@@ -26,6 +26,7 @@
 13. Франшиза/коллекция — не формат произведения, а отдельная сущность.
 14. Пользовательские сравнения между произведениями — отдельный сильный сигнал.
 15. Любая LLM сначала читает `AGENTS.md`, schemas и vocabulary, затем изменяет данные и запускает validation.
+16. Одна связь хранится в одном каноническом месте; обратные ссылки и memberships строятся как derived data.
 
 ## 3. Физическая структура репозитория
 
@@ -77,7 +78,7 @@ media/
 - точечное чтение LLM;
 - размер контекста;
 - Git diff;
-- конкурентные/последовательные изменения;
+- последовательные/параллельные изменения;
 - риск случайной перезаписи соседних записей.
 
 Один файл на произведение позволяет читать полный объект только для релевантных кандидатов.
@@ -102,7 +103,6 @@ identity:
   external_ids:
     imdb: null
     tmdb: null
-  collection_ids: []
 
 metadata:
   genres:
@@ -236,7 +236,7 @@ IMDb/TMDB ID при наличии являются главными ключа�
 
 ## 7. Collections
 
-Коллекция/франшиза — отдельная сущность:
+Коллекция/франшиза — отдельная сущность и единственный source of truth для membership:
 
 ```yaml
 schema_version: 4
@@ -258,6 +258,8 @@ viewer:
     summary: "Вся серия хорошая."
     signals: []
 ```
+
+Work-файл не дублирует `collection_ids`; memberships для retrieval выводятся из collection files в generated index.
 
 Оценка коллекции не переносится автоматически на каждый member.
 
@@ -341,7 +343,7 @@ viewing:
 
 `progress` необязателен и используется главным образом для сериалов.
 
-`contexts` — controlled enum/vocabulary-based context, минимум:
+`contexts` — controlled enum:
 
 - `solo`
 - `couple`
@@ -468,6 +470,12 @@ viewer:
 
 `dimensions` используют canonical vocabulary IDs.
 
+### Семантика `preferred_over`
+
+Если relation хранится в work `A` и имеет `target_id: B`, то `A preferred_over B` означает: пользователь предпочитает исходное произведение A произведению B.
+
+Если пользователь предпочитает B произведению A, relation должна храниться в B с `target_id: A`. Это исключает двусмысленное поле `direction`.
+
 Viewer relation хранится только в исходной записи; обратные ссылки строятся в generated index.
 
 ## 15. Canonical relations
@@ -491,6 +499,8 @@ Enum:
 - `adaptation`
 - `same_franchise`
 
+Каждая factual relation хранится один раз; reverse lookup является derived data.
+
 ## 16. Сериалы и сезоны
 
 `seasons` — необязательная детализация. Общая оценка сериала самостоятельна.
@@ -510,6 +520,12 @@ seasons:
     release_year: 2021
     episode_count: 9
 
+    metadata:
+      traits:
+        - term: pacing.fast
+          source: llm_inferred
+          confidence: medium
+
     viewer:
       viewing:
         status: watched
@@ -523,6 +539,8 @@ seasons:
       rewatch:
         intent: high
 ```
+
+Season metadata также необязательна. Она появляется только если различия между сезонами полезны для понимания вкуса.
 
 Общая и сезонные оценки не пересчитывают друг друга.
 
@@ -657,6 +675,7 @@ Canonical term ID после использования не переимено�
 - отсутствие ссылок на несуществующие vocabulary terms;
 - отсутствие relations на несуществующие targets;
 - отсутствие collection member IDs без work;
+- отсутствие дублирующего collection membership внутри work;
 - уникальность season numbers;
 - seasons разрешены только для series/miniseries;
 - rating score/source/confidence согласованы;
@@ -675,7 +694,7 @@ Canonical term ID после использования не переимено�
 {"id":"interstellar-2014","title_ru":"Интерстеллар","format":"movie","medium":"live_action","year":2014,"status":"watched","rating":9.5,"genres":["genre.science_fiction","genre.drama"],"traits":["story.problem_solving","atmosphere.immersive"],"interest":"none"}
 ```
 
-Индекс может включать обратные viewer-relation ссылки и collection memberships.
+Индекс может включать derived collection memberships, обратные canonical/viewer relation ссылки и другие поля, которые полностью вычисляются из source data.
 
 ## 24. Recommendation pipeline
 
