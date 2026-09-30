@@ -8,43 +8,44 @@
 
 Создать долговечную персональную медиатеку для фильмов, сериалов, мини-сериалов и анимации, которая:
 
-- сохраняет пользовательский сигнал точнее, чем обычный список оценок;
+- сохраняет пользовательский сигнал точнее обычного списка оценок;
 - поддерживает нескольких зрителей и совместный просмотр;
 - безопасно обновляется разными LLM без расползания схемы и словаря;
 - остаётся удобной для Git и ручного чтения;
 - масштабируется до сотен и тысяч произведений;
-- позже может служить каноническим источником для сайта, API, SQLite, полнотекстового и векторного поиска.
+- позже служит каноническим источником для сайта, API, SQLite, полнотекстового и векторного поиска.
 
-Главная задача системы — **объяснимо рекомендовать произведения под конкретного зрителя или группу и улучшать рекомендации по мере накопления реальных отзывов**.
+Главная задача — **объяснимо рекомендовать произведения под конкретного зрителя или группу и улучшать рекомендации по мере накопления реальных отзывов**.
 
-## 2. Основные архитектурные принципы
+## 2. Основные принципы
 
-1. Git/YAML — канонический источник истины.
-2. SQLite, индексы, derived profiles и embeddings — только пересобираемые представления.
+1. Git/YAML — канонический source of truth.
+2. SQLite, индексы, derived profiles, embeddings и image cache — пересобираемые представления.
 3. Один work хранится в одном YAML-файле.
 4. Неизвестные данные остаются неизвестными; LLM не заполняет поля догадками ради полноты.
-5. Пользовательский сигнал имеет больший приоритет, чем semantic metadata, внешние метаданные и публичные рейтинги.
+5. Пользовательский сигнал важнее semantic metadata, внешних метаданных и публичных рейтингов.
 6. `unwatched` не является отрицательным сигналом.
-7. Reaction, числовая оценка, отзыв, пересмотры, интерес и контекст просмотра — независимые сигналы.
-8. Объективный/описательный trait произведения и субъективная viewer reaction — разные понятия.
-9. Все семантические понятия используют controlled vocabulary.
+7. Reaction, rating, feedback, rewatch, interest и viewing — независимые сигналы.
+8. Trait произведения и субъективная viewer reaction — разные понятия.
+9. Все semantic terms используют controlled vocabulary.
 10. Обычное добавление произведения не имеет права менять schema.
-11. Новые vocabulary terms не создаются, пока не проверено отсутствие подходящего canonical term.
-12. Immutable ID не переименовываются; merge/delete выполняются через redirects/tombstones.
+11. Новый vocabulary term не создаётся без поиска существующего canonical term.
+12. Immutable IDs не переименовываются; merge/delete выполняются через redirects/tombstones.
 13. Сезонная детализация сериалов необязательна.
-14. Общая оценка сериала не вычисляется из оценок сезонов и наоборот.
-15. Один relation/membership хранится в одном каноническом месте; обратные связи — derived.
-16. Запись от LLM, сайта или CLI проходит через один и тот же validation/write protocol.
-17. Одноразовое настроение и ограничения текущего запроса по умолчанию не становятся постоянными preferences.
-18. Raw signals хранятся рядом с work; агрегированные профили вкуса являются derived data.
+14. Общая оценка сериала не вычисляется из сезонов и наоборот.
+15. Один relation/membership хранится в одном каноническом месте; обратные связи derived.
+16. LLM, сайт и CLI используют один validation/write protocol.
+17. Ephemeral настроение/ограничения запроса по умолчанию не становятся persistent preferences.
+18. Raw signals хранятся рядом с work; агрегированные taste profiles являются derived data.
 
-## 3. Физическая структура репозитория
+## 3. Физическая структура
 
 ```text
 media/
 ├── AGENTS.md
 ├── README.md
 ├── vocabulary.yaml
+├── .gitignore
 │
 ├── config/
 │   ├── viewers.yaml
@@ -54,7 +55,7 @@ media/
 │   └── explicit/
 │       ├── primary.yaml
 │       ├── partner.yaml
-│       └── couple.yaml          # создаётся только при явных group preferences
+│       └── couple.yaml          # только если появятся explicit group preferences
 │
 ├── schemas/
 │   ├── work.schema.json
@@ -69,10 +70,7 @@ media/
 │
 ├── data/
 │   ├── works/
-│   │   ├── interstellar-2014.yaml
-│   │   └── sherlock-2010.yaml
 │   ├── collections/
-│   │   └── oceans.yaml
 │   ├── lists/
 │   ├── interactions/
 │   │   └── 2026-10.jsonl
@@ -80,11 +78,11 @@ media/
 │
 ├── generated/
 │   ├── index.jsonl
-│   ├── database.sqlite
-│   └── profiles/
-│       ├── primary.yaml
-│       ├── partner.yaml
-│       └── couple.yaml
+│   ├── profiles/
+│   │   ├── primary.yaml
+│   │   ├── partner.yaml
+│   │   └── couple.yaml
+│   └── database.sqlite          # build artifact, не коммитится
 │
 └── tools/
     ├── validate.py
@@ -93,26 +91,32 @@ media/
     └── build_profiles.py
 ```
 
-### Source of truth
+### Канонические данные
 
-Каноническими являются:
+Source of truth:
 
-- `media/config/*`;
-- `media/vocabulary.yaml`;
-- `media/preferences/explicit/*`;
-- `media/data/works/*`;
-- `media/data/collections/*`;
-- `media/data/lists/*`;
-- `media/data/interactions/*`;
-- `media/data/tombstones/*`.
+- `config/*`;
+- `vocabulary.yaml`;
+- `preferences/explicit/*`;
+- `data/works/*`;
+- `data/collections/*`;
+- `data/lists/*`;
+- `data/interactions/*`;
+- `data/tombstones/*`.
 
-`media/generated/*` никогда не редактируется как источник данных и может быть полностью удалён и пересобран.
+### Generated data
+
+`generated/index.jsonl` и `generated/profiles/*.yaml` можно коммитить для удобного чтения LLM через Git, но они всегда считаются derived и должны полностью пересобираться.
+
+`generated/database.sqlite`, embeddings и image cache являются локальными/deployment build artifacts и в Git не коммитятся.
+
+Ни один generated artifact не может быть единственным носителем информации.
 
 ## 4. Entity model
 
 ### 4.1 Work
 
-`work` — отдельное произведение: фильм, сериал или мини-сериал.
+`work` — фильм, сериал или мини-сериал.
 
 ```yaml
 schema_version: 4
@@ -128,23 +132,21 @@ identity:
   year: 2014
   release_date: 2014-11-07
   external_ids:
-    tmdb: 157336
+    tmdb:
+      media_type: movie
+      id: 157336
     imdb: tt0816692
 ```
 
-`identity.format`:
+`identity.format`: `movie | series | miniseries`.
 
-- `movie`
-- `series`
-- `miniseries`
-
-`identity.medium`:
-
-- `live_action`
-- `animation`
-- `hybrid`
+`identity.medium`: `live_action | animation | hybrid`.
 
 Мультфильм — `movie + animation`; анимационный сериал — `series + animation`.
+
+TMDB movie и TV используют разные пространства ID, поэтому canonical TMDB identity — пара `(media_type, id)`. Для `movie` используется TMDB media type `movie`; для `series/miniseries` — `tv`.
+
+IMDb `tt...` ID глобально уникален в рамках поддерживаемых work entities.
 
 ### 4.2 Collection
 
@@ -164,7 +166,7 @@ member_ids:
 
 Membership хранится только в collection. Work не дублирует `collection_ids`.
 
-Collection поддерживает тот же `viewer_signals` / `group_signals`, что и work, если есть реальный отзыв о франшизе целиком.
+Collection поддерживает ту же multi-viewer/group signal model, если есть отзыв о франшизе целиком. Оценка collection не переносится автоматически на members.
 
 ### 4.3 List
 
@@ -180,7 +182,7 @@ description: null
 member_ids: []
 ```
 
-`collection` описывает логическую/каноническую серию произведений; `list` — пользовательскую организацию.
+Collection — логическая/каноническая серия; list — пользовательская организация.
 
 ### 4.4 Interaction
 
@@ -188,11 +190,9 @@ Append-only событие истории рекомендаций/выбора.
 
 ### 4.5 Viewer / group
 
-Viewer и group — стабильные анонимные IDs. Персональные данные не хранятся.
+Viewer/group — стабильные анонимные IDs. Персональные данные не хранятся.
 
 ### 4.6 Tombstone
-
-Удалённый/объединённый immutable ID остаётся разрешимым:
 
 ```yaml
 schema_version: 4
@@ -202,11 +202,9 @@ status: merged
 redirect_to: edge-of-tomorrow-2014
 ```
 
-Redirect chains не должны образовывать циклы.
+Redirects не образуют циклов. Старый ID никогда молча не переиспользуется для другой сущности.
 
-## 5. Multi-viewer model
-
-Начальная конфигурация:
+## 5. Multi-viewer configuration
 
 ```yaml
 # config/viewers.yaml
@@ -226,13 +224,13 @@ groups:
       - partner
 ```
 
-Никаких имён, дат рождения, возраста и других персональных данных.
+Никаких имён, возраста, даты рождения и других персональных данных.
 
-Новые viewer/group создаются только при реальной необходимости; схема должна позволять добавить будущих членов семьи без миграции формата.
+Новые viewer/group добавляются только при реальной необходимости. Будущие члены семьи не создаются заранее.
 
 ## 6. Viewer signals
 
-Raw signal конкретного зрителя хранится внутри work. Viewer-блок **не создаётся без реальных данных**.
+Raw signal конкретного зрителя хранится внутри work. Viewer-блок не создаётся без реальных данных.
 
 ```yaml
 viewer_signals:
@@ -272,19 +270,13 @@ viewer_signals:
       confidence: high
 ```
 
-### 6.1 Viewing status
+### Viewing
 
-Enum:
+`status`: `unwatched | watched | partial | dropped | forgotten`.
 
-- `unwatched`
-- `watched`
-- `partial`
-- `dropped`
-- `forgotten`
+`unwatched` и `dropped` не считаются автоматически отрицательной реакцией.
 
-`dropped` не считается автоматически отрицательной реакцией.
-
-`progress` необязателен и в основном используется для сериалов:
+`progress` необязателен:
 
 ```yaml
 progress:
@@ -292,49 +284,25 @@ progress:
   episode: 5
 ```
 
-### 6.2 Reaction
+### Reaction
 
-Минимальный персональный сигнал:
+`liked | disliked | neutral | mixed | unknown`.
 
-- `liked`
-- `disliked`
-- `neutral`
-- `mixed`
-- `unknown`
+Отсутствие viewer-блока означает отсутствие данных. `unknown` используется только когда явно зафиксированная неизвестность сама полезна.
 
-Отсутствие viewer-блока означает отсутствие данных. `unknown` используется только если неизвестность сама была явно зафиксирована и полезна.
+Reaction и rating независимы и не вычисляются друг из друга.
 
-Reaction и rating независимы. Rating не генерирует reaction автоматически и наоборот.
+Если primary передаёт реальное мнение partner («жене понравилось»), это полноценный partner signal. Confidence зависит от уверенности формулировки, а не от того, кто передал мнение.
 
-Если пользователь передаёт мнение partner (например, «жене понравилось»), это считается полноценным сигналом partner. Confidence зависит от уверенности формулировки, а не от того, кто произнёс фразу в чат.
-
-### 6.3 Rating
-
-```yaml
-rating:
-  score: 8.5
-  source: explicit_approx
-  confidence: high
-```
+### Rating
 
 `score`: `1.0..10.0`, шаг `0.5`, либо `null`.
 
-`source`:
+`source`: `explicit | explicit_approx | inferred | none`.
 
-- `explicit`
-- `explicit_approx`
-- `inferred`
-- `none`
+`confidence`: `exact | high | medium | low | none`.
 
-`confidence`:
-
-- `exact`
-- `high`
-- `medium`
-- `low`
-- `none`
-
-### 6.4 Feedback signals
+### Feedback
 
 ```yaml
 feedback:
@@ -353,24 +321,19 @@ feedback:
 
 `source`: `explicit | inferred`.
 
-LLM должна отличать свою интерпретацию от прямого пользовательского сигнала.
+### Rewatch
 
-### 6.5 Rewatch
+`rewatch.intent`: `none | low | medium | high | unknown`.
 
-```yaml
-rewatch:
-  intent: high
-```
+Фактическое число просмотров хранится только в `viewing.times_watched`.
 
-Количество фактических просмотров хранится в `viewing.times_watched`, поэтому двусмысленного `rewatch.count` нет.
+### Significant history
 
-### 6.6 Significant history
-
-Полного event-sourcing мнений нет. Необязательный `history` используется только для значимых изменений, например сильного пересмотра оценки после повторного просмотра.
+Полного event-sourcing мнений нет. `history` необязателен и используется только для значимых изменений реакции/оценки.
 
 ## 7. Group signals
 
-Group не является отдельным «человеком». Это контекст совместного просмотра и собственный необязательный сигнал.
+Group не является отдельным человеком. Это необязательный сигнал именно о совместном просмотре.
 
 ```yaml
 group_signals:
@@ -396,13 +359,13 @@ group_signals:
     history: []
 ```
 
-Group-блок создаётся только при наличии реального group-specific сигнала.
+Group block создаётся только при реальном group-specific сигнале.
 
-Ситуация `primary: 7.5`, `partner: liked`, `couple: 9.0` валидна.
+`primary: 7.5`, `partner: liked`, `couple: 9.0` — валидная комбинация.
 
-## 8. Сезоны сериалов
+## 8. Сезоны
 
-`seasons` — необязательная детализация. Если сериал оценён только целиком, этого достаточно.
+`seasons` полностью необязателен. Общей оценки сериала достаточно.
 
 ```yaml
 seasons:
@@ -422,13 +385,13 @@ seasons:
     group_signals: {}
 ```
 
-Сезон использует те же viewer/group signal semantics, что и work. Никакие пустые season records не создаются «для полноты».
+Сезон использует те же viewer/group signal semantics, что и work. Пустые season records не создаются ради полноты.
 
-Общая оценка сериала и сезонные оценки независимы.
+`number` уникален внутри сериала и может быть `0` для specials, если внешний источник использует такую модель.
+
+Общая и сезонные оценки независимы.
 
 ## 9. Metadata и enrichment
-
-Metadata разделяются на внешний слой, ручные overrides и semantic слой.
 
 ```yaml
 metadata:
@@ -437,29 +400,29 @@ metadata:
   semantic: {}
 ```
 
-### 9.1 External factual metadata
+### External factual metadata
 
-TMDB — основной metadata provider v4, но schema остаётся provider-neutral.
+TMDB — primary metadata provider v4, но schema provider-neutral.
 
-Полезные поля:
+Полезные данные:
 
 - genres;
 - runtime;
 - original language;
 - countries;
 - production status;
-- spoiler-safe short synopsis;
-- directors;
-- writers;
-- key cast;
+- spoiler-safe synopsis;
+- directors/writers/key cast;
 - certifications;
 - content warnings;
 - external metrics;
 - poster/backdrop references.
 
-При добавлении нового произведения write-layer по возможности автоматически получает factual metadata из внешнего источника. Если источник недоступен, сохраняются только достоверно известные данные.
+При добавлении нового work write-layer по возможности автоматически обогащает metadata. Если provider недоступен, сохраняется только достоверно известное.
 
-### 9.2 People references
+Provider genres/content labels должны быть нормализованы в canonical vocabulary до записи в semantic/controlled поля; raw provider-specific значения не подменяют canonical terms.
+
+### People references
 
 Отдельные person YAML в v4 не создаются.
 
@@ -471,11 +434,9 @@ directors:
       imdb: nm0634240
 ```
 
-Это позволяет строить derived каталог людей без тысяч канонических person-файлов.
+### Assets
 
-### 9.3 Assets
-
-Бинарные постеры/backdrops в Git не хранятся.
+В Git хранятся только provider references:
 
 ```yaml
 assets:
@@ -484,11 +445,9 @@ assets:
     path: /...
 ```
 
-Будущий сайт может кэшировать assets вне canonical Git data.
+Бинарники и image cache находятся вне canonical Git data.
 
-### 9.4 External metrics
-
-Публичные рейтинги — слабый дополнительный сигнал:
+### External metrics
 
 ```yaml
 external_metrics:
@@ -498,21 +457,17 @@ external_metrics:
     observed_at: 2026-10-01
 ```
 
-Они не переопределяют персональный вкус.
+Публичные рейтинги являются слабым внешним сигналом.
 
-### 9.5 Persistent manual overrides
+### Persistent manual overrides
 
-Ручные правки никогда не затираются автоматическим refresh.
+Автоматический metadata refresh никогда не затирает manual overrides.
 
-Effective value:
+Effective value: `override -> external -> null`.
 
-```text
-override -> external -> null
-```
+Override допускается только для разрешённых schema полей.
 
-Override допускается только для полей, разрешённых schema.
-
-### 9.6 Semantic traits
+### Semantic traits
 
 ```yaml
 semantic:
@@ -522,24 +477,15 @@ semantic:
       confidence: high
 ```
 
-Trait обязательно хранит provenance.
+`source`: `external_source | llm_inferred | user_explicit`.
 
-`source`:
-
-- `external_source`
-- `llm_inferred`
-- `user_explicit`
-
-LLM-inferred trait не превращается со временем в «объективный факт».
+LLM-inferred trait всегда сохраняет provenance и не становится молча «фактом».
 
 ## 10. Controlled vocabulary
 
-Все semantic term IDs namespaced.
-
-Примеры:
+Все term IDs namespaced, например:
 
 - `genre.science_fiction`
-- `genre.drama`
 - `narrative.time_loop`
 - `story.problem_solving`
 - `story.intrigue`
@@ -553,28 +499,20 @@ LLM-inferred trait не превращается со временем в «об
 - `reaction.excessive_darkness`
 - `content.violence`
 
-Ключевое разделение:
+Принципиально:
 
-- `pacing.slow` — trait произведения;
-- `reaction.pacing_dragging` — реакция зрителя;
+- `pacing.slow` — свойство work;
+- `reaction.pacing_dragging` — реакция viewer;
 - `humor.absurd` — стиль юмора;
-- `reaction.cringe` — пользовательская реакция.
+- `reaction.cringe` — реакция viewer.
 
-Новый term создаётся только если:
+Новый term создаётся только если подходящего canonical term нет, это не синоним, различие полезно рекомендациям и понятие применимо более чем к одному произведению.
 
-1. подходящего canonical term нет;
-2. это не синоним;
-3. различие полезно будущим рекомендациям;
-4. term применим более чем к одному произведению;
-5. определены namespace/kind/definition/aliases.
-
-Изменение/слияние canonical term IDs — отдельная миграция vocabulary.
+Изменение/слияние canonical term IDs — отдельная vocabulary migration.
 
 ## 11. Relations
 
-### 11.1 Viewer/group relations
-
-Пользовательское сходство — сильный персональный сигнал.
+### Viewer/group relations
 
 ```yaml
 relations:
@@ -589,32 +527,23 @@ relations:
     confidence: exact
 ```
 
-Типы v4:
+Типы: `similar_to | reminds_of | preferred_over`.
 
-- `similar_to`
-- `reminds_of`
-- `preferred_over`
+`dimensions` используют canonical vocabulary IDs.
 
-Relation хранится в viewer/group signal соответствующего субъекта.
+Если `preferred_over` записан в work A с `target_id: B`, субъект предпочитает A произведению B. Если предпочтение обратное, relation хранится в B. `direction` не используется.
 
-`preferred_over`: если relation записан в work A и указывает `target_id: B`, субъект предпочитает A произведению B. Обратная ситуация записывается в B. Поле `direction` не используется.
+### Canonical relations
 
-### 11.2 Canonical relations
+Фактические связи хранятся отдельно:
 
-Фактические связи произведений хранятся отдельно от viewer relations:
+`sequel | prequel | spinoff | remake | reboot | adaptation`.
 
-- `sequel`
-- `prequel`
-- `spinoff`
-- `remake`
-- `reboot`
-- `adaptation`
+Canonical relation и subjective similarity не смешиваются.
 
-Canonical relation и subjective similarity никогда не смешиваются.
+## 12. Interest / target state
 
-## 12. Interest и target state
-
-Interest принадлежит target (`primary`, `partner`, `couple`), а не work глобально.
+Interest принадлежит target, а не work глобально.
 
 ```yaml
 target_states:
@@ -628,68 +557,47 @@ target_states:
       priority: 3
 ```
 
-`interest.state`:
+`state`: `unknown | candidate | shortlist | not_interested`.
 
-- `unknown`
-- `candidate`
-- `shortlist`
-- `not_interested`
-
-`not_interested` — устойчивое состояние. «Не сегодня» остаётся ephemeral и не превращается в постоянный dislike/interest state.
+`not_interested` — устойчивое состояние. «Не сегодня» остаётся ephemeral.
 
 ## 13. Explicit preferences и constraints
 
-Постоянные пользовательские предпочтения, высказанные вне контекста одного произведения, хранятся отдельно по target.
+Постоянные предпочтения, высказанные вне контекста одного work, хранятся по target в `preferences/explicit/*`.
 
-Примеры:
+Одноразовые условия вроде «сегодня без фантастики» не сохраняются.
 
-- «обычно люблю фильмы с загадкой»;
-- «не советуй мне тяжёлый cringe-humor»;
-- «для совместного просмотра предпочитаем не слишком мрачное».
-
-Одноразовые условия вроде «сегодня не хочется фантастики» не сохраняются.
-
-Explicit preference всегда отличается от derived preference.
+Explicit preference/constraint всегда отделён от derived preference.
 
 ## 14. Derived profiles
 
 `generated/profiles/{target}.yaml` строится из:
 
-- explicit preferences;
+- explicit preferences/constraints;
 - viewer/group signals;
-- ratings;
-- reactions;
-- structured feedback;
-- rewatch/viewing evidence;
+- ratings/reactions/feedback;
+- viewing/rewatch evidence;
 - relations;
 - значимых interaction outcomes.
 
-`couple` не является простым средним `primary` и `partner`. Он учитывает:
+`couple` не является средним арифметическим `primary` и `partner`: он учитывает оба профиля, explicit group preferences, `group_signals.couple` и историю совместного выбора.
 
-1. primary profile;
-2. partner profile;
-3. explicit group preferences;
-4. group_signals.couple;
-5. релевантную историю совместного выбора.
-
-Каждый derived вывод должен иметь confidence/evidence и может быть полностью пересобран.
+Каждый derived вывод хранит confidence/evidence и может быть полностью пересобран.
 
 ## 15. Interaction log
 
-История рекомендаций и выбора хранится append-only по месяцам:
+Append-only по месяцам:
 
 ```text
 media/data/interactions/2026-10.jsonl
 ```
-
-Пример:
 
 ```json
 {"id":"evt-20261001-001","at":"2026-10-01T20:15:00+02:00","work_id":"arrival-2016","target":"couple","type":"recommended"}
 {"id":"evt-20261001-002","at":"2026-10-01T20:17:00+02:00","work_id":"arrival-2016","target":"couple","type":"skipped","reason":"not_today"}
 ```
 
-Минимальные event types:
+Event types v4:
 
 - `recommended`
 - `selected`
@@ -698,49 +606,39 @@ media/data/interactions/2026-10.jsonl
 - `added_to_list`
 - `removed_from_list`
 
-Это **не event-sourcing**. Текущее состояние rating/viewing/feedback хранится в work.
+Это не event-sourcing. Current rating/viewing/feedback хранится в work.
 
-Счётчики `recommended_count`, `last_recommended_at`, `skipped_count` и аналогичные значения являются derived и не дублируются как source of truth.
+`recommended_count`, `last_recommended_at`, `skipped_count` и другие счётчики derived и не дублируются в canonical work.
 
-Внутренние кандидаты, которые LLM рассматривала, но не показала пользователю, в log не попадают.
+Внутренние кандидаты LLM, не показанные пользователю, не логируются.
 
 ## 16. Recommendation runtime
-
-LLM не должна загружать всю библиотеку для каждого запроса.
-
-Pipeline:
 
 ```text
 ephemeral request
 + target derived profile
 + index/SQLite retrieval
         ↓
-30–50 кандидатов
+30–50 candidates
         ↓
-фильтры просмотра / interest / constraints
+viewing / interest / constraints filters
         ↓
-10–20 релевантных кандидатов
+10–20 relevant candidates
         ↓
-полные YAML только финалистов
+full YAML only for finalists
         ↓
-рекомендация
+recommendation
 ```
 
-### `generated/index.jsonl`
+`generated/index.jsonl` — компактный retrieval index.
 
-Компактный retrieval index с идентичностью, основными genres/traits, краткими target signals и derived memberships.
+`generated/database.sqlite` — runtime DB для будущего сайта/сложных фильтров, полностью пересобираемая и не коммитимая.
 
-### `generated/database.sqlite`
-
-Предназначена для будущего сайта, фильтрации и сложного поиска. Она полностью пересобирается из canonical data и никогда не редактируется напрямую.
-
-### Embeddings
-
-Не являются обязательной частью реализации v4. Их можно добавить позже как derived слой semantic search без изменения canonical model.
+Embeddings — optional future derived layer, не обязательная часть v4.
 
 ## 17. Будущий сайт
 
-Сайт рассматривается как будущий полноценный read/write client, а не как источник истины.
+Будущий сайт — полноценный read/write client, но не source of truth.
 
 ```text
 Web UI / LLM / CLI
@@ -756,43 +654,45 @@ Git commit
 rebuild generated runtime
 ```
 
-Сайт читает в основном SQLite/index/generated profiles/image cache, но изменения записывает только через общий write-layer.
+Сайт читает главным образом SQLite/index/profiles/image cache, но записывает только через общий write-layer.
 
-Сам веб-интерфейс **не входит в реализацию этой миграции v4**.
+Сам web UI не входит в текущую реализацию v4.
 
 ## 18. Write protocol
 
-Перед любой записью агент/клиент обязан:
+Перед записью клиент/agent обязан:
 
 1. определить target;
 2. прочитать применимые schema и vocabulary;
-3. найти существующий work по TMDB ID, IMDb ID, immutable ID и title/year;
+3. найти существующий work по TMDB composite ID, IMDb ID, internal ID и title/year;
 4. разрешить redirects/tombstones;
-5. при создании work выполнить metadata enrichment, если источник доступен;
-6. не создавать неизвестные поля;
-7. не создавать vocabulary synonym вместо существующего term;
-8. не сохранять ephemeral context как постоянный preference;
-9. не создавать viewer/group block без реального evidence;
-10. не понижать explicit signal до inferred;
+5. при создании выполнить metadata enrichment, если provider доступен;
+6. не создавать неизвестные schema fields;
+7. не создавать vocabulary synonym вместо canonical term;
+8. не сохранять ephemeral context как persistent preference;
+9. не создавать viewer/group signal без evidence;
+10. сохранять explicit/inferred provenance;
 11. подготовить весь logical change-set;
-12. провалидировать proposed canonical state;
+12. провалидировать proposed state;
 13. выполнить atomic write;
 14. создать один Git commit на одну логическую операцию;
 15. пересобрать affected generated data.
 
-Если validation падает, canonical state не должен оставаться частично изменённым.
+При ошибке validation canonical state не должен оставаться частично изменённым.
 
 ## 19. Deduplication
 
-Перед созданием work проверяются:
+Порядок проверки:
 
-1. TMDB ID;
+1. TMDB `(media_type, id)`;
 2. IMDb ID;
 3. internal immutable ID;
 4. original/alternate title + year;
 5. fuzzy candidate search.
 
-При высокой неоднозначности identity не угадывается. Нужно либо оставить запись неполной без ложного external ID, либо запросить разрешение неоднозначности в подходящем interactive workflow.
+TMDB numeric ID без `media_type` не считается глобальным dedup key.
+
+При неоднозначности identity не угадывается.
 
 ## 20. Data precedence
 
@@ -800,48 +700,47 @@ rebuild generated runtime
 
 1. новое явное утверждение пользователя;
 2. persistent manual override;
-3. существующий explicit viewer/group signal;
-4. inferred viewer/group signal;
-5. explicit persistent preference/constraint;
+3. существующий explicit viewer/group signal конкретного work;
+4. explicit persistent preference/constraint;
+5. inferred viewer/group signal;
 6. derived profile;
 7. semantic metadata;
 8. factual external metadata;
 9. public rating/popularity.
 
-Нижний уровень не перезаписывает верхний молча.
+Нижний уровень не перезаписывает верхний молча. Specific explicit signal конкретного work может естественно отличаться от общего explicit preference без признания данных конфликтными.
 
 ## 21. Validation
 
 `validate.py` проверяет как минимум:
 
-- соответствие всех YAML/JSONL schema;
-- `additionalProperties: false` там, где структура должна быть закрытой;
+- соответствие YAML/JSONL schema;
+- закрытые объекты через `additionalProperties: false`, где уместно;
 - уникальность active internal IDs;
-- уникальность ненулевых external IDs;
-- корректность redirects и отсутствие redirect cycles;
+- уникальность ненулевых IMDb IDs;
+- уникальность TMDB composite keys `(media_type, id)`;
+- redirects без циклов;
 - существование work/collection/list/target references;
 - корректность group members;
-- существование всех vocabulary terms;
-- запрет aliases вместо canonical IDs;
-- уникальность season numbers;
-- seasons только у `series`/`miniseries`;
+- существование canonical vocabulary terms;
+- запрет aliases вместо term IDs;
+- уникальность season numbers и допустимость season `0`;
+- seasons только у `series/miniseries`;
 - rating `1..10` с шагом `0.5`;
-- согласованность rating value/source/confidence;
-- отсутствие self-relations там, где они бессмысленны;
+- согласованность score/source/confidence;
+- отсутствие бессмысленных self-relations;
 - корректность `preferred_over`;
 - валидность canonical relations;
-- валидность interaction IDs/timestamps/types;
+- interaction IDs/timestamps/types;
 - существование list members;
 - допустимость metadata overrides;
-- отсутствие canonical ссылок на generated data как source of truth.
+- отсутствие canonical зависимости от generated-only данных.
 
-После успешной проверки build pipeline должен уметь полностью пересобрать index, SQLite и derived profiles.
+После validation build pipeline должен уметь с нуля пересобрать index, SQLite и derived profiles.
 
 ## 22. AGENTS.md contract
 
-`media/AGENTS.md` — короткий обязательный operational contract для любой LLM/agent.
-
-Минимальные правила:
+Минимальный operational contract:
 
 - Read schemas and vocabulary before writing.
 - Never invent schema fields.
@@ -859,11 +758,11 @@ rebuild generated runtime
 
 В текущую реализацию входят:
 
-1. каноническая directory structure;
-2. config для `primary`, `partner`, `couple`;
-3. schemas;
+1. canonical directory structure;
+2. config `primary`, `partner`, `couple`;
+3. JSON Schemas;
 4. initial controlled vocabulary;
-5. миграция текущей v2 movie-базы без потери пользовательского сигнала;
+5. миграция текущей movie-базы без потери пользовательского сигнала;
 6. один YAML на work;
 7. collections;
 8. multi-viewer/group-compatible signals;
@@ -871,53 +770,52 @@ rebuild generated runtime
 10. validator;
 11. generated index;
 12. SQLite builder;
-13. derived profile builder в минимально достаточном виде;
-14. README и AGENTS contract;
-15. удаление/архивирование старых конкурирующих v2 source-of-truth файлов после проверки миграции.
+13. минимально достаточный derived profile builder;
+14. README/AGENTS;
+15. удаление старых конкурирующих source-of-truth файлов только после успешной validation.
 
-Не входят в текущую реализацию:
+Не входят:
 
 - web UI;
 - production API/service;
 - authentication;
-- автоматический background metadata refresh;
+- background metadata refresh;
 - обязательные embeddings/vector DB;
-- полноценный персональный каталог people;
+- полноценный person catalog;
 - полный event-sourcing.
 
-Эти слои должны добавляться поверх v4 без изменения canonical model.
+Эти слои добавляются поверх v4 без изменения canonical model.
 
 ## 24. Migration rules
 
-При миграции текущих данных:
-
-- текущий пользователь становится `primary`;
-- мнение partner переносится только там, где оно реально было сообщено;
-- отсутствие просмотра никогда не становится негативным сигналом;
-- существующие ratings/comments сохраняются;
+- текущий пользователь -> `primary`;
+- partner signal переносится только там, где он реально был сообщён;
+- отсутствие просмотра не становится негативом;
+- ratings/comments сохраняются;
 - inferred ratings сохраняют provenance;
-- collections не размножают оценки на отдельные members;
-- season records не создаются без сезонной информации;
+- collection rating не размножается по members;
+- seasons не создаются без сезонной информации;
 - сомнительные factual metadata не выдумываются;
-- существующие title/year используются для первичной идентичности, external IDs добавляются только при надёжном match;
-- старые файлы удаляются только после успешной validation новой структуры.
+- external IDs добавляются только при надёжном match;
+- старые source-of-truth файлы удаляются только после успешной validation новой структуры.
 
 ## 25. Acceptance criteria
 
-v4 считается реализованной, когда:
+v4 реализована, когда:
 
-1. все текущие пользовательские данные перенесены без потери смысла;
-2. `primary`, `partner`, `couple` поддерживаются схемой без персональных данных;
+1. текущие пользовательские данные перенесены без потери смысла;
+2. `primary`, `partner`, `couple` поддерживаются без персональных данных;
 3. work/collection/list/interaction/tombstone schemas валидируются;
-4. vocabulary references проверяются автоматически;
-5. schema drift при обычном добавлении work запрещён;
+4. vocabulary refs проверяются автоматически;
+5. schema drift при обычном data entry запрещён;
 6. `validate.py` проходит на всей canonical базе;
-7. index и SQLite полностью пересобираются из canonical data;
-8. derived profiles пересобираются из raw signals/explicit preferences;
-9. old v2 files больше не являются конкурирующим source of truth;
-10. можно добавить новый work естественным языком, не придумывая новую структуру;
-11. можно сохранить только `partner: liked`, а позже дополнить rating/feedback без миграции;
-12. можно оценить сериал целиком без seasons и позже добавить season-specific signals;
-13. можно запросить рекомендации для `primary`, `partner` или `couple`;
-14. временные условия запроса не загрязняют постоянный профиль;
-15. будущий сайт сможет читать generated runtime и писать через общий write protocol без смены canonical data model.
+7. index, SQLite и derived profiles пересобираются из canonical data;
+8. old v2 files больше не конкурируют как source of truth;
+9. можно добавить work естественным языком без создания новой структуры;
+10. можно сохранить только `partner: liked`, а позже дополнить rating/feedback;
+11. можно оценить сериал целиком без seasons и позже добавить season-specific signals;
+12. можно рекомендовать для `primary`, `partner` или `couple`;
+13. ephemeral request context не загрязняет persistent profile;
+14. будущий сайт сможет читать generated runtime и писать через общий protocol без смены canonical model;
+15. TMDB movie/TV ID collision не создаёт ложную дедупликацию;
+16. удаление локальной SQLite не приводит к потере информации.
