@@ -6,6 +6,12 @@ identity:
   title_original: Project Hail Mary
   title_ru: Проект «Аве Мария»
   year: null
+  release_date: '2026-03-15'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 687163
+    imdb: tt12042730
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,95 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.science_fiction
+    - genre.adventure
+    runtime_min: 156
+    original_language: en
+    countries:
+    - US
+    production_status: completed
+    synopsis_short: Астронавт Райленд Грейс просыпается на космическом корабле, не
+      помня ни себя, ни свою миссию. Постепенно мужчина приходит к выводу, что он
+      — единственный выживший из экипажа, отправленного в звёздную систему Тау Кита
+      в поисках спасения от катастрофы на Земле. Райленду предстоит положиться на
+      свои обширные научные знания, изобретательность и силу воли, но, возможно, ему
+      не придётся искать в одиночку.
+    directors:
+    - name: Фил Лорд
+      external_ids:
+        tmdb: 107446
+    - name: Крис Миллер
+      external_ids:
+        tmdb: 155267
+    writers:
+    - name: Дрю Годдард
+      external_ids:
+        tmdb: 47506
+    main_cast:
+    - name: Райан Гослинг
+      character: Ryland Grace
+      external_ids:
+        tmdb: 30614
+    - name: Сандра Хюллер
+      character: Eva Stratt
+      external_ids:
+        tmdb: 7152
+    - name: Джеймс Ортис
+      character: Rocky (voice)
+      external_ids:
+        tmdb: 2096164
+    - name: Лайонел Бойс
+      character: Carl
+      external_ids:
+        tmdb: 2320708
+    - name: Милана Вайнтруб
+      character: Olesya Ilyukhina
+      external_ids:
+        tmdb: 1454946
+    - name: Кен Люн
+      character: Yao
+      external_ids:
+        tmdb: 2131
+    - name: Прия Кансара
+      character: Mary (voice)
+      external_ids:
+        tmdb: 3554544
+    - name: Миа Сотерье
+      character: Dr. Browne
+      external_ids:
+        tmdb: 1749206
+    - name: Аннель Олалейе
+      character: Olivia
+      external_ids:
+        tmdb: 3074054
+    - name: Майя Эва Хосейн
+      character: Rekha
+      external_ids:
+        tmdb: 6080198
+    - name: Бастиан Антонио Фуэнтес
+      character: Parker
+      external_ids:
+        tmdb: 3144892
+    - name: Элис Бриттен
+      character: Hardware Store Cashier
+      external_ids:
+        tmdb: 3796265
+    assets:
+      poster:
+        provider: tmdb
+        path: /lGNWODvZnfiocvegYSw1bYnm6pt.jpg
+      backdrop:
+        provider: tmdb
+        path: /8Tfys3mDZVp4tNoH2ktm06a0Tau.jpg
+    external_metrics:
+      tmdb:
+        score: 8.643
+        votes: 8070
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 687163
+      fetched_at: '2026-10-01T11:51:04.078267Z'

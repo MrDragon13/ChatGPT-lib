@@ -6,6 +6,12 @@ identity:
   title_original: The Martian
   title_ru: Марсианин
   year: 2015
+  release_date: '2015-09-30'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 286217
+    imdb: tt3659388
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,95 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.science_fiction
+    - genre.drama
+    - genre.adventure
+    runtime_min: 141
+    original_language: en
+    countries:
+    - US
+    production_status: completed
+    synopsis_short: Марсианская миссия «Арес-3» в процессе работы была вынуждена экстренно
+      покинуть планету из-за надвигающейся песчаной бури. Инженер и биолог Марк Уотни
+      получил повреждение скафандра во время песчаной бури. Сотрудники миссии, посчитав
+      его погибшим, эвакуировались с планеты, оставив Марка одного. Очнувшись, Уотни
+      обнаруживает, что связь с Землёй отсутствует, но при этом полностью функционирует
+      жилой модуль. Главный герой начинает искать способ продержаться на имеющихся
+      запасах еды, витаминов, воды и воздуха ещё 4 года до прилёта следующей миссии
+      «Арес-4».
+    directors:
+    - name: Ридли Скотт
+      external_ids:
+        tmdb: 578
+    writers:
+    - name: Дрю Годдард
+      external_ids:
+        tmdb: 47506
+    main_cast:
+    - name: Мэтт Деймон
+      character: Mark Watney
+      external_ids:
+        tmdb: 1892
+    - name: Джессика Честейн
+      character: Melissa Lewis
+      external_ids:
+        tmdb: 83002
+    - name: Кристен Уиг
+      character: Annie Montrose
+      external_ids:
+        tmdb: 41091
+    - name: Джефф Дэниелс
+      character: Theodore "Teddy" Sanders
+      external_ids:
+        tmdb: 8447
+    - name: Майкл Пенья
+      character: Rick Martinez
+      external_ids:
+        tmdb: 454
+    - name: Шон Бин
+      character: Mitch Henderson
+      external_ids:
+        tmdb: 48
+    - name: Кейт Мара
+      character: Beth Johanssen
+      external_ids:
+        tmdb: 51072
+    - name: Себастиан Стэн
+      character: Chris Beck
+      external_ids:
+        tmdb: 60898
+    - name: Аксель Хенни
+      character: Alex Vogel
+      external_ids:
+        tmdb: 76547
+    - name: Чиветел Эджиофор
+      character: Vincent Kapoor
+      external_ids:
+        tmdb: 5294
+    - name: Бенедикт Вонг
+      character: Bruce Ng
+      external_ids:
+        tmdb: 30082
+    - name: Маккензи Дэвис
+      character: Mindy Park
+      external_ids:
+        tmdb: 1110405
+    assets:
+      poster:
+        provider: tmdb
+        path: /6U19srkH4wI6taluviXbVaIpsau.jpg
+      backdrop:
+        provider: tmdb
+        path: /lzMS0CI3FLQYC5EgJoWeIaEt0lm.jpg
+    external_metrics:
+      tmdb:
+        score: 7.708
+        votes: 21878
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 286217
+      fetched_at: '2026-10-01T11:51:06.187585Z'

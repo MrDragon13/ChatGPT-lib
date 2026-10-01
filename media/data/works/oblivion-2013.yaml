@@ -6,6 +6,12 @@ identity:
   title_original: Oblivion
   title_ru: Обливион
   year: 2013
+  release_date: '2013-04-10'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 75612
+    imdb: tt1483013
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,90 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.action
+    - genre.science_fiction
+    - genre.adventure
+    - genre.mystery
+    runtime_min: 125
+    original_language: en
+    countries:
+    - US
+    - GB
+    - JP
+    - IS
+    production_status: completed
+    synopsis_short: Можно ли скучать по месту, в котором никогда не был, мечтать о
+      девушке, которую никогда не видел? Добро пожаловать в будущее! Мы больше не
+      можем называть Землю своим домом. Мы выиграли войну, но не смогли сохранить
+      планету…
+    directors:
+    - name: Джозеф Косински
+      external_ids:
+        tmdb: 86270
+    writers:
+    - name: Карл Гайдусек
+      external_ids:
+        tmdb: 99411
+    - name: Майкл Арндт
+      external_ids:
+        tmdb: 16961
+    main_cast:
+    - name: Том Круз
+      character: Jack
+      external_ids:
+        tmdb: 500
+    - name: Морган Фримен
+      character: Beech
+      external_ids:
+        tmdb: 192
+    - name: Ольга Куриленко
+      character: Julia
+      external_ids:
+        tmdb: 18182
+    - name: Андреа Райсборо
+      character: Victoria
+      external_ids:
+        tmdb: 127558
+    - name: Николай Костер-Вальдау
+      character: Sykes
+      external_ids:
+        tmdb: 12795
+    - name: Мелисса Лео
+      character: Sally
+      external_ids:
+        tmdb: 6832
+    - name: Зои Белл
+      character: Kara
+      external_ids:
+        tmdb: 20494
+    - name: Эбигейл Лоу
+      character: Julia's Child
+      external_ids:
+        tmdb: 1171690
+    - name: Изабель Лоу
+      character: Julia's Child
+      external_ids:
+        tmdb: 1171689
+    - name: Буч О'коннелл
+      character: Tourist (uncredited)
+      external_ids:
+        tmdb: 1171691
+    assets:
+      poster:
+        provider: tmdb
+        path: /56xLv14jx6qvKWMCrF6C96Hs0cl.jpg
+      backdrop:
+        provider: tmdb
+        path: /2kVt8oj1cSz4GAP0Hi8SESOiH0T.jpg
+    external_metrics:
+      tmdb:
+        score: 6.694
+        votes: 11865
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 75612
+      fetched_at: '2026-10-01T11:51:03.811433Z'

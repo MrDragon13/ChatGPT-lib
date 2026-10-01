@@ -6,6 +6,12 @@ identity:
   title_original: Drive
   title_ru: Драйв
   year: 2011
+  release_date: '2011-09-15'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 64690
+    imdb: tt0780504
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,92 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.drama
+    - genre.thriller
+    - genre.crime
+    runtime_min: 100
+    original_language: en
+    countries:
+    - US
+    production_status: completed
+    synopsis_short: Великолепный водитель – при свете дня он выполняет каскадерские
+      трюки на съёмочных площадках Голливуда, а по ночам ведет рискованную игру. Но
+      один опасный контракт – и за его жизнь назначена награда. Теперь, чтобы остаться
+      в живых и спасти свою очаровательную соседку, он должен делать то, что умеет
+      лучше всего – виртуозно уходить от погони.
+    directors:
+    - name: Николас Виндинг Рефн
+      external_ids:
+        tmdb: 21183
+    writers:
+    - name: Хуссейн Амини
+      external_ids:
+        tmdb: 56960
+    main_cast:
+    - name: Райан Гослинг
+      character: Driver
+      external_ids:
+        tmdb: 30614
+    - name: Кэри Маллиган
+      character: Irene
+      external_ids:
+        tmdb: 36662
+    - name: Брайан Крэнстон
+      character: Shannon
+      external_ids:
+        tmdb: 17419
+    - name: Альберт Брукс
+      character: Bernie Rose
+      external_ids:
+        tmdb: 13
+    - name: Оскар Айзек
+      character: Standard
+      external_ids:
+        tmdb: 25072
+    - name: Кристина Хендрикс
+      character: Blanche
+      external_ids:
+        tmdb: 110014
+    - name: Рон Перлман
+      character: Nino
+      external_ids:
+        tmdb: 2372
+    - name: Kaden Leos
+      character: Benicio
+      external_ids:
+        tmdb: 972270
+    - name: Джефф Вульф
+      character: Tan Suit
+      external_ids:
+        tmdb: 51303
+    - name: James Biberi
+      character: Cook
+      external_ids:
+        tmdb: 37156
+    - name: Расс Тэмблин
+      character: Doc
+      external_ids:
+        tmdb: 6725
+    - name: Джо Букаро III
+      character: Chauffeur
+      external_ids:
+        tmdb: 51302
+    assets:
+      poster:
+        provider: tmdb
+        path: /4T9D8MWhZ2CdE0hK5LfOjwYA9XZ.jpg
+      backdrop:
+        provider: tmdb
+        path: /hoyAALgfmjMEK7O1wZ4r8wT91RP.jpg
+    external_metrics:
+      tmdb:
+        score: 7.584
+        votes: 14053
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 64690
+      fetched_at: '2026-10-01T11:50:59.540920Z'

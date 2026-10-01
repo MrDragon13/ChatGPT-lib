@@ -6,6 +6,12 @@ identity:
   title_original: Prisoners
   title_ru: Пленницы
   year: 2013
+  release_date: '2013-09-19'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 146233
+    imdb: tt1392214
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,95 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.drama
+    - genre.thriller
+    - genre.crime
+    runtime_min: 153
+    original_language: en
+    countries:
+    - US
+    production_status: completed
+    synopsis_short: 'Келлер Довер сталкивается с самым большим кошмаром каждого родителя:
+      его 6-летняя дочь пропала вместе с подругой. Время бежит, девочки не возвращаются,
+      и паника достигает своего предела. Единственная зацепка — обветшалый фургончик,
+      который был припаркован на их улице, когда дети играли во дворе. Детектив Локки,
+      возглавляющий расследование, арестовывает его водителя, Алекса Джонса, но вскоре
+      полиция вынуждена его отпустить из-за нехватки улик. Полиция медлит, а обезумевший
+      от горя отец берет дело в свои руки. Но как далеко готов зайти Келлер в поисках
+      девочек?'
+    directors:
+    - name: Дени Вильнёв
+      external_ids:
+        tmdb: 137427
+    writers:
+    - name: Aaron Guzikowski
+      external_ids:
+        tmdb: 935990
+    main_cast:
+    - name: Хью Джекман
+      character: Keller Dover
+      external_ids:
+        tmdb: 6968
+    - name: Джейк Джилленхол
+      character: Detective Loki
+      external_ids:
+        tmdb: 131
+    - name: Виола Дэвис
+      character: Nancy Birch
+      external_ids:
+        tmdb: 19492
+    - name: Мария Белло
+      character: Grace Dover
+      external_ids:
+        tmdb: 49
+    - name: Терренс Ховард
+      character: Franklin Birch
+      external_ids:
+        tmdb: 18288
+    - name: Мелисса Лео
+      character: Holly Jones
+      external_ids:
+        tmdb: 6832
+    - name: Пол Дано
+      character: Alex Jones
+      external_ids:
+        tmdb: 17142
+    - name: Дилан Миннетт
+      character: Ralph Dover
+      external_ids:
+        tmdb: 112476
+    - name: Зои Соул
+      character: Eliza Birch
+      external_ids:
+        tmdb: 587036
+    - name: Erin Gerasimovich
+      character: Anna Dover
+      external_ids:
+        tmdb: 1224251
+    - name: Kyla-Drew
+      character: Joy Birch
+      external_ids:
+        tmdb: 1371108
+    - name: Уэйн Дюваль
+      character: Captain Richard O'Malley
+      external_ids:
+        tmdb: 1470
+    assets:
+      poster:
+        provider: tmdb
+        path: /iBuJWQEJLOhsN40GiXM6lJyoklW.jpg
+      backdrop:
+        provider: tmdb
+        path: /3RFmTz5h2UuFWEV4oH00XICBR9y.jpg
+    external_metrics:
+      tmdb:
+        score: 8.106
+        votes: 13555
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 146233
+      fetched_at: '2026-10-01T11:51:03.959612Z'

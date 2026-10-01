@@ -6,6 +6,12 @@ identity:
   title_original: Sicario
   title_ru: Убийца
   year: 2015
+  release_date: '2015-09-17'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 273481
+    imdb: tt3397884
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,98 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.action
+    - genre.crime
+    - genre.thriller
+    runtime_min: 121
+    original_language: en
+    countries:
+    - US
+    production_status: completed
+    synopsis_short: "Безлюдные пустоши, по которым проходит граница между Мексикой\
+      \ и США, — это территория без правил, поле битвы между мексиканскими наркокартелями\
+      \ и американскими спецслужбами. Агент ФБР Кейт Мэйсер, которая работает в приграничных\
+      \ районах, старается придерживаться собственных идеалов, хотя и начинает ощущать,\
+      \ что исход войны с наркотрафиком складывается не в пользу служителей закона.\r\
+      \ Однажды ей предоставляется шанс принять участие в работе элитного подразделения\
+      \ по борьбе с наркотиками, возглавляемого агентом Мэттом Грейвером. Самый загадочный\
+      \ участник команды — местный консультант, человек без имени, привычек, и, кажется,\
+      \ без прошлого. Его истинное лицо откроется только в ходе рискованной операции,\
+      \ во время которой Кейт будет вынуждена поступиться собственными принципами,\
+      \ чтобы остаться в живых."
+    directors:
+    - name: Дени Вильнёв
+      external_ids:
+        tmdb: 137427
+    writers:
+    - name: Тейлор Шеридан
+      external_ids:
+        tmdb: 1215399
+    main_cast:
+    - name: Эмили Блант
+      character: Kate Macer
+      external_ids:
+        tmdb: 5081
+    - name: Бенисио дель Торо
+      character: Alejandro Gillick
+      external_ids:
+        tmdb: 1121
+    - name: Джош Бролин
+      character: Matt Graver
+      external_ids:
+        tmdb: 16851
+    - name: Victor Garber
+      character: Dave Jennings
+      external_ids:
+        tmdb: 8536
+    - name: Джон Бернтал
+      character: Ted
+      external_ids:
+        tmdb: 19498
+    - name: Дэниел Калуя
+      character: Reggie Wayne
+      external_ids:
+        tmdb: 206919
+    - name: Джеффри Донован
+      character: Steve Forsing
+      external_ids:
+        tmdb: 52886
+    - name: Рауль Трухильо
+      character: Rafael
+      external_ids:
+        tmdb: 17688
+    - name: Хулио Сесар Седильо
+      character: Fausto Alarcon
+      external_ids:
+        tmdb: 36634
+    - name: Хенк Роджерсон
+      character: Phil Coopers
+      external_ids:
+        tmdb: 167145
+    - name: Bernardo P. Saracino
+      character: Manuel Diaz
+      external_ids:
+        tmdb: 1529184
+    - name: Максимилиано Эрнандес
+      character: Silvio
+      external_ids:
+        tmdb: 1018947
+    assets:
+      poster:
+        provider: tmdb
+        path: /8uV8nnOejsd6GSi2KfeFCM5u05F.jpg
+      backdrop:
+        provider: tmdb
+        path: /fKPgObonYgPgCdu88yjV7Hpn7Dp.jpg
+    external_metrics:
+      tmdb:
+        score: 7.43
+        votes: 9917
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 273481
+      fetched_at: '2026-10-01T11:51:04.914321Z'

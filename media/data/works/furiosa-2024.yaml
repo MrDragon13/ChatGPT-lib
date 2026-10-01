@@ -6,6 +6,12 @@ identity:
   title_original: 'Furiosa: A Mad Max Saga'
   title_ru: 'Фуриоса: Хроники Безумного Макса'
   year: 2024
+  release_date: '2024-05-22'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 786892
+    imdb: tt12037194
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,94 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.action
+    - genre.science_fiction
+    - genre.adventure
+    runtime_min: 149
+    original_language: en
+    countries:
+    - AU
+    - US
+    production_status: completed
+    synopsis_short: 'Постапокалиптический боевик австралийского режиссёра Джорджа
+      Миллера, приквел фильма «Безумный Макс: Дорога ярости».  Фильм посвящён истории
+      главной героини картины «Безумный Макс: Дорога ярости» — Фуриосы'
+    directors:
+    - name: Джордж Миллер
+      external_ids:
+        tmdb: 20629
+    writers:
+    - name: Джордж Миллер
+      external_ids:
+        tmdb: 20629
+    - name: Нико Латурис
+      external_ids:
+        tmdb: 1027146
+    main_cast:
+    - name: Аня Тейлор-Джой
+      character: Furiosa
+      external_ids:
+        tmdb: 1397778
+    - name: Крис Хемсворт
+      character: Dementus
+      external_ids:
+        tmdb: 74568
+    - name: Том Бёрк
+      character: Praetorian Jack
+      external_ids:
+        tmdb: 52891
+    - name: Алила Браун
+      character: Young Furiosa
+      external_ids:
+        tmdb: 2431565
+    - name: Джордж Шевцов
+      character: The History Man
+      external_ids:
+        tmdb: 148899
+    - name: Лейчи Халм
+      character: Immortan Joe / Rizzdale Pell
+      external_ids:
+        tmdb: 75122
+    - name: Джон Хауард
+      character: The People Eater
+      external_ids:
+        tmdb: 102603
+    - name: Энгус Сэмпсон
+      character: Organic Mechanic
+      external_ids:
+        tmdb: 59117
+    - name: Чарли Фрейзер
+      character: Mary Jabassa
+      external_ids:
+        tmdb: 4441956
+    - name: Эльза Патаки
+      character: Vuvalini General / Mr Norton
+      external_ids:
+        tmdb: 73269
+    - name: Натан Джонс
+      character: Rictus Erectus
+      external_ids:
+        tmdb: 24898
+    - name: Джош Хэлман
+      character: Scrotus
+      external_ids:
+        tmdb: 1056053
+    assets:
+      poster:
+        provider: tmdb
+        path: /23oJFM6z4sGPgyIfPyJjcIGMsCz.jpg
+      backdrop:
+        provider: tmdb
+        path: /raph7qjAGTMXaIjVxt6ZDSXRzUr.jpg
+    external_metrics:
+      tmdb:
+        score: 7.441
+        votes: 5230
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 786892
+      fetched_at: '2026-10-01T11:50:59.990164Z'

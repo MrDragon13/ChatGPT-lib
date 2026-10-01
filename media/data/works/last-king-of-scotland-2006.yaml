@@ -6,6 +6,12 @@ identity:
   title_original: The Last King of Scotland
   title_ru: Последний король Шотландии
   year: 2006
+  release_date: '2006-09-27'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 1523
+    imdb: tt0455590
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,93 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.drama
+    runtime_min: 123
+    original_language: en
+    countries:
+    - US
+    - GB
+    production_status: completed
+    synopsis_short: Власть президента Уганды Иди Амина и его смелые решения сперва
+      очаровали шотландского медика Гарригана, ставшего личным врачом диктатора. Но
+      жестокий режим и кровавые преступления президента изменили отношение Гарригана
+      к своему кумиру и он, всеми силами, пытается повлиять на проиcходящее.
+    directors:
+    - name: Кевин Макдональд
+      external_ids:
+        tmdb: 17350
+    writers:
+    - name: Jeremy Brock
+      external_ids:
+        tmdb: 35005
+    - name: Питер Морган
+      external_ids:
+        tmdb: 15730
+    main_cast:
+    - name: Форест Уитакер
+      character: Idi Amin
+      external_ids:
+        tmdb: 2178
+    - name: Джеймс МакЭвой
+      character: Dr. Nicholas Garrigan
+      external_ids:
+        tmdb: 5530
+    - name: Саймон Макберни
+      character: British Diplomat
+      external_ids:
+        tmdb: 16358
+    - name: Джиллиан Андерсон
+      character: Sarah Merrit
+      external_ids:
+        tmdb: 12214
+    - name: Керри Вашингтон
+      character: Kay Amin
+      external_ids:
+        tmdb: 11703
+    - name: Дэвид Ойелоуо
+      character: Dr. Thomas Junju
+      external_ids:
+        tmdb: 35013
+    - name: Abby Mukiibi Nkaaga
+      character: Masanga
+      external_ids:
+        tmdb: 35014
+    - name: Adam Kotz
+      character: Dr. David Merrit
+      external_ids:
+        tmdb: 35015
+    - name: Barbara Rafferty
+      character: Mrs. Garrigan
+      external_ids:
+        tmdb: 35018
+    - name: David Ashton
+      character: Dr. Garrigan - Senior
+      external_ids:
+        tmdb: 35017
+    - name: Sarah Nagayi
+      character: Tolu
+      external_ids:
+        tmdb: 1033153
+    - name: Stephen Rwangyezi
+      character: Jonah Wasswa
+      external_ids:
+        tmdb: 962605
+    assets:
+      poster:
+        provider: tmdb
+        path: /2mcx9zL0MOsg5GsbcdmGz4IaOmC.jpg
+      backdrop:
+        provider: tmdb
+        path: /tO40eTUxPoKrmMKBDWViA9pVYg3.jpg
+    external_metrics:
+      tmdb:
+        score: 7.408
+        votes: 2464
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 1523
+      fetched_at: '2026-10-01T11:51:02.092094Z'

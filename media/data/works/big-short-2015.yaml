@@ -6,6 +6,12 @@ identity:
   title_original: The Big Short
   title_ru: Игра на понижение
   year: 2015
+  release_date: '2015-12-11'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 318846
+    imdb: tt1596363
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,96 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.comedy
+    - genre.drama
+    runtime_min: 130
+    original_language: en
+    countries:
+    - US
+    production_status: completed
+    synopsis_short: Америка находится на грани экономического кризиса, который накроет
+      все передовые страны мира. Однако главные финансисты страны пока не замечают
+      надвигающейся опасности и уверены, что все абсолютно нормально. Существует всего
+      несколько человек, которые убеждены в том, что совсем скоро наступит финансовый
+      крах. Они сумели вовремя сориентироваться и сыграть на приближающемся кризисе.
+      Объединив свои усилия, эти люди смогли воспользоваться своим шансом и заработали
+      миллионы долларов...
+    directors:
+    - name: Адам Маккей
+      external_ids:
+        tmdb: 55710
+    writers:
+    - name: Адам Маккей
+      external_ids:
+        tmdb: 55710
+    - name: Charles Randolph
+      external_ids:
+        tmdb: 1474332
+    main_cast:
+    - name: Стив Карелл
+      character: Mark Baum
+      external_ids:
+        tmdb: 4495
+    - name: Кристиан Бейл
+      character: Michael Burry
+      external_ids:
+        tmdb: 3894
+    - name: Райан Гослинг
+      character: Jared Vennett
+      external_ids:
+        tmdb: 30614
+    - name: Брэд Питт
+      character: Ben Rickert
+      external_ids:
+        tmdb: 287
+    - name: Мариса Томей
+      character: Cynthia Baum
+      external_ids:
+        tmdb: 3141
+    - name: Мелисса Лео
+      character: Georgia Hale
+      external_ids:
+        tmdb: 6832
+    - name: Хэмиш Линклейтер
+      character: Porter Collins
+      external_ids:
+        tmdb: 184581
+    - name: Джон Магаро
+      character: Charlie Geller
+      external_ids:
+        tmdb: 37154
+    - name: Рейф Сполл
+      character: Danny Moses
+      external_ids:
+        tmdb: 28847
+    - name: Джереми Стронг
+      character: Vinny Daniel
+      external_ids:
+        tmdb: 239271
+    - name: Финн Уиттрок
+      character: Jamie Shipley
+      external_ids:
+        tmdb: 168877
+    - name: Трэйси Леттс
+      character: Lawrence Fields
+      external_ids:
+        tmdb: 72638
+    assets:
+      poster:
+        provider: tmdb
+        path: /i46ouFO2WBqJ1xIoTQgrD8Criol.jpg
+      backdrop:
+        provider: tmdb
+        path: /iof28QKa6bKFYCXSexuITxdKBvi.jpg
+    external_metrics:
+      tmdb:
+        score: 7.374
+        votes: 10123
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 318846
+      fetched_at: '2026-10-01T11:50:58.055834Z'

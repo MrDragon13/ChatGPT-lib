@@ -6,6 +6,12 @@ identity:
   title_original: Ronin
   title_ru: Ронин
   year: 1998
+  release_date: '1998-09-25'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 8195
+    imdb: tt0122690
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,98 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.action
+    - genre.thriller
+    - genre.crime
+    runtime_min: 122
+    original_language: en
+    countries:
+    - GB
+    - US
+    production_status: completed
+    synopsis_short: 'Хотя холодная война давно закончена, тайные наемники, чьи навыки
+      в слежке, шпионаже и силовых схватках буквально легендарны, остаются востребованными
+      при новом мировом порядке и всегда находят высокооплачиваемую работу. Некий
+      таинственный клиент собирает в Париже команду таких «платных оперативников»,
+      известных как «Ронины», для похищения сверхсекретного портфеля.Вскоре выясняется,
+      что это, на первый взгляд простое, задание почти невыполнимо: та же цена обещана
+      за тот же портфель еще нескольким нелегальным группам...'
+    directors:
+    - name: John Frankenheimer
+      external_ids:
+        tmdb: 13776
+    writers:
+    - name: Дэвид Мэмет
+      external_ids:
+        tmdb: 1255
+    - name: Дж. Д. Зайк
+      external_ids:
+        tmdb: 108846
+    main_cast:
+    - name: Роберт Де Ниро
+      character: Sam
+      external_ids:
+        tmdb: 380
+    - name: Жан Рено
+      character: Vincent
+      external_ids:
+        tmdb: 1003
+    - name: Наташа Макэлхоун
+      character: Deirdre
+      external_ids:
+        tmdb: 11317
+    - name: Стеллан Скарсгард
+      character: Gregor
+      external_ids:
+        tmdb: 1640
+    - name: Скипп Саддат
+      character: Larry
+      external_ids:
+        tmdb: 33658
+    - name: Джонатан Прайс
+      character: Seamus O'Rourke
+      external_ids:
+        tmdb: 378
+    - name: Шон Бин
+      character: Spence
+      external_ids:
+        tmdb: 48
+    - name: Майкл Лонсдейл
+      character: Jean-Pierre
+      external_ids:
+        tmdb: 2369
+    - name: Féodor Atkine
+      character: Mikhi
+      external_ids:
+        tmdb: 20285
+    - name: Katarina Witt
+      character: Natacha Kirilova
+      external_ids:
+        tmdb: 53955
+    - name: Рон Перкинс
+      character: Man with the Newspaper
+      external_ids:
+        tmdb: 125024
+    - name: Дэниел Бретон
+      character: Sergi's Accomplice
+      external_ids:
+        tmdb: 185257
+    assets:
+      poster:
+        provider: tmdb
+        path: /nuIQ5XTryQS0uhI1Eq17EOi2jgz.jpg
+      backdrop:
+        provider: tmdb
+        path: /frqahc6v8wt0p2Zo3XKBu2dg73z.jpg
+    external_metrics:
+      tmdb:
+        score: 6.97
+        votes: 2804
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 8195
+      fetched_at: '2026-10-01T11:51:04.205584Z'

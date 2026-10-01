@@ -6,6 +6,12 @@ identity:
   title_original: Three Billboards Outside Ebbing, Missouri
   title_ru: Три билборда на границе Эббинга, Миссури
   year: 2017
+  release_date: '2017-12-01'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 359940
+    imdb: tt5027774
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,94 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.crime
+    - genre.drama
+    runtime_min: 115
+    original_language: en
+    countries:
+    - GB
+    - US
+    production_status: completed
+    synopsis_short: 'Прошло семь месяцев, а виновный в убийстве её дочери так и не
+      найден. Тогда Милдред Хейз решает пойти на смелый шаг: она расписывает три рекламных
+      щита на въезде в город, разместив на них провокационное послание, адресованное
+      Биллу Уиллоуби, уважаемому начальнику полиции города. Когда в дело вмешивается
+      его заместитель, офицер Джейсон Диксон — незрелый «маменькин сынок» со склонностью
+      к насилию, — конфликт между Милдред и правоохранительными органами Эббинга только
+      обостряется.'
+    directors:
+    - name: Мартин Макдонах
+      external_ids:
+        tmdb: 54472
+    writers:
+    - name: Мартин Макдонах
+      external_ids:
+        tmdb: 54472
+    main_cast:
+    - name: Фрэнсис Макдорманд
+      character: Mildred
+      external_ids:
+        tmdb: 3910
+    - name: Вуди Харрельсон
+      character: Willoughby
+      external_ids:
+        tmdb: 57755
+    - name: Сэм Рокуэлл
+      character: Dixon
+      external_ids:
+        tmdb: 6807
+    - name: Эбби Корниш
+      character: Anne
+      external_ids:
+        tmdb: 37260
+    - name: Лукас Хеджес
+      character: Robbie
+      external_ids:
+        tmdb: 1105079
+    - name: Желько Иванек
+      character: Desk Sergeant
+      external_ids:
+        tmdb: 6752
+    - name: Калеб Лэндри Джонс
+      character: Red Welby
+      external_ids:
+        tmdb: 572541
+    - name: Кларк Питерс
+      character: Abercrombie
+      external_ids:
+        tmdb: 61011
+    - name: Самара Уивинг
+      character: Penelope
+      external_ids:
+        tmdb: 1372369
+    - name: Джон Хоукс
+      character: Charlie
+      external_ids:
+        tmdb: 16861
+    - name: Питер Динклэйдж
+      character: James
+      external_ids:
+        tmdb: 22970
+    - name: Керри Кондон
+      character: Pamela
+      external_ids:
+        tmdb: 62105
+    assets:
+      poster:
+        provider: tmdb
+        path: /xnyRGjhSIbM2ZVaolkhmPVNncL2.jpg
+      backdrop:
+        provider: tmdb
+        path: /oQHF0Y4gCw6VdPmapjsbZoxY2ht.jpg
+    external_metrics:
+      tmdb:
+        score: 8.052
+        votes: 11221
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 359940
+      fetched_at: '2026-10-01T11:51:06.412885Z'

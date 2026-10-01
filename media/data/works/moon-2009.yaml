@@ -6,6 +6,12 @@ identity:
   title_original: Moon
   title_ru: Луна 2112
   year: 2009
+  release_date: '2009-06-12'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 17431
+    imdb: tt1182345
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,87 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.science_fiction
+    - genre.drama
+    runtime_min: 97
+    original_language: en
+    countries:
+    - GB
+    - US
+    production_status: completed
+    synopsis_short: Сэм Белл работает по контракту на поверхности Луны. Он обслуживает
+      два харвестера, добывающие гелий-3 - сырье будущего, энергетическое счастье
+      человечества. Он один на этой унылой планете, где вся цветовая гамма - оттенки
+      серого. Срок его контракта - три года. За это время на Земле родилась и подросла
+      дочь. Жена ждет и гордится. Однако так ли все на самом деле? Бродя по белым
+      лабиринтам лунной станции, Сэм начинает подозревать, что его собственный робот
+      утаивает от него ключевую часть правды, что его контракт не окончится так просто,
+      и что, в конце концов, он - не единственный Сэм Белл в этом мире.
+    directors:
+    - name: Данкан Джонс
+      external_ids:
+        tmdb: 81850
+    writers:
+    - name: Nathan Parker
+      external_ids:
+        tmdb: 89287
+    main_cast:
+    - name: Сэм Рокуэлл
+      character: Sam Bell
+      external_ids:
+        tmdb: 6807
+    - name: Кевин Спейси
+      character: GERTY (voice)
+      external_ids:
+        tmdb: 1979
+    - name: Доминик МакЭллигот
+      character: Tess Bell
+      external_ids:
+        tmdb: 115146
+    - name: Rosie Shaw
+      character: Little Eve
+      external_ids:
+        tmdb: 115147
+    - name: Adrienne Shaw
+      character: Nanny
+      external_ids:
+        tmdb: 115149
+    - name: Кая Скоделарио
+      character: Eve
+      external_ids:
+        tmdb: 115150
+    - name: Бенедикт Вонг
+      character: Thompson
+      external_ids:
+        tmdb: 30082
+    - name: Мэтт Берри
+      character: Overmeyers
+      external_ids:
+        tmdb: 1488236
+    - name: Malcolm Stewart
+      character: Technician
+      external_ids:
+        tmdb: 27110
+    - name: Робин Чок
+      character: Sam Bell Clone
+      external_ids:
+        tmdb: 115151
+    assets:
+      poster:
+        provider: tmdb
+        path: /c8hErBPraXIyzDn8JLe9I9asZai.jpg
+      backdrop:
+        provider: tmdb
+        path: /mvUAo9ACgmLpS4Ofc2IwD4n7WCt.jpg
+    external_metrics:
+      tmdb:
+        score: 7.563
+        votes: 6537
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 17431
+      fetched_at: '2026-10-01T11:51:03.784704Z'

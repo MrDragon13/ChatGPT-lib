@@ -6,6 +6,12 @@ identity:
   title_original: I, Robot
   title_ru: Я, робот
   year: 2004
+  release_date: '2004-07-15'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 2048
+    imdb: tt0343818
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,98 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.action
+    - genre.science_fiction
+    runtime_min: 115
+    original_language: en
+    countries:
+    - US
+    - DE
+    - CA
+    production_status: completed
+    synopsis_short: Действие фильма происходит в 2035 г., где роботы являются обычными
+      помощниками человека. Главный герой — полицейский, «не переваривающий» роботов,
+      расследует дело об убийстве, в которое оказывается вовлечен робот. Речь идет
+      о возможном нарушении «Закона о Роботах» (робот никогда не поднимет руки на
+      человека), что, в принципе, невозможно. Но если машины могут нарушать этот закон,
+      то уже ничто не остановит их от захвата контроля над людьми, тем более, что
+      человечество уже давно стало полностью зависимо от роботов…
+    directors:
+    - name: Алекс Пройас
+      external_ids:
+        tmdb: 21085
+    writers:
+    - name: Джеф Винтар
+      external_ids:
+        tmdb: 21086
+    - name: Акива Голдсман
+      external_ids:
+        tmdb: 5575
+    main_cast:
+    - name: Уилл Смит
+      character: Del Spooner
+      external_ids:
+        tmdb: 2888
+    - name: Бриджет Мойнэхэн
+      character: Susan Calvin
+      external_ids:
+        tmdb: 18354
+    - name: Алан Тьюдик
+      character: Sonny (voice)
+      external_ids:
+        tmdb: 21088
+    - name: Джеймс Кромвелл
+      character: Dr. Alfred Lanning
+      external_ids:
+        tmdb: 2505
+    - name: Брюс Гринвуд
+      character: Lawrence Robertson
+      external_ids:
+        tmdb: 21089
+    - name: Adrian Ricard
+      character: Granny
+      external_ids:
+        tmdb: 21090
+    - name: Чи МакБрайд
+      character: Lt. John Bergin
+      external_ids:
+        tmdb: 8687
+    - name: Jerry Wasserman
+      character: Baldez
+      external_ids:
+        tmdb: 21091
+    - name: Fiona Hogan
+      character: V.I.K.I. (voice)
+      external_ids:
+        tmdb: 21092
+    - name: Питер Шинкода
+      character: Chin
+      external_ids:
+        tmdb: 172994
+    - name: Терри Чэнь
+      character: Chin
+      external_ids:
+        tmdb: 11677
+    - name: David Haysom
+      character: NS4 & NS5 Robots (voice)
+      external_ids:
+        tmdb: 189001
+    assets:
+      poster:
+        provider: tmdb
+        path: /stffMPJj4cke1MrAkek1CFhjKuR.jpg
+      backdrop:
+        provider: tmdb
+        path: /jpFcZH2eyh6gcoxCa637TrGe4bT.jpg
+    external_metrics:
+      tmdb:
+        score: 6.973
+        votes: 13043
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 2048
+      fetched_at: '2026-10-01T11:51:01.640999Z'

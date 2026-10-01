@@ -6,6 +6,12 @@ identity:
   title_original: Gran Torino
   title_ru: Гран Торино
   year: 2008
+  release_date: '2008-12-12'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 13223
+    imdb: tt1205489
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,92 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.drama
+    runtime_min: 116
+    original_language: en
+    countries:
+    - US
+    - DE
+    production_status: completed
+    synopsis_short: Вышедший на пенсию автомеханик Уолт Ковальски проводит дни, починяя
+      что-то по дому, попивая пиво и раз в месяц заходя к парикмахеру. И хотя последним
+      желанием его недавно почившей жены было совершение им исповеди, Уолту — ожесточившемуся
+      ветерану Корейской войны, всегда держащему свою винтовку наготове, — признаваться
+      в общем-то не в чем. Да и нет того, кому он доверял бы в той полной мере, в
+      какой доверяет своей собаке Дейзи.
+    directors:
+    - name: Клинт Иствуд
+      external_ids:
+        tmdb: 190
+    writers:
+    - name: Nick Schenk
+      external_ids:
+        tmdb: 74315
+    main_cast:
+    - name: Клинт Иствуд
+      character: Walt Kowalski
+      external_ids:
+        tmdb: 190
+    - name: Christopher Carley
+      character: Father Janovich
+      external_ids:
+        tmdb: 74308
+    - name: Bee Vang
+      character: Thao
+      external_ids:
+        tmdb: 74309
+    - name: Эни Хи
+      character: Sue
+      external_ids:
+        tmdb: 74312
+    - name: Brian Haley
+      character: Mitch Kowalski
+      external_ids:
+        tmdb: 10138
+    - name: Geraldine Hughes
+      character: Karen Kowalski
+      external_ids:
+        tmdb: 16502
+    - name: Dreama Walker
+      character: Ashley Kowalski
+      external_ids:
+        tmdb: 74303
+    - name: Брайан Хоу
+      character: Steve Kowalski
+      external_ids:
+        tmdb: 1990
+    - name: Джон Кэрролл Линч
+      character: Barber Martin
+      external_ids:
+        tmdb: 3911
+    - name: Уильям Хилл
+      character: Tim Kennedy
+      external_ids:
+        tmdb: 1232496
+    - name: Brooke Chia Thao
+      character: Vu
+      external_ids:
+        tmdb: 1586430
+    - name: Chee Thao
+      character: Grandma
+      external_ids:
+        tmdb: 1445218
+    assets:
+      poster:
+        provider: tmdb
+        path: /k4SlXMkoosIiWC8toXywDqpVOSW.jpg
+      backdrop:
+        provider: tmdb
+        path: /sP4vNXFhPviUJevrD7X8fJV1OD1.jpg
+    external_metrics:
+      tmdb:
+        score: 7.988
+        votes: 11849
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 13223
+      fetched_at: '2026-10-01T11:51:00.290167Z'

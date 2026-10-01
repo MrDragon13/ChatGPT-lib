@@ -6,6 +6,12 @@ identity:
   title_original: The Accountant
   title_ru: Расплата
   year: 2016
+  release_date: '2016-10-13'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 302946
+    imdb: tt2140479
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,94 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.crime
+    - genre.thriller
+    - genre.drama
+    runtime_min: 128
+    original_language: en
+    countries:
+    - US
+    production_status: completed
+    synopsis_short: Лента расскажет историю математического гения Кристиана Вульфа,
+      который подрабатывает аудитором для самых опасных преступных организаций. Когда
+      ему «на хвост» садится отдел по борьбе с преступностью Министерства финансов
+      во главе с Рэем Кингом Кристиан решает найти себе законопослушного клиента и
+      проводит аудит в компании по производству новейшей робототехники, где сотрудница
+      финансового отдела обнаружила «нестыковочку» в миллионы долларов. Но стоит Кристиану
+      взяться за счета и выйти на след, как в деле начинают появляться жертвы.
+    directors:
+    - name: Гэвин О'Коннор
+      external_ids:
+        tmdb: 77003
+    writers:
+    - name: Билл Дюбюк
+      external_ids:
+        tmdb: 1281388
+    main_cast:
+    - name: Бен Аффлек
+      character: Christian Wolff
+      external_ids:
+        tmdb: 880
+    - name: Анна Кендрик
+      character: Dana Cummings
+      external_ids:
+        tmdb: 84223
+    - name: Джей Кей Симмонс
+      character: Ray King
+      external_ids:
+        tmdb: 18999
+    - name: Джон Бернтал
+      character: Brax
+      external_ids:
+        tmdb: 19498
+    - name: Джеффри Тэмбор
+      character: Francis Silverberg
+      external_ids:
+        tmdb: 4175
+    - name: Синтия Аддай-Робинсон
+      character: Marybeth Medina
+      external_ids:
+        tmdb: 182272
+    - name: Джон Литгоу
+      character: Lamar Blackburn
+      external_ids:
+        tmdb: 12074
+    - name: Джин Смарт
+      character: Rita Blackburn
+      external_ids:
+        tmdb: 5376
+    - name: Энди Умбергер
+      character: Ed Chilton
+      external_ids:
+        tmdb: 142204
+    - name: Элисон Райт
+      character: Justine
+      external_ids:
+        tmdb: 1257565
+    - name: Джейсон Дэвис
+      character: Neurologist
+      external_ids:
+        tmdb: 58733
+    - name: Роберт С. Тревейлер
+      character: Young Chris' Father
+      external_ids:
+        tmdb: 52490
+    assets:
+      poster:
+        provider: tmdb
+        path: /xsuqYQBt3CGYMhOxtJkkRuNY60B.jpg
+      backdrop:
+        provider: tmdb
+        path: /dTGECn8He16tZeBHQTLf6rVydE8.jpg
+    external_metrics:
+      tmdb:
+        score: 7.141
+        votes: 7617
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 302946
+      fetched_at: '2026-10-01T11:50:57.838893Z'

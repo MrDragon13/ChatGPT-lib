@@ -6,6 +6,12 @@ identity:
   title_original: Seven Psychopaths
   title_ru: Семь психопатов
   year: 2012
+  release_date: '2012-10-12'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 86838
+    imdb: tt1931533
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,92 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.comedy
+    - genre.crime
+    runtime_min: 110
+    original_language: en
+    countries:
+    - GB
+    - US
+    production_status: completed
+    synopsis_short: Непутевый писатель потерял вдохновение и никак не может справиться
+      с новым сценарием. Волей случая он оказывается втянутым в похищение собаки,
+      затеянное его эксцентричными дружками. Выясняется, что украденное животное —
+      любимый пёс главного местного гангстера, которому ничего не стоит в два счета
+      вычислить и уничтожить оболтусов.
+    directors:
+    - name: Мартин Макдонах
+      external_ids:
+        tmdb: 54472
+    writers:
+    - name: Мартин Макдонах
+      external_ids:
+        tmdb: 54472
+    main_cast:
+    - name: Колин Фаррелл
+      character: Marty Faranan
+      external_ids:
+        tmdb: 72466
+    - name: Сэм Рокуэлл
+      character: Billy Bickle
+      external_ids:
+        tmdb: 6807
+    - name: Вуди Харрельсон
+      character: Charlie Costello
+      external_ids:
+        tmdb: 57755
+    - name: Кристофер Уокен
+      character: Hans Kieslowski
+      external_ids:
+        tmdb: 4690
+    - name: Ольга Куриленко
+      character: Angela
+      external_ids:
+        tmdb: 18182
+    - name: Том Уэйтс
+      character: Zachariah Rigby
+      external_ids:
+        tmdb: 2887
+    - name: Эбби Корниш
+      character: Kaya
+      external_ids:
+        tmdb: 37260
+    - name: Майкл Стулбарг
+      character: Tommy
+      external_ids:
+        tmdb: 72873
+    - name: Кевин Корригэн
+      character: Dennis
+      external_ids:
+        tmdb: 18472
+    - name: Желько Иванек
+      character: Paolo
+      external_ids:
+        tmdb: 6752
+    - name: Майкл Питт
+      character: Larry
+      external_ids:
+        tmdb: 10692
+    - name: Linda Bright Clay
+      character: Myra Kieslowski
+      external_ids:
+        tmdb: 1170658
+    assets:
+      poster:
+        provider: tmdb
+        path: /Vs0ZLKWIJChGbNSaNowChablG9.jpg
+      backdrop:
+        provider: tmdb
+        path: /6KrodMTWn9hNZBhrwOYd8snqtVp.jpg
+    external_metrics:
+      tmdb:
+        score: 6.818
+        votes: 4432
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 86838
+      fetched_at: '2026-10-01T11:51:04.294936Z'
