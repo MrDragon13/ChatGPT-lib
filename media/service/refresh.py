@@ -86,7 +86,13 @@ def _resolve_candidate(
     return candidates[0], None
 
 
-def _identity_compatible(record: WorkRecord, candidate: ProviderCandidate, metadata: CanonicalMetadata) -> bool:
+def _identity_compatible(
+    record: WorkRecord,
+    candidate: ProviderCandidate,
+    metadata: CanonicalMetadata,
+    *,
+    allow_title_mismatch: bool = False,
+) -> bool:
     canonical = record.data.get("identity") or {}
     provider_identity = metadata.identity
     if provider_identity.get("format") != "movie":
@@ -102,7 +108,7 @@ def _identity_compatible(record: WorkRecord, candidate: ProviderCandidate, metad
         normalize_title(str(provider_identity.get("title_original") or "")),
         normalize_title(str(provider_identity.get("title_ru") or "")),
     }
-    if canonical_title and canonical_title not in provider_titles:
+    if not allow_title_mismatch and canonical_title and canonical_title not in provider_titles:
         return False
 
     provider_ids = provider_identity.get("external_ids") or {}
@@ -192,7 +198,13 @@ def plan_refresh_metadata(
             continue
         assert candidate is not None
         metadata = provider.fetch_work(candidate.media_type, candidate.provider_id)
-        if not _identity_compatible(record, candidate, metadata):
+        override_is_resolution = record.id in command.tmdb_overrides and _canonical_tmdb(record) is None
+        if not _identity_compatible(
+            record,
+            candidate,
+            metadata,
+            allow_title_mismatch=override_is_resolution,
+        ):
             blockers.append(_blocker(record.id, "identity_conflict"))
             continue
         resolved.append((record, metadata))
