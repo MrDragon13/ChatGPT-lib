@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   check:
@@ -33,9 +33,11 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: '22.22.2'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
       - name: Install web dependencies
         working-directory: web
-        run: npm install
+        run: npm ci
       - name: Run web tests
         working-directory: web
         run: npm run test:run
@@ -45,15 +47,3 @@ jobs:
       - name: Build web
         working-directory: web
         run: npm run build
-      - name: Commit generated lockfile once
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        shell: bash
-        run: |
-          if git diff --quiet -- web/package-lock.json && git ls-files --error-unmatch web/package-lock.json >/dev/null 2>&1; then
-            exit 0
-          fi
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add web/package-lock.json
-          git commit -m 'build: lock web dependencies'
-          git push origin HEAD:${{ github.head_ref }}
