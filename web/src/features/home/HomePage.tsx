@@ -1,7 +1,10 @@
 import { ArrowRight, Clock } from "@phosphor-icons/react";
+import { AnimatePresence, motion } from "motion/react";
+import { useState } from "react";
 
 import { workHref } from "../../app/router";
 import { useAppContext } from "../../app/AppShell";
+import { cardMotion, heroMotion, revealMotion } from "../../motion/transitions";
 import type { HomeCandidate } from "./selectors";
 import { buildHomeViewModel } from "./selectors";
 import "./home.css";
@@ -14,9 +17,25 @@ function formatMeta(candidate: HomeCandidate): string[] {
   return values;
 }
 
-function CandidateThumb({ candidate, target }: { candidate: HomeCandidate; target: string }) {
+function CandidateThumb({
+  candidate,
+  target,
+  onPreview,
+}: {
+  candidate: HomeCandidate;
+  target: string;
+  onPreview: () => void;
+}) {
   return (
-    <a className="candidate-thumb" href={workHref(candidate.id, target)}>
+    <motion.a
+      className="candidate-thumb"
+      href={workHref(candidate.id, target)}
+      onPointerEnter={onPreview}
+      onFocus={onPreview}
+      whileHover={cardMotion.hover}
+      whileTap={cardMotion.tap}
+      transition={cardMotion.transition}
+    >
       <span className="candidate-thumb__image" aria-hidden="true">
         {candidate.posterUrl ? <img src={candidate.posterUrl} alt="" loading="lazy" /> : <span />}
       </span>
@@ -24,7 +43,7 @@ function CandidateThumb({ candidate, target }: { candidate: HomeCandidate; targe
         <strong>{candidate.title}</strong>
         <small>{formatMeta(candidate).slice(0, 2).join(" · ")}</small>
       </span>
-    </a>
+    </motion.a>
   );
 }
 
@@ -39,13 +58,27 @@ function PosterRail({
 }) {
   if (!items.length) return null;
   return (
-    <section className="poster-section" aria-labelledby={`rail-${title}`}>
+    <motion.section
+      className="poster-section"
+      aria-labelledby={`rail-${title}`}
+      initial={revealMotion.hidden}
+      whileInView={revealMotion.visible}
+      viewport={{ once: true, amount: 0.18 }}
+      transition={revealMotion.transition}
+    >
       <div className="section-heading">
         <h2 id={`rail-${title}`}>{title}</h2>
       </div>
       <div className="poster-rail">
         {items.map((item) => (
-          <a className="poster-card" href={workHref(item.id, target)} key={item.id}>
+          <motion.a
+            className="poster-card"
+            href={workHref(item.id, target)}
+            key={item.id}
+            whileHover={cardMotion.hover}
+            whileTap={cardMotion.tap}
+            transition={cardMotion.transition}
+          >
             <span className="poster-card__art">
               {item.posterUrl ? <img src={item.posterUrl} alt="" loading="lazy" /> : <span aria-hidden="true" />}
             </span>
@@ -53,16 +86,17 @@ function PosterRail({
               <strong>{item.title}</strong>
               <small>{formatMeta(item).slice(0, 2).join(" · ")}</small>
             </span>
-          </a>
+          </motion.a>
         ))}
       </div>
-    </section>
+    </motion.section>
   );
 }
 
 export function HomePage() {
   const { manifest, target } = useAppContext();
   const model = buildHomeViewModel(manifest, target);
+  const [previewId, setPreviewId] = useState<string | null>(null);
 
   if (!model.hero) {
     return (
@@ -77,31 +111,49 @@ export function HomePage() {
     );
   }
 
-  const hero = model.hero;
-  const reasons = hero.reasonLabels.slice(0, 3);
+  const activeHero =
+    [model.hero, ...model.alternatives].find((candidate) => candidate.id === previewId) ?? model.hero;
+  const reasons = activeHero.reasonLabels.slice(0, 3);
 
   return (
     <div className="home-page">
-      <section
-        className={`cinema-hero${hero.backdropUrl ? " cinema-hero--with-image" : ""}`}
-        style={hero.backdropUrl ? { "--hero-backdrop": `url("${hero.backdropUrl}")` } as React.CSSProperties : undefined}
-        aria-labelledby="hero-title"
-      >
+      <section className="cinema-hero" aria-labelledby="hero-title" data-testid="cinema-hero">
+        <AnimatePresence initial={false}>
+          {activeHero.backdropUrl ? (
+            <motion.div
+              className="cinema-hero__backdrop"
+              key={activeHero.id}
+              style={{ backgroundImage: `url("${activeHero.backdropUrl}")` }}
+              initial={{ opacity: 0, scale: 1.025 }}
+              animate={{ opacity: 0.78, scale: 1.012 }}
+              exit={{ opacity: 0, scale: 1.006 }}
+              transition={{ duration: 0.72, ease: [0.32, 0.72, 0, 1] }}
+              aria-hidden="true"
+            />
+          ) : null}
+        </AnimatePresence>
         <div className="cinema-hero__scrim" aria-hidden="true" />
-        <div className="cinema-hero__content">
+
+        <motion.div
+          className="cinema-hero__content"
+          key={activeHero.id}
+          initial={heroMotion.initial}
+          animate={heroMotion.enter}
+          transition={heroMotion.transition}
+        >
           <p className="eyebrow">Сегодня · {target === "couple" ? "для двоих" : "для вас"}</p>
-          <h1 id="hero-title">{hero.title}</h1>
-          {hero.titleOriginal && hero.titleOriginal !== hero.title ? (
-            <p className="cinema-hero__original">{hero.titleOriginal}</p>
+          <h1 id="hero-title">{activeHero.title}</h1>
+          {activeHero.titleOriginal && activeHero.titleOriginal !== activeHero.title ? (
+            <p className="cinema-hero__original">{activeHero.titleOriginal}</p>
           ) : null}
           <div className="cinema-hero__meta" aria-label="Сведения о фильме">
-            {hero.year ? <span>{hero.year}</span> : null}
-            {hero.runtimeMin ? (
+            {activeHero.year ? <span>{activeHero.year}</span> : null}
+            {activeHero.runtimeMin ? (
               <span>
-                <Clock aria-hidden="true" weight="regular" /> {hero.runtimeMin} мин
+                <Clock aria-hidden="true" weight="regular" /> {activeHero.runtimeMin} мин
               </span>
             ) : null}
-            {hero.genreLabels.slice(0, 2).map((genre) => (
+            {activeHero.genreLabels.slice(0, 2).map((genre) => (
               <span key={genre}>{genre}</span>
             ))}
           </div>
@@ -111,20 +163,37 @@ export function HomePage() {
               <p>{reasons.join(" · ")}</p>
             </div>
           ) : null}
-          <a className="hero-action" href={workHref(hero.id, target)}>
+          <motion.a
+            className="hero-action"
+            href={workHref(activeHero.id, target)}
+            whileTap={cardMotion.tap}
+            transition={cardMotion.transition}
+          >
             Подробнее <ArrowRight aria-hidden="true" weight="bold" />
-          </a>
-        </div>
+          </motion.a>
+        </motion.div>
 
-        <div className="cinema-hero__poster" aria-hidden="true">
-          {hero.posterUrl ? <img src={hero.posterUrl} alt="" /> : <span />}
-        </div>
+        <motion.div
+          className="cinema-hero__poster"
+          key={`poster-${activeHero.id}`}
+          initial={{ opacity: 0, y: 18, rotate: 0.4 }}
+          animate={{ opacity: 1, y: 0, rotate: 1.4 }}
+          transition={heroMotion.transition}
+          aria-hidden="true"
+        >
+          {activeHero.posterUrl ? <img src={activeHero.posterUrl} alt="" /> : <span />}
+        </motion.div>
 
         {model.alternatives.length ? (
           <div className="cinema-hero__alternatives" aria-label="Ещё варианты">
             <span className="cinema-hero__alternatives-label">Ещё варианты</span>
             {model.alternatives.map((candidate) => (
-              <CandidateThumb candidate={candidate} target={target} key={candidate.id} />
+              <CandidateThumb
+                candidate={candidate}
+                target={target}
+                key={candidate.id}
+                onPreview={() => setPreviewId(candidate.id)}
+              />
             ))}
           </div>
         ) : null}
