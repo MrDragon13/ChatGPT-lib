@@ -20,11 +20,12 @@ function formatActivity(item: HistoryItemModel): string {
   if (!item.activityAt) return "Дата не указана";
   const date = new Date(item.activityAt);
   if (Number.isNaN(date.getTime())) return item.activityAt;
+  const dayPrecision = item.activityPrecision === "day";
   return new Intl.DateTimeFormat("ru-RU", {
     day: "numeric",
     month: "long",
     year: "numeric",
-    ...(item.activityPrecision === "exact" ? { hour: "2-digit", minute: "2-digit" } : {}),
+    ...(dayPrecision ? { timeZone: "UTC" } : { hour: "2-digit", minute: "2-digit" }),
   }).format(date);
 }
 
