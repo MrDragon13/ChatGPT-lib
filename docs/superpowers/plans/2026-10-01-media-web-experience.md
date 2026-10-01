@@ -20,6 +20,7 @@
 - Personal signal is visually primary; public metrics are secondary.
 - No new opaque recommendation score. Reuse `build_recommend_context(...)` for deterministic evidence ordering where recommendations are needed.
 - V1 routes are hash-based and must work under the GitHub project-site subpath.
+- Default viewer context is `couple` when that configured group exists; otherwise use the first configured viewer in sorted order. A URL `target` parameter always overrides the default when it names a configured target.
 - Taste dials are fixed at `DESIGN_VARIANCE = 7`, `MOTION_INTENSITY = 8`, `VISUAL_DENSITY = 4`.
 - Visual direction is the approved “вечерний программный гид + личный киножурнал”: charcoal/graphite base, milk-white type, one tungsten accent, poster/backdrop imagery as the main color source, no blue-purple AI gradients.
 - Motion must respect `prefers-reduced-motion`; frequent animation is transform/opacity only.
@@ -47,17 +48,19 @@
 - Test: `tests/media/test_cli.py`
 
 **Interfaces:**
-- Consumes: `YamlRepository.iter_works()`, `YamlRepository.configured_targets()`, `IndexRepository.rows()`, generated profiles, and `build_recommend_context(media_root, RecommendContextRequest)`.
+- Consumes: `YamlRepository.iter_works()`, `YamlRepository.configured_targets()`, `IndexRepository.rows()`, `media/vocabulary.yaml`, generated profiles, and `build_recommend_context(media_root, RecommendContextRequest)`.
 - Produces: `build_web_manifest(media_root: Path) -> dict[str, Any]` and `write_web_manifest(media_root: Path, output_path: Path) -> Path`.
 - CLI: `python -m media.cli web-export --output <path> --format json`.
-- Manifest v1 top-level keys: `schema_version`, `targets`, `profiles`, `recommendations`, `works`.
-- `targets`: `{ "viewers": ["primary", "partner"], "groups": {"couple": ["primary", "partner"]} }` derived from config, never hard-coded.
+- Manifest v1 top-level keys: `schema_version`, `default_target`, `targets`, `vocabulary`, `profiles`, `recommendations`, `works`.
+- `default_target`: `couple` when configured, otherwise the first configured viewer in sorted order.
+- `targets`: viewer/group IDs and memberships derived from config, never hard-coded.
+- `vocabulary`: read-only map from canonical term ID to at least `{kind, label_ru}`; this is the only source of human labels for recommendation traits/genres in the frontend.
 - `recommendations[target]`: existing `recommend_context` output produced with `only_unwatched=True`, `runtime_max=None`, `include_not_interested=False`, `limit=24`, `text=None`.
 - Each work includes only UI read fields already present in canonical/derived data: `id`, `identity`, factual external metadata/assets/metrics, `viewer_signals`, `group_signals`, derived index `interest`/`traits`, and canonical provenance dates needed for truthful chronology.
 
 - [ ] **Step 1: Write failing exporter contract tests**
 
-Add tests that assert: manifest schema version is `1`; targets come from fixture config; Arrival keeps its work ID/title/viewing signal; missing optional metadata serializes as null/empty without exception; recommendations contain no invented numeric score; exporting does not change any canonical/generated file bytes; manifest contains no keys matching token/secret/credential/password patterns.
+Add tests that assert: manifest schema version is `1`; configured `couple` becomes `default_target`; targets come from fixture config; vocabulary labels come from canonical vocabulary (for example `story.intrigue -> Интрига`); Arrival keeps its work ID/title/viewing signal; missing optional metadata serializes as null/empty without exception; recommendations contain no invented numeric score; exporting does not change any canonical/generated file bytes; manifest contains no keys matching token/secret/credential/password patterns.
 
 - [ ] **Step 2: Run exporter tests to verify RED**
 
@@ -155,15 +158,16 @@ git commit -m "design: lock media web visual direction"
 - Create: `web/src/data/types.ts`
 - Create: `web/src/data/client.ts`
 - Create: `web/src/data/assets.ts`
+- Create: `web/src/styles/tokens.css`
 - Create: `web/src/styles/global.css`
 - Create: `web/src/test/setup.ts`
 - Create: `web/src/data/client.test.ts`
 - Create: `web/src/app/router.test.tsx`
-- Modify: root `.gitignore` or `web/.gitignore` so generated `web/public/data/manifest.json` and build output are not hand-maintained source.
+- Create: `web/.gitignore`
 
 **Interfaces:**
 - Consumes: manifest v1 from Task 1 and visual/type/color contract from Task 2.
-- Produces: `loadManifest(): Promise<WebManifest>`, `tmdbImageUrl(path, size): string | null`, hash routes `#/today`, `#/library`, `#/work/:id`, and a shared `target` query parameter.
+- Produces: `loadManifest(): Promise<WebManifest>`, `resolveTarget(manifest, searchParams): TargetId`, `vocabularyLabel(manifest, termId): string`, `tmdbImageUrl(path, size): string | null`, hash routes `#/today`, `#/library`, `#/work/:id`, and a shared `target` query parameter.
 
 - [ ] **Step 1: Scaffold dependencies and verify them from `package.json` before import**
 
@@ -171,7 +175,7 @@ Use React, React DOM, React Router, Motion, Tailwind v4 + Vite plugin, Phosphor 
 
 - [ ] **Step 2: Write failing data-client tests**
 
-Tests cover valid manifest loading, schema-version mismatch -> Russian error state object, missing manifest -> Russian error, and asset helper behavior for null poster/backdrop refs.
+Tests cover valid manifest loading, schema-version mismatch -> Russian error state object, missing manifest -> Russian error, null poster/backdrop refs, vocabulary label lookup, and target resolution (`target` query wins; else manifest `default_target`).
 
 - [ ] **Step 3: Run RED**
 
@@ -181,7 +185,7 @@ Expected: FAIL because client/types do not exist.
 
 - [ ] **Step 4: Implement TypeScript manifest types and data client**
 
-Do not add movie arrays to component source. Keep provider URL construction centralized in `assets.ts`.
+Do not add movie arrays to component source. Keep provider URL construction centralized in `assets.ts` and term labels centralized through manifest vocabulary.
 
 - [ ] **Step 5: Write and implement hash-router tests**
 
@@ -189,7 +193,7 @@ Assert `#/today`, `#/library?target=couple`, and `#/work/arrival-2016` resolve w
 
 - [ ] **Step 6: Add the minimal semantic shell**
 
-Only route outlets, landmarks, loading/error boundary, and typography/color token plumbing. No final visual sections yet.
+Only route outlets, landmarks, loading/error boundary, target-context plumbing, and typography/color token plumbing. No final visual sections yet.
 
 - [ ] **Step 7: Run checks and commit**
 
@@ -210,26 +214,31 @@ git commit -m "feat: scaffold media web client"
 **Files:**
 - Create: `web/src/features/home/HomePage.tsx`
 - Create: `web/src/features/home/selectors.ts`
-- Create: `web/src/features/home/*.test.tsx`
+- Create: `web/src/features/home/home.test.tsx`
 - Create: `web/src/features/library/LibraryPage.tsx`
 - Create: `web/src/features/library/filters.ts`
-- Create: `web/src/features/library/*.test.tsx`
+- Create: `web/src/features/library/library.test.tsx`
 - Create: `web/src/features/work-detail/WorkDetailPage.tsx`
-- Create: `web/src/features/work-detail/*.test.tsx`
-- Create focused shared components under `web/src/components/` for poster/backdrop media, target switcher, rating/reaction display, poster rail, empty/error states, credits/about.
-- Create/update: `web/src/styles/tokens.css`, `web/src/styles/components.css` (or equivalent focused style modules chosen by the executor; do not collapse the whole site into one giant stylesheet).
+- Create: `web/src/features/work-detail/work-detail.test.tsx`
+- Create: `web/src/components/MediaArtwork.tsx`
+- Create: `web/src/components/TargetSwitcher.tsx`
+- Create: `web/src/components/SignalPanel.tsx`
+- Create: `web/src/components/PosterRail.tsx`
+- Create: `web/src/components/StateMessage.tsx`
+- Create: `web/src/components/AboutCredits.tsx`
+- Create: `web/src/styles/components.css`
 
 **Interfaces:**
-- Consumes: `WebManifest`, `loadManifest`, route target, selected visual comp.
+- Consumes: `WebManifest`, `loadManifest`, route target, vocabulary labels, selected visual comp.
 - Produces: selectors that return view models without inventing facts; components remain pure consumers of those view models.
 
 - [ ] **Step 1: Write failing selector tests for the home screen**
 
-Pin these rules: hero comes from precomputed recommendation candidates; unwatched/not-interested semantics are inherited rather than recalculated; `Для двоих` appears only when `couple` has usable candidates; “recent” uses actual `last_watched_at` or provenance dates and disappears when no truthful chronology exists; sparse partner data never copies primary reaction/rating.
+Pin these rules: hero comes from precomputed recommendation candidates; unwatched/not-interested semantics are inherited rather than recalculated; `Для двоих` appears only when `couple` has usable candidates; “recent” uses actual `last_watched_at` or provenance dates and disappears when no truthful chronology exists; sparse partner data never copies primary reaction/rating; “почему сейчас” maps evidence term IDs through `manifest.vocabulary` and never hard-codes trait labels in React.
 
 - [ ] **Step 2: Run home RED and implement minimal selectors**
 
-Run: `cd web && npm test -- --run src/features/home`
+Run: `cd web && npm test -- --run src/features/home/home.test.tsx`
 
 - [ ] **Step 3: Build HomePage to the approved comp using `high-end-visual-design`**
 
@@ -269,7 +278,7 @@ git commit -m "feat: build cinematic media surfaces"
 
 **Files:**
 - Create: `web/src/motion/transitions.ts`
-- Create/update: motion leaf components in home/library/detail features
+- Modify: motion leaf components in home/library/detail features
 - Create: `web/e2e/responsive.spec.ts`
 - Create: `web/e2e/motion.spec.ts`
 
@@ -314,11 +323,12 @@ git commit -m "feat: add cinematic motion and responsive layouts"
 - Create: `.github/workflows/media-pages.yml`
 - Create: `web/e2e/a11y.spec.ts`
 - Create: `tests/media/test_pages_contract.py`
-- Modify: `README.md` and/or `media/README.md` with the read-site command/deployment contract.
+- Modify: `README.md`
+- Modify: `media/README.md`
 
 **Interfaces:**
 - Consumes: `python -m media.cli web-export`, npm scripts from `web/package.json`.
-- Produces: a Pages artifact from `web/dist` on `main`; PRs run build/test without deploying.
+- Produces: a Pages artifact from `web/dist` on `main`; pull requests run build/test without deploying.
 
 - [ ] **Step 1: Write failing workflow contract tests**
 
