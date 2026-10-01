@@ -7,6 +7,7 @@ rules: []
 constraints: []
 summary:
   reactions_count: 4
+  relations_count: 0
   viewing_count: 4
 evidence:
   entity_count: 106
