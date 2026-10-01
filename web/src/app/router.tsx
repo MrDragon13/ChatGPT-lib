@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import type { ManifestTargetConfig, TargetId } from "../data/types";
 import { HomePage } from "../features/home/HomePage";
+import { LibraryPage } from "../features/library/LibraryPage";
 
 export function configuredTargets(config: ManifestTargetConfig): Set<TargetId> {
   return new Set([...config.targets.viewers, ...Object.keys(config.targets.groups)]);
@@ -44,7 +45,7 @@ export function AppRoutes() {
   return (
     <Routes>
       <Route path="/today" element={<HomePage />} />
-      <Route path="/library" element={<RoutePlaceholder title="Медиатека" />} />
+      <Route path="/library" element={<LibraryPage />} />
       <Route path="/work/:id" element={<RoutePlaceholder title="Фильм" />} />
       <Route path="*" element={<Navigate to="/today" replace />} />
     </Routes>
