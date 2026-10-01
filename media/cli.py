@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from media.commands.schema import load_command
-from media.domain.commands import AddWorkCommand, RecommendContextRequest
+from media.domain.commands import AddWorkCommand, RecommendContextRequest, RecordViewingFeedbackCommand
 from media.domain.errors import (
     AmbiguousIdentityError,
     CommandValidationError,
@@ -68,7 +68,8 @@ def main(argv: list[str] | None = None) -> int:
             command=load_command(Path(args.request))
             if isinstance(command,RecommendContextRequest): raise CommandValidationError("recommend_context is read-only and cannot be applied")
             provider=None
-            if isinstance(command,AddWorkCommand):
+            needs_provider=isinstance(command,AddWorkCommand) or (isinstance(command,RecordViewingFeedbackCommand) and command.create_if_missing)
+            if needs_provider:
                 token=os.environ.get("TMDB_READ_TOKEN")
                 if token: provider=TMDBProvider(token)
             result=preview_command(repo_root,command,provider=provider) if args.dry_run else execute_command(repo_root,command,provider=provider); _emit(_operation_result(result),output_format); return 0
