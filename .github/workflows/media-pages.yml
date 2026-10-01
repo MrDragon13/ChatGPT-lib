@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pages: read
+      pages: write
     steps:
       - name: Checkout exact revision
         uses: actions/checkout@v7
@@ -69,6 +69,8 @@ jobs:
         run: npm run test:e2e
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
