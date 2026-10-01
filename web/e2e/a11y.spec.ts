@@ -11,6 +11,12 @@ async function expectNoSeriousA11yViolations(page: Page) {
   expect(blocking).toEqual([]);
 }
 
+test.beforeEach(async ({ page }) => {
+  // Audit the stable rendered state. Motion behavior, including the full-motion
+  // path, is covered separately in motion.spec.ts.
+  await page.emulateMedia({ reducedMotion: "reduce" });
+});
+
 test("today, library and detail have no serious WCAG violations", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
 
