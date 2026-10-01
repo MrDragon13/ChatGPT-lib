@@ -1,5 +1,5 @@
 import { MagnifyingGlass } from "@phosphor-icons/react";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 
@@ -59,6 +59,7 @@ export function LibraryPage() {
   const results = useMemo(() => filterLibrary(manifest, target, filters), [filters, manifest, target]);
   const genres = useMemo(() => genreOptions(manifest.works, manifest.vocabulary), [manifest]);
   const years = useMemo(() => yearOptions(manifest.works), [manifest.works]);
+  const reduceMotion = useReducedMotion();
 
   const update = (patch: Partial<LibraryFilters>) => {
     const next = { ...filters, ...patch };
@@ -69,9 +70,10 @@ export function LibraryPage() {
     <section className="library-page" aria-labelledby="library-title">
       <motion.header
         className="library-intro"
-        initial={revealMotion.hidden}
+        data-motion={reduceMotion ? "reduced" : "full"}
+        initial={reduceMotion ? false : revealMotion.hidden}
         animate={revealMotion.visible}
-        transition={revealMotion.transition}
+        transition={reduceMotion ? { duration: 0 } : revealMotion.transition}
       >
         <p className="eyebrow">Вся коллекция</p>
         <div>
@@ -133,9 +135,9 @@ export function LibraryPage() {
                 className="library-card"
                 href={workHref(work.id, target)}
                 key={work.id}
-                whileHover={cardMotion.hover}
-                whileTap={cardMotion.tap}
-                transition={cardMotion.transition}
+                whileHover={reduceMotion ? undefined : cardMotion.hover}
+                whileTap={reduceMotion ? undefined : cardMotion.tap}
+                transition={reduceMotion ? { duration: 0 } : cardMotion.transition}
               >
                 <span className="library-card__poster">
                   {poster ? <img src={poster} alt="" loading="lazy" /> : <span className="library-card__missing" aria-hidden="true">Нет постера</span>}
