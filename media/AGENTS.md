@@ -26,6 +26,7 @@ This directory is a canonical personal media library. Git/YAML is source of trut
 - Season records are optional and must not be fabricated for completeness.
 - Manual metadata overrides always win over refreshed external metadata.
 - No arbitrary shell command, filename, YAML patch, or Git patch may come from model output.
+- Run full validation before commit; typed operation PRs enforce this through `media-command.yml` and `media-check.yml`.
 
 ## Normal LLM write protocol
 
