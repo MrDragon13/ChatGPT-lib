@@ -1,4 +1,5 @@
 import "@fontsource-variable/onest";
+import { MotionConfig } from "motion/react";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter } from "react-router-dom";
@@ -13,10 +14,12 @@ if (!root) throw new Error("Root element is missing");
 
 createRoot(root).render(
   <StrictMode>
-    <HashRouter>
-      <AppShell>
-        <AppRoutes />
-      </AppShell>
-    </HashRouter>
+    <MotionConfig reducedMotion="user">
+      <HashRouter>
+        <AppShell>
+          <AppRoutes />
+        </AppShell>
+      </HashRouter>
+    </MotionConfig>
   </StrictMode>,
 );
