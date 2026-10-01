@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import type { ManifestTargetConfig, TargetId } from "../data/types";
+import { WorkDetailPage } from "../features/detail/WorkDetailPage";
 import { HomePage } from "../features/home/HomePage";
 import { LibraryPage } from "../features/library/LibraryPage";
 
@@ -32,21 +33,12 @@ export function libraryHref(
   return `#/library?${query.toString()}`;
 }
 
-function RoutePlaceholder({ title }: { title: string }) {
-  const id = `route-${title.toLowerCase().replaceAll(/\s+/g, "-")}`;
-  return (
-    <section aria-labelledby={id} className="route-placeholder">
-      <h1 id={id}>{title}</h1>
-    </section>
-  );
-}
-
 export function AppRoutes() {
   return (
     <Routes>
       <Route path="/today" element={<HomePage />} />
       <Route path="/library" element={<LibraryPage />} />
-      <Route path="/work/:id" element={<RoutePlaceholder title="Фильм" />} />
+      <Route path="/work/:id" element={<WorkDetailPage />} />
       <Route path="*" element={<Navigate to="/today" replace />} />
     </Routes>
   );
