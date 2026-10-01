@@ -56,10 +56,10 @@ def test_tmdb_genres_are_canonical_vocabulary_ids():
     assert metadata.external['genres']==['genre.science_fiction','genre.drama']
 
 
-def test_workflow_exposes_tmdb_secret_only_to_add_work_step():
+def test_workflow_exposes_tmdb_secret_only_to_provider_needed_step():
     text=(Path(__file__).parents[2]/'.github/workflows/media-command.yml').read_text(encoding='utf-8')
     assert 'Apply command without provider secret' in text
-    assert "steps.operation.outputs.operation != 'add_work'" in text
-    assert 'Apply add-work command with TMDB secret' in text
-    assert "steps.operation.outputs.operation == 'add_work'" in text
+    assert "steps.operation.outputs.needs_provider != 'true'" in text
+    assert 'Apply provider-dependent command with TMDB secret' in text
+    assert "steps.operation.outputs.needs_provider == 'true'" in text
     assert text.count('TMDB_READ_TOKEN: ${{ secrets.TMDB_READ_TOKEN }}')==1
