@@ -17,11 +17,15 @@ test.beforeEach(async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
 });
 
-test("today, library and detail have no serious WCAG violations", async ({ page }) => {
+test("today, history, library and detail have no serious WCAG violations", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
 
   await page.goto("#/today");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await expectNoSeriousA11yViolations(page);
+
+  await page.goto("#/history?target=primary");
+  await expect(page.getByRole("heading", { name: "История" })).toBeVisible();
   await expectNoSeriousA11yViolations(page);
 
   await page.goto("#/library?target=couple");
@@ -45,7 +49,7 @@ test("empty and missing states remain accessible", async ({ page }) => {
   await expectNoSeriousA11yViolations(page);
 });
 
-test("keyboard path covers profile, filters and detail navigation", async ({ page }) => {
+test("keyboard path covers profile, history, filters and detail navigation", async ({ page }) => {
   await page.goto("#/today?target=couple");
 
   const profileNav = page.getByRole("navigation", { name: "Профиль просмотра" });
@@ -54,6 +58,13 @@ test("keyboard path covers profile, filters and detail navigation", async ({ pag
   await expect(primaryProfile).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/#\/today\?target=primary$/);
+
+  await page.goto("#/history?target=primary");
+  const firstHistoryItem = page.locator(".history-item").first();
+  await firstHistoryItem.focus();
+  await expect(firstHistoryItem).toBeFocused();
+  const historyOutline = await firstHistoryItem.evaluate((element) => getComputedStyle(element).outlineStyle);
+  expect(historyOutline).not.toBe("none");
 
   await page.goto("#/library?target=primary");
   const search = page.getByRole("searchbox", { name: "Поиск" });

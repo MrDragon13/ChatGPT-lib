@@ -3,6 +3,7 @@ import { useMemo } from "react";
 
 import { useAppContext } from "../../app/AppShell";
 import { workHref } from "../../app/router";
+import type { TargetId } from "../../data/types";
 import { cardMotion, revealMotion } from "../../motion/transitions";
 import { buildHistoryItems, type HistoryItemModel } from "./selectors";
 import "./history.css";
@@ -31,11 +32,13 @@ function reactionLabel(value: string): string {
   return reactionLabels[value] ?? value;
 }
 
-export function HistoryPage() {
-  const { manifest, target } = useAppContext();
-  const items = useMemo(() => buildHistoryItems(manifest, target), [manifest, target]);
-  const reduceMotion = useReducedMotion();
+type HistoryViewProps = {
+  items: HistoryItemModel[];
+  target: TargetId;
+  reduceMotion: boolean;
+};
 
+export function HistoryView({ items, target, reduceMotion }: HistoryViewProps) {
   return (
     <section className="history-page" aria-labelledby="history-title">
       <motion.header
@@ -98,4 +101,11 @@ export function HistoryPage() {
       )}
     </section>
   );
+}
+
+export function HistoryPage() {
+  const { manifest, target } = useAppContext();
+  const items = useMemo(() => buildHistoryItems(manifest, target), [manifest, target]);
+  const reduceMotion = Boolean(useReducedMotion());
+  return <HistoryView items={items} target={target} reduceMotion={reduceMotion} />;
 }

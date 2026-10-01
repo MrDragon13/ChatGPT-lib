@@ -41,11 +41,12 @@ function targetSignal(manifest: WebManifest, work: WebWork, target: TargetId): U
     : record(work.group_signals[target]);
 }
 
-function eligible(signal: UnknownRecord | null): signal is UnknownRecord {
+function eligible(signal: UnknownRecord | null, viewerTarget: boolean): signal is UnknownRecord {
   if (!signal) return false;
-  return ["viewing", "rating", "reaction", "feedback"].some(
-    (key) => signal[key] !== undefined && signal[key] !== null,
-  );
+  const keys = viewerTarget
+    ? ["viewing", "rating", "reaction", "feedback"]
+    : ["rating", "reaction", "feedback"];
+  return keys.some((key) => signal[key] !== undefined && signal[key] !== null);
 }
 
 function parsedTime(value: string | null): number | null {
@@ -97,10 +98,11 @@ function reactionFor(signal: UnknownRecord): string | null {
 }
 
 export function buildHistoryItems(manifest: WebManifest, target: TargetId): HistoryItemModel[] {
+  const viewerTarget = manifest.targets.viewers.includes(target);
   return manifest.works
     .flatMap((work) => {
       const signal = targetSignal(manifest, work, target);
-      if (!eligible(signal)) return [];
+      if (!eligible(signal, viewerTarget)) return [];
       const activity = activityFor(work, signal);
       const item: HistoryItemModel & { sortTime: number } = {
         id: work.id,
