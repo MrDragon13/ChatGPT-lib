@@ -1,0 +1,15 @@
+:root {
+  color-scheme: dark;
+  font-family: "Onest Variable", "Segoe UI", sans-serif;
+  font-synthesis: none;
+  --color-canvas: #080808;
+  --color-surface: #12110f;
+  --color-surface-soft: #1a1815;
+  --color-text: #f3f0e8;
+  --color-text-muted: #bdb7ab;
+  --color-accent: #e0b56c;
+  --color-focus: #f0c97f;
+  --radius-card: 16px;
+  --radius-control: 999px;
+  --content-max: 1440px;
+}

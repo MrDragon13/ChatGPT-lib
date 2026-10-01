@@ -65,12 +65,21 @@ Request-only `media/op-*` PR не получает отдельный автом
 
 GitHub Actions не вызывает модель и не хранит OpenAI/model credentials. `TMDB_READ_TOKEN` нужен только provider-dependent операциям: `add_work`, `record_viewing_feedback` с `create_if_missing: true` при создании отсутствующего произведения и `refresh_metadata`. Обычные изменения уже существующего work не зависят от provider.
 
+## Web / GitHub Pages
+
+`web/` — статическая русскоязычная витрина медиатеки на React/Vite. Frontend не читает canonical YAML напрямую: перед сборкой deterministic exporter формирует versioned `manifest.json` из canonical/derived media layer. Этот manifest является только read-моделью и не коммитится как новый источник истины.
+
+GitHub Pages pipeline сначала запускает media validation/rebuild/doctor, затем экспортирует manifest, выполняет frontend unit/type/browser/accessibility/security checks и только после этого собирает Pages artifact. В браузер не передаются GitHub write credentials, provider tokens или другие секреты.
+
+V1 сайта работает только на чтение: выбор фильма, поиск, фильтры, карточка произведения и сохранённые впечатления. Будущие быстрые исправления оценки/статуса должны отправляться через защищённый write-broker в тот же typed-command pipeline, который используют LLM/CLI; прямого редактирования YAML из браузера не будет.
+
 ## CLI
 
 ```bash
 python -m media.cli search "Arrival" --format json
 python -m media.cli show arrival-2016 --format json
 python -m media.cli recommend-context --request request.json --format json
+python -m media.cli web-export --output /tmp/media-web-manifest.json --format json
 python -m media.cli apply-command request.json --dry-run --format json
 python -m media.cli apply-command request.json --format json
 python -m media.cli rebuild --check

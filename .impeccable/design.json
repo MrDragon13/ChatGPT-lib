@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "product": "media-web",
+  "status": "implemented",
+  "direction": "Вечерний сеанс",
+  "approved_comp": ".impeccable/mocks/home-c.svg",
+  "taste": {
+    "design_variance": 7,
+    "motion_intensity": 8,
+    "visual_density": 4
+  },
+  "typography": {
+    "family": "Onest Variable",
+    "package": "@fontsource-variable/onest@5.3.1",
+    "fallback": "system-ui, sans-serif",
+    "cyrillic": true
+  },
+  "colors": {
+    "canvas": "#080808",
+    "surface": "#111111",
+    "surface_soft": "#191919",
+    "text": "#F3F0E8",
+    "text_muted": "#BDB7AB",
+    "accent": "#E0B56C"
+  },
+  "principles": [
+    "personal_signal_over_public_popularity",
+    "real_imagery_owns_chroma",
+    "single_tungsten_accent",
+    "read_only_frontend_v1",
+    "no_production_mock_movies",
+    "no_browser_credentials",
+    "reduced_motion_complete"
+  ],
+  "routes": ["#/today", "#/library", "#/work/:id"],
+  "responsive_review_widths": [390, 768, 1440],
+  "review": {
+    "mode": "degraded-single-context",
+    "critique": ".impeccable/critique/2026-10-01-media-web.md",
+    "surface_contract": ".impeccable/surfaces/home.md"
+  }
+}

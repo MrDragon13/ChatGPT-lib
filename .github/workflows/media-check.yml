@@ -44,5 +44,7 @@ jobs:
         run: python -m media.tools.validate .
       - name: Check generated artifacts
         run: python -m media.cli rebuild --check
+      - name: Export web manifest
+        run: python -m media.cli web-export --output /tmp/media-web-manifest.json --format json
       - name: Run media doctor
         run: python -m media.cli doctor --format json

@@ -1,0 +1,10 @@
+{
+  "id": "home-b",
+  "title": "Три кандидата",
+  "viewport": "1440x900",
+  "source": "degraded-static-svg",
+  "approved": false,
+  "content_basis": ["arrival-2016", "knives-out-2019", "blade-runner-2049-2017"],
+  "notes": "Большой вопрос и три равноправные карточки. Быстро читается, но слишком близко к selector/grid и недодаёт киноизображения.",
+  "prompt": "Русский вечерний выбор фильма как editorial selector; три реальных кандидата, крупная типографика, charcoal canvas и tungsten action accent."
+}
