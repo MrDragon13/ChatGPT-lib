@@ -2,7 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "chatgpt-lib-media-broker",
   "main": "src/index.ts",
-  "compatibility_date": "2026-10-02",
+  "compatibility_date": "2026-10-01",
   "vars": {
     "REPO_OWNER": "MrDragon13",
     "REPO_NAME": "ChatGPT-lib",
