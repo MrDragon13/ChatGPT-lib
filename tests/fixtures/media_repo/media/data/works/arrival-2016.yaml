@@ -1,0 +1,30 @@
+schema_version: 4
+entity_type: work
+id: arrival-2016
+identity:
+  format: movie
+  title_original: Arrival
+  title_ru: Прибытие
+  alternate_titles:
+  - Story of Your Life
+  year: 2016
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 329865
+    imdb: tt2543164
+metadata:
+  external:
+    runtime_min: 116
+  semantic:
+    traits:
+    - term: story.intrigue
+      source: llm_inferred
+      confidence: high
+viewer_signals:
+  primary:
+    viewing:
+      status: watched
+  partner:
+    viewing:
+      status: watched

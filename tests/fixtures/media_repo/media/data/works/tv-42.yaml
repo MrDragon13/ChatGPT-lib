@@ -1,0 +1,13 @@
+schema_version: 4
+entity_type: work
+id: tv-42
+identity:
+  format: series
+  title_original: TV Forty Two
+  title_ru: Сериал 42
+  year: 2002
+  external_ids:
+    tmdb:
+      media_type: tv
+      id: 42
+    imdb: tt0000043

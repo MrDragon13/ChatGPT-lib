@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chatgpt-lib.local/commands/common.schema.json",
+  "$defs": {
+    "workRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "title": {"type": "string", "minLength": 1},
+        "year": {"type": "integer", "minimum": 1880},
+        "tmdb_media_type": {"enum": ["movie", "tv"]},
+        "tmdb_id": {"type": "integer", "minimum": 1},
+        "imdb_id": {"type": "string", "pattern": "^tt[0-9]+$"}
+      },
+      "anyOf": [{"required": ["id"]}, {"required": ["title"]}, {"required": ["tmdb_media_type", "tmdb_id"]}, {"required": ["imdb_id"]}],
+      "dependentRequired": {"tmdb_media_type": ["tmdb_id"], "tmdb_id": ["tmdb_media_type"]}
+    },
+    "confidence": {"enum": ["exact", "high", "medium", "low", "none"]},
+    "rating": {"type": "object", "additionalProperties": false, "required": ["score", "source", "confidence"], "properties": {"score": {"type": "number", "minimum": 1, "maximum": 10, "multipleOf": 0.5}, "source": {"enum": ["explicit", "explicit_approx", "inferred"]}, "confidence": {"$ref": "#/$defs/confidence"}}},
+    "viewing": {"type": "object", "additionalProperties": false, "required": ["status"], "properties": {"status": {"enum": ["unwatched", "watched", "partial", "dropped", "forgotten"]}}},
+    "reaction": {"type": "object", "additionalProperties": false, "required": ["value", "source", "confidence"], "properties": {"value": {"enum": ["liked", "disliked", "neutral", "mixed", "unknown"]}, "source": {"enum": ["explicit", "inferred"]}, "confidence": {"$ref": "#/$defs/confidence"}}},
+    "feedbackSignal": {"type": "object", "additionalProperties": false, "required": ["term", "sentiment", "strength", "source", "confidence"], "properties": {"term": {"type": "string", "minLength": 3}, "sentiment": {"enum": ["positive", "negative", "mixed", "neutral"]}, "strength": {"type": "integer", "minimum": 1, "maximum": 3}, "source": {"enum": ["explicit", "inferred"]}, "confidence": {"$ref": "#/$defs/confidence"}}},
+    "feedback": {"type": "object", "additionalProperties": false, "properties": {"summary": {"type": ["string", "null"]}, "signals": {"type": "array", "items": {"$ref": "#/$defs/feedbackSignal"}}}},
+    "targetUpdate": {"type": "object", "additionalProperties": false, "required": ["target"], "minProperties": 2, "properties": {"target": {"type": "string", "minLength": 1}, "viewing": {"$ref": "#/$defs/viewing"}, "rating": {"$ref": "#/$defs/rating"}, "reaction": {"$ref": "#/$defs/reaction"}, "feedback": {"$ref": "#/$defs/feedback"}}}
+  }
+}
