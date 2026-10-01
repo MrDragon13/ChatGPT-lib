@@ -17,8 +17,10 @@ class ProviderCandidate:
 class CanonicalMetadata:
     identity: Mapping[str, Any]
     external: Mapping[str, Any]
+    unmapped_genre_ids: tuple[int, ...] = ()
 
 
 class MetadataProvider(Protocol):
     def search_work(self, title: str, year: int | None = None) -> list[ProviderCandidate]: ...
+    def find_by_imdb(self, imdb_id: str) -> list[ProviderCandidate]: ...
     def fetch_work(self, media_type: Literal["movie", "tv"], provider_id: int) -> CanonicalMetadata: ...
