@@ -41,11 +41,15 @@ natural language
 → media-command GitHub Action
 → deterministic Python service
 → canonical YAML + generated rebuild + receipt
-→ media-check on exact resulting head SHA
+→ dispatched media-check on exact resulting head SHA
 → human-reviewed merge
 ```
 
-GitHub Actions не вызывает модель и не хранит OpenAI/model credentials. `TMDB_READ_TOKEN` нужен только provider-dependent `add_work`. В v1 auto-merge отключён.
+Request-only `media/op-*` PR не получает отдельный автоматический зелёный `Media Check`: authoritative check запускается `Media Command` только после успешного применения команды и commit результата.
+
+Если пользователь одновременно сообщает о просмотре/оценке нового произведения, используется одна команда `record_viewing_feedback` с `create_if_missing: true`. Service через TMDB создаёт work и применяет viewing/rating/reaction/feedback в одной транзакции; при provider outage, неоднозначной identity или validation failure не сохраняется ни work, ни feedback.
+
+GitHub Actions не вызывает модель и не хранит OpenAI/model credentials. `TMDB_READ_TOKEN` нужен только provider-dependent операциям: `add_work` и `record_viewing_feedback` с `create_if_missing: true`, когда требуется создание отсутствующего произведения. Обычные изменения уже существующего work не зависят от provider. В v1 auto-merge отключён.
 
 ## CLI
 
