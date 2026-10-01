@@ -57,6 +57,15 @@ def test_parse_constructs_typed_commands():
     recommend = parse_command({"schema_version": 1, "operation": "recommend_context", "target": "couple", "text": "not dark tonight", "only_unwatched": True, "runtime_max": 120, "include_not_interested": False, "limit": 12}); assert isinstance(recommend, RecommendContextRequest); assert recommend.limit == 12
 
 
+def test_record_feedback_create_if_missing_is_typed_and_defaults_false():
+    default = parse_command(valid_record_feedback_dict())
+    assert isinstance(default, RecordViewingFeedbackCommand)
+    assert default.create_if_missing is False
+    data = valid_record_feedback_dict(); data["create_if_missing"] = True
+    command = parse_command(data)
+    assert command.create_if_missing is True
+
+
 def test_feedback_term_membership_is_not_checked_by_command_schema():
     data = valid_record_feedback_dict(); data["target_updates"][0]["feedback"] = {"summary": "Specific semantic comment", "signals": [{"term": "nonexistent.future.term", "sentiment": "negative", "strength": 2, "source": "explicit", "confidence": "high"}]}
     command = parse_command(data); assert command.target_updates[0].feedback["signals"][0]["term"] == "nonexistent.future.term"
