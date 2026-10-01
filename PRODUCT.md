@@ -12,7 +12,7 @@ delegated: React + Vite + TypeScript + Motion, deployed as a static GitHub Pages
 
 ## Users
 
-Primary users are the repository owner and partner. The site is for internal household use rather than a public audience.
+Primary users are the repository owner and partner. The site is intended for internal household use rather than a public audience.
 
 ## Product Purpose
 
@@ -32,16 +32,18 @@ The product is a personal recommendation surface backed by the users' own canoni
 - Website v1 is a read-only visual surface over existing data.
 - A later edit flow may support quick corrections such as rating or viewing-status changes, but those edits must be submitted as typed commands through a protected write broker and must never mutate YAML directly from the browser.
 - The repository and GitHub Pages deployment remain the architectural home of the project.
+- The site is for internal use, but confidentiality of movie ratings, reactions, and comments is not a product requirement; it is acceptable if the published Pages site is reachable by others.
 
 ## Capabilities and Constraints
 
 - Current canonical media structure is strict and must be treated as read-only by frontend rendering code.
 - Frontend components must consume real repository-derived data; no production mock arrays may be embedded in components.
-- The browser must never receive repository write credentials or GitHub tokens.
+- The browser must never receive repository write credentials, GitHub tokens, provider secrets, or unrelated private data.
 - Existing media schema, vocabulary, IDs, validation rules, generated artifacts, and user signals must remain authoritative.
+- v1 may publish media ratings, reactions, comments, and other media-library fields as ordinary static read data; no passphrase/encryption layer is required for them.
 - v1 must work as a static build suitable for GitHub Pages.
 - Future quick edits must reuse the typed-command pipeline and validation gates already used by LLM/CLI writes.
-- All visible website interface copy is in Russian.
+- All visible website interface copy is in Russian, except provider/legal wording that must remain verbatim for attribution compliance.
 
 ## Brand Commitments
 
