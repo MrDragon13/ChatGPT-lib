@@ -92,6 +92,37 @@ describe("work detail", () => {
     expect(view.signals.couple?.rating).toBe(8);
   });
 
+  it("sizes the signal grid to the number of real panels instead of reserving empty columns", () => {
+    const sparse = work({
+      viewer_signals: {
+        primary: {
+          viewing: { status: "watched" },
+          rating: { score: 8 },
+          feedback: { summary: "Хороший." },
+        },
+      },
+      group_signals: {},
+    });
+    const view = buildWorkDetailView(manifest(sparse), sparse.id, "couple")!;
+    const { container } = render(<WorkDetailView view={view} activeTarget="couple" />);
+    expect(container.querySelector(".signal-grid")).toHaveClass("signal-grid--1");
+    expect(container.querySelectorAll(".signal-panel")).toHaveLength(1);
+  });
+
+  it("presents the public TMDB score to one decimal place", () => {
+    const rated = work({
+      metadata: {
+        external: {
+          external_metrics: { tmdb: { score: 8.272, votes: 18874 } },
+        },
+      },
+    });
+    const view = buildWorkDetailView(manifest(rated), rated.id, "primary")!;
+    render(<WorkDetailView view={view} activeTarget="primary" />);
+    expect(screen.getByText("8.3")).toBeInTheDocument();
+    expect(screen.queryByText("8.272")).not.toBeInTheDocument();
+  });
+
   it("does not crash when optional artwork, runtime, synopsis and external metrics are missing", () => {
     const sparse = work({ metadata: { external: {} } });
     const view = buildWorkDetailView(manifest(sparse), sparse.id, "primary")!;
