@@ -18,11 +18,12 @@
 3. React-компоненты не читают и не редактируют YAML напрямую.
 4. В production-компонентах нет встроенных mock-массивов фильмов.
 5. Web build получает отдельный JSON manifest, построенный из существующей медиатеки штатным Python/domain-слоем.
-6. Все видимые тексты интерфейса — на русском языке.
+6. Все обычные видимые тексты интерфейса — на русском языке; обязательные provider/legal notices могут сохранять требуемую источником формулировку.
 7. Личный сигнал (`viewer_signals`, `group_signals`, explicit interest/preferences) визуально важнее публичных рейтингов.
 8. Сайт не вводит новый скрытый recommendation score и не подменяет LLM как основной recommendation engine.
 9. Будущие быстрые правки с сайта используют тот же typed-command / validation / receipt протокол, что LLM и CLI.
 10. GitHub token, write credentials и provider secrets никогда не попадают в browser bundle.
+11. Private repository не считается достаточной защитой опубликованного Pages origin. Персональный payload не публикуется открытым текстом, если доступ к Pages не подтверждён как действительно private.
 
 ## 3. Область v1
 
@@ -32,15 +33,16 @@
 - Motion (`motion/react`) для переходов и интерактивности;
 - статическая сборка и публикация через GitHub Pages;
 - build-time exporter из canonical/derived media data в web manifest;
+- privacy envelope для персонального manifest, когда Pages origin публично доступен;
 - главная страница как «вечерний программный гид»;
 - медиатека с поиском и фильтрами;
 - detail page фильма;
 - переключение контекста просмотра (`Я`, `Партнёр`, `Вместе`) там, где соответствующие данные существуют;
 - постеры/backdrops через уже сохранённые TMDB asset references;
-- loading, empty и error состояния;
+- loading, locked, empty и error состояния;
 - responsive desktop/mobile;
 - accessibility и reduced motion;
-- русская локализация всего интерфейса.
+- русская локализация интерфейса.
 
 ### Не входит в v1
 
@@ -77,17 +79,17 @@ UI v1 поэтому строится так, чтобы блоки пользо
 
 ### 5.1 Web manifest
 
-Добавляется штатный exporter в Python media-layer. Он читает canonical/derived данные через существующие parser/service boundaries и выпускает один или несколько статических JSON-файлов для `web`.
+Добавляется штатный exporter в Python media-layer. Он читает canonical/derived данные через существующие parser/service boundaries и выпускает статическое JSON-представление для web build.
 
-Предпочтительная логическая форма:
+Логическая форма:
 
 ```text
-web/public/data/
+build-time generated data
   manifest.json
-  works/<id>.json   # допускается при необходимости lazy loading
+  works/<id>.json   # допускается только если измеренный размер потребует chunking
 ```
 
-Точная физическая разбивка определяется implementation plan после измерения размера полного набора. Контракт важнее формата: браузер получает только JSON-представление, предназначенное для чтения.
+Файлы web manifest являются build artifacts: они не становятся новым canonical storage и не коммитятся как ручные данные.
 
 Manifest содержит только уже существующие факты:
 
@@ -117,6 +119,35 @@ v1 не создаёт opaque score.
 
 LLM остаётся каналом для более сложного запроса «подбери нам фильм сегодня».
 
+### 5.3 Privacy envelope
+
+На дату этого spec GitHub Pages access control для private publication относится к GitHub Enterprise Cloud organization-owned project sites; личный private repository нельзя считать автоматически закрытым сайтом. Поэтому текущий personal repository должен проектироваться так, будто опубликованный Pages origin публично достижим.
+
+Безопасный v1 режим:
+
+```text
+canonical data
+-> exporter
+-> plaintext manifest inside CI workspace only
+-> build-time encryption
+-> encrypted payload published to Pages
+-> passphrase unlock in browser
+-> decrypted data kept only in runtime memory
+```
+
+Требования:
+
+- сильный shared passphrase хранится как repository Actions secret и известен только пользователям сайта;
+- public bundle не содержит passphrase, derived key или plaintext viewer data;
+- payload шифруется authenticated encryption, совместимым с Web Crypto;
+- salt/nonce могут быть публичными и хранятся рядом с ciphertext;
+- decrypted manifest не пишется в `localStorage`, IndexedDB или публичный cache;
+- неверный passphrase не раскрывает, какие фильмы/оценки находятся внутри;
+- unlock state не является заменой будущей write-broker authentication;
+- если в будущем Pages deployment получает действительно private access control, encryption можно оставить defense-in-depth либо убрать отдельным осознанным решением.
+
+Экран unlock должен быть частью визуальной системы, а не технической заглушкой.
+
 ## 6. Frontend boundary
 
 Предлагаемая структура:
@@ -127,16 +158,16 @@ web/
     app/
     components/
     features/
+      unlock/
       home/
       library/
       work-detail/
     data/
       client.ts
+      crypto.ts
       types.ts
     motion/
     styles/
-  public/
-    data/
   index.html
   package.json
   vite.config.ts
@@ -144,7 +175,7 @@ web/
 
 Компоненты получают типизированные view models. Они не знают о YAML-схемах, GitHub API, Actions или canonical filenames.
 
-Data adapter — единственная frontend-точка, знающая manifest contract.
+Data adapter — единственная frontend-точка, знающая manifest contract. Crypto boundary отвечает только за unlock/decryption и не содержит media business logic.
 
 ## 7. Информационная архитектура
 
@@ -285,7 +316,7 @@ Nav компактная, floating, не занимает большой про�
 
 Не добавляем разделы ради полноты.
 
-## 13. Изображения
+## 13. Изображения и TMDB attribution
 
 Canonical Git хранит TMDB provider paths, а не binary assets.
 
@@ -299,6 +330,14 @@ Fallback-порядок:
 
 Никаких случайных stock movie posters или synthetic replacements для реально существующих фильмов.
 
+Поскольку приложение использует TMDB data/images, v1 содержит раздел `О проекте` / credits с approved TMDB logo и обязательным notice:
+
+> This product uses the TMDB API but is not endorsed or certified by TMDB.
+
+Это единственное намеренное исключение из правила «весь интерфейс на русском»: сама навигация и пояснение вокруг attribution остаются русскими, обязательная provider-формулировка сохраняется без перевода.
+
+TMDB attribution не должен визуально конкурировать с собственным продуктом.
+
 ## 14. GitHub Pages delivery
 
 Добавляется отдельный Pages workflow, независимый от normal media write workflow.
@@ -311,27 +350,34 @@ checkout main
 -> install media requirements
 -> validate canonical data
 -> build/rebuild generated data check
--> export web manifest
+-> export plaintext web manifest inside runner workspace
 -> setup Node
 -> install locked frontend dependencies
+-> encrypt personal web payload from Actions secret
 -> test/typecheck/build web
 -> publish dist to GitHub Pages
 ```
 
+Plaintext manifest не публикуется как artifact Pages и не коммитится.
+
 Изменение media data после merge автоматически приводит к новой Pages build, чтобы сайт показывал актуальный `main`.
 
-Pages workflow не получает TMDB write/enrichment secret: enrichment уже происходит в media workflow, сайт использует сохранённые provider refs.
+Pages workflow не получает TMDB read/enrichment secret: enrichment уже происходит в media workflow, сайт использует сохранённые provider refs.
 
 ## 15. Routing на GitHub Pages
 
-Vite должен работать под repository subpath, а не предполагать root `/`.
+v1 использует **hash routing**.
 
-Detail navigation проектируется так, чтобы refresh/deep link не давал 404 на GitHub Pages. Implementation plan выберет один из безопасных вариантов:
+Причины:
 
-- hash routing;
-- static route fallback/404 strategy.
+- надёжный refresh/deep link на GitHub Pages без custom 404 routing;
+- минимальная инфраструктура;
+- не требует серверного rewrite layer;
+- совместим с repository subpath.
 
-Для v1 предпочтение отдаётся минимальной инфраструктуре и предсказуемым deep links.
+Vite должен работать под project-site base path и не предполагать root `/`.
+
+Если в будущем появится отдельный gateway/domain с rewrite support, переход на history routing будет отдельным решением.
 
 ## 16. Accessibility
 
@@ -345,9 +391,14 @@ Detail navigation проектируется так, чтобы refresh/deep lin
 - no motion dependency;
 - `prefers-reduced-motion`;
 - hover state всегда имеет keyboard/focus equivalent;
-- читабельность текста поверх backdrop проверяется на реальных изображениях, не только на design tokens.
+- читабельность текста поверх backdrop проверяется на реальных изображениях, не только на design tokens;
+- unlock form имеет label, error state и не зависит от placeholder как от label.
 
 ## 17. Состояния
+
+### Locked
+
+До успешной расшифровки персональные данные не рендерятся. Пользователь видит компактный кинематографичный unlock screen с русским UI.
 
 ### Loading
 
@@ -359,7 +410,7 @@ Skeleton повторяет форму итогового poster/hero layout. Ge
 
 ### Error
 
-Если manifest недоступен или повреждён, пользователь видит локальное понятное сообщение и возможность перезагрузить страницу. Ошибка не маскируется пустой медиатекой.
+Если encrypted payload недоступен/повреждён или passphrase неверен, пользователь видит понятное локальное сообщение. Ошибка не маскируется пустой медиатекой.
 
 ### Missing metadata
 
@@ -370,11 +421,12 @@ Skeleton повторяет форму итогового poster/hero layout. Ge
 - статическая сборка;
 - code splitting для detail/library по необходимости;
 - изображения lazy-load вне первого viewport;
-- hero image получает повышенный priority;
+- hero image получает повышенный priority после unlock;
 - Motion не подписывает React state на continuous scroll values;
 - backdrop blur не используется на больших scrolling surfaces;
 - производительность проверяется на mobile viewport;
-- размер manifest измеряется до выбора single-file vs per-work split.
+- размер manifest измеряется до выбора single-file vs per-work split;
+- encryption/decryption не блокирует основной UI дольше необходимого; работа выполняется одним bounded шагом после unlock.
 
 ## 19. Тестирование
 
@@ -387,14 +439,23 @@ Skeleton повторяет форму итогового poster/hero layout. Ge
 - missing optional metadata поддерживается;
 - asset refs сериализуются корректно.
 
+### Privacy tests
+
+- Pages output не содержит plaintext rating/feedback/title payload из manifest до decrypt;
+- passphrase отсутствует в built JS/assets;
+- wrong passphrase fail-closed;
+- tampered ciphertext fail-closed;
+- plaintext manifest не попадает в published artifact.
+
 ### Frontend tests
 
 - data adapter/type contract;
+- unlock flow;
 - search/filter behavior;
 - viewer context behavior;
 - fallback states;
 - no hard-coded production movie arrays;
-- Russian UI strings для shipping surfaces.
+- Russian UI strings для shipping surfaces, кроме обязательного TMDB notice.
 
 ### Build gates
 
@@ -404,6 +465,7 @@ Skeleton повторяет форму итогового poster/hero layout. Ge
 - frontend tests;
 - TypeScript typecheck;
 - production build;
+- published-artifact privacy check;
 - accessibility audit;
 - desktop/mobile screenshot review;
 - Impeccable critique/audit/polish before merge.
@@ -433,14 +495,16 @@ Workflow default: **comp-first**.
 v1 считается готовой, когда:
 
 - GitHub Pages публикует сайт из `main`;
+- опубликованный Pages artifact не раскрывает plaintext персональной медиатеки без unlock;
 - сайт строится только из repository-derived media data;
 - canonical data остаётся untouched frontend-слоем;
 - главный экран даёт быстрый персональный путь к выбору фильма;
 - library и detail page работают на desktop/mobile;
 - личные оценки/реакции визуально важнее внешнего рейтинга;
-- интерфейс полностью на русском;
+- интерфейс полностью на русском, кроме обязательного provider notice;
 - отсутствуют production mock arrays;
 - keyboard/reduced-motion/contrast gates пройдены;
+- TMDB attribution присутствует;
 - Impeccable finish review завершён;
 - `DESIGN.md` документирует фактическую визуальную систему;
 - будущий write-broker можно добавить без изменения canonical read architecture.
@@ -449,9 +513,9 @@ v1 считается готовой, когда:
 
 Следующие детали не меняют утверждённую архитектуру и выбираются после измерения/прототипирования:
 
-- single manifest vs manifest + per-work chunks;
-- hash router vs Pages fallback routing;
+- single encrypted manifest vs encrypted manifest + per-work chunks;
 - конкретная Cyrillic-capable font family;
 - exact TMDB image size variants;
 - минимальный набор deterministic home shelves при текущей плотности сигналов;
+- конкретные KDF параметры для Web Crypto-compatible encryption;
 - форма будущей write-broker authentication.
