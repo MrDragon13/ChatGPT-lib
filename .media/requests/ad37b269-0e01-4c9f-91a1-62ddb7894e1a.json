@@ -15,5 +15,10 @@
     "snowpiercer-2013": {"media_type": "movie", "id": 110415},
     "twelve-monkeys-1995": {"media_type": "movie", "id": 63},
     "v-for-vendetta-2005": {"media_type": "movie", "id": 752}
+  },
+  "year_overrides": {
+    "gentlemen-2019": 2020,
+    "kingsman-secret-service-2014": 2015,
+    "v-for-vendetta-2005": 2006
   }
 }
