@@ -1,4 +1,4 @@
-import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 import { AboutCredits } from "../components/AboutCredits";
@@ -10,6 +10,7 @@ import { historyHref, libraryHref, resolveTarget } from "./router";
 type AppContextValue = {
   manifest: WebManifest;
   target: TargetId;
+  refreshManifest(cacheBust?: string): Promise<void>;
 };
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -39,6 +40,11 @@ export function AppShell({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  const refreshManifest = useCallback(async (cacheBust?: string) => {
+    const value = await loadManifest(cacheBust);
+    setManifest(value);
+  }, []);
+
   const target = useMemo(() => {
     if (!manifest) return null;
     return resolveTarget(manifest, new URLSearchParams(location.search));
@@ -61,7 +67,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     );
   }
 
-  const value = { manifest, target } satisfies AppContextValue;
+  const value = { manifest, target, refreshManifest } satisfies AppContextValue;
 
   return (
     <AppContext.Provider value={value}>
