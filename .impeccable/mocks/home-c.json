@@ -1,0 +1,28 @@
+{
+  "id": "home-c",
+  "title": "Вечерний сеанс",
+  "viewport": "1440x900",
+  "source": "degraded-static-svg",
+  "approved": true,
+  "content_basis": ["arrival-2016", "knives-out-2019", "blade-runner-2049-2017"],
+  "typography": {
+    "family": "Onest Variable",
+    "package": "@fontsource-variable/onest@5.3.1",
+    "coverage": ["cyrillic", "cyrillic-ext", "latin", "latin-ext"],
+    "axis": "wght 100-900"
+  },
+  "palette": {
+    "canvas": "#080808",
+    "surface": "#11110F",
+    "surface_raised": "#1B1916",
+    "text": "#F3F0E8",
+    "text_secondary": "#9B968D",
+    "text_muted_floor": "#827D75",
+    "accent_tungsten": "#E0B56C",
+    "accent_ink": "#15120E",
+    "separator": "#302D27"
+  },
+  "notes": "Approved north star. Один большой hero-сеанс, два запасных варианта и прямой выход во всю медиатеку. Реальные TMDB изображения заменяют обозначенные plate-зоны при реализации; SVG не является shipping asset.",
+  "signature_interaction": "Фокус или hover на запасном кандидате коротко crossfade-ит hero backdrop и metadata с ощущением смены кадра проектора; reduced-motion оставляет мгновенную смену без spatial motion.",
+  "prompt": "Кинематографичный русский GitHub Pages интерфейс персональной медиатеки: один доминирующий фильм в первом viewport, backdrop как главный цветовой материал, небольшой poster plate справа, два спокойных запасных кандидата снизу и вход во всю медиатеку; charcoal/graphite, milk-white text, один tungsten accent, Onest Variable, высокая визуальная иерархия, без blue-purple gradients и без dashboard-grid."
+}
