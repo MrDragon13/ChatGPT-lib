@@ -160,6 +160,7 @@ rules:
 constraints: []
 summary:
   ratings_count: 53
+  relations_count: 0
   viewing_count: 106
 evidence:
   entity_count: 106
