@@ -113,9 +113,17 @@ async function expectJson<T>(response: Response, action: string): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+export async function getRepoJson<T>(
+  env: BrokerEnv,
+  token: string,
+  path: string,
+  action: string,
+): Promise<T> {
+  return expectJson<T>(await githubRequest(env, token, path), action);
+}
+
 export async function getMainSha(env: BrokerEnv, token: string): Promise<string> {
-  const response = await githubRequest(env, token, "/git/ref/heads/main");
-  const data = await expectJson<{ object?: { sha?: unknown } }>(response, "failed to read main ref");
+  const data = await getRepoJson<{ object?: { sha?: unknown } }>(env, token, "/git/ref/heads/main", "failed to read main ref");
   if (typeof data.object?.sha !== "string" || !data.object.sha) throw new GitHubApiError("main ref response missing sha", 502);
   return data.object.sha;
 }
