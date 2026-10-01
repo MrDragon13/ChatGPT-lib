@@ -43,10 +43,11 @@ export async function signJson(value: unknown, secret: string): Promise<string> 
 export async function verifySignedJson<T>(token: string, secret: string): Promise<T> {
   const [payload, signature, extra] = token.split(".");
   if (!payload || !signature || extra !== undefined) throw new Error("invalid signed token");
+  const signatureBytes = new Uint8Array(base64UrlDecode(signature));
   const valid = await crypto.subtle.verify(
     "HMAC",
     await hmacKey(secret),
-    base64UrlDecode(signature),
+    signatureBytes,
     encoder.encode(payload),
   );
   if (!valid) throw new Error("invalid signed token");
