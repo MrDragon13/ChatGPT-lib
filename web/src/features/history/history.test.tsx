@@ -110,4 +110,34 @@ describe("viewing history page", () => {
     expect(screen.getByRole("heading", { name: "Здесь пока пусто" })).toBeInTheDocument();
     expect(screen.getByText("После просмотра или отзыва фильм появится здесь.")).toBeInTheDocument();
   });
+
+  it("keeps day-precision activity on the same calendar date across time zones", () => {
+    const originalTimezone = process.env.TZ;
+    process.env.TZ = "America/Los_Angeles";
+    try {
+      render(
+        <HistoryView
+          target="primary"
+          reduceMotion
+          items={[
+            {
+              id: "legacy",
+              title: "Legacy",
+              year: 2024,
+              posterUrl: null,
+              rating: 8,
+              reaction: null,
+              feedbackSummary: null,
+              activityAt: "2026-01-01",
+              activityPrecision: "day",
+            },
+          ]}
+        />,
+      );
+      expect(screen.getByText(/1 января 2026/)).toBeInTheDocument();
+    } finally {
+      if (originalTimezone === undefined) delete process.env.TZ;
+      else process.env.TZ = originalTimezone;
+    }
+  });
 });
