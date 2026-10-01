@@ -6,9 +6,11 @@
 
 ### 🎬 Media
 
-- [Personal Media Library v4](media/README.md) — фильмы, сериалы, анимация, multi-viewer сигналы, рекомендации и правила хранения.
+- [Personal Media Library v4](media/README.md) — фильмы, сериалы, анимация, multi-viewer сигналы, рекомендации, typed tooling и GitHub-native write flow.
 
 ## Архитектурные документы
 
 - `docs/superpowers/specs/2026-10-01-personal-media-recommendation-v4-design.md`
 - `docs/superpowers/plans/2026-10-01-personal-media-recommendation-v4.md`
+- `docs/superpowers/specs/2026-10-01-media-tooling-orchestration-design.md`
+- `docs/superpowers/plans/2026-10-01-media-tooling-orchestration.md`
