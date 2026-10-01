@@ -1,5 +1,5 @@
 import { Clock, Star } from "@phosphor-icons/react";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { useParams } from "react-router-dom";
 
 import { useAppContext } from "../../app/AppShell";
@@ -69,6 +69,7 @@ export function WorkDetailView({
   view: WorkDetailModel;
   activeTarget: TargetId;
 }) {
+  const reduceMotion = useReducedMotion();
   const orderedSignals = [
     view.signals[activeTarget],
     ...Object.entries(view.signals)
@@ -77,19 +78,22 @@ export function WorkDetailView({
   ].filter((signal): signal is DetailSignal => Boolean(signal));
 
   const hasCredits = view.directors.length > 0 || view.cast.length > 0;
+  const revealInitial = reduceMotion ? false : revealMotion.hidden;
+  const revealTransition = reduceMotion ? { duration: 0 } : revealMotion.transition;
 
   return (
     <article className="detail-page">
       <motion.header
         className={`detail-hero${view.backdropUrl ? " detail-hero--with-image" : ""}`}
+        data-motion={reduceMotion ? "reduced" : "full"}
         style={
           view.backdropUrl
             ? ({ "--detail-backdrop": `url("${view.backdropUrl}")` } as React.CSSProperties)
             : undefined
         }
-        initial={revealMotion.hidden}
+        initial={revealInitial}
         animate={revealMotion.visible}
-        transition={revealMotion.transition}
+        transition={revealTransition}
       >
         <div className="detail-hero__scrim" aria-hidden="true" />
         <div className="detail-hero__poster" aria-hidden="true">
@@ -115,10 +119,10 @@ export function WorkDetailView({
       <motion.section
         className="detail-signals"
         aria-labelledby="detail-signals-title"
-        initial={revealMotion.hidden}
+        initial={revealInitial}
         whileInView={revealMotion.visible}
         viewport={{ once: true, amount: 0.16 }}
-        transition={revealMotion.transition}
+        transition={revealTransition}
       >
         <div className="detail-section-heading">
           <p className="eyebrow">Личное</p>
@@ -142,10 +146,10 @@ export function WorkDetailView({
         <motion.section
           className="detail-external"
           aria-labelledby="detail-external-title"
-          initial={revealMotion.hidden}
+          initial={revealInitial}
           whileInView={revealMotion.visible}
           viewport={{ once: true, amount: 0.2 }}
-          transition={revealMotion.transition}
+          transition={revealTransition}
         >
           <div>
             <p className="eyebrow">Внешний контекст</p>
@@ -163,10 +167,10 @@ export function WorkDetailView({
         <motion.section
           className="detail-credits"
           aria-labelledby="detail-credits-title"
-          initial={revealMotion.hidden}
+          initial={revealInitial}
           whileInView={revealMotion.visible}
           viewport={{ once: true, amount: 0.14 }}
-          transition={revealMotion.transition}
+          transition={revealTransition}
         >
           <div className="detail-section-heading">
             <p className="eyebrow">Создатели</p>
