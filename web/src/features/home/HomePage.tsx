@@ -59,17 +59,18 @@ function PosterRail({
 }) {
   const reduceMotion = useReducedMotion();
   if (!items.length) return null;
+  const headingId = `rail-${title.replaceAll(" ", "-").toLowerCase()}`;
   return (
     <motion.section
       className="poster-section"
-      aria-labelledby={`rail-${title}`}
+      aria-labelledby={headingId}
       initial={reduceMotion ? false : revealMotion.hidden}
       whileInView={revealMotion.visible}
       viewport={{ once: true, amount: 0.18 }}
       transition={reduceMotion ? { duration: 0 } : revealMotion.transition}
     >
       <div className="section-heading">
-        <h2 id={`rail-${title}`}>{title}</h2>
+        <h2 id={headingId}>{title}</h2>
       </div>
       <div className="poster-rail">
         {items.map((item) => (
@@ -207,6 +208,7 @@ export function HomePage() {
         ) : null}
       </section>
 
+      <PosterRail title="Посмотреть следующим" items={model.next} target={target} />
       {target !== "couple" ? <PosterRail title="Для двоих" items={model.couple} target="couple" /> : null}
       <PosterRail title="Недавно смотрели" items={model.recent} target={target} />
     </div>
