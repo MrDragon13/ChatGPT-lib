@@ -58,6 +58,15 @@ jobs:
       - name: Build web
         working-directory: web
         run: npm run build
+      - name: Scan static artifact
+        working-directory: web
+        run: npm run scan:dist
+      - name: Install Chromium for browser checks
+        working-directory: web
+        run: npx playwright install --with-deps chromium
+      - name: Run browser checks
+        working-directory: web
+        run: npm run test:e2e
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload GitHub Pages artifact
