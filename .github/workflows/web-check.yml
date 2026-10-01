@@ -47,3 +47,9 @@ jobs:
       - name: Build web
         working-directory: web
         run: npm run build
+      - name: Install Chromium for browser checks
+        working-directory: web
+        run: npx playwright install --with-deps chromium
+      - name: Run responsive and motion browser checks
+        working-directory: web
+        run: npm run test:e2e -- responsive.spec.ts motion.spec.ts
