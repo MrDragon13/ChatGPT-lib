@@ -26,15 +26,16 @@ function CandidateThumb({
   target: string;
   onPreview: () => void;
 }) {
+  const reduceMotion = useReducedMotion();
   return (
     <motion.a
       className="candidate-thumb"
       href={workHref(candidate.id, target)}
       onPointerEnter={onPreview}
       onFocus={onPreview}
-      whileHover={cardMotion.hover}
-      whileTap={cardMotion.tap}
-      transition={cardMotion.transition}
+      whileHover={reduceMotion ? undefined : cardMotion.hover}
+      whileTap={reduceMotion ? undefined : cardMotion.tap}
+      transition={reduceMotion ? { duration: 0 } : cardMotion.transition}
     >
       <span className="candidate-thumb__image" aria-hidden="true">
         {candidate.posterUrl ? <img src={candidate.posterUrl} alt="" loading="lazy" /> : <span />}
@@ -76,9 +77,9 @@ function PosterRail({
             className="poster-card"
             href={workHref(item.id, target)}
             key={item.id}
-            whileHover={cardMotion.hover}
-            whileTap={cardMotion.tap}
-            transition={cardMotion.transition}
+            whileHover={reduceMotion ? undefined : cardMotion.hover}
+            whileTap={reduceMotion ? undefined : cardMotion.tap}
+            transition={reduceMotion ? { duration: 0 } : cardMotion.transition}
           >
             <span className="poster-card__art">
               {item.posterUrl ? <img src={item.posterUrl} alt="" loading="lazy" /> : <span aria-hidden="true" />}
@@ -173,8 +174,8 @@ export function HomePage() {
           <motion.a
             className="hero-action"
             href={workHref(activeHero.id, target)}
-            whileTap={cardMotion.tap}
-            transition={cardMotion.transition}
+            whileTap={reduceMotion ? undefined : cardMotion.tap}
+            transition={reduceMotion ? { duration: 0 } : cardMotion.transition}
           >
             Подробнее <ArrowRight aria-hidden="true" weight="bold" />
           </motion.a>
