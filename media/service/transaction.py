@@ -9,19 +9,20 @@ from pathlib import Path
 from typing import Any
 
 from media.domain.changeset import MutationPlan, OperationResult
-from media.domain.commands import AddWorkCommand, RecordViewingFeedbackCommand, SetInterestCommand
+from media.domain.commands import AddWorkCommand, RecordViewingFeedbackCommand, RefreshMetadataCommand, SetInterestCommand
 from media.domain.errors import CommandValidationError, NotFoundError, TransactionValidationError
 from media.domain.types import WorkRef
 from media.repository.yaml_repo import YamlRepository
 from media.service.enrich import plan_add_work, plan_add_work_resolved
 from media.service.mutate import apply_feedback_updates, plan_record_viewing_feedback, plan_set_interest, profile_targets_for
 from media.service.path_policy import verify_changed_paths
+from media.service.refresh import plan_refresh_metadata
 from media.tools.build_index import write_index
 from media.tools.build_profiles import write_profiles
 from media.tools.common import dump_yaml
 from media.tools.validate import validate_repository
 
-MutableCommand = RecordViewingFeedbackCommand | SetInterestCommand | AddWorkCommand
+MutableCommand = RecordViewingFeedbackCommand | SetInterestCommand | AddWorkCommand | RefreshMetadataCommand
 
 
 def _receipt_path(repo_root: Path, operation_id: str) -> Path:
@@ -36,6 +37,7 @@ def _load_receipt(path: Path) -> OperationResult:
         data["operation"],
         tuple(data.get("changed_entities") or ()),
         tuple(data.get("changed_files") or ()),
+        data.get("details") or {},
     )
 
 
@@ -87,6 +89,8 @@ def _plan(repo: YamlRepository, command: MutableCommand, now: datetime | None, p
         return plan_set_interest(repo, command, now=now)
     if isinstance(command, AddWorkCommand):
         return plan_add_work(repo, command, provider, now=now)
+    if isinstance(command, RefreshMetadataCommand):
+        return plan_refresh_metadata(repo, command, provider, now=now)
     raise CommandValidationError("unsupported mutable command")
 
 
@@ -102,6 +106,7 @@ def preview_command(repo_root: Path, command: MutableCommand, *, now: datetime |
         plan.operation,
         plan.changed_entities,
         tuple(sorted(plan.documents)),
+        plan.details,
     )
 
 
@@ -179,6 +184,8 @@ def execute_command(repo_root: Path, command: MutableCommand, *, now: datetime |
             "changed_files": list(changed_files),
             "applied_at": applied_at,
         }
+        if plan.details:
+            payload["details"] = dict(plan.details)
         temp_receipt = temp_root / receipt_rel
         temp_receipt.parent.mkdir(parents=True, exist_ok=True)
         temp_receipt.write_text(
@@ -188,4 +195,4 @@ def execute_command(repo_root: Path, command: MutableCommand, *, now: datetime |
         sync_paths = media_paths + [receipt_rel]
         verify_changed_paths(plan.operation, sync_paths)
         _sync_with_rollback(repo_root, temp_root, sync_paths)
-    return OperationResult(status, plan.operation_id, plan.operation, plan.changed_entities, changed_files)
+    return OperationResult(status, plan.operation_id, plan.operation, plan.changed_entities, changed_files, plan.details)
