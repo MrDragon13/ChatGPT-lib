@@ -57,6 +57,8 @@ jobs:
         run: npm run typecheck
       - name: Build web
         working-directory: web
+        env:
+          VITE_MEDIA_BROKER_URL: ${{ vars.MEDIA_BROKER_URL }}
         run: npm run build
       - name: Scan static artifact
         working-directory: web

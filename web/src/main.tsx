@@ -6,6 +6,7 @@ import { HashRouter } from "react-router-dom";
 
 import { AppShell } from "./app/AppShell";
 import { AppRoutes } from "./app/router";
+import { BrokerSessionProvider } from "./broker/BrokerSessionProvider";
 import "./styles/tokens.css";
 import "./styles/global.css";
 
@@ -15,11 +16,13 @@ if (!root) throw new Error("Root element is missing");
 createRoot(root).render(
   <StrictMode>
     <MotionConfig reducedMotion="user">
-      <HashRouter>
-        <AppShell>
-          <AppRoutes />
-        </AppShell>
-      </HashRouter>
+      <BrokerSessionProvider>
+        <HashRouter>
+          <AppShell>
+            <AppRoutes />
+          </AppShell>
+        </HashRouter>
+      </BrokerSessionProvider>
     </MotionConfig>
   </StrictMode>,
 );
