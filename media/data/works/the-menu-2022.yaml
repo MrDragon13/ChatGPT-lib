@@ -6,6 +6,12 @@ identity:
   title_original: The Menu
   title_ru: Меню
   year: 2022
+  release_date: '2022-11-17'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 593643
+    imdb: tt9764362
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,91 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.comedy
+    runtime_min: 107
+    original_language: en
+    countries:
+    - US
+    production_status: completed
+    synopsis_short: Марго и Тайлер едут на отдаленный остров, чтобы попасть на ужин
+      в эксклюзивный ресторан, где шеф-повар Словик приготовил роскошное меню с некоторыми
+      шокирующими сюрпризами.
+    directors:
+    - name: Марк Милод
+      external_ids:
+        tmdb: 57199
+    writers:
+    - name: Сет Рейсс
+      external_ids:
+        tmdb: 2362815
+    - name: Will Tracy
+      external_ids:
+        tmdb: 2373362
+    main_cast:
+    - name: Аня Тейлор-Джой
+      character: Margot
+      external_ids:
+        tmdb: 1397778
+    - name: Рэйф Файнс
+      character: Chef Slowik
+      external_ids:
+        tmdb: 5469
+    - name: Николас Холт
+      character: Tyler
+      external_ids:
+        tmdb: 3292
+    - name: Джанет Мактир
+      character: Lillian
+      external_ids:
+        tmdb: 47627
+    - name: Пол Адельштейн
+      character: Ted
+      external_ids:
+        tmdb: 17342
+    - name: Роб Янг
+      character: Bryce
+      external_ids:
+        tmdb: 207389
+    - name: Эйми Карреро
+      character: Felicity
+      external_ids:
+        tmdb: 1224238
+    - name: Джон Легуизамо
+      character: Movie Star
+      external_ids:
+        tmdb: 5723
+    - name: Артуро Кастро
+      character: Soren
+      external_ids:
+        tmdb: 1457999
+    - name: Рид Бирни
+      character: Richard
+      external_ids:
+        tmdb: 163774
+    - name: Хонг Чау
+      character: Elsa
+      external_ids:
+        tmdb: 1360317
+    - name: Джудит Лайт
+      character: Anne
+      external_ids:
+        tmdb: 80415
+    assets:
+      poster:
+        provider: tmdb
+        path: /84khkKvBldEp3h1PQUe6v8ItpR7.jpg
+      backdrop:
+        provider: tmdb
+        path: /4vSBj7BYsyuKCx96EJzGyp20WfY.jpg
+    external_metrics:
+      tmdb:
+        score: 7.179
+        votes: 6698
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 593643
+      fetched_at: '2026-10-01T11:51:06.280288Z'

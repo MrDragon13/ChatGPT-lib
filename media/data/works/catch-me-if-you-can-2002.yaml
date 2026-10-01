@@ -6,6 +6,12 @@ identity:
   title_original: Catch Me If You Can
   title_ru: Поймай меня, если сможешь
   year: 2002
+  release_date: '2002-12-16'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 640
+    imdb: tt0264464
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,93 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.drama
+    - genre.crime
+    runtime_min: 141
+    original_language: en
+    countries:
+    - US
+    production_status: completed
+    synopsis_short: Фрэнк Эбегнейл успел поработать врачом, адвокатом и пилотом на
+      пассажирской авиалинии — и все это до достижения полного совершеннолетия в 21
+      год. Мастер в обмане и жульничестве, он также обладал искусством подделки документов,
+      что в конечном счете принесло ему миллионы долларов, которые он получил по фальшивым
+      чекам. Агент ФБР Карл Хэнрэтти отдал бы все, чтобы схватить Фрэнка и привлечь
+      к ответственности за свои деяния, но Фрэнк всегда опережает его на шаг, заставляя
+      продолжать погоню.
+    directors:
+    - name: Стивен Спилберг
+      external_ids:
+        tmdb: 488
+    writers:
+    - name: Джефф Натансон
+      external_ids:
+        tmdb: 2689
+    main_cast:
+    - name: Леонардо ДиКаприо
+      character: Frank Abagnale Jr.
+      external_ids:
+        tmdb: 6193
+    - name: Том Хэнкс
+      character: Carl Hanratty
+      external_ids:
+        tmdb: 31
+    - name: Кристофер Уокен
+      character: Frank Abagnale
+      external_ids:
+        tmdb: 4690
+    - name: Мартин Шин
+      character: Roger Strong
+      external_ids:
+        tmdb: 8349
+    - name: Натали Бей
+      character: Paula Abagnale
+      external_ids:
+        tmdb: 136761
+    - name: Эми Адамс
+      character: Brenda Strong
+      external_ids:
+        tmdb: 9273
+    - name: Джеймс Бролин
+      character: Jack Barnes
+      external_ids:
+        tmdb: 9274
+    - name: Брайан Хоу
+      character: Earl Amdursky
+      external_ids:
+        tmdb: 1990
+    - name: Фрэнк Джон Хьюз
+      character: Tom Fox
+      external_ids:
+        tmdb: 9275
+    - name: Steve Eastin
+      character: Paul Morgan
+      external_ids:
+        tmdb: 9276
+    - name: Крис Эллис
+      character: Special Agent Witkins
+      external_ids:
+        tmdb: 8191
+    - name: Джон Финн
+      character: Assistant Director Marsh
+      external_ids:
+        tmdb: 9277
+    assets:
+      poster:
+        provider: tmdb
+        path: /9Izej6CiwFkptv6aTbRhersjAiT.jpg
+      backdrop:
+        provider: tmdb
+        path: /ggC3Brchf4RqPitEh7cROFoeAWn.jpg
+    external_metrics:
+      tmdb:
+        score: 7.978
+        votes: 17631
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 640
+      fetched_at: '2026-10-01T11:50:58.239193Z'

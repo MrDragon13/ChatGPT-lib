@@ -6,6 +6,12 @@ identity:
   title_original: Equilibrium
   title_ru: Эквилибриум
   year: 2002
+  release_date: '2002-12-06'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 7299
+    imdb: tt0238380
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,94 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.action
+    - genre.science_fiction
+    - genre.thriller
+    runtime_min: 107
+    original_language: en
+    countries:
+    - US
+    production_status: completed
+    synopsis_short: Действие происходит в будущем, когда люди лишены возможности выражать
+      какие-то эмоции, потому, что они… запрещены. Это - та цена, которую человечество
+      платит за устранение из своей жизни войны. Теперь книги, искусство и музыка
+      находятся вне закона. А любое чувство - уже преступление, наказуемое смертью.
+      Агент Джон Престон борется с теми, кто нарушает правила. В один прекрасный момент
+      он забывает принять очередную дозу лекарства и с ним происходит духовное превращение,
+      что приводит его к противоречию с самим собой и с начальством.
+    directors:
+    - name: Курт Уиммер
+      external_ids:
+        tmdb: 13927
+    writers:
+    - name: Курт Уиммер
+      external_ids:
+        tmdb: 13927
+    main_cast:
+    - name: Кристиан Бейл
+      character: John Preston
+      external_ids:
+        tmdb: 3894
+    - name: Эмили Уотсон
+      character: Mary O'Brien
+      external_ids:
+        tmdb: 1639
+    - name: Тэй Диггз
+      character: Brandt
+      external_ids:
+        tmdb: 17637
+    - name: Энгус Макфадьен
+      character: DuPont
+      external_ids:
+        tmdb: 2464
+    - name: Шон Бин
+      character: Errol Partridge
+      external_ids:
+        tmdb: 48
+    - name: Шон Пертви
+      character: Father
+      external_ids:
+        tmdb: 28848
+    - name: Мэтью Харбор
+      character: Robbie Preston
+      external_ids:
+        tmdb: 52401
+    - name: Уильям Фихтнер
+      character: Jürgen
+      external_ids:
+        tmdb: 886
+    - name: Доминик Пёрселл
+      character: Seamus
+      external_ids:
+        tmdb: 10862
+    - name: Дэвид Хеммингс
+      character: Proctor
+      external_ids:
+        tmdb: 15196
+    - name: Кристиан Карманн
+      character: Officer in Charge
+      external_ids:
+        tmdb: 43454
+    - name: Джон Кеог
+      character: Chemist
+      external_ids:
+        tmdb: 49486
+    assets:
+      poster:
+        provider: tmdb
+        path: /3L8uAS38M7sgehBoZ7ao2FooG2j.jpg
+      backdrop:
+        provider: tmdb
+        path: /dQutbCXdvcoRORJTcnakrICCkDb.jpg
+    external_metrics:
+      tmdb:
+        score: 7.057
+        votes: 5241
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 7299
+      fetched_at: '2026-10-01T11:50:59.779950Z'

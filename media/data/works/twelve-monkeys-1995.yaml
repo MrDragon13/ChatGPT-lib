@@ -6,6 +6,12 @@ identity:
   title_original: 12 Monkeys
   title_ru: 12 обезьян
   year: 1995
+  release_date: '1995-12-29'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 63
+    imdb: tt0114746
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,96 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.science_fiction
+    - genre.thriller
+    - genre.mystery
+    runtime_min: 129
+    original_language: en
+    countries:
+    - US
+    production_status: completed
+    synopsis_short: 2035 год... Чудовищный, неизлечимый вирус уничтожил пять миллиардов
+      человек, то есть 99% населения Земли. Оставшиеся в живых люди вынуждены обитать
+      под землей. Уголовник Джеймс Коул добровольно отправляется в опасное путешествие
+      на машине времени. Он должен попасть в прошлое, чтобы помочь ученым найти источник
+      возникновения этого ужасного вируса и раскрыть загадку таинственных «Двенадцати
+      обезьян»...
+    directors:
+    - name: Терри Гиллиам
+      external_ids:
+        tmdb: 280
+    writers:
+    - name: Дэвид Уэбб Пиплз
+      external_ids:
+        tmdb: 7191
+    - name: Janet Peoples
+      external_ids:
+        tmdb: 281
+    main_cast:
+    - name: Брюс Уиллис
+      character: James Cole
+      external_ids:
+        tmdb: 62
+    - name: Мэделин Стоу
+      character: Dr. Kathryn Railly
+      external_ids:
+        tmdb: 289
+    - name: Брэд Питт
+      character: Jeffrey Goines
+      external_ids:
+        tmdb: 287
+    - name: Кристофер Пламмер
+      character: Dr. Goines
+      external_ids:
+        tmdb: 290
+    - name: Дэвид Морс
+      character: Dr. Peters
+      external_ids:
+        tmdb: 52
+    - name: Джон Седа
+      character: Jose
+      external_ids:
+        tmdb: 288
+    - name: Кристофер Мелони
+      character: Lt. Halperin
+      external_ids:
+        tmdb: 22227
+    - name: Джоуи Перилло
+      character: Detective Franki
+      external_ids:
+        tmdb: 1318900
+    - name: Лиза Гэй Хэмилтон
+      character: Teddy
+      external_ids:
+        tmdb: 64908
+    - name: Мэтт Росс
+      character: Bee
+      external_ids:
+        tmdb: 11154
+    - name: Annie Golden
+      character: Woman Cabbie
+      external_ids:
+        tmdb: 66094
+    - name: Michael Chance
+      character: Scarface
+      external_ids:
+        tmdb: 1077231
+    assets:
+      poster:
+        provider: tmdb
+        path: /p8WRofuh7P4a0ttjnZdAslnyex1.jpg
+      backdrop:
+        provider: tmdb
+        path: /mKIkGoyuR71qz6FdiEiOjxvBQcS.jpg
+    external_metrics:
+      tmdb:
+        score: 7.614
+        votes: 9426
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 63
+      fetched_at: '2026-10-01T11:51:06.833622Z'

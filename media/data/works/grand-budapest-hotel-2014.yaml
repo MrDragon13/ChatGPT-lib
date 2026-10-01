@@ -6,6 +6,12 @@ identity:
   title_original: The Grand Budapest Hotel
   title_ru: Отель «Гранд Будапешт»
   year: 2014
+  release_date: '2014-02-26'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 120467
+    imdb: tt2278388
 viewer_signals:
   primary:
     viewing:
@@ -27,3 +33,92 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.comedy
+    - genre.drama
+    runtime_min: 100
+    original_language: en
+    countries:
+    - US
+    - DE
+    production_status: completed
+    synopsis_short: Картина расскажет о легендарном консьерже популярного европейского
+      отеля и проследит за его жизнью между двумя мировыми войнами, а также за его
+      дружбой с юным сотрудником, который становится его протеже. Сюжет включает в себя
+      кражу бесценной картины эпохи Возрождения, борьбу за огромное наследство и потрясения,
+      постигшие Европу во время первой половины XX века.
+    directors:
+    - name: Уэс Андерсон
+      external_ids:
+        tmdb: 5655
+    writers:
+    - name: Уэс Андерсон
+      external_ids:
+        tmdb: 5655
+    main_cast:
+    - name: Рэйф Файнс
+      character: M. Gustave
+      external_ids:
+        tmdb: 5469
+    - name: Ф. Мюррей Абрахам
+      character: Mr. Moustafa
+      external_ids:
+        tmdb: 1164
+    - name: Тони Револори
+      character: Zero
+      external_ids:
+        tmdb: 1291350
+    - name: Эдриен Броуди
+      character: Dmitri
+      external_ids:
+        tmdb: 3490
+    - name: Уиллем Дефо
+      character: Jopling
+      external_ids:
+        tmdb: 5293
+    - name: Матьё Амальрик
+      character: Serge X.
+      external_ids:
+        tmdb: 8789
+    - name: Джефф Голдблюм
+      character: Deputy Kovacs
+      external_ids:
+        tmdb: 4785
+    - name: Харви Кейтель
+      character: Ludwig
+      external_ids:
+        tmdb: 1037
+    - name: Джуд Лоу
+      character: Young Author
+      external_ids:
+        tmdb: 9642
+    - name: Билл Мюррей
+      character: M. Ivan
+      external_ids:
+        tmdb: 1532
+    - name: Эдвард Нортон
+      character: Henckels
+      external_ids:
+        tmdb: 819
+    - name: Сирша Ронан
+      character: Agatha
+      external_ids:
+        tmdb: 36592
+    assets:
+      poster:
+        provider: tmdb
+        path: /5qFxj03eBrkI0bUiGIonb4e0AI4.jpg
+      backdrop:
+        provider: tmdb
+        path: /jK65srQczOKTpW62wPxwwKztGgE.jpg
+    external_metrics:
+      tmdb:
+        score: 8.026
+        votes: 16547
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 120467
+      fetched_at: '2026-10-01T11:51:00.342195Z'

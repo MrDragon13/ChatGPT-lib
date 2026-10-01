@@ -6,6 +6,12 @@ identity:
   title_original: The Matrix Revolutions
   title_ru: 'Матрица: Революция'
   year: 2003
+  release_date: '2003-11-05'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 605
+    imdb: tt0242653
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,96 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.adventure
+    - genre.action
+    - genre.thriller
+    - genre.science_fiction
+    runtime_min: 129
+    original_language: en
+    countries:
+    - US
+    production_status: completed
+    synopsis_short: Пока армия машин пытается уничтожить Зион, его жители из последних
+      сил держат оборону.
+    directors:
+    - name: Энди Вачовски
+      external_ids:
+        tmdb: 9339
+    - name: Лана Вачовски
+      external_ids:
+        tmdb: 9340
+    writers:
+    - name: Энди Вачовски
+      external_ids:
+        tmdb: 9339
+    - name: Лана Вачовски
+      external_ids:
+        tmdb: 9340
+    main_cast:
+    - name: Киану Ривз
+      character: Neo
+      external_ids:
+        tmdb: 6384
+    - name: Лоренс Фишбёрн
+      character: Morpheus
+      external_ids:
+        tmdb: 2975
+    - name: Кэрри-Энн Мосс
+      character: Trinity
+      external_ids:
+        tmdb: 530
+    - name: Хьюго Уивинг
+      character: Agent Smith
+      external_ids:
+        tmdb: 1331
+    - name: Джада Пинкетт-Смит
+      character: Niobe
+      external_ids:
+        tmdb: 9575
+    - name: Мэри Элис
+      character: The Oracle
+      external_ids:
+        tmdb: 9572
+    - name: Гарольд Перрино
+      character: Link
+      external_ids:
+        tmdb: 6195
+    - name: Колин Чоу
+      character: Seraph
+      external_ids:
+        tmdb: 52908
+    - name: Гарри Ленникс
+      character: Commander Lock
+      external_ids:
+        tmdb: 9464
+    - name: Иэн Блисс
+      character: Bane
+      external_ids:
+        tmdb: 62486
+    - name: Ламбер Вильсон
+      character: Merovingian
+      external_ids:
+        tmdb: 2192
+    - name: Брюс Спенс
+      character: Trainman
+      external_ids:
+        tmdb: 27752
+    assets:
+      poster:
+        provider: tmdb
+        path: /19LNhQz4nwbwS95CQ9LHLxAUAXB.jpg
+      backdrop:
+        provider: tmdb
+        path: /533xAMhhVyjTy8hwMUFEt5TuDfR.jpg
+    external_metrics:
+      tmdb:
+        score: 6.759
+        votes: 11173
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 605
+      fetched_at: '2026-10-01T11:51:03.602894Z'

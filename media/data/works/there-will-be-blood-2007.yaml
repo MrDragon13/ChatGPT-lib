@@ -6,6 +6,12 @@ identity:
   title_original: There Will Be Blood
   title_ru: Нефть
   year: 2007
+  release_date: '2007-12-26'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 7345
+    imdb: tt0469494
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,89 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.drama
+    runtime_min: 158
+    original_language: en
+    countries:
+    - US
+    production_status: completed
+    synopsis_short: Начало XX века. Предприниматель Дэниэл Плэйнвью ищет золото и
+      серебро, а находит нефть. За несколько лет он становится преуспевающим нефтяником,
+      разработавшим уже несколько скважин. Однажды он узнает про новое месторождение.
+      Уцепившись за этот шанс разбогатеть, Дэниэл делает всё, чтобы добиться своего.
+    directors:
+    - name: Пол Томас Андерсон
+      external_ids:
+        tmdb: 4762
+    writers:
+    - name: Пол Томас Андерсон
+      external_ids:
+        tmdb: 4762
+    main_cast:
+    - name: Дэниэл Дэй-Льюис
+      character: Daniel Plainview
+      external_ids:
+        tmdb: 11856
+    - name: Пол Дано
+      character: Paul Sunday / Eli Sunday
+      external_ids:
+        tmdb: 17142
+    - name: Кевин Джеймс О’Коннор
+      character: Henry
+      external_ids:
+        tmdb: 18916
+    - name: Киаран Хайндс
+      character: Fletcher Hamilton
+      external_ids:
+        tmdb: 8785
+    - name: Dillon Freasier
+      character: H.W. Plainview
+      external_ids:
+        tmdb: 52564
+    - name: Hope Elizabeth Reeves
+      character: Elizabeth
+      external_ids:
+        tmdb: 52565
+    - name: Colleen Foy
+      character: Mary Sunday
+      external_ids:
+        tmdb: 52566
+    - name: Барри Дель Шерман
+      character: H. B. Ailman
+      external_ids:
+        tmdb: 8214
+    - name: David Willis
+      character: Abel Sunday
+      external_ids:
+        tmdb: 53668
+    - name: Hans Howes
+      character: Mr. Bandy
+      external_ids:
+        tmdb: 53669
+    - name: Sydney McCallister
+      character: Mary Sunday (young)
+      external_ids:
+        tmdb: 53670
+    - name: Paul F. Tompkins
+      character: Prescott
+      external_ids:
+        tmdb: 1219029
+    assets:
+      poster:
+        provider: tmdb
+        path: /pRDl87FFiBEeyveitkwylmE7pbQ.jpg
+      backdrop:
+        provider: tmdb
+        path: /9UAKA6ceZi6TgQwTAAMt7DWwYPI.jpg
+    external_metrics:
+      tmdb:
+        score: 8.064
+        votes: 7744
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 7345
+      fetched_at: '2026-10-01T11:51:06.367541Z'

@@ -6,6 +6,12 @@ identity:
   title_original: Jagten
   title_ru: Охота
   year: 2012
+  release_date: '2012-10-25'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 103663
+    imdb: tt2106476
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,93 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.drama
+    runtime_min: 106
+    original_language: da
+    countries:
+    - DK
+    - SE
+    production_status: completed
+    synopsis_short: После развода учитель живет одинокой жизнью, пытаясь восстановить
+      отношения со своим сыном-подростком. Постепенно он находит любовь и получает
+      хорошие новости от сына, но эта удача вот-вот будет жестоко разрушена невинной
+      ложью.
+    directors:
+    - name: Thomas Vinterberg
+      external_ids:
+        tmdb: 4453
+    writers:
+    - name: Тобиас Линдхольм
+      external_ids:
+        tmdb: 141883
+    - name: Thomas Vinterberg
+      external_ids:
+        tmdb: 4453
+    main_cast:
+    - name: Мадс Миккельсен
+      character: Lucas
+      external_ids:
+        tmdb: 1019
+    - name: Томас Бо Ларсен
+      character: Theo
+      external_ids:
+        tmdb: 4457
+    - name: Анника Веддеркопп
+      character: Klara
+      external_ids:
+        tmdb: 1112385
+    - name: Лассе Фогельстрём
+      character: Marcus
+      external_ids:
+        tmdb: 1188827
+    - name: Суссе Вольд
+      character: Grethe
+      external_ids:
+        tmdb: 47156
+    - name: Анне Луизе Хассинг
+      character: Agnes
+      external_ids:
+        tmdb: 6122
+    - name: Ларс Ранте
+      character: Bruun
+      external_ids:
+        tmdb: 588175
+    - name: Александра Рапапорт
+      character: Nadja
+      external_ids:
+        tmdb: 92416
+    - name: Себастьян Булл Сарнинг
+      character: Torsten
+      external_ids:
+        tmdb: 1442695
+    - name: Steen Ordell Guldbrandsen
+      character: Lars T
+      external_ids:
+        tmdb: 1442696
+    - name: Daniel Engstrup
+      character: Johan
+      external_ids:
+        tmdb: 1441931
+    - name: Troels Thorsen
+      character: Bent
+      external_ids:
+        tmdb: 1442697
+    assets:
+      poster:
+        provider: tmdb
+        path: /gKPW529JqNdzOqooFfdFDNC32at.jpg
+      backdrop:
+        provider: tmdb
+        path: /jmVWlCZ8hRtmrQGbKXXFHsrSohp.jpg
+    external_metrics:
+      tmdb:
+        score: 8.098
+        votes: 5003
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 103663
+      fetched_at: '2026-10-01T11:51:06.133602Z'

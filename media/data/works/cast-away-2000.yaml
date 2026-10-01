@@ -6,6 +6,12 @@ identity:
   title_original: Cast Away
   title_ru: Изгой
   year: 2000
+  release_date: '2000-12-22'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 8358
+    imdb: tt0162222
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,95 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.adventure
+    - genre.drama
+    runtime_min: 143
+    original_language: en
+    countries:
+    - US
+    production_status: completed
+    synopsis_short: "Герой этой картины, Чак Нолан, — сотрудник всемирно известной\
+      \ службы доставки «Federal Express». Чак — скрупулёзный практик и неисправимый\
+      \ педант. Жизнь Нолана, высокопоставленного инспектора международных отделений\
+      \ «FedEx» расписана по минутам. И этих драгоценных минут катастрофически не хватает\
+      \ ни на личную жизнь, ни на любимую женщину.\r Однако, безжалостная судьба заставила\
+      \ Нолана иначе взглянуть на отпущенное ему время... Самолёт, на котором путешествует\
+      \ Чак, падает в океан. Инженер, единственный, кому посчастливилось остаться\
+      \ в живых, попадает на необитаемый остров. Здесь Нолану предстоит провести мучительно\
+      \ долгие годы в жестокой битве за выживание..."
+    directors:
+    - name: Роберт Земекис
+      external_ids:
+        tmdb: 24
+    writers:
+    - name: William Broyles Jr.
+      external_ids:
+        tmdb: 142
+    main_cast:
+    - name: Том Хэнкс
+      character: Chuck Noland
+      external_ids:
+        tmdb: 31
+    - name: Хелен Хант
+      character: Kelly Frears
+      external_ids:
+        tmdb: 9994
+    - name: Ник Сирси
+      character: Stan
+      external_ids:
+        tmdb: 12538
+    - name: Дженифер Льюис
+      character: Becca Twig
+      external_ids:
+        tmdb: 15899
+    - name: Geoffrey Blake
+      character: Maynard Graham
+      external_ids:
+        tmdb: 148122
+    - name: Peter Von Berg
+      character: Yuri
+      external_ids:
+        tmdb: 55437
+    - name: Крис Нот
+      character: Jerry Lovett
+      external_ids:
+        tmdb: 38026
+    - name: Lari White
+      character: Bettina Peterson
+      external_ids:
+        tmdb: 55433
+    - name: Элден Хенсон
+      character: Elden Madden
+      external_ids:
+        tmdb: 20220
+    - name: Тимоти Стэк
+      character: Morgan Stockton
+      external_ids:
+        tmdb: 28168
+    - name: Paul Sanchez
+      character: Ramon
+      external_ids:
+        tmdb: 11892
+    - name: Leonid Citer
+      character: Fyodor
+      external_ids:
+        tmdb: 55434
+    assets:
+      poster:
+        provider: tmdb
+        path: /7pt1wFiuCai9BGGwNoQ0vgcfs1T.jpg
+      backdrop:
+        provider: tmdb
+        path: /oCFVYPXI4IfhtF3GapU2jkDicDI.jpg
+    external_metrics:
+      tmdb:
+        score: 7.668
+        votes: 12595
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 8358
+      fetched_at: '2026-10-01T11:50:58.149067Z'

@@ -6,6 +6,12 @@ identity:
   title_original: Enemy of the State
   title_ru: Враг государства
   year: 1998
+  release_date: '1998-11-20'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 9798
+    imdb: tt0120660
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,95 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.action
+    - genre.drama
+    - genre.thriller
+    runtime_min: 132
+    original_language: en
+    countries:
+    - GB
+    - US
+    production_status: completed
+    synopsis_short: 'Роковое стечение обстоятельств неожиданно наносит мощный удар
+      по блестящей карьере и счастливой семейной жизни адвоката Роберта Дина: его
+      обвиняют в убийстве, которого он не совершал. Дин понимает, что это связано
+      с политическими интригами общенационального масштаба. Его противником оказывается
+      руководитель крупного департамента Агентства национальной безопасности Томас
+      Брайан Рейнольдс. Дина лишают престижной высокооплачиваемой работы, семьи; из
+      всех электронных баз удаляют его личные данные.'
+    directors:
+    - name: Тони Скотт
+      external_ids:
+        tmdb: 893
+    writers:
+    - name: David Marconi
+      external_ids:
+        tmdb: 21002
+    main_cast:
+    - name: Уилл Смит
+      character: Robert Clayton Dean
+      external_ids:
+        tmdb: 2888
+    - name: Джин Хэкмен
+      character: Brill
+      external_ids:
+        tmdb: 193
+    - name: Джон Войт
+      character: Reynolds
+      external_ids:
+        tmdb: 10127
+    - name: Реджина Кинг
+      character: Carla Dean
+      external_ids:
+        tmdb: 9788
+    - name: Loren Dean
+      character: Hicks
+      external_ids:
+        tmdb: 11628
+    - name: Джейк Бьюзи
+      character: Krug
+      external_ids:
+        tmdb: 28410
+    - name: Барри Пеппер
+      character: Pratt
+      external_ids:
+        tmdb: 12834
+    - name: Джейсон Ли
+      character: Daniel Zavitz
+      external_ids:
+        tmdb: 11662
+    - name: Гэбриэл Бирн
+      character: '''Brill'''
+      external_ids:
+        tmdb: 5168
+    - name: Лиза Боне
+      character: Rachel Banks
+      external_ids:
+        tmdb: 3232
+    - name: Stuart Wilson
+      character: Congressman Albert
+      external_ids:
+        tmdb: 14344
+    - name: Лора Кайюэтт
+      character: Christa Hawkins
+      external_ids:
+        tmdb: 565498
+    assets:
+      poster:
+        provider: tmdb
+        path: /FYUAgRSP6rvxHI6Sc9OBt2XSmX.jpg
+      backdrop:
+        provider: tmdb
+        path: /lPLTLCBn39Wiy1RPQLB9xOKyF2v.jpg
+    external_metrics:
+      tmdb:
+        score: 7.08
+        votes: 4443
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 9798
+      fetched_at: '2026-10-01T11:50:59.728106Z'

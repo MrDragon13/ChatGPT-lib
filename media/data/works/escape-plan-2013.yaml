@@ -6,6 +6,12 @@ identity:
   title_original: Escape Plan
   title_ru: План побега
   year: 2013
+  release_date: '2013-10-09'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 107846
+    imdb: tt1211956
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,95 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.action
+    - genre.thriller
+    runtime_min: 115
+    original_language: en
+    countries:
+    - GB
+    - US
+    production_status: completed
+    synopsis_short: 'Один из самых выдающихся мировых специалистов по системам безопасности
+      соглашается на последнюю рисковую операцию: сбежать из суперсекретной высокотехнологичной
+      тюрьмы, которую называют «Гробницей». Преданный Рэй Бреслин вынужден прибегнуть
+      к помощи напарника - заключенного Эмиля Ротмайера, чтобы разработать отчаянный
+      и практически неосуществимый план побега из самой защищенной тюрьмы в мире!'
+    directors:
+    - name: Микаэль Хофстрём
+      external_ids:
+        tmdb: 29605
+    writers:
+    - name: Джейсон Келлер
+      external_ids:
+        tmdb: 133287
+    - name: Miles Chapman
+      external_ids:
+        tmdb: 1042683
+    main_cast:
+    - name: Сильвестр Сталлоне
+      character: Ray Breslin
+      external_ids:
+        tmdb: 16483
+    - name: Арнольд Шварценеггер
+      character: Emil Rottmayer
+      external_ids:
+        tmdb: 1100
+    - name: Джеймс Кэвизел
+      character: Willard Hobbes
+      external_ids:
+        tmdb: 8767
+    - name: Кёртис 'Фифти Сент' Джексон
+      character: Hush
+      external_ids:
+        tmdb: 62644
+    - name: Сэм Нилл
+      character: Dr. Kyrie
+      external_ids:
+        tmdb: 4783
+    - name: Винни Джонс
+      character: Drake
+      external_ids:
+        tmdb: 980
+    - name: Фаран Таир
+      character: Javed
+      external_ids:
+        tmdb: 57452
+    - name: Винсент Д’Онофрио
+      character: Lester Clark
+      external_ids:
+        tmdb: 7132
+    - name: Эми Райан
+      character: Abigail Ross
+      external_ids:
+        tmdb: 39388
+    - name: Graham Beckel
+      character: Brims
+      external_ids:
+        tmdb: 6110
+    - name: Мэтт Джералд
+      character: Roag
+      external_ids:
+        tmdb: 98215
+    - name: Катрина Балф
+      character: Jessica Miller
+      external_ids:
+        tmdb: 147056
+    assets:
+      poster:
+        provider: tmdb
+        path: /xYNFVP8JAKJbf2Rn8B4iyrHb02Q.jpg
+      backdrop:
+        provider: tmdb
+        path: /ix9WYBqQ2xSZCgyeQ1vVdrbaFa4.jpg
+    external_metrics:
+      tmdb:
+        score: 6.719
+        votes: 5761
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 107846
+      fetched_at: '2026-10-01T11:50:59.824377Z'

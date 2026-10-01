@@ -6,6 +6,12 @@ identity:
   title_original: 'Mad Max: Fury Road'
   title_ru: 'Безумный Макс: Дорога ярости'
   year: 2015
+  release_date: '2015-05-13'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 76341
+    imdb: tt1392190
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,99 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.action
+    - genre.adventure
+    - genre.science_fiction
+    runtime_min: 120
+    original_language: en
+    countries:
+    - AU
+    - US
+    production_status: completed
+    synopsis_short: Преследуемый призраками прошлого Макс уверен, что лучший способ
+      выжить — скитаться в одиночестве. Но он попадает в плен и вынужденно присоединяется
+      к бунтарям, бегущим через пустыню от тирании Несмертного Джо. Они забрали у
+      него кое-что очень ценное, и разъярённый диктатор бросает все силы в погоню
+      за мятежниками.
+    directors:
+    - name: Джордж Миллер
+      external_ids:
+        tmdb: 20629
+    writers:
+    - name: Джордж Миллер
+      external_ids:
+        tmdb: 20629
+    - name: Нико Латурис
+      external_ids:
+        tmdb: 1027146
+    - name: Брендан МакКарти
+      external_ids:
+        tmdb: 1468313
+    main_cast:
+    - name: Том Харди
+      character: Max Rockatansky
+      external_ids:
+        tmdb: 2524
+    - name: Шарлиз Терон
+      character: Imperator Furiosa
+      external_ids:
+        tmdb: 6885
+    - name: Николас Холт
+      character: Nux
+      external_ids:
+        tmdb: 3292
+    - name: Хью Кияс-Бёрн
+      character: Immortan Joe
+      external_ids:
+        tmdb: 26060
+    - name: Джош Хэлман
+      character: Slit
+      external_ids:
+        tmdb: 1056053
+    - name: Натан Джонс
+      character: Rictus Erectus
+      external_ids:
+        tmdb: 24898
+    - name: Зои Кравиц
+      character: Toast the Knowing
+      external_ids:
+        tmdb: 37153
+    - name: Роузи Хантингтон-Уайтли
+      character: The Splendid Angharad
+      external_ids:
+        tmdb: 236048
+    - name: Райли Кио
+      character: Capable
+      external_ids:
+        tmdb: 98522
+    - name: Эбби Ли
+      character: The Dag
+      external_ids:
+        tmdb: 1036288
+    - name: Кортни Итон
+      character: Cheedo the Fragile
+      external_ids:
+        tmdb: 1278500
+    - name: Джон Хауард
+      character: The People Eater
+      external_ids:
+        tmdb: 102603
+    assets:
+      poster:
+        provider: tmdb
+        path: /8FM6AhLMX3X6OcZjfmH24F4rKMI.jpg
+      backdrop:
+        provider: tmdb
+        path: /gqrnQA6Xppdl8vIb2eJc58VC1tW.jpg
+    external_metrics:
+      tmdb:
+        score: 7.639
+        votes: 24687
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 76341
+      fetched_at: '2026-10-01T11:51:02.340926Z'

@@ -6,6 +6,12 @@ identity:
   title_original: The Departed
   title_ru: Отступники
   year: 2006
+  release_date: '2006-10-04'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 1422
+    imdb: tt0407887
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,93 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.drama
+    - genre.thriller
+    - genre.crime
+    runtime_min: 151
+    original_language: en
+    countries:
+    - HK
+    - US
+    production_status: completed
+    synopsis_short: 'Два лучших выпускника полицейской академии оказались по разные
+      стороны баррикады: один из них — агент мафии в рядах правоохранительных органов,
+      другой — «крот», внедрённый в мафию. Каждый считает своим долгом обнаружить
+      и уничтожить противника, но постоянная жизнь в искажённых реалиях меняет внутренний
+      мир героев.'
+    directors:
+    - name: Мартин Скорсезе
+      external_ids:
+        tmdb: 1032
+    writers:
+    - name: Уильям Монахэн
+      external_ids:
+        tmdb: 34510
+    main_cast:
+    - name: Леонардо ДиКаприо
+      character: Billy
+      external_ids:
+        tmdb: 6193
+    - name: Мэтт Деймон
+      character: Colin
+      external_ids:
+        tmdb: 1892
+    - name: Джек Николсон
+      character: Costello
+      external_ids:
+        tmdb: 514
+    - name: Марк Уолберг
+      character: Dignam
+      external_ids:
+        tmdb: 13240
+    - name: Мартин Шин
+      character: Queenan
+      external_ids:
+        tmdb: 8349
+    - name: Рэй Уинстон
+      character: Mr. French
+      external_ids:
+        tmdb: 5538
+    - name: Вера Фармига
+      character: Madolyn
+      external_ids:
+        tmdb: 21657
+    - name: Энтони Андерсон
+      character: Brown
+      external_ids:
+        tmdb: 18471
+    - name: Алек Болдуин
+      character: Ellerby
+      external_ids:
+        tmdb: 7447
+    - name: Кевин Корригэн
+      character: Cousin Sean
+      external_ids:
+        tmdb: 18472
+    - name: Джеймс Бэдж Дейл
+      character: Barrigan
+      external_ids:
+        tmdb: 18473
+    - name: Дэвид О’Хара
+      character: Fitzy
+      external_ids:
+        tmdb: 2482
+    assets:
+      poster:
+        provider: tmdb
+        path: /jT6JJV6t902SN9dJlSRdiPi6hSv.jpg
+      backdrop:
+        provider: tmdb
+        path: /6WRrGYalXXveItfpnipYdayFkQB.jpg
+    external_metrics:
+      tmdb:
+        score: 8.159
+        votes: 16710
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 1422
+      fetched_at: '2026-10-01T11:50:58.468084Z'

@@ -6,6 +6,12 @@ identity:
   title_original: Dune
   title_ru: Дюна
   year: 2021
+  release_date: '2021-09-15'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 438631
+    imdb: tt1160419
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,100 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.science_fiction
+    - genre.adventure
+    runtime_min: 155
+    original_language: en
+    countries:
+    - US
+    production_status: completed
+    synopsis_short: Наследник знаменитого дома Атрейдесов Пол отправляется вместе
+      с семьей на одну из самых опасных планет во Вселенной — Арракис. Здесь нет ничего,
+      кроме песка, палящего солнца, гигантских чудовищ и основной причины межгалактических
+      конфликтов — невероятно ценного ресурса, который называется меланж. В результате
+      захвата власти Пол вынужден бежать и скрываться, и это становится началом его
+      эпического путешествия. Враждебный мир Арракиса приготовил для него множество
+      тяжелых испытаний, но только тот, кто готов взглянуть в глаза своему страху,
+      достоин стать избранным.
+    directors:
+    - name: Дени Вильнёв
+      external_ids:
+        tmdb: 137427
+    writers:
+    - name: Эрик Рот
+      external_ids:
+        tmdb: 27
+    - name: Дени Вильнёв
+      external_ids:
+        tmdb: 137427
+    - name: Джон Спэйтс
+      external_ids:
+        tmdb: 564940
+    main_cast:
+    - name: Тимоти Шаламе
+      character: Paul Atreides
+      external_ids:
+        tmdb: 1190668
+    - name: Ребекка Фергюсон
+      character: Lady Jessica Atreides
+      external_ids:
+        tmdb: 933238
+    - name: Оскар Айзек
+      character: Duke Leto Atreides
+      external_ids:
+        tmdb: 25072
+    - name: Джейсон Момоа
+      character: Duncan Idaho
+      external_ids:
+        tmdb: 117642
+    - name: Стеллан Скарсгард
+      character: Baron Vladimir Harkonnen
+      external_ids:
+        tmdb: 1640
+    - name: Стивен Маккинли Хендерсон
+      character: Thufir Hawat
+      external_ids:
+        tmdb: 196179
+    - name: Джош Бролин
+      character: Gurney Halleck
+      external_ids:
+        tmdb: 16851
+    - name: Хавьер Бардем
+      character: Stilgar
+      external_ids:
+        tmdb: 3810
+    - name: Шэрон Дункан-Брюстер
+      character: Dr. Liet Kynes
+      external_ids:
+        tmdb: 195666
+    - name: Чан Чэнь
+      character: Dr. Wellington Yueh
+      external_ids:
+        tmdb: 1622
+    - name: Дейв Батиста
+      character: Beast Rabban Harkonnen
+      external_ids:
+        tmdb: 543530
+    - name: Дэвид Дастмалчян
+      character: Piter de Vries
+      external_ids:
+        tmdb: 83854
+    assets:
+      poster:
+        provider: tmdb
+        path: /3hbXNclcHaj5KiF6kK41GBMjyFr.jpg
+      backdrop:
+        provider: tmdb
+        path: /zRKQW58MBEY078AxkHxEJzUskCl.jpg
+    external_metrics:
+      tmdb:
+        score: 7.784
+        votes: 15625
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 438631
+      fetched_at: '2026-10-01T11:50:59.584292Z'

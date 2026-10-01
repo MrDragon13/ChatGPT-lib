@@ -6,6 +6,12 @@ identity:
   title_original: Sunshine
   title_ru: Пекло
   year: 2007
+  release_date: '2007-04-05'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 1272
+    imdb: tt0448134
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,97 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.science_fiction
+    - genre.thriller
+    runtime_min: 107
+    original_language: en
+    countries:
+    - GB
+    production_status: completed
+    synopsis_short: 2057 год. Солнце погибает, и человечество встает перед лицом вымирания.
+      Последняя надежда планеты Земля связана с «Икаром 2» — космическим кораблем,
+      экипаж которого состоит из восьми мужчин и женщин во главе с капитаном Канедой.
+      Их миссия — доставить ядерный заряд, с помощью которого предполагается повторно
+      воспламенить гаснущее Солнце.Во время своего путешествия, находясь далеко в
+      космическом безмолвии, в отсутствии какого-либо радиоконтакта с Землей, экипаж
+      слышит слабые позывные сигналы с космического корабля «Икар 1», который пропал,
+      выполняя семь лет назад ту же самую миссию, что и «Икар 2». Ужасная катастрофа
+      ввергает миссию в очень опасную и рискованную ситуацию, и скоро команда обнаруживает,
+      что вынуждена бороться не только за свои собственные жизни и душевное равновесие,
+      но и за будущее всех нас…
+    directors:
+    - name: Дэнни Бойл
+      external_ids:
+        tmdb: 2034
+    writers:
+    - name: Алекс Гарленд
+      external_ids:
+        tmdb: 2036
+    main_cast:
+    - name: Киллиан Мёрфи
+      character: Capa
+      external_ids:
+        tmdb: 2037
+    - name: Роуз Бирн
+      character: Cassie
+      external_ids:
+        tmdb: 9827
+    - name: Крис Эванс
+      character: Mace
+      external_ids:
+        tmdb: 16828
+    - name: Мишель Йео
+      character: Corazon
+      external_ids:
+        tmdb: 1620
+    - name: Клифф Кёртис
+      character: Searle
+      external_ids:
+        tmdb: 7248
+    - name: Хироюки Санада
+      character: Kaneda
+      external_ids:
+        tmdb: 9195
+    - name: Трой Гэрити
+      character: Harvey
+      external_ids:
+        tmdb: 31711
+    - name: Бенедикт Вонг
+      character: Trey
+      external_ids:
+        tmdb: 30082
+    - name: Марк Стронг
+      character: Pinbacker
+      external_ids:
+        tmdb: 2983
+    - name: Палома Баеза
+      character: Capa's Sister
+      external_ids:
+        tmdb: 24618
+    - name: Арчи МакДональд
+      character: Child
+      external_ids:
+        tmdb: 1414389
+    - name: Сильвия МакДональд
+      character: Child
+      external_ids:
+        tmdb: 2002163
+    assets:
+      poster:
+        provider: tmdb
+        path: /3ty7Do19CPLwwaQdbISbZEXt92d.jpg
+      backdrop:
+        provider: tmdb
+        path: /5AIAnucJKZ3sHpm7r1ykFVIoUHK.jpg
+    external_metrics:
+      tmdb:
+        score: 7.0
+        votes: 4451
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 1272
+      fetched_at: '2026-10-01T11:51:05.919691Z'

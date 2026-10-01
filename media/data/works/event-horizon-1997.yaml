@@ -6,6 +6,12 @@ identity:
   title_original: Event Horizon
   title_ru: Сквозь горизонт
   year: 1997
+  release_date: '1997-08-15'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 8413
+    imdb: tt0119081
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,92 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.science_fiction
+    - genre.mystery
+    runtime_min: 96
+    original_language: en
+    countries:
+    - GB
+    - US
+    production_status: completed
+    synopsis_short: 2047 год. Спасательный космический корабль послан к границе Солнечной
+      системы с целью выяснить, что произошло с экипажем первого звездолета, созданного
+      для путешествий со сверхсветовой скоростью и бесследно исчезнувшего при первом
+      же полете. Внезапно появившийся из ниоткуда, он был обнаружен возле далекой
+      планеты Нептун.
+    directors:
+    - name: Пол У. С. Андерсон
+      external_ids:
+        tmdb: 4014
+    writers:
+    - name: Филип Эйснер
+      external_ids:
+        tmdb: 55753
+    main_cast:
+    - name: Лоренс Фишбёрн
+      character: Miller
+      external_ids:
+        tmdb: 2975
+    - name: Сэм Нилл
+      character: Weir
+      external_ids:
+        tmdb: 4783
+    - name: Кэтлин Куинлан
+      character: Peters
+      external_ids:
+        tmdb: 8183
+    - name: Джоэли Ричардсон
+      character: Starck
+      external_ids:
+        tmdb: 20810
+    - name: Ричард Т. Джонс
+      character: Cooper
+      external_ids:
+        tmdb: 55755
+    - name: Джек Ноузворти
+      character: Justin
+      external_ids:
+        tmdb: 22133
+    - name: Джейсон Айзекс
+      character: D.J.
+      external_ids:
+        tmdb: 11355
+    - name: Шон Пертви
+      character: Smith
+      external_ids:
+        tmdb: 28848
+    - name: Питер Маринкер
+      character: Kilpack
+      external_ids:
+        tmdb: 93477
+    - name: Холли Чант
+      character: Claire
+      external_ids:
+        tmdb: 1052953
+    - name: Баркли Райт
+      character: Denny
+      external_ids:
+        tmdb: 575916
+    - name: Ной Хантли
+      character: Burning Man
+      external_ids:
+        tmdb: 2050
+    assets:
+      poster:
+        provider: tmdb
+        path: /b1ronibBfm5R12wYFOuRGPSQSCu.jpg
+      backdrop:
+        provider: tmdb
+        path: /nByMcYBhChTs2TF9fEFcTSsjme5.jpg
+    external_metrics:
+      tmdb:
+        score: 6.6
+        votes: 3502
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 8413
+      fetched_at: '2026-10-01T11:50:59.861576Z'

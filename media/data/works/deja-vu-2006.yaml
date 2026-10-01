@@ -6,6 +6,12 @@ identity:
   title_original: Déjà Vu
   title_ru: Дежавю
   year: 2006
+  release_date: '2006-11-22'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 7551
+    imdb: tt0453467
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,100 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.action
+    - genre.thriller
+    - genre.science_fiction
+    runtime_min: 126
+    original_language: en
+    countries:
+    - US
+    - GB
+    production_status: completed
+    synopsis_short: Каждый из нас хотя бы раз в жизни испытывал эффект дежа вю, когда
+      нам вдруг начинает казаться, что мы знакомы с людьми, которых на самом деле
+      раньше никогда не видели, и уже бывали в местах, где на самом деле никогда не
+      были. И, возможно, в такие моменты кому-то приходила в голову мысль, что эти
+      ощущения — не что иное, как предупреждения, посланные нам из прошлого, а может
+      быть, и ключ к познанию будущего.Агент АТФ Даг Карлин получает возможность совершать
+      путешествия во времени, расследуя обстоятельства взрыва, произошедшего на новоорлеанском
+      пароме. Оказавшись в прошлом, он встречает женщину, которую должны убить, и
+      в итоге влюбляется в нее…
+    directors:
+    - name: Тони Скотт
+      external_ids:
+        tmdb: 893
+    writers:
+    - name: Билл Марсили
+      external_ids:
+        tmdb: 52927
+    - name: Терри Россио
+      external_ids:
+        tmdb: 1706
+    main_cast:
+    - name: Дензел Вашингтон
+      character: Doug Carlin
+      external_ids:
+        tmdb: 5292
+    - name: Паула Паттон
+      character: Claire Kuchever
+      external_ids:
+        tmdb: 52851
+    - name: Вэл Килмер
+      character: Paul Pryzwarra
+      external_ids:
+        tmdb: 5576
+    - name: Джеймс Кэвизел
+      character: Carroll Oerstadt
+      external_ids:
+        tmdb: 8767
+    - name: Адам Голдберг
+      character: Denny
+      external_ids:
+        tmdb: 6163
+    - name: Элден Хенсон
+      character: Gunnars
+      external_ids:
+        tmdb: 20220
+    - name: Эрика Александер
+      character: Shanti
+      external_ids:
+        tmdb: 33655
+    - name: Брюс Гринвуд
+      character: Jack McCready
+      external_ids:
+        tmdb: 21089
+    - name: Мэтт Крэйвен
+      character: Larry Minuti
+      external_ids:
+        tmdb: 13525
+    - name: Энрике Кастильо
+      character: Claire's Father
+      external_ids:
+        tmdb: 16427
+    - name: Марк Финни
+      character: Agent Donnelly
+      external_ids:
+        tmdb: 52926
+    - name: Рич Хатчман
+      character: Agent Stalhuth
+      external_ids:
+        tmdb: 52924
+    assets:
+      poster:
+        provider: tmdb
+        path: /qt0ZbE00OuXDkyHA1nkEhFl3e8N.jpg
+      backdrop:
+        provider: tmdb
+        path: /mhi2fRCbEXtN43FNiq45WQg0DFe.jpg
+    external_metrics:
+      tmdb:
+        score: 6.895
+        votes: 5491
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 7551
+      fetched_at: '2026-10-01T11:50:58.427535Z'

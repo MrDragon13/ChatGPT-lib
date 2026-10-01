@@ -6,6 +6,12 @@ identity:
   title_original: The Truman Show
   title_ru: Шоу Трумана
   year: 1998
+  release_date: '1998-06-04'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 37165
+    imdb: tt0120382
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,95 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.comedy
+    - genre.drama
+    runtime_min: 103
+    original_language: en
+    countries:
+    - US
+    production_status: completed
+    synopsis_short: Представьте себе, что вы вдруг начинаете понимать, что всё вокруг
+      вас - декорации, а люди - актёры, притворяющиеся теми, кем они вам кажутся.
+      Весь ваш мир оказывается большим телесериалом, где вы исполняете главную роль,
+      даже не подозревая об этом. Вся ваша жизнь - результат работы автора телешоу,
+      которое вот уже тридцать лет смотрит вся планета, начиная с момента вашего рождения.
+      В такой ситуации оказался Труман, главный герой картины. Будет ли он продолжать
+      жить в безопасном мире, где, как он теперь знает, у него практически нет свободы
+      выбора, или все-таки выйдет из «игры» и станет сам хозяином своей судьбы, в
+      которой его ждет не запланированная сценарием девушка?
+    directors:
+    - name: Питер Уир
+      external_ids:
+        tmdb: 2690
+    writers:
+    - name: Эндрю Никкол
+      external_ids:
+        tmdb: 8685
+    main_cast:
+    - name: Джим Керри
+      character: Truman Burbank
+      external_ids:
+        tmdb: 206
+    - name: Лора Линни
+      character: Meryl Burbank / Hannah Gill
+      external_ids:
+        tmdb: 350
+    - name: Ноа Эммерих
+      character: Marlon / Louis Coltrane
+      external_ids:
+        tmdb: 11315
+    - name: Наташа Макэлхоун
+      character: Lauren Garland / Sylvia
+      external_ids:
+        tmdb: 11317
+    - name: Холланд Тейлор
+      character: Angela Montclair / Alanis Montclair
+      external_ids:
+        tmdb: 11318
+    - name: Эд Харрис
+      character: Christof
+      external_ids:
+        tmdb: 228
+    - name: Пол Джаматти
+      character: Simeon
+      external_ids:
+        tmdb: 13242
+    - name: Брайан Дилейт
+      character: Walter Moore / Kirk Burbank
+      external_ids:
+        tmdb: 6579
+    - name: Питер Краузе
+      character: Lawrence
+      external_ids:
+        tmdb: 23119
+    - name: Blair Slater
+      character: Young Truman
+      external_ids:
+        tmdb: 116898
+    - name: Heidi Schanz
+      character: Vivien
+      external_ids:
+        tmdb: 11321
+    - name: Una Damon
+      character: Chloe
+      external_ids:
+        tmdb: 154644
+    assets:
+      poster:
+        provider: tmdb
+        path: /lYMMRbMZCyn12t6HLVYfmWfHrrq.jpg
+      backdrop:
+        provider: tmdb
+        path: /rmiG2uwcNoGFmBKMoa1pIcf514L.jpg
+    external_metrics:
+      tmdb:
+        score: 8.159
+        votes: 20931
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 37165
+      fetched_at: '2026-10-01T11:51:06.807990Z'

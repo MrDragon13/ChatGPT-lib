@@ -6,6 +6,12 @@ identity:
   title_original: District 9
   title_ru: Район №9
   year: 2009
+  release_date: '2009-08-05'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 17654
+    imdb: tt1136608
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,96 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.science_fiction
+    runtime_min: 112
+    original_language: en
+    countries:
+    - NZ
+    - ZA
+    - US
+    production_status: completed
+    synopsis_short: Более 20 лет назад инопланетяне установили первый контакт с Землей.
+      Люди были готовы ко всему — от враждебного вторжения до невероятного технологического
+      прорыва. Ни того, ни другого не произошло. Пришельцы оказались беженцами со
+      своей собственной планеты, и пока мировое сообщество решало, что с ними делать
+      дальше, для них был организован временный лагерь в южноафриканском Районе №
+      9.
+    directors:
+    - name: Нил Бломкамп
+      external_ids:
+        tmdb: 82194
+    writers:
+    - name: Нил Бломкамп
+      external_ids:
+        tmdb: 82194
+    - name: Терри Татчелл
+      external_ids:
+        tmdb: 82195
+    main_cast:
+    - name: Шарлто Копли
+      character: Wikus van de Merwe
+      external_ids:
+        tmdb: 82191
+    - name: Джейсон Коуп
+      character: Christopher Johnson / Grey Bradnam / Trent
+      external_ids:
+        tmdb: 82193
+    - name: Натали Болтт
+      character: Sarah Livingstone - Sociologist
+      external_ids:
+        tmdb: 97599
+    - name: Sylvaine Strike
+      character: Dr Katrina McKenzie
+      external_ids:
+        tmdb: 230818
+    - name: Elizabeth Mkandawie
+      character: Interviewee
+      external_ids:
+        tmdb: 1086505
+    - name: John Sumner
+      character: Les Feldman - MIL Engineer
+      external_ids:
+        tmdb: 3495
+    - name: Уильям Аллен Янг
+      character: Dirk Michaels
+      external_ids:
+        tmdb: 53087
+    - name: Ник Блейк
+      character: Francois Moraneu - CIV Engineer Team
+      external_ids:
+        tmdb: 240024
+    - name: Greg Melvill-Smith
+      character: Interviewer
+      external_ids:
+        tmdb: 1029046
+    - name: Роберт Хоббс
+      character: Ross Pienaar
+      external_ids:
+        tmdb: 82190
+    - name: Vanessa Haywood
+      character: Tania van de Merwe
+      external_ids:
+        tmdb: 82192
+    - name: Morena Busa Sesatsa
+      character: Interviewee
+      external_ids:
+        tmdb: 1086506
+    assets:
+      poster:
+        provider: tmdb
+        path: /dIsWr91mFfVvQsTgd0I6hfmyS8B.jpg
+      backdrop:
+        provider: tmdb
+        path: /jhM3wgWUrrOkz9r4xwV5cV5RhI4.jpg
+    external_metrics:
+      tmdb:
+        score: 7.479
+        votes: 10690
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 17654
+      fetched_at: '2026-10-01T11:50:59.498945Z'

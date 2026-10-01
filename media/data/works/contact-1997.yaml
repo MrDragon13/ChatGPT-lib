@@ -6,6 +6,12 @@ identity:
   title_original: Contact
   title_ru: Контакт
   year: 1997
+  release_date: '1997-07-11'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 686
+    imdb: tt0118884
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,93 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.drama
+    - genre.science_fiction
+    - genre.mystery
+    runtime_min: 150
+    original_language: en
+    countries:
+    - US
+    production_status: completed
+    synopsis_short: Радиоастроном доктор Элли Эрроуэй мечтала о звездах с детских
+      лет, когда вместе с отцом занималась радиолюбительством и выходила на связь
+      в эфир. Она рано потеряла родителей и думала, что они где-то далеко, в пространстве...
+    directors:
+    - name: Роберт Земекис
+      external_ids:
+        tmdb: 24
+    writers:
+    - name: James V. Hart
+      external_ids:
+        tmdb: 10295
+    - name: Michael Goldenberg
+      external_ids:
+        tmdb: 10296
+    main_cast:
+    - name: Джоди Фостер
+      character: Ellie Arroway
+      external_ids:
+        tmdb: 1038
+    - name: Мэттью Макконахи
+      character: Palmer Joss
+      external_ids:
+        tmdb: 10297
+    - name: Джеймс Вудс
+      character: Michael Kitz
+      external_ids:
+        tmdb: 4512
+    - name: Джон Хёрт
+      character: S. R. Hadden
+      external_ids:
+        tmdb: 5049
+    - name: Том Скеррит
+      character: David Drumlin
+      external_ids:
+        tmdb: 4139
+    - name: Уильям Фихтнер
+      character: Kent
+      external_ids:
+        tmdb: 886
+    - name: Дэвид Морс
+      character: Ted Arroway
+      external_ids:
+        tmdb: 52
+    - name: Анджела Бассетт
+      character: Rachel Constantine
+      external_ids:
+        tmdb: 9780
+    - name: Geoffrey Blake
+      character: Fisher
+      external_ids:
+        tmdb: 148122
+    - name: Макс Мартини
+      character: Willie
+      external_ids:
+        tmdb: 94864
+    - name: Роб Лоу
+      character: Richard Rank
+      external_ids:
+        tmdb: 2879
+    - name: Джейк Бьюзи
+      character: Joseph
+      external_ids:
+        tmdb: 28410
+    assets:
+      poster:
+        provider: tmdb
+        path: /iECjtE7zjJYGwi2hIdLsndOI61Z.jpg
+      backdrop:
+        provider: tmdb
+        path: /yFkUPqBuUnbhYbQL8VFpTrAT9za.jpg
+    external_metrics:
+      tmdb:
+        score: 7.5
+        votes: 5211
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 686
+      fetched_at: '2026-10-01T11:50:58.384024Z'

@@ -6,6 +6,12 @@ identity:
   title_original: Edge of Tomorrow
   title_ru: Грань будущего
   year: 2014
+  release_date: '2014-05-27'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 137113
+    imdb: tt1631867
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,97 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.action
+    - genre.science_fiction
+    runtime_min: 113
+    original_language: en
+    countries:
+    - US
+    production_status: completed
+    synopsis_short: В недалёком будущем раса инопланетян вторгается на Землю. Никакая
+      армия в мире не может противостоять им. Майор Уильям Кейдж умирает в бою, но
+      случается невозможное - он оказывается во времённой петле. Раз за разом он попадает
+      в один и тот же бой, сражается и умирает... снова и снова. И каждое повторяющееся
+      сражение приближает его к разгадке того, как победить врага.
+    directors:
+    - name: Даг Лайман
+      external_ids:
+        tmdb: 11694
+    writers:
+    - name: Кристофер МакКуорри
+      external_ids:
+        tmdb: 9033
+    - name: Джез Баттеруорт
+      external_ids:
+        tmdb: 21339
+    - name: Джон-Генри Баттеруорт
+      external_ids:
+        tmdb: 120254
+    main_cast:
+    - name: Том Круз
+      character: Cage
+      external_ids:
+        tmdb: 500
+    - name: Эмили Блант
+      character: Rita
+      external_ids:
+        tmdb: 5081
+    - name: Брендан Глисон
+      character: General Brigham
+      external_ids:
+        tmdb: 2039
+    - name: Билл Пэкстон
+      character: Master Sergeant Farell
+      external_ids:
+        tmdb: 2053
+    - name: Джонас Армстронг
+      character: Skinner
+      external_ids:
+        tmdb: 119224
+    - name: Тони Уэй
+      character: Kimmel
+      external_ids:
+        tmdb: 147255
+    - name: Кик Гарри
+      character: Griff
+      external_ids:
+        tmdb: 93111
+    - name: Франц Драмех
+      character: Ford
+      external_ids:
+        tmdb: 1363086
+    - name: Драгомир Мрсич
+      character: Kuntz
+      external_ids:
+        tmdb: 125740
+    - name: Шарлотта Райли
+      character: Nance
+      external_ids:
+        tmdb: 115679
+    - name: Масаёси Ханеда
+      character: Takeda
+      external_ids:
+        tmdb: 1095404
+    - name: Теренс Мэйнард
+      character: Cruel Sergeant
+      external_ids:
+        tmdb: 67205
+    assets:
+      poster:
+        provider: tmdb
+        path: /98Ll6igWXdjHiKuZtCacTzRGyNX.jpg
+      backdrop:
+        provider: tmdb
+        path: /4V1yIoAKPMRQwGBaSses8Bp2nsi.jpg
+    external_metrics:
+      tmdb:
+        score: 7.643
+        votes: 15555
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 137113
+      fetched_at: '2026-10-01T11:50:59.678250Z'

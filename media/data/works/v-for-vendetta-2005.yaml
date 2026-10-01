@@ -5,7 +5,13 @@ identity:
   format: movie
   title_original: V for Vendetta
   title_ru: V — значит вендетта
-  year: 2005
+  year: 2006
+  release_date: '2006-02-23'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 752
+    imdb: tt0434409
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,100 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.action
+    - genre.thriller
+    - genre.science_fiction
+    runtime_min: 132
+    original_language: en
+    countries:
+    - DE
+    - GB
+    - US
+    production_status: completed
+    synopsis_short: 'Альтернативное будущее. В Англии после страшной эпидемии неизвестного
+      вируса повергшей страну в хаос, устанавливается жестокая диктатура властного
+      канцлера со всеми сопутствующими прелестями: комендантский час, всевластие членов
+      партии над простыми людьми и, конечно, сотни тайных стукачей-осведомителей.
+      Однажды ночью в Лондоне появляется борец за свободу, известный как V, который
+      начинает партизанскую войну с режимом в попытке вернуть народу отнятую у него
+      свободу. В этой войне он привлекает на свою сторону молодую женщину, которую
+      он вырвал из лап тайной полиции.'
+    directors:
+    - name: Джеймс МакТиг
+      external_ids:
+        tmdb: 11266
+    writers:
+    - name: Энди Вачовски
+      external_ids:
+        tmdb: 9339
+    - name: Лана Вачовски
+      external_ids:
+        tmdb: 9340
+    main_cast:
+    - name: Натали Портман
+      character: Evey
+      external_ids:
+        tmdb: 524
+    - name: Хьюго Уивинг
+      character: V / William Rookwood
+      external_ids:
+        tmdb: 1331
+    - name: Стивен Ри
+      character: Finch
+      external_ids:
+        tmdb: 9029
+    - name: Стивен Фрай
+      character: Deitrich
+      external_ids:
+        tmdb: 11275
+    - name: Джон Хёрт
+      character: Adam Sutler
+      external_ids:
+        tmdb: 5049
+    - name: Тим Пиготт-Смит
+      character: Creedy
+      external_ids:
+        tmdb: 11276
+    - name: Руперт Грейвс
+      character: Dominic
+      external_ids:
+        tmdb: 11278
+    - name: Роджер Аллам
+      character: Lewis Prothero
+      external_ids:
+        tmdb: 11279
+    - name: Бен Майлз
+      character: Dascomb
+      external_ids:
+        tmdb: 11280
+    - name: Sinéad Cusack
+      character: Delia Surridge
+      external_ids:
+        tmdb: 11281
+    - name: Natasha Wightman
+      character: Valerie
+      external_ids:
+        tmdb: 11277
+    - name: Джон Стэндинг
+      character: Lilliman
+      external_ids:
+        tmdb: 11282
+    assets:
+      poster:
+        provider: tmdb
+        path: /bLDAaOt50FY0j9vB8HTLjF9AHAO.jpg
+      backdrop:
+        provider: tmdb
+        path: /sFEYsEfzTx7hhjetlNrme8B5OUo.jpg
+    external_metrics:
+      tmdb:
+        score: 7.897
+        votes: 15992
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 752
+      fetched_at: '2026-10-01T11:51:07.452272Z'

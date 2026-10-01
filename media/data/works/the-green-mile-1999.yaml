@@ -6,6 +6,12 @@ identity:
   title_original: The Green Mile
   title_ru: Зелёная миля
   year: 1999
+  release_date: '1999-12-10'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 497
+    imdb: tt0120689
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,91 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.drama
+    - genre.crime
+    runtime_min: 189
+    original_language: en
+    countries:
+    - US
+    production_status: completed
+    synopsis_short: Пол Эджкомб — начальник блока смертников в тюрьме «Холодная гора»,
+      каждый из узников которого однажды проходит «зеленую милю» по пути к месту казни.
+      Пол повидал много заключённых и надзирателей за время работы. Однако гигант
+      Джон Коффи, обвинённый в страшном преступлении, стал одним из самых необычных
+      обитателей блока.
+    directors:
+    - name: Фрэнк Дарабонт
+      external_ids:
+        tmdb: 4027
+    writers:
+    - name: Фрэнк Дарабонт
+      external_ids:
+        tmdb: 4027
+    main_cast:
+    - name: Том Хэнкс
+      character: Paul Edgecomb
+      external_ids:
+        tmdb: 31
+    - name: Дэвид Морс
+      character: Brutus 'Brutal' Howell
+      external_ids:
+        tmdb: 52
+    - name: Бонни Хант
+      character: Jan Edgecomb
+      external_ids:
+        tmdb: 5149
+    - name: Майкл Кларк Дункан
+      character: John Coffey
+      external_ids:
+        tmdb: 61981
+    - name: Джеймс Кромвелл
+      character: Warden Hal Moores
+      external_ids:
+        tmdb: 2505
+    - name: Майкл Джитер
+      character: Eduard Delacroix
+      external_ids:
+        tmdb: 2169
+    - name: Грэм Грин
+      character: Arlen Bitterbuck
+      external_ids:
+        tmdb: 6804
+    - name: Даг Хатчисон
+      character: Percy Wetmore
+      external_ids:
+        tmdb: 6806
+    - name: Сэм Рокуэлл
+      character: '''Wild Bill'' Wharton'
+      external_ids:
+        tmdb: 6807
+    - name: Барри Пеппер
+      character: Dean Stanton
+      external_ids:
+        tmdb: 12834
+    - name: Джеффри ДеМанн
+      character: Harry Terwilliger
+      external_ids:
+        tmdb: 12645
+    - name: Патрисия Кларксон
+      character: Melinda Moores
+      external_ids:
+        tmdb: 1276
+    assets:
+      poster:
+        provider: tmdb
+        path: /lHxe8t4B0CKv4DO0C0B4rsuiG95.jpg
+      backdrop:
+        provider: tmdb
+        path: /amZavErrjrdgDwhsIdpWxHNenIx.jpg
+    external_metrics:
+      tmdb:
+        score: 8.506
+        votes: 19880
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 497
+      fetched_at: '2026-10-01T11:51:06.092152Z'

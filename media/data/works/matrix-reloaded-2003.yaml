@@ -6,6 +6,12 @@ identity:
   title_original: The Matrix Reloaded
   title_ru: 'Матрица: Перезагрузка'
   year: 2003
+  release_date: '2003-05-15'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 604
+    imdb: tt0234215
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,99 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.adventure
+    - genre.action
+    - genre.thriller
+    - genre.science_fiction
+    runtime_min: 138
+    original_language: en
+    countries:
+    - US
+    production_status: completed
+    synopsis_short: Борцы за свободу Нео, Тринити и Морфеус продолжают руководить
+      восстанием людей против армии машин. Они вынуждены использовать не только арсенал
+      превосходного оружия, но и свои выдающиеся навыки. Участие в миссии по спасению
+      человеческой расы от истребления приносит им более глубокое понимание Матрицы
+      и осознание центральной роли Нео в судьбе человечества.
+    directors:
+    - name: Лана Вачовски
+      external_ids:
+        tmdb: 9340
+    - name: Энди Вачовски
+      external_ids:
+        tmdb: 9339
+    writers:
+    - name: Лана Вачовски
+      external_ids:
+        tmdb: 9340
+    - name: Энди Вачовски
+      external_ids:
+        tmdb: 9339
+    main_cast:
+    - name: Киану Ривз
+      character: Neo
+      external_ids:
+        tmdb: 6384
+    - name: Лоренс Фишбёрн
+      character: Morpheus
+      external_ids:
+        tmdb: 2975
+    - name: Кэрри-Энн Мосс
+      character: Trinity
+      external_ids:
+        tmdb: 530
+    - name: Хьюго Уивинг
+      character: Agent Smith
+      external_ids:
+        tmdb: 1331
+    - name: Джада Пинкетт-Смит
+      character: Niobe
+      external_ids:
+        tmdb: 9575
+    - name: Глория Фостер
+      character: The Oracle
+      external_ids:
+        tmdb: 9364
+    - name: Гарольд Перрино
+      character: Link
+      external_ids:
+        tmdb: 6195
+    - name: Моника Беллуччи
+      character: Persephone
+      external_ids:
+        tmdb: 28782
+    - name: Гарри Ленникс
+      character: Commander Lock
+      external_ids:
+        tmdb: 9464
+    - name: Ламбер Вильсон
+      character: The Merovingian
+      external_ids:
+        tmdb: 2192
+    - name: Рэндалл Дук Ким
+      character: Keymaker
+      external_ids:
+        tmdb: 9462
+    - name: Нона Гэй
+      character: Zee
+      external_ids:
+        tmdb: 18286
+    assets:
+      poster:
+        provider: tmdb
+        path: /d0xVNNxIYxId2qHkqpgE39soOvD.jpg
+      backdrop:
+        provider: tmdb
+        path: /ihOJcrorpDQtHTzIOrobbOhpJsj.jpg
+    external_metrics:
+      tmdb:
+        score: 7.086
+        votes: 12358
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 604
+      fetched_at: '2026-10-01T11:51:03.562985Z'

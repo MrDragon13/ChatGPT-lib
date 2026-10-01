@@ -6,6 +6,12 @@ identity:
   title_original: Interstellar
   title_ru: Интерстеллар
   year: 2014
+  release_date: '2014-11-05'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 157336
+    imdb: tt0816692
 viewer_signals:
   primary:
     viewing:
@@ -20,3 +26,95 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.adventure
+    - genre.drama
+    - genre.science_fiction
+    runtime_min: 169
+    original_language: en
+    countries:
+    - GB
+    - US
+    production_status: completed
+    synopsis_short: Когда засуха, пыльные бури и вымирание растений приводят человечество
+      к продовольственному кризису, коллектив исследователей и учёных отправляется
+      сквозь червоточину в путешествие, чтобы превзойти прежние ограничения для космических
+      путешествий человека и найти планету с подходящими для человечества условиями.
+    directors:
+    - name: Кристофер Нолан
+      external_ids:
+        tmdb: 525
+    writers:
+    - name: Джонатан Нолан
+      external_ids:
+        tmdb: 527
+    - name: Кристофер Нолан
+      external_ids:
+        tmdb: 525
+    main_cast:
+    - name: Мэттью Макконахи
+      character: Cooper
+      external_ids:
+        tmdb: 10297
+    - name: Энн Хэтэуэй
+      character: Brand
+      external_ids:
+        tmdb: 1813
+    - name: Майкл Кейн
+      character: Professor Brand
+      external_ids:
+        tmdb: 3895
+    - name: Джессика Честейн
+      character: Murph
+      external_ids:
+        tmdb: 83002
+    - name: Кейси Аффлек
+      character: Tom
+      external_ids:
+        tmdb: 1893
+    - name: Уэс Бентли
+      character: Doyle
+      external_ids:
+        tmdb: 8210
+    - name: Тофер Грейс
+      character: Getty
+      external_ids:
+        tmdb: 17052
+    - name: Маккензи Фой
+      character: Murph (10 Yrs.)
+      external_ids:
+        tmdb: 851784
+    - name: Эллен Бёрстин
+      character: Murph (older)
+      external_ids:
+        tmdb: 9560
+    - name: Джон Литгоу
+      character: Donald
+      external_ids:
+        tmdb: 12074
+    - name: Билл Ирвин
+      character: TARS (voice)
+      external_ids:
+        tmdb: 58549
+    - name: Дэвид Джеси
+      character: Romilly
+      external_ids:
+        tmdb: 55411
+    assets:
+      poster:
+        provider: tmdb
+        path: /vReLRjDV9XPhiOSEW7QWow4DXwf.jpg
+      backdrop:
+        provider: tmdb
+        path: /8sNiAPPYU14PUepFNeSNGUTiHW.jpg
+    external_metrics:
+      tmdb:
+        score: 8.5
+        votes: 41332
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 157336
+      fetched_at: '2026-10-01T11:51:01.773963Z'

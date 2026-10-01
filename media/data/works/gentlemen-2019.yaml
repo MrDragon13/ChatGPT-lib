@@ -5,7 +5,13 @@ identity:
   format: movie
   title_original: The Gentlemen
   title_ru: Джентльмены
-  year: 2019
+  year: 2020
+  release_date: '2020-01-01'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 522627
+    imdb: tt8367814
 viewer_signals:
   primary:
     viewing:
@@ -21,3 +27,98 @@ viewer_signals:
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-01'
+metadata:
+  external:
+    genres:
+    - genre.action
+    - genre.comedy
+    - genre.crime
+    runtime_min: 113
+    original_language: en
+    countries:
+    - GB
+    - US
+    production_status: completed
+    synopsis_short: Один ушлый американец ещё со студенческих лет приторговывал наркотиками,
+      а теперь придумал схему нелегального обогащения с использованием поместий обедневшей
+      английской аристократии и очень неплохо на этом разбогател. Другой пронырливый
+      журналист приходит к Рэю, правой руке американца, и предлагает тому купить киносценарий,
+      в котором подробно описаны преступления его босса при участии других представителей
+      лондонского криминального мира — партнёра-еврея, китайской диаспоры, чернокожих
+      спортсменов и даже русского олигарха.
+    directors:
+    - name: Гай Ричи
+      external_ids:
+        tmdb: 956
+    writers:
+    - name: Гай Ричи
+      external_ids:
+        tmdb: 956
+    - name: Lauren Bond
+      external_ids:
+        tmdb: 2493734
+    main_cast:
+    - name: Мэттью Макконахи
+      character: Michael Pearson
+      external_ids:
+        tmdb: 10297
+    - name: Чарли Ханнэм
+      character: Ray
+      external_ids:
+        tmdb: 56365
+    - name: Мишель Докери
+      character: Rosalind Pearson
+      external_ids:
+        tmdb: 70904
+    - name: Джереми Стронг
+      character: Matthew
+      external_ids:
+        tmdb: 239271
+    - name: Лин Рене
+      character: Jackie
+      external_ids:
+        tmdb: 45753
+    - name: Колин Фаррелл
+      character: Coach
+      external_ids:
+        tmdb: 72466
+    - name: Генри Голдинг
+      character: Dry Eye
+      external_ids:
+        tmdb: 1807132
+    - name: Том Ву
+      character: Lord George
+      external_ids:
+        tmdb: 67212
+    - name: Чиди Аджуфо
+      character: Bunny
+      external_ids:
+        tmdb: 1285754
+    - name: Хью Грант
+      character: Fletcher
+      external_ids:
+        tmdb: 3291
+    - name: Simon Barker
+      character: Frazier
+      external_ids:
+        tmdb: 1719801
+    - name: Эдди Марсан
+      character: Big Dave
+      external_ids:
+        tmdb: 1665
+    assets:
+      poster:
+        provider: tmdb
+        path: /vWxVVECgYDPSg5o0Rhw5u7KFa7X.jpg
+      backdrop:
+        provider: tmdb
+        path: /hClLP88yMIuhslwSVxtYrvWmxfp.jpg
+    external_metrics:
+      tmdb:
+        score: 7.659
+        votes: 6929
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 522627
+      fetched_at: '2026-10-01T11:51:00.116106Z'
