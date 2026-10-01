@@ -68,6 +68,14 @@ Initial commands are `add_work`, `record_viewing_feedback`, `set_interest`, and 
 
 Factual enrichment uses TMDB for `add_work` and for `record_viewing_feedback` only when `create_if_missing: true` actually requires creation. Existing-work mutations must not depend on provider availability. `TMDB_READ_TOKEN` is exposed only to the provider-needed workflow step. LLM semantic feedback may use only existing vocabulary IDs.
 
+## Bulk metadata maintenance
+
+`refresh_metadata` is a typed maintenance command for existing factual metadata. Its initial scope is exactly `all_movies`: it resolves every canonical movie against TMDB, performs a complete preflight before writing, preserves user-owned signals and manual overrides, and applies the resulting work updates atomically through the normal transaction pipeline.
+
+Identity ambiguity, missing matches, conflicting external IDs, or provider failure must stop the bulk refresh without partial canonical mutation. Explicit `tmdb_overrides` may resolve a blocker only for a work that does not already have a canonical TMDB ID; they must never silently rebind an existing canonical TMDB identity. Unsupported TMDB genre IDs are omitted and reported rather than added to vocabulary.
+
+`refresh_metadata` is provider-dependent, so `TMDB_READ_TOKEN` may be exposed only to the provider-bearing command step. Because an `all_movies` refresh can produce a large maintenance diff, it **must not auto-merge**. After the exact-head Media Check succeeds, keep the operation PR open for explicit human review and manual merge.
+
 ## Verification
 
 Before a normal media PR is eligible for auto-merge:

@@ -72,6 +72,25 @@ class TMDBProvider:
             candidates.append(ProviderCandidate(media_type, item["id"], str(localized or original or ""), str(original or localized or ""), _year(date_value)))
         return candidates
 
+    def find_by_imdb(self, imdb_id: str) -> list[ProviderCandidate]:
+        payload = self._get(f"/find/{imdb_id}", {"external_source": "imdb_id", "language": "ru-RU"})
+        candidates: list[ProviderCandidate] = []
+        for item in payload.get("movie_results") or []:
+            if not isinstance(item.get("id"), int):
+                continue
+            localized = item.get("title")
+            original = item.get("original_title")
+            candidates.append(
+                ProviderCandidate(
+                    "movie",
+                    item["id"],
+                    str(localized or original or ""),
+                    str(original or localized or ""),
+                    _year(item.get("release_date")),
+                )
+            )
+        return candidates
+
     def fetch_work(self, media_type: str, provider_id: int) -> CanonicalMetadata:
         payload = self._get(f"/{media_type}/{provider_id}", {"language": "ru-RU", "append_to_response": "external_ids,credits,release_dates,content_ratings"})
         localized = payload.get("title") if media_type == "movie" else payload.get("name")
@@ -99,8 +118,11 @@ class TMDBProvider:
         writers = [self._person(person) for person in crew if person.get("job") in {"Writer", "Screenplay", "Teleplay"}]
         status_raw = str(payload.get("status") or "")
         status = "completed" if status_raw in {"Released", "Ended"} else "cancelled" if status_raw == "Canceled" else "ongoing" if status_raw in {"Returning Series", "In Production", "Planned"} else "unknown"
+        genre_items = payload.get("genres") or []
+        mapped_genres = [TMDB_GENRE_TERM_BY_ID[item["id"]] for item in genre_items if item.get("id") in TMDB_GENRE_TERM_BY_ID]
+        unmapped_genre_ids = tuple(dict.fromkeys(item["id"] for item in genre_items if isinstance(item.get("id"), int) and item["id"] not in TMDB_GENRE_TERM_BY_ID))
         external: dict[str, Any] = {
-            "genres": [TMDB_GENRE_TERM_BY_ID[item["id"]] for item in payload.get("genres") or [] if item.get("id") in TMDB_GENRE_TERM_BY_ID],
+            "genres": mapped_genres,
             "runtime_min": runtime,
             "original_language": payload.get("original_language"),
             "countries": [str(item.get("iso_3166_1")) for item in payload.get("production_countries") or [] if item.get("iso_3166_1")],
@@ -119,7 +141,7 @@ class TMDBProvider:
             external["assets"]["backdrop"] = {"provider": "tmdb", "path": payload["backdrop_path"]}
         if not external["assets"]:
             external.pop("assets")
-        return CanonicalMetadata(identity=identity, external=external)
+        return CanonicalMetadata(identity=identity, external=external, unmapped_genre_ids=unmapped_genre_ids)
 
     @staticmethod
     def _person(person: Mapping[str, Any], character: bool = False) -> dict[str, Any]:

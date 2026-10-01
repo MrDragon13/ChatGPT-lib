@@ -26,6 +26,10 @@ Raw signals хранятся внутри work/collection и создаются 
 
 Factual metadata может автоматически обогащаться из внешних providers; TMDB — предпочтительный primary provider. Неизвестные факты не выдумываются. `metadata.overrides` сохраняет ручные правки и имеет приоритет над внешними данными. Semantic traits всегда имеют provenance.
 
+Для массового обновления уже существующих фильмов используется typed maintenance-команда `refresh_metadata` со scope `all_movies`. Перед записью она полностью разрешает identity всех фильмов через существующий TMDB ID, IMDb lookup, явный `tmdb_overrides` либо строгий title+year fallback. Если хотя бы один фильм неоднозначен или конфликтует с canonical identity, bulk refresh останавливается без частичной записи.
+
+Refresh обновляет только provider-owned factual snapshot: release date/external IDs, поддерживаемые canonical genres, runtime, язык/страны/status, synopsis, credits, artwork, TMDB metric и provider provenance. Пользовательские оценки, просмотры, реакции, feedback, semantic metadata, relations, internal IDs и manual overrides сохраняются. Неподдерживаемые TMDB genre IDs не создают новые vocabulary terms автоматически.
+
 ## Пользовательский UX
 
 Для пользователя это прежде всего личный киноассистент. Штатные GitHub/YAML/Actions/command детали скрыты за сценой и не проговариваются при нормальной успешной операции. Техническая информация появляется только при проблеме, когда от пользователя действительно требуется действие, либо по прямому запросу.
@@ -50,14 +54,16 @@ natural language
 → deterministic Python service
 → canonical YAML + generated rebuild + receipt
 → dispatched media-check on exact resulting head SHA
-→ human-reviewed merge
+→ guarded auto-merge for eligible normal data operations
 ```
 
 Request-only `media/op-*` PR не получает отдельный автоматический зелёный `Media Check`: authoritative check запускается `Media Command` только после успешного применения команды и commit результата.
 
+Обычные data-only операции `add_work`, `record_viewing_feedback` и `set_interest` после exact-head green gate могут завершаться guarded auto-merge. Архитектурные изменения и bulk maintenance `refresh_metadata` в этот allowlist не входят; `refresh_metadata(scope=all_movies)` после зелёного exact-head check остаётся открытым для ручного review/merge.
+
 Если пользователь одновременно сообщает о просмотре/оценке нового произведения, используется одна команда `record_viewing_feedback` с `create_if_missing: true`. Service через TMDB создаёт work и применяет viewing/rating/reaction/feedback в одной транзакции; при provider outage, неоднозначной identity или validation failure не сохраняется ни work, ни feedback.
 
-GitHub Actions не вызывает модель и не хранит OpenAI/model credentials. `TMDB_READ_TOKEN` нужен только provider-dependent операциям: `add_work` и `record_viewing_feedback` с `create_if_missing: true`, когда требуется создание отсутствующего произведения. Обычные изменения уже существующего work не зависят от provider. В v1 auto-merge отключён.
+GitHub Actions не вызывает модель и не хранит OpenAI/model credentials. `TMDB_READ_TOKEN` нужен только provider-dependent операциям: `add_work`, `record_viewing_feedback` с `create_if_missing: true` при создании отсутствующего произведения и `refresh_metadata`. Обычные изменения уже существующего work не зависят от provider.
 
 ## CLI
 
@@ -71,7 +77,7 @@ python -m media.cli rebuild --check
 python -m media.cli doctor --format json
 ```
 
-`apply-command` принимает только строгий typed command JSON. Exit codes: `0` — success/no_change/already_applied, `2` — invalid/ambiguous user command, `3` — canonical/doctor/integrity failure, `4` — metadata provider unavailable.
+`apply-command` принимает только строгий typed command JSON, включая maintenance-команду `refresh_metadata`. Exit codes: `0` — success/no_change/already_applied, `2` — invalid/ambiguous/preflight-needs-input command, `3` — canonical/doctor/integrity failure, `4` — metadata provider unavailable.
 
 ## Проверка и пересборка
 
@@ -89,4 +95,4 @@ Generated SQLite можно удалить в любой момент: она п
 
 ## Для LLM/агентов
 
-Перед работой обязательно прочитать [`AGENTS.md`](AGENTS.md). Для обычной пользовательской записи модель формирует typed command и создаёт operation PR; она не редактирует canonical/generated YAML напрямую и не изменяет schema/vocabulary как побочный эффект data entry.
+Перед работой обязательно прочитать [`AGENTS.md`](AGENTS.md). Для обычной пользовательской записи модель формирует typed command и создаёт operation PR; она не редактирует canonical/generated YAML напрямую и не изменяет schema/vocabulary как побочный эффект data entry. Bulk `refresh_metadata(all_movies)` также идёт через typed-command pipeline, но всегда требует ручного merge после review.

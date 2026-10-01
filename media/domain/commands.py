@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal, TypeAlias
+from typing import Literal, Mapping, TypeAlias
 
 from .types import TargetUpdate, WorkRef
 
@@ -33,6 +33,20 @@ class AddWorkCommand:
 
 
 @dataclass(frozen=True)
+class ProviderWorkRef:
+    media_type: Literal["movie"]
+    id: int
+
+
+@dataclass(frozen=True)
+class RefreshMetadataCommand:
+    schema_version: int
+    operation_id: str
+    scope: Literal["all_movies"]
+    tmdb_overrides: Mapping[str, ProviderWorkRef]
+
+
+@dataclass(frozen=True)
 class RecommendContextRequest:
     schema_version: int
     target: str
@@ -43,4 +57,4 @@ class RecommendContextRequest:
     limit: int
 
 
-MediaCommand: TypeAlias = RecordViewingFeedbackCommand | SetInterestCommand | AddWorkCommand
+MediaCommand: TypeAlias = RecordViewingFeedbackCommand | SetInterestCommand | AddWorkCommand | RefreshMetadataCommand

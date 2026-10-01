@@ -8,10 +8,11 @@ from pathlib import Path
 from typing import Any
 
 from media.commands.schema import load_command
-from media.domain.commands import AddWorkCommand, RecommendContextRequest, RecordViewingFeedbackCommand
+from media.domain.commands import AddWorkCommand, RecommendContextRequest, RecordViewingFeedbackCommand, RefreshMetadataCommand
 from media.domain.errors import (
     AmbiguousIdentityError,
     CommandValidationError,
+    MetadataRefreshPreflightError,
     NotFoundError,
     PathPolicyError,
     ProviderUnavailableError,
@@ -37,7 +38,10 @@ def _emit(value: Any, output_format: str = "human") -> None:
 
 
 def _operation_result(result: Any) -> dict[str, Any]:
-    return {"status": result.status, "operation_id": result.operation_id, "operation": result.operation, "changed_entities": list(result.changed_entities), "changed_files": list(result.changed_files)}
+    value = {"status": result.status, "operation_id": result.operation_id, "operation": result.operation, "changed_entities": list(result.changed_entities), "changed_files": list(result.changed_files)}
+    if result.details:
+        value["details"] = dict(result.details)
+    return value
 
 
 def _doctor_result(report: Any) -> dict[str, Any]:
@@ -68,7 +72,7 @@ def main(argv: list[str] | None = None) -> int:
             command=load_command(Path(args.request))
             if isinstance(command,RecommendContextRequest): raise CommandValidationError("recommend_context is read-only and cannot be applied")
             provider=None
-            needs_provider=isinstance(command,AddWorkCommand) or (isinstance(command,RecordViewingFeedbackCommand) and command.create_if_missing)
+            needs_provider=isinstance(command,(AddWorkCommand,RefreshMetadataCommand)) or (isinstance(command,RecordViewingFeedbackCommand) and command.create_if_missing)
             if needs_provider:
                 token=os.environ.get("TMDB_READ_TOKEN")
                 if token: provider=TMDBProvider(token)
@@ -81,6 +85,8 @@ def main(argv: list[str] | None = None) -> int:
                 if stale: _emit({"status":"stale","files":stale},"json"); return 3
                 _emit({"status":"ok","files":[]},"json"); return 0
             paths=rebuild_generated(media_root); _emit({"status":"rebuilt","files":[str(path.relative_to(repo_root)) for path in paths]},"json"); return 0
+    except MetadataRefreshPreflightError as exc:
+        _emit({"status":"needs_input","reason":"metadata_refresh_preflight","blockers":[dict(item) for item in exc.blockers]},output_format); return 2
     except AmbiguousIdentityError as exc:
         _emit({"status":"needs_input","reason":"ambiguous_identity","candidates":[asdict(candidate) if hasattr(candidate,"__dataclass_fields__") else str(candidate) for candidate in exc.candidates]},output_format); return 2
     except (CommandValidationError,NotFoundError,UnknownTargetError) as exc:

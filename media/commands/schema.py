@@ -8,8 +8,10 @@ from uuid import UUID
 from media.domain.commands import (
     AddWorkCommand,
     MediaCommand,
+    ProviderWorkRef,
     RecommendContextRequest,
     RecordViewingFeedbackCommand,
+    RefreshMetadataCommand,
     SetInterestCommand,
 )
 from media.domain.errors import CommandValidationError
@@ -20,6 +22,7 @@ _SCHEMA_BY_OPERATION = {
     "record_viewing_feedback": "record_viewing_feedback.schema.json",
     "set_interest": "set_interest.schema.json",
     "add_work": "add_work.schema.json",
+    "refresh_metadata": "refresh_metadata.schema.json",
     "recommend_context": "recommend_context.schema.json",
 }
 
@@ -62,6 +65,12 @@ def parse_command(data: Mapping[str, Any], schema_dir: Path | None = None) -> Me
         return SetInterestCommand(data["schema_version"], data["operation_id"], _work_ref(data["work_ref"]), data["target"], data["state"], data.get("priority"))
     if operation == "add_work":
         return AddWorkCommand(data["schema_version"], data["operation_id"], _work_ref(data["work_ref"]))
+    if operation == "refresh_metadata":
+        overrides = {
+            work_id: ProviderWorkRef(value["media_type"], value["id"])
+            for work_id, value in (data.get("tmdb_overrides") or {}).items()
+        }
+        return RefreshMetadataCommand(data["schema_version"], data["operation_id"], data["scope"], overrides)
     return RecommendContextRequest(data["schema_version"], data["target"], data.get("text"), data.get("only_unwatched", False), data.get("runtime_max"), data.get("include_not_interested", False), data.get("limit", 20))
 
 

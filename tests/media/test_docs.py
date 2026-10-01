@@ -43,3 +43,14 @@ def test_readme_commands_match_real_modules_and_agents_contract_mentions_guardra
     agents=Path('media/AGENTS.md').read_text(encoding='utf-8')
     for phrase in ['Never invent schema fields','Unknown is better than guessed','Do not persist ephemeral','Run full validation before commit','Normal data entry must not modify schemas']:
         assert phrase in agents
+
+
+def test_docs_define_refresh_metadata_as_manual_bulk_maintenance():
+    readme=Path('media/README.md').read_text(encoding='utf-8')
+    agents=Path('media/AGENTS.md').read_text(encoding='utf-8')
+    assert 'refresh_metadata' in readme
+    assert 'all_movies' in readme
+    assert 'manual' in readme.lower() or 'вручную' in readme.lower()
+    assert 'refresh_metadata' in agents
+    assert 'all_movies' in agents
+    assert 'must not auto-merge' in agents.lower()
