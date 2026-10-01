@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import worker from "../src/index";
-import { corsHeaders } from "../src/http";
+import { corsHeaders, readJsonBody } from "../src/http";
 
 const env = {
   ALLOWED_ORIGIN: "https://mrdragon13.github.io",
@@ -19,21 +19,17 @@ describe("HTTP boundary", () => {
     expect(response.status).toBe(404);
   });
 
-  it("returns 422 for invalid feedback JSON", async () => {
-    const response = await worker.fetch(new Request("https://broker.example/v1/feedback", {
+  it("rejects invalid JSON in the bounded body reader", async () => {
+    await expect(readJsonBody(new Request("https://broker.example", {
       method: "POST",
-      headers: { "content-type": "application/json", origin: "https://mrdragon13.github.io" },
       body: "{",
-    }), env);
-    expect(response.status).toBe(422);
+    }))).rejects.toThrow(/invalid json/i);
   });
 
-  it("returns 422 before parsing JSON bodies larger than 16 KiB", async () => {
-    const response = await worker.fetch(new Request("https://broker.example/v1/feedback", {
+  it("rejects JSON bodies larger than 16 KiB", async () => {
+    await expect(readJsonBody(new Request("https://broker.example", {
       method: "POST",
-      headers: { "content-type": "application/json", origin: "https://mrdragon13.github.io" },
-      body: JSON.stringify({ work_id: "x", target: "primary", feedback_summary: "a".repeat(17000) }),
-    }), env);
-    expect(response.status).toBe(422);
+      body: JSON.stringify({ feedback_summary: "a".repeat(17000) }),
+    }))).rejects.toThrow(/exceeds limit/i);
   });
 });

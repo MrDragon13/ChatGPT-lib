@@ -28,3 +28,14 @@ def test_refresh_metadata_is_explicitly_not_auto_merge_eligible():
     assert "refresh_metadata" not in case_block
 def test_maintenance_is_manual_and_read_only():
     text=_text("media-maintenance.yml"); assert "workflow_dispatch:" in text; assert "contents: read" in text; assert "contents: write" not in text; assert "doctor" in text; assert "rebuild --check" in text
+
+def test_web_feedback_broker_can_rely_on_one_request_operation_contract():
+    text=_text("media-command.yml")
+    assert "Require exactly one pending request" in text
+    assert "Expected exactly one pending .media/requests/*.json file" in text
+    assert "find .media/requests -maxdepth 1 -type f -name '*.json'" in text
+
+def test_record_viewing_feedback_remains_normal_data_auto_merge_eligible():
+    text=_text("media-auto-merge.yml")
+    case_block=text.split('case "$OP_KIND" in',1)[1].split('esac',1)[0]
+    assert "record_viewing_feedback" in case_block
