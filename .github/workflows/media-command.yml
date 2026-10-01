@@ -1,0 +1,138 @@
+name: Media Command
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - '.media/requests/**'
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+concurrency:
+  group: media-command-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      startsWith(github.head_ref, 'media/op-')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout trusted operation branch
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - name: Install media dependencies
+        run: python -m pip install -r media/requirements.txt
+      - name: Require exactly one pending request
+        id: request
+        shell: bash
+        run: |
+          mapfile -t REQUESTS < <(find .media/requests -maxdepth 1 -type f -name '*.json' | sort)
+          if [ "${#REQUESTS[@]}" -ne 1 ]; then
+            echo "::error::Expected exactly one pending .media/requests/*.json file"
+            exit 2
+          fi
+          echo "request=${REQUESTS[0]}" >> "$GITHUB_OUTPUT"
+      - name: Replay branch on current main
+        shell: bash
+        run: |
+          git fetch origin main
+          if ! git merge --no-edit origin/main; then
+            git merge --abort || true
+            echo '{"status":"conflict","reason":"stale_base_merge_conflict"}'
+            exit 3
+          fi
+      - name: Reject pre-existing non-request branch changes
+        shell: bash
+        env:
+          REQUEST: ${{ steps.request.outputs.request }}
+        run: |
+          mapfile -t BRANCH_PATHS < <(git diff --name-only origin/main...HEAD)
+          for path in "${BRANCH_PATHS[@]}"; do
+            if [ "$path" != "$REQUEST" ]; then
+              echo "::error::Operation PR must contain only its request before execution: $path"
+              exit 3
+            fi
+          done
+      - name: Apply typed media command
+        shell: bash
+        env:
+          TMDB_READ_TOKEN: ${{ secrets.TMDB_READ_TOKEN }}
+          REQUEST: ${{ steps.request.outputs.request }}
+        run: |
+          cp -- "$REQUEST" /tmp/media-request.json
+          set +e
+          python -m media.cli apply-command "$REQUEST" --format json | tee /tmp/media-result.json
+          status=${PIPESTATUS[0]}
+          set -e
+          exit "$status"
+      - name: Remove transient request
+        shell: bash
+        env:
+          REQUEST: ${{ steps.request.outputs.request }}
+        run: rm -- "$REQUEST"
+      - name: Stage operation outputs
+        shell: bash
+        env:
+          REQUEST: ${{ steps.request.outputs.request }}
+        run: |
+          git add -A -- media/data/works media/generated/index.jsonl media/generated/profiles .media/operations "$REQUEST"
+      - name: Verify staged path policy
+        shell: bash
+        env:
+          REQUEST: ${{ steps.request.outputs.request }}
+        run: |
+          git diff --cached --name-only
+          python - "$REQUEST" <<'PY'
+          import json
+          import subprocess
+          import sys
+          from media.service.path_policy import verify_changed_paths
+          request_path = sys.argv[1]
+          command = json.load(open('/tmp/media-request.json', encoding='utf-8'))
+          paths = subprocess.check_output(['git', 'diff', '--cached', '--name-only'], text=True).splitlines()
+          if request_path not in paths:
+              raise SystemExit('transient request deletion is not staged')
+          media_paths = [path for path in paths if path != request_path]
+          verify_changed_paths(command['operation'], media_paths)
+          forbidden = ('media/schemas/', 'media/service/', 'media/domain/', '.github/workflows/')
+          forbidden_exact = {'media/vocabulary.yaml', 'media/AGENTS.md'}
+          bad = [path for path in paths if path.startswith(forbidden) or path in forbidden_exact]
+          if bad:
+              raise SystemExit(f'architecture paths rejected: {bad}')
+          PY
+      - name: Run full verification before commit
+        run: |
+          python -m pytest -q
+          python -m media.tools.validate .
+          python -m media.cli rebuild --check
+          python -m media.cli doctor --format json
+      - name: Commit and push operation result
+        id: commit
+        shell: bash
+        env:
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          OPERATION_ID=$(python -c "import json; print(json.load(open('/tmp/media-request.json'))['operation_id'])")
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "data: apply media operation $OPERATION_ID"
+          git push origin "HEAD:$BRANCH"
+          echo "head_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Dispatch read-only check for exact new head
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ github.head_ref }}
+          HEAD_SHA: ${{ steps.commit.outputs.head_sha }}
+        run: gh workflow run media-check.yml --ref "$BRANCH" -f expected_sha="$HEAD_SHA"
