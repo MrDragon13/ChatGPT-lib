@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Literal, Mapping, TypeAlias
 
 from .types import TargetUpdate, WorkRef
@@ -44,6 +44,7 @@ class RefreshMetadataCommand:
     operation_id: str
     scope: Literal["all_movies"]
     tmdb_overrides: Mapping[str, ProviderWorkRef]
+    year_overrides: Mapping[str, int] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
