@@ -1,0 +1,81 @@
+name: Media Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'media/**'
+      - 'web/**'
+      - 'tests/media/**'
+      - '.github/workflows/media-pages.yml'
+      - 'pyproject.toml'
+  workflow_dispatch:
+
+concurrency:
+  group: media-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: read
+    steps:
+      - name: Checkout exact revision
+        uses: actions/checkout@v7
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - name: Install media dependencies
+        run: python -m pip install -r media/requirements.txt
+      - name: Run project tests
+        run: python -m pytest -q
+      - name: Validate canonical media
+        run: python -m media.tools.validate .
+      - name: Check generated artifacts
+        run: python -m media.cli rebuild --check
+      - name: Run media doctor
+        run: python -m media.cli doctor --format json
+      - name: Export web manifest
+        run: python -m media.cli web-export --output web/public/data/manifest.json --format json
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22.22.2'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install web dependencies
+        working-directory: web
+        run: npm ci
+      - name: Run web tests
+        working-directory: web
+        run: npm run test:run
+      - name: Typecheck web
+        working-directory: web
+        run: npm run typecheck
+      - name: Build web
+        working-directory: web
+        run: npm run build
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: web/dist
+
+  deploy:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
