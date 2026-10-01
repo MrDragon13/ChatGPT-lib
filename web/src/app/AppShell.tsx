@@ -2,6 +2,7 @@ import { createContext, type ReactNode, useContext, useEffect, useMemo, useState
 import { Link, useLocation } from "react-router-dom";
 
 import { AboutCredits } from "../components/AboutCredits";
+import { TargetSwitcher } from "../components/TargetSwitcher";
 import { loadManifest } from "../data/client";
 import type { TargetId, WebManifest } from "../data/types";
 import { libraryHref, resolveTarget } from "./router";
@@ -69,10 +70,13 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Link className="brand" to={`/today?target=${encodeURIComponent(target)}`}>
             Наше кино
           </Link>
-          <nav aria-label="Основная навигация">
-            <Link to={`/today?target=${encodeURIComponent(target)}`}>Сегодня</Link>
-            <a href={libraryHref(target)}>Медиатека</a>
-          </nav>
+          <div className="site-header__controls">
+            <nav className="site-header__primary" aria-label="Основная навигация">
+              <Link to={`/today?target=${encodeURIComponent(target)}`}>Сегодня</Link>
+              <a href={libraryHref(target)}>Медиатека</a>
+            </nav>
+            <TargetSwitcher targets={manifest.targets} activeTarget={target} />
+          </div>
         </header>
         <main id="content">{children}</main>
         <AboutCredits />
