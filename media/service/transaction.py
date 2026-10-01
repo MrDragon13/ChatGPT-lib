@@ -3,16 +3,18 @@ from __future__ import annotations
 import json
 import shutil
 import tempfile
+from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from media.domain.changeset import MutationPlan, OperationResult
 from media.domain.commands import AddWorkCommand, RecordViewingFeedbackCommand, SetInterestCommand
-from media.domain.errors import CommandValidationError, TransactionValidationError
+from media.domain.errors import CommandValidationError, NotFoundError, TransactionValidationError
+from media.domain.types import WorkRef
 from media.repository.yaml_repo import YamlRepository
-from media.service.mutate import plan_record_viewing_feedback, plan_set_interest
-from media.service.enrich import plan_add_work
+from media.service.enrich import plan_add_work, plan_add_work_resolved
+from media.service.mutate import apply_feedback_updates, plan_record_viewing_feedback, plan_set_interest, profile_targets_for
 from media.service.path_policy import verify_changed_paths
 from media.tools.build_index import write_index
 from media.tools.build_profiles import write_profiles
@@ -28,12 +30,59 @@ def _receipt_path(repo_root: Path, operation_id: str) -> Path:
 
 def _load_receipt(path: Path) -> OperationResult:
     data = json.loads(path.read_text(encoding="utf-8"))
-    return OperationResult("already_applied", data["operation_id"], data["operation"], tuple(data.get("changed_entities") or ()), tuple(data.get("changed_files") or ()))
+    return OperationResult(
+        "already_applied",
+        data["operation_id"],
+        data["operation"],
+        tuple(data.get("changed_entities") or ()),
+        tuple(data.get("changed_files") or ()),
+    )
+
+
+def _plan_record_feedback(
+    repo: YamlRepository,
+    command: RecordViewingFeedbackCommand,
+    now: datetime | None,
+    provider: Any = None,
+) -> MutationPlan:
+    try:
+        return plan_record_viewing_feedback(repo, command, now=now)
+    except NotFoundError:
+        if not command.create_if_missing:
+            raise
+
+    add_command = AddWorkCommand(command.schema_version, command.operation_id, command.work_ref)
+    add_plan, work_id = plan_add_work_resolved(repo, add_command, provider, now=now)
+
+    if not add_plan.documents:
+        existing_command = replace(command, work_ref=WorkRef(id=work_id), create_if_missing=False)
+        return plan_record_viewing_feedback(repo, existing_command, now=now)
+
+    if len(add_plan.documents) != 1:
+        raise CommandValidationError("create-if-missing expected exactly one new work document")
+    path, document = next(iter(add_plan.documents.items()))
+    updated_document, _, touched_targets = apply_feedback_updates(
+        repo,
+        document,
+        command.target_updates,
+        now=now,
+    )
+    profile_targets = tuple(
+        sorted(set(add_plan.rebuild_profile_targets) | set(profile_targets_for(repo, touched_targets)))
+    )
+    return MutationPlan(
+        command.operation_id,
+        "record_viewing_feedback",
+        (work_id,),
+        {path: updated_document},
+        True,
+        profile_targets,
+    )
 
 
 def _plan(repo: YamlRepository, command: MutableCommand, now: datetime | None, provider: Any = None) -> MutationPlan:
     if isinstance(command, RecordViewingFeedbackCommand):
-        return plan_record_viewing_feedback(repo, command, now=now)
+        return _plan_record_feedback(repo, command, now, provider)
     if isinstance(command, SetInterestCommand):
         return plan_set_interest(repo, command, now=now)
     if isinstance(command, AddWorkCommand):
@@ -47,7 +96,13 @@ def preview_command(repo_root: Path, command: MutableCommand, *, now: datetime |
     if receipt.exists():
         return _load_receipt(receipt)
     plan = _plan(YamlRepository(repo_root / "media"), command, now, provider)
-    return OperationResult("planned" if plan.changed_entities else "no_change", plan.operation_id, plan.operation, plan.changed_entities, tuple(sorted(plan.documents)))
+    return OperationResult(
+        "planned" if plan.changed_entities else "no_change",
+        plan.operation_id,
+        plan.operation,
+        plan.changed_entities,
+        tuple(sorted(plan.documents)),
+    )
 
 
 def _file_map(root: Path) -> dict[str, bytes]:
@@ -126,7 +181,10 @@ def execute_command(repo_root: Path, command: MutableCommand, *, now: datetime |
         }
         temp_receipt = temp_root / receipt_rel
         temp_receipt.parent.mkdir(parents=True, exist_ok=True)
-        temp_receipt.write_text(json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+        temp_receipt.write_text(
+            json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
+            encoding="utf-8",
+        )
         sync_paths = media_paths + [receipt_rel]
         verify_changed_paths(plan.operation, sync_paths)
         _sync_with_rollback(repo_root, temp_root, sync_paths)

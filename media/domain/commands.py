@@ -12,6 +12,7 @@ class RecordViewingFeedbackCommand:
     operation_id: str
     work_ref: WorkRef
     target_updates: tuple[TargetUpdate, ...]
+    create_if_missing: bool = False
 
 
 @dataclass(frozen=True)

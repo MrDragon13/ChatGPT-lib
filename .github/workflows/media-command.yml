@@ -71,10 +71,22 @@ jobs:
           REQUEST: ${{ steps.request.outputs.request }}
         run: |
           cp -- "$REQUEST" /tmp/media-request.json
-          operation=$(python -c "import json; print(json.load(open('/tmp/media-request.json'))['operation'])")
-          echo "operation=$operation" >> "$GITHUB_OUTPUT"
+          python - "$REQUEST" "$GITHUB_OUTPUT" <<'PY'
+          import json
+          import sys
+
+          command = json.load(open(sys.argv[1], encoding='utf-8'))
+          operation = command['operation']
+          create_if_missing = bool(command.get('create_if_missing', False))
+          needs_provider = operation == 'add_work' or (
+              operation == 'record_viewing_feedback' and create_if_missing
+          )
+          with open(sys.argv[2], 'a', encoding='utf-8') as output:
+              print(f'operation={operation}', file=output)
+              print(f"needs_provider={'true' if needs_provider else 'false'}", file=output)
+          PY
       - name: Apply command without provider secret
-        if: ${{ steps.operation.outputs.operation != 'add_work' }}
+        if: ${{ steps.operation.outputs.needs_provider != 'true' }}
         shell: bash
         env:
           REQUEST: ${{ steps.request.outputs.request }}
@@ -84,8 +96,8 @@ jobs:
           status=${PIPESTATUS[0]}
           set -e
           exit "$status"
-      - name: Apply add-work command with TMDB secret
-        if: ${{ steps.operation.outputs.operation == 'add_work' }}
+      - name: Apply provider-dependent command with TMDB secret
+        if: ${{ steps.operation.outputs.needs_provider == 'true' }}
         shell: bash
         env:
           TMDB_READ_TOKEN: ${{ secrets.TMDB_READ_TOKEN }}

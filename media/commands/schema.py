@@ -57,7 +57,7 @@ def parse_command(data: Mapping[str, Any], schema_dir: Path | None = None) -> Me
         _validate_uuid(str(data["operation_id"]))
     if operation == "record_viewing_feedback":
         updates = tuple(TargetUpdate(target=item["target"], viewing=item.get("viewing"), rating=item.get("rating"), reaction=item.get("reaction"), feedback=item.get("feedback")) for item in data["target_updates"])
-        return RecordViewingFeedbackCommand(data["schema_version"], data["operation_id"], _work_ref(data["work_ref"]), updates)
+        return RecordViewingFeedbackCommand(data["schema_version"], data["operation_id"], _work_ref(data["work_ref"]), updates, data.get("create_if_missing", False))
     if operation == "set_interest":
         return SetInterestCommand(data["schema_version"], data["operation_id"], _work_ref(data["work_ref"]), data["target"], data["state"], data.get("priority"))
     if operation == "add_work":
