@@ -7,9 +7,11 @@
 
 Добавить к существующей персональной медиатеке кинематографичный веб-интерфейс на GitHub Pages.
 
-Сайт нужен для внутреннего использования владельцем репозитория и партнёром. Его главная задача — сделать уже накопленные данные визуальными и быстрыми в использовании: выбрать фильм на вечер, просмотреть личную медиатеку, увидеть собственные оценки и реакции, открыть подробную карточку произведения и понять, почему оно находится в фокусе.
+Сайт нужен прежде всего для внутреннего использования владельцем репозитория и партнёром. Его главная задача — сделать уже накопленные данные визуальными и быстрыми в использовании: выбрать фильм на вечер, просмотреть личную медиатеку, увидеть собственные оценки и реакции, открыть подробную карточку произведения и понять, почему оно находится в фокусе.
 
 Основной способ пополнения богатых данных остаётся прежним: разговор с LLM и существующий typed-command/write pipeline. Веб-интерфейс не создаёт второй источник истины.
+
+Публичная достижимость сайта не считается проблемой: пользователь подтвердил, что возможная видимость его кинооценок, реакций и комментариев для посторонних приемлема. Поэтому v1 не вводит encryption/passphrase слой только ради сокрытия медиатеки.
 
 ## 2. Продуктовый контракт
 
@@ -23,7 +25,8 @@
 8. Сайт не вводит новый скрытый recommendation score и не подменяет LLM как основной recommendation engine.
 9. Будущие быстрые правки с сайта используют тот же typed-command / validation / receipt протокол, что LLM и CLI.
 10. GitHub token, write credentials и provider secrets никогда не попадают в browser bundle.
-11. Private repository не считается достаточной защитой опубликованного Pages origin. Персональный payload не публикуется открытым текстом, если доступ к Pages не подтверждён как действительно private.
+11. Ratings, reactions, feedback и прочие данные медиатеки могут публиковаться в статическом read manifest без дополнительного encryption слоя.
+12. Отсутствие требования конфиденциальности не ослабляет secret boundary: credentials, Actions secrets, provider tokens и будущая write-broker authentication остаются непубличными.
 
 ## 3. Область v1
 
@@ -33,13 +36,12 @@
 - Motion (`motion/react`) для переходов и интерактивности;
 - статическая сборка и публикация через GitHub Pages;
 - build-time exporter из canonical/derived media data в web manifest;
-- privacy envelope для персонального manifest, когда Pages origin публично доступен;
 - главная страница как «вечерний программный гид»;
 - медиатека с поиском и фильтрами;
 - detail page фильма;
 - переключение контекста просмотра (`Я`, `Партнёр`, `Вместе`) там, где соответствующие данные существуют;
 - постеры/backdrops через уже сохранённые TMDB asset references;
-- loading, locked, empty и error состояния;
+- loading, empty и error состояния;
 - responsive desktop/mobile;
 - accessibility и reduced motion;
 - русская локализация интерфейса.
@@ -48,10 +50,10 @@
 
 - browser-side редактирование canonical YAML;
 - GitHub OAuth/token в браузере;
+- passphrase/unlock/encryption слой для медиатеки;
 - новый recommendation ML/ranking engine;
 - серверная база данных;
 - публичные аккаунты и многопользовательская авторизация;
-- публичный каталог;
 - административный интерфейс;
 - schema/vocabulary editing из сайта.
 
@@ -74,6 +76,8 @@ React UI
 Write broker не имеет права принимать произвольный YAML, patch, filename или shell command. Он принимает только ограниченный typed payload существующей media domain-модели.
 
 UI v1 поэтому строится так, чтобы блоки пользовательских сигналов могли позже получить edit affordance без изменения read-модели страницы.
+
+Публичность read-сайта не означает публичность write-flow: будущий broker обязан иметь отдельную authentication/authorization boundary.
 
 ## 5. Архитектура данных для сайта
 
@@ -119,34 +123,28 @@ v1 не создаёт opaque score.
 
 LLM остаётся каналом для более сложного запроса «подбери нам фильм сегодня».
 
-### 5.3 Privacy envelope
+### 5.3 Publication posture
 
-На дату этого spec GitHub Pages access control для private publication относится к GitHub Enterprise Cloud organization-owned project sites; личный private repository нельзя считать автоматически закрытым сайтом. Поэтому текущий personal repository должен проектироваться так, будто опубликованный Pages origin публично достижим.
+Сайт рассчитан на внутреннее использование, но не требует privacy wall для данных медиатеки.
 
-Безопасный v1 режим:
+Разрешено публиковать в Pages artifact:
 
-```text
-canonical data
--> exporter
--> plaintext manifest inside CI workspace only
--> build-time encryption
--> encrypted payload published to Pages
--> passphrase unlock in browser
--> decrypted data kept only in runtime memory
-```
+- названия и metadata фильмов;
+- оценки;
+- reactions;
+- feedback summaries/signals;
+- viewing status/history, если они уже входят в утверждённый manifest contract;
+- viewer/group IDs, поскольку текущая модель использует анонимные стабильные IDs и не хранит имена/PII.
 
-Требования:
+Запрещено публиковать:
 
-- сильный shared passphrase хранится как repository Actions secret и известен только пользователям сайта;
-- public bundle не содержит passphrase, derived key или plaintext viewer data;
-- payload шифруется authenticated encryption, совместимым с Web Crypto;
-- salt/nonce могут быть публичными и хранятся рядом с ciphertext;
-- decrypted manifest не пишется в `localStorage`, IndexedDB или публичный cache;
-- неверный passphrase не раскрывает, какие фильмы/оценки находятся внутри;
-- unlock state не является заменой будущей write-broker authentication;
-- если в будущем Pages deployment получает действительно private access control, encryption можно оставить defense-in-depth либо убрать отдельным осознанным решением.
+- GitHub access tokens;
+- Actions secrets;
+- TMDB/API credentials;
+- будущие write-broker credentials/session secrets;
+- любые новые персональные данные, которых нет в canonical media model и которые не нужны UI.
 
-Экран unlock должен быть частью визуальной системы, а не технической заглушкой.
+Это сознательная продуктовая позиция, а не предположение о приватности GitHub Pages.
 
 ## 6. Frontend boundary
 
@@ -158,13 +156,11 @@ web/
     app/
     components/
     features/
-      unlock/
       home/
       library/
       work-detail/
     data/
       client.ts
-      crypto.ts
       types.ts
     motion/
     styles/
@@ -175,7 +171,7 @@ web/
 
 Компоненты получают типизированные view models. Они не знают о YAML-схемах, GitHub API, Actions или canonical filenames.
 
-Data adapter — единственная frontend-точка, знающая manifest contract. Crypto boundary отвечает только за unlock/decryption и не содержит media business logic.
+Data adapter — единственная frontend-точка, знающая manifest contract.
 
 ## 7. Информационная архитектура
 
@@ -350,19 +346,20 @@ checkout main
 -> install media requirements
 -> validate canonical data
 -> build/rebuild generated data check
--> export plaintext web manifest inside runner workspace
+-> export web manifest
 -> setup Node
 -> install locked frontend dependencies
--> encrypt personal web payload from Actions secret
 -> test/typecheck/build web
 -> publish dist to GitHub Pages
 ```
 
-Plaintext manifest не публикуется как artifact Pages и не коммитится.
+Manifest может входить в опубликованный Pages artifact как обычный статический JSON/read payload.
 
 Изменение media data после merge автоматически приводит к новой Pages build, чтобы сайт показывал актуальный `main`.
 
 Pages workflow не получает TMDB read/enrichment secret: enrichment уже происходит в media workflow, сайт использует сохранённые provider refs.
+
+Pages workflow не получает GitHub write token сверх минимально необходимого стандартному deploy mechanism и не используется для media mutation.
 
 ## 15. Routing на GitHub Pages
 
@@ -391,14 +388,9 @@ Vite должен работать под project-site base path и не пре�
 - no motion dependency;
 - `prefers-reduced-motion`;
 - hover state всегда имеет keyboard/focus equivalent;
-- читабельность текста поверх backdrop проверяется на реальных изображениях, не только на design tokens;
-- unlock form имеет label, error state и не зависит от placeholder как от label.
+- читабельность текста поверх backdrop проверяется на реальных изображениях, не только на design tokens.
 
 ## 17. Состояния
-
-### Locked
-
-До успешной расшифровки персональные данные не рендерятся. Пользователь видит компактный кинематографичный unlock screen с русским UI.
 
 ### Loading
 
@@ -410,7 +402,7 @@ Skeleton повторяет форму итогового poster/hero layout. Ge
 
 ### Error
 
-Если encrypted payload недоступен/повреждён или passphrase неверен, пользователь видит понятное локальное сообщение. Ошибка не маскируется пустой медиатекой.
+Если manifest недоступен или повреждён, пользователь видит понятное локальное сообщение и возможность перезагрузить страницу. Ошибка не маскируется пустой медиатекой.
 
 ### Missing metadata
 
@@ -421,12 +413,11 @@ Skeleton повторяет форму итогового poster/hero layout. Ge
 - статическая сборка;
 - code splitting для detail/library по необходимости;
 - изображения lazy-load вне первого viewport;
-- hero image получает повышенный priority после unlock;
+- hero image получает повышенный priority;
 - Motion не подписывает React state на continuous scroll values;
 - backdrop blur не используется на больших scrolling surfaces;
 - производительность проверяется на mobile viewport;
-- размер manifest измеряется до выбора single-file vs per-work split;
-- encryption/decryption не блокирует основной UI дольше необходимого; работа выполняется одним bounded шагом после unlock.
+- размер manifest измеряется до выбора single-file vs per-work split.
 
 ## 19. Тестирование
 
@@ -437,20 +428,12 @@ Skeleton повторяет форму итогового poster/hero layout. Ge
 - viewer signals не теряются;
 - canonical data не изменяется при export;
 - missing optional metadata поддерживается;
-- asset refs сериализуются корректно.
-
-### Privacy tests
-
-- Pages output не содержит plaintext rating/feedback/title payload из manifest до decrypt;
-- passphrase отсутствует в built JS/assets;
-- wrong passphrase fail-closed;
-- tampered ciphertext fail-closed;
-- plaintext manifest не попадает в published artifact.
+- asset refs сериализуются корректно;
+- exporter не сериализует credentials/secrets.
 
 ### Frontend tests
 
 - data adapter/type contract;
-- unlock flow;
 - search/filter behavior;
 - viewer context behavior;
 - fallback states;
@@ -465,7 +448,7 @@ Skeleton повторяет форму итогового poster/hero layout. Ge
 - frontend tests;
 - TypeScript typecheck;
 - production build;
-- published-artifact privacy check;
+- static artifact check на отсутствие credentials/secrets;
 - accessibility audit;
 - desktop/mobile screenshot review;
 - Impeccable critique/audit/polish before merge.
@@ -495,7 +478,6 @@ Workflow default: **comp-first**.
 v1 считается готовой, когда:
 
 - GitHub Pages публикует сайт из `main`;
-- опубликованный Pages artifact не раскрывает plaintext персональной медиатеки без unlock;
 - сайт строится только из repository-derived media data;
 - canonical data остаётся untouched frontend-слоем;
 - главный экран даёт быстрый персональный путь к выбору фильма;
@@ -503,6 +485,7 @@ v1 считается готовой, когда:
 - личные оценки/реакции визуально важнее внешнего рейтинга;
 - интерфейс полностью на русском, кроме обязательного provider notice;
 - отсутствуют production mock arrays;
+- browser bundle/Pages artifact не содержат write credentials или provider secrets;
 - keyboard/reduced-motion/contrast gates пройдены;
 - TMDB attribution присутствует;
 - Impeccable finish review завершён;
@@ -513,9 +496,8 @@ v1 считается готовой, когда:
 
 Следующие детали не меняют утверждённую архитектуру и выбираются после измерения/прототипирования:
 
-- single encrypted manifest vs encrypted manifest + per-work chunks;
+- single manifest vs manifest + per-work chunks;
 - конкретная Cyrillic-capable font family;
 - exact TMDB image size variants;
 - минимальный набор deterministic home shelves при текущей плотности сигналов;
-- конкретные KDF параметры для Web Crypto-compatible encryption;
 - форма будущей write-broker authentication.
