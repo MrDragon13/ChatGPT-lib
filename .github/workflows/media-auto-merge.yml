@@ -1,0 +1,136 @@
+name: Media Auto Merge
+
+on:
+  workflow_run:
+    workflows: [Media Check]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: media-auto-merge-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
+
+jobs:
+  merge-normal-data-operation:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'workflow_dispatch' &&
+      startsWith(github.event.workflow_run.head_branch, 'media/op-')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve and verify eligible PR
+        id: pr
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          CHECKED_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+
+          OWNER="${REPO%%/*}"
+          mapfile -t PR_ROWS < <(
+            gh api --method GET "repos/$REPO/pulls" \
+              -f state=open \
+              -f base=main \
+              -f head="$OWNER:$HEAD_BRANCH" \
+              --jq '.[] | [.number, .head.sha, .head.repo.full_name, .base.ref] | @tsv'
+          )
+
+          if [ "${#PR_ROWS[@]}" -eq 0 ]; then
+            echo "No open operation PR remains; nothing to merge."
+            echo "eligible=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "${#PR_ROWS[@]}" -ne 1 ]; then
+            echo "::error::Expected exactly one open PR for $HEAD_BRANCH"
+            exit 2
+          fi
+
+          IFS=$'\t' read -r PR_NUMBER PR_HEAD_SHA PR_HEAD_REPO PR_BASE <<< "${PR_ROWS[0]}"
+          if [ "$PR_HEAD_SHA" != "$CHECKED_SHA" ]; then
+            echo "::error::PR head moved after the successful check"
+            exit 3
+          fi
+          if [ "$PR_HEAD_REPO" != "$REPO" ] || [ "$PR_BASE" != "main" ]; then
+            echo "::error::Only same-repository operation PRs targeting main are eligible"
+            exit 3
+          fi
+
+          COMMIT_ACTOR=$(gh api "repos/$REPO/commits/$CHECKED_SHA" --jq '.author.login // empty')
+          if [ "$COMMIT_ACTOR" != "github-actions[bot]" ]; then
+            echo "::error::Operation head was not produced by the trusted command workflow"
+            exit 3
+          fi
+
+          mapfile -t FILES < <(
+            gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/files?per_page=100" --jq '.[].filename'
+          )
+          if [ "${#FILES[@]}" -eq 0 ]; then
+            echo "::error::Operation PR has no changed files"
+            exit 3
+          fi
+
+          OP_MARKERS=()
+          for path in "${FILES[@]}"; do
+            case "$path" in
+              media/data/works/*.yaml)
+                ;;
+              media/generated/index.jsonl)
+                ;;
+              media/generated/profiles/*.yaml)
+                ;;
+              .media/operations/*.json)
+                OP_MARKERS+=("$path")
+                ;;
+              *)
+                echo "::error::Path is not eligible for normal data auto-merge: $path"
+                exit 3
+                ;;
+            esac
+          done
+
+          if [ "${#OP_MARKERS[@]}" -ne 1 ]; then
+            echo "::error::Expected exactly one applied operation marker"
+            exit 3
+          fi
+
+          OP_JSON=$(gh api "repos/$REPO/contents/${OP_MARKERS[0]}?ref=$CHECKED_SHA" --jq '.content' | tr -d '\n' | base64 --decode)
+          OP_STATUS=$(printf '%s' "$OP_JSON" | jq -r '.status // empty')
+          OP_KIND=$(printf '%s' "$OP_JSON" | jq -r '.operation // empty')
+          if [ "$OP_STATUS" != "applied" ]; then
+            echo "::error::Operation marker is not applied"
+            exit 3
+          fi
+          case "$OP_KIND" in
+            add_work|record_viewing_feedback|set_interest)
+              ;;
+            *)
+              echo "::error::Operation kind is not eligible for v1.2 auto-merge: $OP_KIND"
+              exit 3
+              ;;
+          esac
+
+          echo "eligible=true" >> "$GITHUB_OUTPUT"
+          echo "number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "sha=$PR_HEAD_SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Merge verified normal data operation
+        if: ${{ steps.pr.outputs.eligible == 'true' }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          EXPECTED_SHA: ${{ steps.pr.outputs.sha }}
+        run: |
+          set -euo pipefail
+          RESPONSE=$(gh api --method PUT "repos/$REPO/pulls/$PR_NUMBER/merge" \
+            -f sha="$EXPECTED_SHA" \
+            -f merge_method=merge)
+          printf '%s\n' "$RESPONSE"
+          printf '%s' "$RESPONSE" | jq -e '.merged == true' >/dev/null
