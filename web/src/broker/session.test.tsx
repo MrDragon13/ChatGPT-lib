@@ -65,7 +65,7 @@ describe("BrokerSessionProvider", () => {
   });
 
   it("clears the memory session on 401 and supports local logout", async () => {
-    vi.spyOn(window, "open").mockReturnValue(window);
+    const open = vi.spyOn(window, "open").mockReturnValue(window);
     render(<BrokerSessionProvider baseUrl="https://broker.example"><Probe /></BrokerSessionProvider>);
     act(() => session?.login());
     act(() => window.dispatchEvent(new MessageEvent("message", {
@@ -79,9 +79,13 @@ describe("BrokerSessionProvider", () => {
       status: 401,
       headers: { "content-type": "application/json" },
     }));
-    await expect(session!.getOperationStatus("11111111-2222-4333-8444-555555555555")).rejects.toMatchObject({ status: 401 });
-    await waitFor(() => expect(session?.authenticated).toBe(false));
+    await act(async () => {
+      await expect(session!.getOperationStatus("11111111-2222-4333-8444-555555555555")).rejects.toMatchObject({ status: 401 });
+    });
+    expect(session?.authenticated).toBe(false);
 
+    act(() => session?.login());
+    expect(open).toHaveBeenCalledTimes(2);
     act(() => window.dispatchEvent(new MessageEvent("message", {
       origin: "https://broker.example",
       source: window,
