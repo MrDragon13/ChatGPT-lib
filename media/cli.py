@@ -23,6 +23,7 @@ from media.providers.tmdb import TMDBProvider
 from media.service.query import search_works, show_work
 from media.service.recommend import build_recommend_context
 from media.service.transaction import execute_command, preview_command
+from media.service.web_export import write_web_manifest
 from media.tools.doctor import doctor
 from media.tools.rebuild import check_generated, rebuild_generated
 
@@ -56,6 +57,7 @@ def _parser() -> argparse.ArgumentParser:
     apply=sub.add_parser("apply-command"); apply.add_argument("request"); apply.add_argument("--dry-run",action="store_true"); apply.add_argument("--format",choices=("human","json"),default="human")
     doctor_cmd=sub.add_parser("doctor"); doctor_cmd.add_argument("--format",choices=("human","json"),default="human")
     rebuild=sub.add_parser("rebuild"); rebuild.add_argument("--check",action="store_true")
+    web_export=sub.add_parser("web-export"); web_export.add_argument("--output",required=True); web_export.add_argument("--format",choices=("human","json"),default="human")
     return parser
 
 
@@ -85,6 +87,8 @@ def main(argv: list[str] | None = None) -> int:
                 if stale: _emit({"status":"stale","files":stale},"json"); return 3
                 _emit({"status":"ok","files":[]},"json"); return 0
             paths=rebuild_generated(media_root); _emit({"status":"rebuilt","files":[str(path.relative_to(repo_root)) for path in paths]},"json"); return 0
+        if args.command=="web-export":
+            output=write_web_manifest(media_root,Path(args.output)); manifest=json.loads(output.read_text(encoding="utf-8")); _emit({"status":"ok","output":str(output),"works":len(manifest["works"]),"bytes":output.stat().st_size},output_format); return 0
     except MetadataRefreshPreflightError as exc:
         _emit({"status":"needs_input","reason":"metadata_refresh_preflight","blockers":[dict(item) for item in exc.blockers]},output_format); return 2
     except AmbiguousIdentityError as exc:
