@@ -54,22 +54,19 @@ def apply_feedback_updates(
         previous: dict[str, Any] = {}
         current: dict[str, Any] = {}
         component_changed = False
-        had_existing_component = False
         for key in ("viewing", "rating", "reaction", "feedback"):
             value = getattr(update, key)
             if value is None:
                 continue
             incoming = copy.deepcopy(dict(value))
             if key in signal:
-                had_existing_component = True
                 previous[key] = copy.deepcopy(signal[key])
             current[key] = incoming
             if signal.get(key) != incoming:
                 signal[key] = incoming
                 component_changed = True
         if component_changed:
-            if had_existing_component:
-                signal.setdefault("history", []).append({"at": _at(now), "previous": previous, "current": current})
+            signal.setdefault("history", []).append({"at": _at(now), "previous": previous, "current": current})
             signals[update.target] = signal
             changed = True
             touched_targets.add(update.target)
