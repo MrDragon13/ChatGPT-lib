@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import type { ManifestTargetConfig, TargetId } from "../data/types";
+import { HomePage } from "../features/home/HomePage";
 
 export function configuredTargets(config: ManifestTargetConfig): Set<TargetId> {
   return new Set([...config.targets.viewers, ...Object.keys(config.targets.groups)]);
@@ -31,9 +32,10 @@ export function libraryHref(
 }
 
 function RoutePlaceholder({ title }: { title: string }) {
+  const id = `route-${title.toLowerCase().replaceAll(/\s+/g, "-")}`;
   return (
-    <section aria-labelledby={`route-${title}`} className="route-placeholder">
-      <h1 id={`route-${title}`}>{title}</h1>
+    <section aria-labelledby={id} className="route-placeholder">
+      <h1 id={id}>{title}</h1>
     </section>
   );
 }
@@ -41,7 +43,7 @@ function RoutePlaceholder({ title }: { title: string }) {
 export function AppRoutes() {
   return (
     <Routes>
-      <Route path="/today" element={<RoutePlaceholder title="Сегодня" />} />
+      <Route path="/today" element={<HomePage />} />
       <Route path="/library" element={<RoutePlaceholder title="Медиатека" />} />
       <Route path="/work/:id" element={<RoutePlaceholder title="Фильм" />} />
       <Route path="*" element={<Navigate to="/today" replace />} />
