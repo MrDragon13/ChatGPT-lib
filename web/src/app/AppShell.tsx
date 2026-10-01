@@ -1,6 +1,7 @@
 import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
+import { AboutCredits } from "../components/AboutCredits";
 import { loadManifest } from "../data/client";
 import type { TargetId, WebManifest } from "../data/types";
 import { libraryHref, resolveTarget } from "./router";
@@ -74,6 +75,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </nav>
         </header>
         <main id="content">{children}</main>
+        <AboutCredits />
       </div>
     </AppContext.Provider>
   );
