@@ -25,6 +25,24 @@ Raw signals хранятся внутри work/collection и создаются 
 
 Factual metadata может автоматически обогащаться из внешних providers; TMDB — предпочтительный primary provider. Неизвестные факты не выдумываются. `metadata.overrides` сохраняет ручные правки и имеет приоритет над внешними данными. Semantic traits всегда имеют provenance.
 
+## CLI
+
+Основной программный интерфейс поверх общего service layer:
+
+```bash
+python -m media.cli search "Arrival" --format json
+python -m media.cli show arrival-2016 --format json
+python -m media.cli recommend-context --request request.json --format json
+python -m media.cli apply-command request.json --dry-run --format json
+python -m media.cli apply-command request.json --format json
+python -m media.cli rebuild --check
+python -m media.cli doctor --format json
+```
+
+`apply-command` принимает только строгий typed command JSON. Для `add_work`, которому действительно нужен внешний поиск, может использоваться `TMDB_READ_TOKEN`; операции с уже известными произведениями не зависят от TMDB.
+
+Exit codes CLI: `0` — success/no_change/already_applied, `2` — invalid/ambiguous user command, `3` — canonical/doctor/integrity failure, `4` — metadata provider unavailable.
+
 ## Проверка и пересборка
 
 ```bash
@@ -32,6 +50,8 @@ python -m media.tools.validate .
 python -m media.tools.build_index media
 python -m media.tools.build_profiles media
 python -m media.tools.build_db media
+python -m media.cli rebuild --check
+python -m media.cli doctor --format json
 ```
 
 Полный тестовый прогон:
@@ -44,4 +64,4 @@ Generated SQLite можно удалить в любой момент: она п
 
 ## Для LLM/агентов
 
-Перед записью обязательно прочитать [`AGENTS.md`](AGENTS.md), соответствующую schema и `vocabulary.yaml`. Обычное добавление произведения не должно менять schema или создавать новые термины без необходимости.
+Перед записью обязательно прочитать [`AGENTS.md`](AGENTS.md), соответствующую schema и `vocabulary.yaml`. Нормальный write-path использует typed command/service layer; обычное добавление произведения не должно менять schema или создавать новые термины без необходимости.
