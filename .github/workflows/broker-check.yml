@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   test:
@@ -18,25 +18,13 @@ jobs:
         working-directory: broker
     steps:
       - uses: actions/checkout@v7
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
       - uses: actions/setup-node@v7
         with:
           node-version: '22.22.2'
+          cache: npm
+          cache-dependency-path: broker/package-lock.json
       - name: Install broker dependencies
-        run: npm install --no-audit --no-fund
-      - name: Commit generated lockfile once
-        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
-        shell: bash
-        run: |
-          if git ls-files --error-unmatch package-lock.json >/dev/null 2>&1; then
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add package-lock.json
-          git commit -m "build: lock broker dependencies"
-          git push origin "HEAD:${GITHUB_HEAD_REF}"
+        run: npm ci --no-audit --no-fund
       - name: Run broker tests
         run: npm run test:run
       - name: Typecheck broker
