@@ -11,14 +11,16 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout exact revision
+      - name: Checkout exact head revision
         uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
@@ -43,10 +45,15 @@ jobs:
       - name: Build web
         working-directory: web
         run: npm run build
-      - name: Upload generated lockfile
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: web-package-lock
-          path: web/package-lock.json
-          if-no-files-found: error
+      - name: Commit generated lockfile once
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        shell: bash
+        run: |
+          if git diff --quiet -- web/package-lock.json && git ls-files --error-unmatch web/package-lock.json >/dev/null 2>&1; then
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add web/package-lock.json
+          git commit -m 'build: lock web dependencies'
+          git push origin HEAD:${{ github.head_ref }}
