@@ -1,5 +1,5 @@
 import { ArrowRight, Clock } from "@phosphor-icons/react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useState } from "react";
 
 import { workHref } from "../../app/router";
@@ -56,15 +56,16 @@ function PosterRail({
   items: HomeCandidate[];
   target: string;
 }) {
+  const reduceMotion = useReducedMotion();
   if (!items.length) return null;
   return (
     <motion.section
       className="poster-section"
       aria-labelledby={`rail-${title}`}
-      initial={revealMotion.hidden}
+      initial={reduceMotion ? false : revealMotion.hidden}
       whileInView={revealMotion.visible}
       viewport={{ once: true, amount: 0.18 }}
-      transition={revealMotion.transition}
+      transition={reduceMotion ? { duration: 0 } : revealMotion.transition}
     >
       <div className="section-heading">
         <h2 id={`rail-${title}`}>{title}</h2>
@@ -97,6 +98,7 @@ export function HomePage() {
   const { manifest, target } = useAppContext();
   const model = buildHomeViewModel(manifest, target);
   const [previewId, setPreviewId] = useState<string | null>(null);
+  const reduceMotion = useReducedMotion();
 
   if (!model.hero) {
     return (
@@ -117,17 +119,22 @@ export function HomePage() {
 
   return (
     <div className="home-page">
-      <section className="cinema-hero" aria-labelledby="hero-title" data-testid="cinema-hero">
-        <AnimatePresence initial={false}>
+      <section
+        className="cinema-hero"
+        aria-labelledby="hero-title"
+        data-testid="cinema-hero"
+        data-motion={reduceMotion ? "reduced" : "full"}
+      >
+        <AnimatePresence initial={!reduceMotion}>
           {activeHero.backdropUrl ? (
             <motion.div
               className="cinema-hero__backdrop"
               key={activeHero.id}
               style={{ backgroundImage: `url("${activeHero.backdropUrl}")` }}
-              initial={{ opacity: 0, scale: 1.025 }}
+              initial={reduceMotion ? false : { opacity: 0, scale: 1.025 }}
               animate={{ opacity: 0.78, scale: 1.012 }}
-              exit={{ opacity: 0, scale: 1.006 }}
-              transition={{ duration: 0.72, ease: [0.32, 0.72, 0, 1] }}
+              exit={reduceMotion ? undefined : { opacity: 0, scale: 1.006 }}
+              transition={reduceMotion ? { duration: 0 } : { duration: 0.72, ease: [0.32, 0.72, 0, 1] }}
               aria-hidden="true"
             />
           ) : null}
@@ -137,9 +144,9 @@ export function HomePage() {
         <motion.div
           className="cinema-hero__content"
           key={activeHero.id}
-          initial={heroMotion.initial}
+          initial={reduceMotion ? false : heroMotion.initial}
           animate={heroMotion.enter}
-          transition={heroMotion.transition}
+          transition={reduceMotion ? { duration: 0 } : heroMotion.transition}
         >
           <p className="eyebrow">Сегодня · {target === "couple" ? "для двоих" : "для вас"}</p>
           <h1 id="hero-title">{activeHero.title}</h1>
@@ -176,9 +183,9 @@ export function HomePage() {
         <motion.div
           className="cinema-hero__poster"
           key={`poster-${activeHero.id}`}
-          initial={{ opacity: 0, y: 18, rotate: 0.4 }}
-          animate={{ opacity: 1, y: 0, rotate: 1.4 }}
-          transition={heroMotion.transition}
+          initial={reduceMotion ? false : { opacity: 0, y: 18, rotate: 0.4 }}
+          animate={{ opacity: 1, y: 0, rotate: reduceMotion ? 0 : 1.4 }}
+          transition={reduceMotion ? { duration: 0 } : heroMotion.transition}
           aria-hidden="true"
         >
           {activeHero.posterUrl ? <img src={activeHero.posterUrl} alt="" /> : <span />}
