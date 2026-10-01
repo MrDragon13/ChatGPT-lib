@@ -45,3 +45,5 @@ def test_starter_prompt_is_human_first_and_reuses_repository_rules():
     assert "не превращай выбор фильма в анкету" in text
     assert "один короткий необязательный вопрос" in text
     assert "ничего в медиатеке не записывай" in text
+    assert "не проси второго подтверждения" in text
+    assert "не говори, что сохранил" in text
