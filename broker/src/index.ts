@@ -1,7 +1,8 @@
 import type { BrokerEnv } from "./env";
-import { finishAuth, startAuth } from "./auth";
+import { finishAuth, startAuth, verifySession } from "./auth";
 import { FeedbackValidationError, parseFeedbackInput } from "./feedback";
 import { RequestBodyError, corsHeaders, jsonResponse, readJsonBody } from "./http";
+import { OperationSubmissionError, submitFeedback } from "./operations";
 
 function responseWithCors(response: Response, origin: string | null, env: BrokerEnv): Response {
   const headers = new Headers(response.headers);
@@ -13,6 +14,13 @@ function responseWithCors(response: Response, origin: string | null, env: Broker
 async function authRateLimited(env: BrokerEnv, route: string): Promise<boolean> {
   const result = await env.AUTH_RATE_LIMITER.limit({ key: `auth:${route}` });
   return !result.success;
+}
+
+function bearerToken(request: Request): string | null {
+  const value = request.headers.get("authorization");
+  if (!value) return null;
+  const match = /^Bearer\s+(.+)$/i.exec(value);
+  return match?.[1] ?? null;
 }
 
 const worker = {
@@ -39,19 +47,35 @@ const worker = {
     }
 
     if (request.method === "POST" && url.pathname === "/v1/feedback") {
+      const token = bearerToken(request);
+      if (!token) return responseWithCors(jsonResponse({ error: "unauthorized" }, 401), origin, env);
+
+      let ownerId: string;
+      try {
+        ownerId = (await verifySession(token, env)).sub;
+      } catch {
+        return responseWithCors(jsonResponse({ error: "unauthorized" }, 401), origin, env);
+      }
+
+      const rate = await env.WRITE_RATE_LIMITER.limit({ key: `write:${ownerId}:/v1/feedback` });
+      if (!rate.success) return responseWithCors(jsonResponse({ error: "rate_limited" }, 429), origin, env);
+
       try {
         const body = await readJsonBody(request);
-        parseFeedbackInput(body);
-        return responseWithCors(
-          jsonResponse({ error: "not_implemented" }, 501),
-          origin,
-          env,
-        );
+        const input = parseFeedbackInput(body);
+        const result = await submitFeedback(input, env);
+        return responseWithCors(jsonResponse(result, 202), origin, env);
       } catch (error) {
         if (error instanceof RequestBodyError || error instanceof FeedbackValidationError) {
           return responseWithCors(jsonResponse({ error: "invalid_request" }, 422), origin, env);
         }
-        throw error;
+        if (error instanceof OperationSubmissionError) {
+          return responseWithCors(jsonResponse({
+            error: "github_operation_failed",
+            operation_id: error.operationId,
+          }, error.upstreamStatus === 503 ? 503 : 502), origin, env);
+        }
+        return responseWithCors(jsonResponse({ error: "broker_unavailable" }, 503), origin, env);
       }
     }
 
