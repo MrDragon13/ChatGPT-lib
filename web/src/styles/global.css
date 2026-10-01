@@ -13,6 +13,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100dvh;
+  overflow-x: clip;
   background: var(--color-canvas);
   color: var(--color-text);
   font-family: inherit;
@@ -26,6 +27,8 @@ a {
 
 a:focus-visible,
 button:focus-visible,
+input:focus-visible,
+select:focus-visible,
 [tabindex]:focus-visible {
   outline: 2px solid var(--color-focus);
   outline-offset: 3px;
@@ -52,6 +55,9 @@ button:focus-visible,
 }
 
 .site-header a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
   text-decoration: none;
 }
 
