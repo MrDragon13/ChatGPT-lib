@@ -25,10 +25,15 @@ def _blocker(work_id: str, reason: str, candidates: list[ProviderCandidate] | No
     return value
 
 
-def _movie_candidates(record: WorkRecord, candidates: list[ProviderCandidate]) -> list[ProviderCandidate]:
+def _movie_candidates(
+    record: WorkRecord,
+    candidates: list[ProviderCandidate],
+    *,
+    expected_year: int | None = None,
+) -> list[ProviderCandidate]:
     identity = record.data.get("identity") or {}
     title = normalize_title(str(identity.get("title_original") or ""))
-    year = identity.get("year")
+    year = expected_year if expected_year is not None else identity.get("year")
     return [
         candidate
         for candidate in candidates
@@ -54,6 +59,7 @@ def _resolve_candidate(
     external_ids = identity.get("external_ids") or {}
     canonical_tmdb = _canonical_tmdb(record)
     override = command.tmdb_overrides.get(record.id)
+    expected_year = command.year_overrides.get(record.id, identity.get("year"))
 
     if canonical_tmdb is not None:
         canonical_type = canonical_tmdb.get("media_type")
@@ -62,10 +68,10 @@ def _resolve_candidate(
             return None, _blocker(record.id, "override_conflict")
         if canonical_type != "movie" or not isinstance(canonical_id, int):
             return None, _blocker(record.id, "identity_conflict")
-        return ProviderCandidate("movie", canonical_id, str(identity.get("title_ru") or ""), str(identity.get("title_original") or ""), identity.get("year")), None
+        return ProviderCandidate("movie", canonical_id, str(identity.get("title_ru") or ""), str(identity.get("title_original") or ""), expected_year), None
 
     if override is not None:
-        return ProviderCandidate("movie", override.id, str(identity.get("title_ru") or ""), str(identity.get("title_original") or ""), identity.get("year")), None
+        return ProviderCandidate("movie", override.id, str(identity.get("title_ru") or ""), str(identity.get("title_original") or ""), expected_year), None
 
     imdb_id = external_ids.get("imdb")
     if isinstance(imdb_id, str) and imdb_id:
@@ -77,8 +83,11 @@ def _resolve_candidate(
         return candidates[0], None
 
     title = str(identity.get("title_original") or "")
-    year = identity.get("year")
-    candidates = _movie_candidates(record, provider.search_work(title, year))
+    candidates = _movie_candidates(
+        record,
+        provider.search_work(title, expected_year),
+        expected_year=expected_year,
+    )
     if not candidates:
         return None, _blocker(record.id, "not_found")
     if len(candidates) > 1:
@@ -92,6 +101,7 @@ def _identity_compatible(
     metadata: CanonicalMetadata,
     *,
     allow_title_mismatch: bool = False,
+    expected_year: int | None = None,
 ) -> bool:
     canonical = record.data.get("identity") or {}
     provider_identity = metadata.identity
@@ -100,7 +110,10 @@ def _identity_compatible(
 
     canonical_year = canonical.get("year")
     provider_year = provider_identity.get("year")
-    if canonical_year is not None and provider_year is not None and canonical_year != provider_year:
+    if expected_year is not None:
+        if provider_year != expected_year:
+            return False
+    elif canonical_year is not None and provider_year is not None and canonical_year != provider_year:
         return False
 
     canonical_title = normalize_title(str(canonical.get("title_original") or ""))
@@ -147,12 +160,20 @@ def _merge_external(existing: Mapping[str, Any], incoming: Mapping[str, Any]) ->
     return merged
 
 
-def _refreshed_document(record: WorkRecord, metadata: CanonicalMetadata, *, day: str) -> dict[str, Any]:
+def _refreshed_document(
+    record: WorkRecord,
+    metadata: CanonicalMetadata,
+    *,
+    day: str,
+    year_override: int | None = None,
+) -> dict[str, Any]:
     original = deepcopy(dict(record.data))
     document = deepcopy(original)
 
     identity = document.setdefault("identity", {})
     provider_identity = metadata.identity
+    if year_override is not None:
+        identity["year"] = year_override
     if provider_identity.get("release_date") is not None:
         identity["release_date"] = provider_identity["release_date"]
     external_ids = deepcopy(dict(identity.get("external_ids") or {}))
@@ -188,7 +209,7 @@ def plan_refresh_metadata(
         key=lambda record: record.id,
     )
     blockers: list[Mapping[str, Any]] = []
-    resolved: list[tuple[WorkRecord, CanonicalMetadata]] = []
+    resolved: list[tuple[WorkRecord, CanonicalMetadata, int | None]] = []
     unmapped_genres: set[int] = set()
 
     for record in targets:
@@ -199,15 +220,17 @@ def plan_refresh_metadata(
         assert candidate is not None
         metadata = provider.fetch_work(candidate.media_type, candidate.provider_id)
         override_is_resolution = record.id in command.tmdb_overrides and _canonical_tmdb(record) is None
+        year_override = command.year_overrides.get(record.id)
         if not _identity_compatible(
             record,
             candidate,
             metadata,
             allow_title_mismatch=override_is_resolution,
+            expected_year=year_override,
         ):
             blockers.append(_blocker(record.id, "identity_conflict"))
             continue
-        resolved.append((record, metadata))
+        resolved.append((record, metadata, year_override))
         unmapped_genres.update(metadata.unmapped_genre_ids)
 
     if blockers:
@@ -217,8 +240,8 @@ def plan_refresh_metadata(
     day = value.date().isoformat()
     documents: dict[str, Mapping[str, Any]] = {}
     changed_entities: list[str] = []
-    for record, metadata in resolved:
-        document = _refreshed_document(record, metadata, day=day)
+    for record, metadata, year_override in resolved:
+        document = _refreshed_document(record, metadata, day=day, year_override=year_override)
         if document == record.data:
             continue
         path = f"media/data/works/{record.id}.yaml"
