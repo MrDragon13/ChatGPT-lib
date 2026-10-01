@@ -30,6 +30,10 @@ const VIEWING_LABELS: Record<string, string> = {
   forgotten: "Почти не помним",
 };
 
+function formatExternalRating(value: number): string {
+  return value.toFixed(1).replace(/\.0$/, "");
+}
+
 function SignalPanel({ signal, active }: { signal: DetailSignal; active: boolean }) {
   return (
     <article className={`signal-panel${active ? " signal-panel--active" : ""}`}>
@@ -80,6 +84,7 @@ export function WorkDetailView({
   const hasCredits = view.directors.length > 0 || view.cast.length > 0;
   const revealInitial = reduceMotion ? false : revealMotion.hidden;
   const revealTransition = reduceMotion ? { duration: 0 } : revealMotion.transition;
+  const signalColumnCount = Math.min(Math.max(orderedSignals.length, 1), 3);
 
   return (
     <article className="detail-page">
@@ -129,7 +134,7 @@ export function WorkDetailView({
           <h2 id="detail-signals-title">Наши впечатления</h2>
         </div>
         {orderedSignals.length ? (
-          <div className="signal-grid">
+          <div className={`signal-grid signal-grid--${signalColumnCount}`}>
             {orderedSignals.map((signal) => (
               <SignalPanel key={signal.target} signal={signal} active={signal.target === activeTarget} />
             ))}
@@ -157,7 +162,7 @@ export function WorkDetailView({
           </div>
           <p className="external-score">
             <Star aria-hidden="true" weight="fill" />
-            <strong>{view.externalRating}</strong>
+            <strong>{formatExternalRating(view.externalRating)}</strong>
             <span>/10{view.externalVotes !== null ? ` · ${view.externalVotes.toLocaleString("ru-RU")} оценок` : ""}</span>
           </p>
         </motion.section>
