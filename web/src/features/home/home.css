@@ -13,7 +13,6 @@
 }
 
 .cinema-hero {
-  --hero-backdrop: none;
   position: relative;
   min-height: min(690px, calc(100dvh - 112px));
   overflow: hidden;
@@ -25,20 +24,14 @@
   isolation: isolate;
 }
 
-.cinema-hero::before {
-  content: "";
+.cinema-hero__backdrop {
   position: absolute;
   inset: 0;
   z-index: -3;
-  background-image: var(--hero-backdrop);
   background-position: center;
   background-size: cover;
-  opacity: 0;
-  transform: scale(1.012);
-}
-
-.cinema-hero--with-image::before {
-  opacity: 0.78;
+  transform-origin: center;
+  will-change: transform, opacity;
 }
 
 .cinema-hero__scrim {
@@ -150,6 +143,7 @@
   background: var(--color-surface-soft);
   box-shadow: 0 24px 70px rgb(0 0 0 / 0.42);
   transform: rotate(1.4deg);
+  will-change: transform, opacity;
 }
 
 .cinema-hero__poster img,
@@ -190,6 +184,7 @@
   padding: 10px 16px;
   background: rgb(8 8 8 / 0.86);
   text-decoration: none;
+  will-change: transform;
 }
 
 .candidate-thumb:hover {
@@ -247,15 +242,17 @@
   grid-auto-columns: minmax(150px, 190px);
   gap: 14px;
   overflow-x: auto;
-  padding: 2px 2px 14px;
+  padding: 8px 2px 18px;
   overscroll-behavior-inline: contain;
   scroll-snap-type: x proximity;
+  scrollbar-width: thin;
 }
 
 .poster-card {
   min-width: 0;
   text-decoration: none;
   scroll-snap-align: start;
+  will-change: transform;
 }
 
 .poster-card__art {
@@ -320,6 +317,7 @@
     right: 22px;
     width: 150px;
     margin: 0;
+    transform: none;
   }
 
   .cinema-hero__alternatives {
@@ -348,5 +346,14 @@
 
   .poster-rail {
     grid-auto-columns: 42vw;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cinema-hero__backdrop,
+  .cinema-hero__poster,
+  .candidate-thumb,
+  .poster-card {
+    will-change: auto;
   }
 }
