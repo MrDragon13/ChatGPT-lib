@@ -1,8 +1,10 @@
 import { Clock, Star } from "@phosphor-icons/react";
+import { motion } from "motion/react";
 import { useParams } from "react-router-dom";
 
 import { useAppContext } from "../../app/AppShell";
 import type { TargetId } from "../../data/types";
+import { revealMotion } from "../../motion/transitions";
 import { buildWorkDetailView, type DetailSignal, type WorkDetailModel } from "./selectors";
 import "./detail.css";
 
@@ -78,13 +80,16 @@ export function WorkDetailView({
 
   return (
     <article className="detail-page">
-      <header
+      <motion.header
         className={`detail-hero${view.backdropUrl ? " detail-hero--with-image" : ""}`}
         style={
           view.backdropUrl
             ? ({ "--detail-backdrop": `url("${view.backdropUrl}")` } as React.CSSProperties)
             : undefined
         }
+        initial={revealMotion.hidden}
+        animate={revealMotion.visible}
+        transition={revealMotion.transition}
       >
         <div className="detail-hero__scrim" aria-hidden="true" />
         <div className="detail-hero__poster" aria-hidden="true">
@@ -105,9 +110,16 @@ export function WorkDetailView({
           </div>
           {view.synopsis ? <p className="detail-hero__synopsis">{view.synopsis}</p> : null}
         </div>
-      </header>
+      </motion.header>
 
-      <section className="detail-signals" aria-labelledby="detail-signals-title">
+      <motion.section
+        className="detail-signals"
+        aria-labelledby="detail-signals-title"
+        initial={revealMotion.hidden}
+        whileInView={revealMotion.visible}
+        viewport={{ once: true, amount: 0.16 }}
+        transition={revealMotion.transition}
+      >
         <div className="detail-section-heading">
           <p className="eyebrow">Личное</p>
           <h2 id="detail-signals-title">Наши впечатления</h2>
@@ -124,10 +136,17 @@ export function WorkDetailView({
         <div className="future-edit-boundary" data-testid="future-edit-boundary">
           <span>Режим только для чтения</span>
         </div>
-      </section>
+      </motion.section>
 
       {view.externalRating !== null ? (
-        <section className="detail-external" aria-labelledby="detail-external-title">
+        <motion.section
+          className="detail-external"
+          aria-labelledby="detail-external-title"
+          initial={revealMotion.hidden}
+          whileInView={revealMotion.visible}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={revealMotion.transition}
+        >
           <div>
             <p className="eyebrow">Внешний контекст</p>
             <h2 id="detail-external-title">TMDB</h2>
@@ -137,11 +156,18 @@ export function WorkDetailView({
             <strong>{view.externalRating}</strong>
             <span>/10{view.externalVotes !== null ? ` · ${view.externalVotes.toLocaleString("ru-RU")} оценок` : ""}</span>
           </p>
-        </section>
+        </motion.section>
       ) : null}
 
       {hasCredits ? (
-        <section className="detail-credits" aria-labelledby="detail-credits-title">
+        <motion.section
+          className="detail-credits"
+          aria-labelledby="detail-credits-title"
+          initial={revealMotion.hidden}
+          whileInView={revealMotion.visible}
+          viewport={{ once: true, amount: 0.14 }}
+          transition={revealMotion.transition}
+        >
           <div className="detail-section-heading">
             <p className="eyebrow">Создатели</p>
             <h2 id="detail-credits-title">Кто сделал фильм</h2>
@@ -165,7 +191,7 @@ export function WorkDetailView({
               </ul>
             </div>
           ) : null}
-        </section>
+        </motion.section>
       ) : null}
     </article>
   );
