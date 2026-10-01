@@ -1,0 +1,23 @@
+schema_version: 4
+entity_type: work
+id: dune-2021
+identity:
+  format: movie
+  title_original: Dune
+  title_ru: Дюна
+  alternate_titles:
+  - 'Dune: Part One'
+  year: 2021
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 438631
+    imdb: tt1160419
+metadata:
+  external:
+    runtime_min: 155
+  semantic:
+    traits:
+    - term: story.intrigue
+      source: llm_inferred
+      confidence: medium

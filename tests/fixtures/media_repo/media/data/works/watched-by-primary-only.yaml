@@ -1,0 +1,18 @@
+schema_version: 4
+entity_type: work
+id: watched-by-primary-only
+identity:
+  format: movie
+  title_original: Half Seen
+  title_ru: Наполовину виденный
+  year: 2022
+metadata:
+  external:
+    runtime_min: 100
+viewer_signals:
+  primary:
+    viewing:
+      status: watched
+  partner:
+    viewing:
+      status: unwatched

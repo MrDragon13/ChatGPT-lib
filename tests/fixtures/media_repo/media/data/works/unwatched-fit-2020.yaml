@@ -1,0 +1,21 @@
+schema_version: 4
+entity_type: work
+id: unwatched-fit-2020
+identity:
+  format: movie
+  title_original: Puzzle Run
+  title_ru: Забег с загадкой
+  year: 2020
+metadata:
+  external:
+    runtime_min: 105
+  semantic:
+    traits:
+    - term: story.intrigue
+      source: llm_inferred
+      confidence: high
+target_states:
+  primary:
+    interest:
+      state: shortlist
+      priority: 4

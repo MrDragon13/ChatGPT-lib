@@ -1,0 +1,13 @@
+schema_version: 4
+entity_type: work
+id: movie-42
+identity:
+  format: movie
+  title_original: Movie Forty Two
+  title_ru: Фильм 42
+  year: 2001
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 42
+    imdb: tt0000042

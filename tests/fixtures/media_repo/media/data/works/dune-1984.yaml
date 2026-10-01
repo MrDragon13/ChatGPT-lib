@@ -1,0 +1,20 @@
+schema_version: 4
+entity_type: work
+id: dune-1984
+identity:
+  format: movie
+  title_original: Dune
+  title_ru: Дюна
+  year: 1984
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 841
+    imdb: tt0087182
+metadata:
+  external:
+    runtime_min: 137
+target_states:
+  primary:
+    interest:
+      state: not_interested
