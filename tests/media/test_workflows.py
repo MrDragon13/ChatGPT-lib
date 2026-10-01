@@ -39,3 +39,34 @@ def test_record_viewing_feedback_remains_normal_data_auto_merge_eligible():
     text=_text("media-auto-merge.yml")
     case_block=text.split('case "$OP_KIND" in',1)[1].split('esac',1)[0]
     assert "record_viewing_feedback" in case_block
+
+def test_broker_check_is_read_only_and_secret_free():
+    text=_text("broker-check.yml")
+    assert "contents: read" in text
+    assert "contents: write" not in text
+    assert "npm ci" in text
+    assert "npm run test:run" in text
+    assert "npm run typecheck" in text
+    assert "CLOUDFLARE_API_TOKEN" not in text
+    assert "GITHUB_APP_PRIVATE_KEY" not in text
+    assert "GITHUB_APP_CLIENT_SECRET" not in text
+
+def test_broker_deploy_is_manual_main_sha_gated_and_uses_only_cloudflare_deploy_secrets():
+    text=_text("broker-deploy.yml")
+    assert "workflow_dispatch:" in text
+    assert "expected_sha" in text
+    assert "github.ref == 'refs/heads/main'" in text
+    assert "git rev-parse HEAD" in text
+    assert "npm ci" in text
+    assert "npm run test:run" in text
+    assert "npm run typecheck" in text
+    assert "wrangler deploy" in text
+    assert "secrets.CLOUDFLARE_API_TOKEN" in text
+    assert "secrets.CLOUDFLARE_ACCOUNT_ID" in text
+    assert "GITHUB_APP_PRIVATE_KEY" not in text
+    assert "GITHUB_APP_CLIENT_SECRET" not in text
+
+def test_pages_deploy_remains_independent_of_cloudflare_credentials():
+    text=_text("media-pages.yml")
+    assert "CLOUDFLARE_API_TOKEN" not in text
+    assert "CLOUDFLARE_ACCOUNT_ID" not in text
