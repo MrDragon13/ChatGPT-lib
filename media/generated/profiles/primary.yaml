@@ -1,0 +1,165 @@
+schema_version: 4
+target: primary
+generated_from: canonical-v4
+affinities:
+  characters.charisma:
+    score: 1.0
+    confidence: medium
+    evidence_count: 3
+    evidence:
+    - entity_id: now-you-see-me-collection
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: inferred
+      confidence: medium
+      weight: 0.98
+    - entity_id: oceans-collection
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: inferred
+      confidence: medium
+      weight: 0.98
+    - entity_id: sherlock-holmes-guy-ritchie-collection
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: inferred
+      confidence: medium
+      weight: 0.98
+  entertainment.engaging:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: game-night-2018
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: inferred
+      confidence: high
+      weight: 1.26
+  humor.absurd:
+    score: -1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: game-night-2018
+      source_target: primary
+      source_kind: feedback
+      sentiment: negative
+      strength: 2
+      source: inferred
+      confidence: high
+      weight: 1.26
+  reaction.cringe:
+    score: -1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: game-night-2018
+      source_target: primary
+      source_kind: feedback
+      sentiment: negative
+      strength: 3
+      source: inferred
+      confidence: high
+      weight: 1.89
+  reaction.pacing_dragging:
+    score: -1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: blade-runner-2049-2017
+      source_target: primary
+      source_kind: feedback
+      sentiment: negative
+      strength: 2
+      source: inferred
+      confidence: high
+      weight: 1.26
+  story.intrigue:
+    score: 1.0
+    confidence: medium
+    evidence_count: 2
+    evidence:
+    - entity_id: knives-out-2019
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 3
+      source: inferred
+      confidence: medium
+      weight: 1.47
+    - entity_id: sherlock-bbc
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 3
+      source: inferred
+      confidence: medium
+      weight: 1.47
+  story.problem_solving:
+    score: 1.0
+    confidence: medium
+    evidence_count: 3
+    evidence:
+    - entity_id: now-you-see-me-collection
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: inferred
+      confidence: medium
+      weight: 0.98
+    - entity_id: oceans-collection
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: inferred
+      confidence: medium
+      weight: 0.98
+    - entity_id: sherlock-holmes-guy-ritchie-collection
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: inferred
+      confidence: medium
+      weight: 0.98
+  visuals.strong:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: blade-runner-2049-2017
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: inferred
+      confidence: high
+      weight: 1.26
+explicit_preferences:
+- id: genre-secondary-to-execution
+  statement: Жанр сам по себе вторичен; качество реализации важнее жанровой принадлежности.
+  source: explicit
+  confidence: exact
+rules:
+- id: slow-pacing-context
+  statement: Медленный темп сам по себе не является минусом, если он оправдан историей,
+    персонажами или эмоциональной отдачей.
+  source: explicit
+  confidence: exact
+constraints: []
+summary:
+  ratings_count: 53
+  viewing_count: 106
+evidence:
+  entity_count: 106
