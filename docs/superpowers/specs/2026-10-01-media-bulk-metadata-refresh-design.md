@@ -65,10 +65,10 @@ Refresh must resolve every target work before any canonical mutation begins.
 
 Resolution order for each movie:
 
-1. Existing canonical TMDB composite ID (`media_type`, `id`) — fetch directly.
-2. Existing canonical IMDb ID — resolve through TMDB external-ID lookup, then fetch the unique movie result.
-3. Otherwise search TMDB using canonical `title_original` plus canonical year and accept only one exact normalized title/year match.
-4. If `tmdb_overrides` contains the work ID, use that explicit TMDB composite ID after validating that the fetched provider record is compatible with the canonical work.
+1. Existing canonical TMDB composite ID (`media_type`, `id`) — fetch directly. If an override is also supplied, it must match this canonical ID; the maintenance command cannot silently rebind an existing canonical TMDB identity.
+2. If no canonical TMDB ID exists and `tmdb_overrides` contains the work ID, use that explicit TMDB composite ID after validating that the fetched provider record is compatible with the canonical work.
+3. Existing canonical IMDb ID — resolve through TMDB external-ID lookup, then fetch the unique movie result.
+4. Otherwise search TMDB using canonical `title_original` plus canonical year and accept only one exact normalized title/year match.
 
 If zero or multiple plausible candidates remain, or if existing external IDs conflict with provider identity, preflight fails closed. The command returns the affected work IDs/candidates and performs no canonical write.
 
@@ -201,19 +201,20 @@ Implementation follows TDD and adds coverage for:
 1. strict `refresh_metadata` command schema/parsing;
 2. TMDB direct composite-ID refresh;
 3. IMDb-to-TMDB external-ID lookup;
-4. title/year fallback resolution;
-5. ambiguous/missing identity preflight with zero canonical mutation;
-6. conflicting external IDs fail closed;
-7. preservation of titles/year/user signals/semantic metadata/manual overrides;
-8. replacement of provider-owned factual snapshot while preserving non-TMDB external metrics;
-9. unsupported genres omitted and reported without vocabulary mutation;
-10. multi-work all-or-nothing transaction and rollback;
-11. idempotent replay by operation receipt;
-12. generated artifact rebuild/currentness;
-13. path-policy acceptance for refresh outputs and rejection of architecture paths;
-14. workflow contract: TMDB secret only on provider-needed step;
-15. workflow contract: `refresh_metadata` remains ineligible for auto-merge;
-16. end-to-end synthetic bulk refresh using mocked TMDB fixtures.
+4. explicit TMDB override for an unresolved work;
+5. title/year fallback resolution;
+6. ambiguous/missing identity preflight with zero canonical mutation;
+7. conflicting external IDs fail closed;
+8. preservation of titles/year/user signals/semantic metadata/manual overrides;
+9. replacement of provider-owned factual snapshot while preserving non-TMDB external metrics;
+10. unsupported genres omitted and reported without vocabulary mutation;
+11. multi-work all-or-nothing transaction and rollback;
+12. idempotent replay by operation receipt;
+13. generated artifact rebuild/currentness;
+14. path-policy acceptance for refresh outputs and rejection of architecture paths;
+15. workflow contract: TMDB secret only on provider-needed step;
+16. workflow contract: `refresh_metadata` remains ineligible for auto-merge;
+17. end-to-end synthetic bulk refresh using mocked TMDB fixtures.
 
 Normal pytest must not call live TMDB.
 
@@ -235,7 +236,7 @@ The feature is complete when:
 
 1. every existing canonical movie can be deterministically resolved to TMDB or appears in an explicit blocker report without any partial canonical mutation;
 2. a successful all-movies run enriches existing work files with normalized provider metadata comparable to newly created works where TMDB supplies the fields;
-3. user ratings, viewing states, reactions, free-form feedback, semantic traits, manual overrides, IDs, and relations are byte-for-byte/semantically preserved except for expected serialization ordering where unavoidable;
+3. user ratings, viewing states, reactions, free-form feedback, semantic traits, manual overrides, IDs, and relations are semantically preserved, with no mutation beyond expected serialization ordering;
 4. external identity conflicts and ambiguous matches fail closed;
 5. no schema or vocabulary change can occur as a side effect of refresh;
 6. refresh is idempotent with respect to one operation ID and safe to retry after provider/preflight failure;
