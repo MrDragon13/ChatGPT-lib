@@ -43,10 +43,14 @@ function targetSignal(manifest: WebManifest, work: WebWork, target: TargetId): U
 
 function eligible(signal: UnknownRecord | null, viewerTarget: boolean): signal is UnknownRecord {
   if (!signal) return false;
-  const keys = viewerTarget
-    ? ["viewing", "rating", "reaction", "feedback"]
-    : ["rating", "reaction", "feedback"];
-  return keys.some((key) => signal[key] !== undefined && signal[key] !== null);
+
+  if (["rating", "reaction", "feedback"].some((key) => signal[key] !== undefined && signal[key] !== null)) {
+    return true;
+  }
+  if (!viewerTarget) return false;
+
+  const viewingStatus = stringValue(record(signal.viewing)?.status);
+  return viewingStatus !== null && viewingStatus !== "unwatched";
 }
 
 function parsedTime(value: string | null): number | null {
