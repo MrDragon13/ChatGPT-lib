@@ -151,11 +151,11 @@ export function FeedbackEditor({
   }, [broker.authenticated, openAfterLogin]);
 
   useEffect(() => {
-    if (pending || submitting) return;
+    if (pending) return;
     setRatingInput(current.rating?.toString() ?? "");
     setReaction(current.reaction ?? "unknown");
     setFeedbackSummary(current.feedbackSummary ?? "");
-  }, [current.rating, current.reaction, current.feedbackSummary, pending, submitting]);
+  }, [current.rating, current.reaction, current.feedbackSummary, pending]);
 
   useEffect(() => {
     if (!pending || pending.status === "failed" || pending.status === "published") return;
