@@ -48,3 +48,13 @@ def test_pages_workflow_does_not_reference_provider_or_write_credentials() -> No
         "media" + "_write_token",
     ]
     assert all(value not in text for value in forbidden)
+
+
+def test_pages_build_exposes_only_optional_public_broker_url() -> None:
+    text = _workflow_text()
+    assert "VITE_MEDIA_BROKER_URL" in text
+    assert "vars.MEDIA_BROKER_URL" in text
+    assert "secrets.MEDIA_BROKER_URL" not in text
+    assert "GITHUB_APP_PRIVATE_KEY" not in text
+    assert "GITHUB_APP_CLIENT_SECRET" not in text
+    assert "BROKER_SESSION_SECRET" not in text
