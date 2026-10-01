@@ -44,4 +44,15 @@ test("capture art-direction review surfaces", async ({ page }) => {
   await page.goto("#/today");
   await expect(page.getByTestId("cinema-hero")).toHaveAttribute("data-motion", "reduced");
   await page.screenshot({ path: resolve(reviewDir, "today-mobile.png"), fullPage: true });
+
+  await page.goto("#/library?target=couple");
+  await expect(page.getByRole("heading", { name: "Медиатека" })).toBeVisible();
+  await warmLazyArtwork(page);
+  await page.screenshot({ path: resolve(reviewDir, "library-mobile.png"), fullPage: true });
+
+  const mobileFirstHref = await page.locator(".library-card").first().getAttribute("href");
+  expect(mobileFirstHref).toBeTruthy();
+  await page.goto(mobileFirstHref ?? "#/library?target=couple");
+  await expect(page.locator(".detail-hero")).toHaveAttribute("data-motion", "reduced");
+  await page.screenshot({ path: resolve(reviewDir, "detail-mobile.png"), fullPage: true });
 });
