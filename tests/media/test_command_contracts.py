@@ -80,6 +80,7 @@ def test_refresh_metadata_minimal_command_is_typed():
     assert type(command).__name__ == "RefreshMetadataCommand"
     assert command.scope == "all_movies"
     assert command.tmdb_overrides == {}
+    assert command.year_overrides == {}
 
 
 def test_refresh_metadata_is_strict_and_all_movies_only():
@@ -102,4 +103,12 @@ def test_refresh_metadata_override_requires_movie_and_positive_tmdb_id():
     bad = valid_refresh_metadata_dict(); bad["tmdb_overrides"] = {"arrival-2016": {"media_type": "tv", "id": 329865}}
     with pytest.raises(CommandValidationError): parse_command(bad)
     bad = valid_refresh_metadata_dict(); bad["tmdb_overrides"] = {"arrival-2016": {"media_type": "movie", "id": 0}}
+    with pytest.raises(CommandValidationError): parse_command(bad)
+
+
+def test_refresh_metadata_year_override_is_typed_and_bounded():
+    data = valid_refresh_metadata_dict(); data["year_overrides"] = {"gentlemen-2019": 2020}
+    command = parse_command(data)
+    assert command.year_overrides == {"gentlemen-2019": 2020}
+    bad = valid_refresh_metadata_dict(); bad["year_overrides"] = {"gentlemen-2019": 1879}
     with pytest.raises(CommandValidationError): parse_command(bad)
