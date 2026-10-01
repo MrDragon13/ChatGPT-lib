@@ -1,4 +1,5 @@
 import { MagnifyingGlass } from "@phosphor-icons/react";
+import { motion } from "motion/react";
 import { useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 
@@ -6,6 +7,7 @@ import { useAppContext } from "../../app/AppShell";
 import { workHref } from "../../app/router";
 import { tmdbImageUrl } from "../../data/assets";
 import type { WebWork } from "../../data/types";
+import { cardMotion, revealMotion } from "../../motion/transitions";
 import {
   filterLibrary,
   libraryFiltersFromSearchParams,
@@ -65,13 +67,18 @@ export function LibraryPage() {
 
   return (
     <section className="library-page" aria-labelledby="library-title">
-      <header className="library-intro">
+      <motion.header
+        className="library-intro"
+        initial={revealMotion.hidden}
+        animate={revealMotion.visible}
+        transition={revealMotion.transition}
+      >
         <p className="eyebrow">Вся коллекция</p>
         <div>
           <h1 id="library-title">Медиатека</h1>
           <p>{results.length} из {manifest.works.length}</p>
         </div>
-      </header>
+      </motion.header>
 
       <form className="library-filters" onSubmit={(event) => event.preventDefault()}>
         <label className="search-field">
@@ -122,7 +129,14 @@ export function LibraryPage() {
           {results.map((work) => {
             const poster = posterUrl(work);
             return (
-              <a className="library-card" href={workHref(work.id, target)} key={work.id}>
+              <motion.a
+                className="library-card"
+                href={workHref(work.id, target)}
+                key={work.id}
+                whileHover={cardMotion.hover}
+                whileTap={cardMotion.tap}
+                transition={cardMotion.transition}
+              >
                 <span className="library-card__poster">
                   {poster ? <img src={poster} alt="" loading="lazy" /> : <span className="library-card__missing" aria-hidden="true">Нет постера</span>}
                 </span>
@@ -130,7 +144,7 @@ export function LibraryPage() {
                   <strong>{workTitle(work)}</strong>
                   <small>{[work.identity.year, work.identity.title_original !== work.identity.title_ru ? work.identity.title_original : null].filter(Boolean).join(" · ")}</small>
                 </span>
-              </a>
+              </motion.a>
             );
           })}
         </div>
