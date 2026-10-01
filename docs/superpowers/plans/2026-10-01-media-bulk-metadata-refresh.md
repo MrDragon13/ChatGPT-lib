@@ -43,11 +43,11 @@
 
 **Interfaces:**
 - Consumes: existing canonical UUID validation and command schema loader.
-- Produces: `RefreshMetadataCommand(schema_version: int, operation_id: str, scope: Literal["all_movies"], tmdb_overrides: Mapping[str, ProviderWorkRef])` and parser support under operation `refresh_metadata`.
+- Produces: `TMDBWorkRef(media_type: Literal["movie"], id: int)`; `RefreshMetadataCommand(schema_version: int, operation_id: str, scope: Literal["all_movies"], tmdb_overrides: Mapping[str, TMDBWorkRef])`; parser support under operation `refresh_metadata`.
 
-- [ ] **Step 1: Add failing contract tests** for: minimal valid `all_movies`; strict rejection of unknown properties/scope; canonical UUID requirement; override object requiring `media_type: movie` and positive integer `id`; parser returns `RefreshMetadataCommand`.
+- [ ] **Step 1: Add failing contract tests** for: minimal valid `all_movies`; strict rejection of unknown properties/scope; canonical UUID requirement; override object requiring `media_type: movie` and positive integer `id`; parser returns `RefreshMetadataCommand` with typed `TMDBWorkRef` values.
 - [ ] **Step 2: Run** `python -m pytest tests/media/test_command_contracts.py -q` and verify the new tests fail because `refresh_metadata` is unknown.
-- [ ] **Step 3: Implement** the dataclass/type alias extension, strict schema, `_SCHEMA_BY_OPERATION` entry, and parse branch. Keep `MediaCommand` inclusive of the new mutable command.
+- [ ] **Step 3: Implement** the dataclasses/type alias extension, strict schema, `_SCHEMA_BY_OPERATION` entry, and parse branch. Keep `MediaCommand` inclusive of the new mutable command.
 - [ ] **Step 4: Run** `python -m pytest tests/media/test_command_contracts.py -q` and verify PASS.
 - [ ] **Step 5: Commit** as `feat: add metadata refresh command contract`.
 
@@ -79,10 +79,11 @@
 
 **Interfaces:**
 - Consumes: `YamlRepository.iter_works()`, `RefreshMetadataCommand`, `MetadataProvider.find_by_imdb/search_work/fetch_work`, canonical work mappings.
-- Produces: `plan_refresh_metadata(repo: YamlRepository, command: RefreshMetadataCommand, provider: MetadataProvider | None, *, now: datetime | None = None) -> MutationPlan`; an aggregate preflight error carrying structured blockers; `MutationPlan.details` / `OperationResult.details` (optional immutable mapping) for target/change counts and unmapped genre IDs.
+- Produces: `plan_refresh_metadata(repo: YamlRepository, command: RefreshMetadataCommand, provider: MetadataProvider | None, *, now: datetime | None = None) -> MutationPlan`; `MetadataRefreshPreflightError(blockers: tuple[Mapping[str, Any], ...])`; `MutationPlan.details: Mapping[str, Any]` and `OperationResult.details: Mapping[str, Any]`, both defaulting to an empty immutable/independent mapping for backward compatibility.
+- Preflight blocker entries use stable keys `work_id`, `reason`, and optional `candidates`; reasons include at least `not_found`, `ambiguous_identity`, `identity_conflict`, and `override_conflict`.
 
 - [ ] **Step 1: Add failing planner tests** covering direct canonical TMDB lookup; explicit override before title search; IMDb lookup; exact original-title/year fallback; only `identity.format == movie`; ambiguity/missing/conflicting identity aggregated with zero document plan; provider outage abort; preservation of titles/year/user signals/semantic metadata/manual overrides; non-TMDB metrics preserved; unsupported genres reported; conservative handling of absent provider fields; `updated_at` only on actually changed works.
-- [ ] **Step 2: Add a multi-work failing test** proving one unresolved/ambiguous movie prevents every canonical document from being returned for application.
+- [ ] **Step 2: Add a multi-work failing test** proving one unresolved/ambiguous movie raises `MetadataRefreshPreflightError` containing all resolvable blockers and returns no partial mutation for application.
 - [ ] **Step 3: Run** `python -m pytest tests/media/test_refresh_metadata.py -q` and verify RED.
 - [ ] **Step 4: Implement** focused helpers in `media/service/refresh.py`: target enumeration, candidate resolution, provider/canonical identity compatibility checks, external snapshot merge, per-work document production, and aggregate result details. Keep provider-specific parsing out of this service.
 - [ ] **Step 5: Run** `python -m pytest tests/media/test_refresh_metadata.py -q` and verify PASS.
@@ -100,10 +101,11 @@
 **Interfaces:**
 - Consumes: `plan_refresh_metadata()` and `RefreshMetadataCommand` from earlier tasks.
 - Produces: normal `preview_command()` / `execute_command()` support, provider construction for refresh, receipt persistence/replay of technical `details`, and the same direct-work/generated/profile/receipt path allowlist under operation `refresh_metadata`.
+- CLI maps `MetadataRefreshPreflightError` to exit code `2` and JSON `{status:"needs_input", reason:"metadata_refresh_preflight", blockers:[...]}`; provider transport remains exit code `4`.
 
-- [ ] **Step 1: Add failing tests** for execute/preview dispatch, provider-required behavior, one atomic multi-work transaction, rollback on validation/sync error, `no_change`, receipt idempotency, details surviving receipt replay, and path-policy allow/reject behavior.
+- [ ] **Step 1: Add failing tests** for execute/preview dispatch, provider-required behavior, one atomic multi-work transaction, rollback on validation/sync error, `no_change`, receipt idempotency, details surviving receipt replay, preflight JSON/exit code, and path-policy allow/reject behavior.
 - [ ] **Step 2: Run** focused transaction/CLI/path-policy tests and verify RED.
-- [ ] **Step 3: Implement** refresh dispatch in `_plan`, include the new command in mutable types, extend receipt serialization/loading with optional technical details, and mark refresh as provider-dependent in CLI. Keep existing result JSON backward-compatible by adding `details` only when non-empty.
+- [ ] **Step 3: Implement** refresh dispatch in `_plan`, include the new command in mutable types, extend receipt serialization/loading with optional technical details, add CLI preflight error rendering, and mark refresh as provider-dependent in CLI. Keep existing result JSON backward-compatible by adding `details` only when non-empty.
 - [ ] **Step 4: Run** focused tests and verify PASS.
 - [ ] **Step 5: Commit** as `feat: execute bulk metadata refresh transaction`.
 
