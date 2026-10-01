@@ -7,6 +7,7 @@ import { HashRouter } from "react-router-dom";
 import { AppShell } from "./app/AppShell";
 import { AppRoutes } from "./app/router";
 import { BrokerSessionProvider } from "./broker/BrokerSessionProvider";
+import "./features/detail/feedback-editor.css";
 import "./styles/tokens.css";
 import "./styles/global.css";
 
