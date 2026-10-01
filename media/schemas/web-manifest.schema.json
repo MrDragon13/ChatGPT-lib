@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chatgpt-lib.local/schemas/web-manifest.schema.json",
+  "title": "Media web manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "default_target",
+    "targets",
+    "vocabulary",
+    "profiles",
+    "recommendations",
+    "works"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "default_target": {"type": ["string", "null"]},
+    "targets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["viewers", "groups"],
+      "properties": {
+        "viewers": {
+          "type": "array",
+          "items": {"type": "string"},
+          "uniqueItems": true
+        },
+        "groups": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {"type": "string"},
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "vocabulary": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "label_ru"],
+        "properties": {
+          "kind": {"type": "string"},
+          "label_ru": {"type": "string"}
+        }
+      }
+    },
+    "profiles": {
+      "type": "object",
+      "additionalProperties": {"type": "object"}
+    },
+    "recommendations": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["target", "request", "candidates"],
+        "properties": {
+          "target": {"type": "string"},
+          "request": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "candidates": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "not": {"required": ["score"]},
+              "additionalProperties": true
+            }
+          }
+        }
+      }
+    },
+    "works": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "identity",
+          "metadata",
+          "viewer_signals",
+          "group_signals",
+          "interest",
+          "traits",
+          "collections",
+          "provenance"
+        ],
+        "properties": {
+          "id": {"type": "string"},
+          "identity": {"type": "object", "additionalProperties": true},
+          "metadata": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["external"],
+            "properties": {
+              "external": {"type": "object", "additionalProperties": true}
+            }
+          },
+          "viewer_signals": {"type": "object", "additionalProperties": true},
+          "group_signals": {"type": "object", "additionalProperties": true},
+          "interest": {"type": "object", "additionalProperties": true},
+          "traits": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "collections": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "provenance": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["created_at", "updated_at"],
+            "properties": {
+              "created_at": {"type": ["string", "null"]},
+              "updated_at": {"type": ["string", "null"]}
+            }
+          }
+        }
+      }
+    }
+  }
+}
