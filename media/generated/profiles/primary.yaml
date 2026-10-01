@@ -135,8 +135,8 @@ affinities:
       weight: 0.98
   visuals.strong:
     score: 1.0
-    confidence: low
-    evidence_count: 1
+    confidence: medium
+    evidence_count: 2
     evidence:
     - entity_id: blade-runner-2049-2017
       source_target: primary
@@ -146,6 +146,14 @@ affinities:
       source: inferred
       confidence: high
       weight: 1.26
+    - entity_id: masters-of-the-universe-2026
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
 explicit_preferences:
 - id: genre-secondary-to-execution
   statement: Жанр сам по себе вторичен; качество реализации важнее жанровой принадлежности.
@@ -159,8 +167,9 @@ rules:
   confidence: exact
 constraints: []
 summary:
-  ratings_count: 53
+  ratings_count: 54
+  reactions_count: 1
   relations_count: 0
-  viewing_count: 106
+  viewing_count: 107
 evidence:
-  entity_count: 106
+  entity_count: 107

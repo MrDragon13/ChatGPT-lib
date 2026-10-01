@@ -1,0 +1,149 @@
+schema_version: 4
+id: masters-of-the-universe-2026
+entity_type: work
+identity:
+  format: movie
+  title_original: Masters of the Universe
+  title_ru: Властелины вселенной
+  year: 2026
+  release_date: '2026-06-03'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 454639
+    imdb: tt0427340
+metadata:
+  external:
+    genres:
+    - genre.action
+    - genre.science_fiction
+    runtime_min: 140
+    original_language: en
+    countries:
+    - US
+    production_status: completed
+    synopsis_short: Адам, 10-летний принц с планеты Этерния, терпит крушение на космическом
+      корабле и попадает на Землю. Спустя 15 лет принц отправляется на родную планету,
+      которая теперь находится под гнётом Скелетора. Чтобы одолеть опасного противника,
+      Адаму предстоит раскрыть своё прошлое, объединить силы с союзниками и стать
+      Хи-Меном — самым могущественным человеком во Вселенной.
+    directors:
+    - name: Трэвис Найт
+      external_ids:
+        tmdb: 1033661
+    writers:
+    - name: Крис Батлер
+      external_ids:
+        tmdb: 154705
+    - name: Aaron Nee
+      external_ids:
+        tmdb: 931525
+    - name: Adam Nee
+      external_ids:
+        tmdb: 174313
+    - name: Дэйв Каллахэм
+      external_ids:
+        tmdb: 57264
+    main_cast:
+    - name: Николас Галицин
+      character: Adam / He-Man
+      external_ids:
+        tmdb: 1425934
+    - name: Камила Мендес
+      character: Teela
+      external_ids:
+        tmdb: 1721740
+    - name: Идрис Эльба
+      character: Duncan
+      external_ids:
+        tmdb: 17605
+    - name: Джаред Лето
+      character: Skeletor
+      external_ids:
+        tmdb: 7499
+    - name: Элисон Бри
+      character: Evil-Lyn
+      external_ids:
+        tmdb: 88029
+    - name: Йоуханнес Хёйкюр Йоуханнессон
+      character: Fisto
+      external_ids:
+        tmdb: 238164
+    - name: Джон Сюэ Чжан
+      character: Ram Man
+      external_ids:
+        tmdb: 2483272
+    - name: Сэм С. Уилсон
+      character: Trap Jaw
+      external_ids:
+        tmdb: 2418119
+    - name: Джеймс Пьюрфой
+      character: King Randor
+      external_ids:
+        tmdb: 17648
+    - name: Шарлотта Райли
+      character: Queen Marlena
+      external_ids:
+        tmdb: 115679
+    - name: Морена Баккарин
+      character: The Sorceress
+      external_ids:
+        tmdb: 54882
+    - name: Кристен Уиг
+      character: Roboto (voice)
+      external_ids:
+        tmdb: 41091
+    assets:
+      poster:
+        provider: tmdb
+        path: /u0SxcVBFf9c5PFt9i12RYSLoQf.jpg
+      backdrop:
+        provider: tmdb
+        path: /5MUMB3aPEPEQPCIAaygXFUTWE9Y.jpg
+    external_metrics:
+      tmdb:
+        score: 7.108
+        votes: 2186
+        observed_at: '2026-10-01'
+    provenance:
+      provider: tmdb
+      provider_id: 454639
+      fetched_at: '2026-10-01T09:44:51.547783Z'
+provenance:
+  created_at: '2026-10-01'
+  updated_at: '2026-10-01'
+viewer_signals:
+  primary:
+    viewing:
+      status: watched
+    rating:
+      score: 6
+      source: explicit
+      confidence: exact
+    reaction:
+      value: mixed
+      source: inferred
+      confidence: high
+    feedback:
+      summary: Приятная картинка, но фильм очень детский; один раз посмотреть фоном
+        сойдёт.
+      signals:
+      - term: visuals.strong
+        sentiment: positive
+        strength: 2
+        source: explicit
+        confidence: high
+  partner:
+    reaction:
+      value: mixed
+      source: inferred
+      confidence: high
+    feedback:
+      summary: 'В целом того же мнения: приятная картинка, но фильм очень детский
+        и годится скорее для одноразового фонового просмотра.'
+      signals:
+      - term: visuals.strong
+        sentiment: positive
+        strength: 2
+        source: explicit
+        confidence: high
