@@ -1,0 +1,22 @@
+schema_version: 4
+id: furiosa-2024
+entity_type: work
+identity:
+  format: movie
+  title_original: 'Furiosa: A Mad Max Saga'
+  title_ru: 'Фуриоса: Хроники Безумного Макса'
+  year: 2024
+viewer_signals:
+  primary:
+    viewing:
+      status: watched
+    rating:
+      score: 6.5
+      source: inferred
+      confidence: low
+    feedback:
+      summary: Уже не так хорошо, как «Дорога ярости». Не трактовать как сильный минус.
+      signals: []
+provenance:
+  created_at: '2026-10-01'
+  updated_at: '2026-10-01'

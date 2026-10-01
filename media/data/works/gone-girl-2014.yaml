@@ -1,0 +1,29 @@
+schema_version: 4
+id: gone-girl-2014
+entity_type: work
+identity:
+  format: movie
+  title_original: Gone Girl
+  title_ru: Исчезнувшая
+  year: 2014
+viewer_signals:
+  primary:
+    viewing:
+      status: unwatched
+    rating:
+      score: null
+      source: none
+      confidence: none
+    feedback:
+      summary: Сам не смотрел; жене, судя по разговору, понравилось.
+      signals: []
+  partner:
+    viewing:
+      status: watched
+    reaction:
+      value: liked
+      source: explicit
+      confidence: medium
+provenance:
+  created_at: '2026-10-01'
+  updated_at: '2026-10-01'

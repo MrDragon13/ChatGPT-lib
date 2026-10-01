@@ -1,0 +1,5 @@
+generated/database.sqlite
+generated/database.sqlite-*
+generated/*.db
+generated/embeddings/
+generated/image-cache/

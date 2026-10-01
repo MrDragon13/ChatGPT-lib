@@ -1,0 +1,32 @@
+schema_version: 4
+id: blade-runner-2049-2017
+entity_type: work
+identity:
+  format: movie
+  title_original: Blade Runner 2049
+  title_ru: Бегущий по лезвию 2049
+  year: 2017
+viewer_signals:
+  primary:
+    viewing:
+      status: watched
+    rating:
+      score: 6.5
+      source: inferred
+      confidence: medium
+    feedback:
+      summary: Слегка нудновато, хотя картинка красивая.
+      signals:
+      - term: visuals.strong
+        sentiment: positive
+        strength: 2
+        source: inferred
+        confidence: high
+      - term: reaction.pacing_dragging
+        sentiment: negative
+        strength: 2
+        source: inferred
+        confidence: high
+provenance:
+  created_at: '2026-10-01'
+  updated_at: '2026-10-01'

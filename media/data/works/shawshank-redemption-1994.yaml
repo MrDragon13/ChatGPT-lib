@@ -1,0 +1,22 @@
+schema_version: 4
+id: shawshank-redemption-1994
+entity_type: work
+identity:
+  format: movie
+  title_original: The Shawshank Redemption
+  title_ru: Побег из Шоушенка
+  year: 1994
+viewer_signals:
+  primary:
+    viewing:
+      status: watched
+    rating:
+      score: 9.5
+      source: inferred
+      confidence: high
+    feedback:
+      summary: Отлично.
+      signals: []
+provenance:
+  created_at: '2026-10-01'
+  updated_at: '2026-10-01'

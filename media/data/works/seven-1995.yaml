@@ -1,0 +1,22 @@
+schema_version: 4
+id: seven-1995
+entity_type: work
+identity:
+  format: movie
+  title_original: Se7en
+  title_ru: Семь
+  year: 1995
+viewer_signals:
+  primary:
+    viewing:
+      status: watched
+    rating:
+      score: 7.0
+      source: inferred
+      confidence: medium
+    feedback:
+      summary: Интересный, но немного мрачный.
+      signals: []
+provenance:
+  created_at: '2026-10-01'
+  updated_at: '2026-10-01'

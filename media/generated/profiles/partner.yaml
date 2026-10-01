@@ -1,0 +1,13 @@
+schema_version: 4
+target: partner
+generated_from: canonical-v4
+affinities: {}
+explicit_preferences: []
+rules: []
+constraints: []
+summary:
+  reactions_count: 4
+  relations_count: 0
+  viewing_count: 4
+evidence:
+  entity_count: 106

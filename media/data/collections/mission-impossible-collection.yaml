@@ -1,0 +1,21 @@
+schema_version: 4
+id: mission-impossible-collection
+entity_type: collection
+name_ru: Миссия невыполнима — серия
+name_original: 'Mission: Impossible collection'
+member_ids: []
+viewer_signals:
+  primary:
+    viewing:
+      status: partial
+    rating:
+      score: null
+      source: none
+      confidence: none
+    feedback:
+      summary: Смотрел первые несколько частей, потом забросил; планирует когда-нибудь
+        пересмотреть всю серию подряд.
+      signals: []
+provenance:
+  created_at: '2026-10-01'
+  updated_at: '2026-10-01'

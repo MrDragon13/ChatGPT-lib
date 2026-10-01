@@ -1,0 +1,29 @@
+schema_version: 4
+id: once-upon-a-time-in-hollywood-2019
+entity_type: work
+identity:
+  format: movie
+  title_original: Once Upon a Time in Hollywood
+  title_ru: Однажды в… Голливуде
+  year: 2019
+viewer_signals:
+  primary:
+    viewing:
+      status: unwatched
+    rating:
+      score: null
+      source: none
+      confidence: none
+    feedback:
+      summary: Сам не смотрел; отзыв жены не использовать как его оценку.
+      signals: []
+  partner:
+    viewing:
+      status: watched
+    reaction:
+      value: disliked
+      source: explicit
+      confidence: high
+provenance:
+  created_at: '2026-10-01'
+  updated_at: '2026-10-01'

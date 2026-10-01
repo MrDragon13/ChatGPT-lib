@@ -1,0 +1,22 @@
+schema_version: 4
+id: la-la-land-2016
+entity_type: work
+identity:
+  format: movie
+  title_original: La La Land
+  title_ru: Ла-Ла Ленд
+  year: 2016
+viewer_signals:
+  primary:
+    viewing:
+      status: unwatched
+    rating:
+      score: null
+      source: none
+      confidence: none
+    feedback:
+      summary: Не смотрел.
+      signals: []
+provenance:
+  created_at: '2026-10-01'
+  updated_at: '2026-10-01'

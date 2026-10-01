@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chatgpt-lib.local/schemas/work.schema.json",
+  "$defs": {
+    "personRef": {"type":"object","additionalProperties":false,"required":["name"],"properties":{"name":{"type":"string","minLength":1},"character":{"type":["string","null"]},"external_ids":{"type":"object","additionalProperties":false,"properties":{"tmdb":{"type":["integer","null"],"minimum":1},"imdb":{"type":["string","null"],"pattern":"^nm[0-9]+$"}}}}},
+    "assetRef": {"type":"object","additionalProperties":false,"required":["provider","path"],"properties":{"provider":{"type":"string","minLength":1},"path":{"type":"string","minLength":1}}},
+    "externalMetric": {"type":"object","additionalProperties":false,"properties":{"score":{"type":["number","null"],"minimum":0,"maximum":10},"votes":{"type":["integer","null"],"minimum":0},"observed_at":{"type":["string","null"]}}},
+    "metadataFields": {
+      "genres":{"type":"array","uniqueItems":true,"items":{"type":"string"}},
+      "runtime_min":{"type":["integer","null"],"minimum":1},
+      "original_language":{"type":["string","null"]},
+      "countries":{"type":"array","uniqueItems":true,"items":{"type":"string","minLength":2}},
+      "production_status":{"enum":["ongoing","completed","cancelled","unknown",null]},
+      "synopsis_short":{"type":["string","null"]},
+      "directors":{"type":"array","items":{"$ref":"#/$defs/personRef"}},
+      "writers":{"type":"array","items":{"$ref":"#/$defs/personRef"}},
+      "main_cast":{"type":"array","items":{"$ref":"#/$defs/personRef"}},
+      "certifications":{"type":"object","additionalProperties":{"type":"string"}},
+      "content_warnings":{"type":"array","uniqueItems":true,"items":{"type":"string"}},
+      "assets":{"type":"object","additionalProperties":false,"properties":{"poster":{"$ref":"#/$defs/assetRef"},"backdrop":{"$ref":"#/$defs/assetRef"}}}
+    },
+    "metadataExternal": {"type":"object","additionalProperties":false,"properties":{"genres":{"$ref":"#/$defs/metadataFields/genres"},"runtime_min":{"$ref":"#/$defs/metadataFields/runtime_min"},"original_language":{"$ref":"#/$defs/metadataFields/original_language"},"countries":{"$ref":"#/$defs/metadataFields/countries"},"production_status":{"$ref":"#/$defs/metadataFields/production_status"},"synopsis_short":{"$ref":"#/$defs/metadataFields/synopsis_short"},"directors":{"$ref":"#/$defs/metadataFields/directors"},"writers":{"$ref":"#/$defs/metadataFields/writers"},"main_cast":{"$ref":"#/$defs/metadataFields/main_cast"},"certifications":{"$ref":"#/$defs/metadataFields/certifications"},"content_warnings":{"$ref":"#/$defs/metadataFields/content_warnings"},"assets":{"$ref":"#/$defs/metadataFields/assets"},"external_metrics":{"type":"object","additionalProperties":{"$ref":"#/$defs/externalMetric"}},"provenance":{"type":"object","additionalProperties":false,"properties":{"provider":{"type":["string","null"]},"provider_id":{"type":["string","integer","null"]},"fetched_at":{"type":["string","null"]}}}}},
+    "metadataOverrides": {"type":"object","additionalProperties":false,"properties":{"genres":{"$ref":"#/$defs/metadataFields/genres"},"runtime_min":{"$ref":"#/$defs/metadataFields/runtime_min"},"original_language":{"$ref":"#/$defs/metadataFields/original_language"},"countries":{"$ref":"#/$defs/metadataFields/countries"},"production_status":{"$ref":"#/$defs/metadataFields/production_status"},"synopsis_short":{"$ref":"#/$defs/metadataFields/synopsis_short"},"directors":{"$ref":"#/$defs/metadataFields/directors"},"writers":{"$ref":"#/$defs/metadataFields/writers"},"main_cast":{"$ref":"#/$defs/metadataFields/main_cast"},"certifications":{"$ref":"#/$defs/metadataFields/certifications"},"content_warnings":{"$ref":"#/$defs/metadataFields/content_warnings"},"assets":{"$ref":"#/$defs/metadataFields/assets"}}},
+    "signalMap": {"type":"object","patternProperties":{"^[a-z][a-z0-9_-]*$":{"$ref":"https://chatgpt-lib.local/schemas/common.schema.json#/$defs/viewerSignal"}},"additionalProperties":false},
+    "groupSignalMap": {"type":"object","patternProperties":{"^[a-z][a-z0-9_-]*$":{"$ref":"https://chatgpt-lib.local/schemas/common.schema.json#/$defs/groupSignal"}},"additionalProperties":false},
+    "targetStateMap": {"type":"object","patternProperties":{"^[a-z][a-z0-9_-]*$":{"$ref":"https://chatgpt-lib.local/schemas/common.schema.json#/$defs/targetState"}},"additionalProperties":false},
+    "season": {"type":"object","additionalProperties":false,"required":["number"],"properties":{"number":{"type":"integer","minimum":0},"title":{"type":["string","null"]},"release_year":{"type":["integer","null"],"minimum":1880},"episode_count":{"type":["integer","null"],"minimum":0},"metadata":{"type":"object","additionalProperties":false,"properties":{"semantic":{"type":"object","additionalProperties":false,"properties":{"traits":{"type":"array","items":{"$ref":"https://chatgpt-lib.local/schemas/common.schema.json#/$defs/semanticTrait"}}}}}},"viewer_signals":{"$ref":"#/$defs/signalMap"},"group_signals":{"$ref":"#/$defs/groupSignalMap"}}},
+    "canonicalRelation": {"type":"object","additionalProperties":false,"required":["target_id","type"],"properties":{"target_id":{"type":"string","minLength":1},"type":{"enum":["sequel","prequel","spinoff","remake","reboot","adaptation"]},"source":{"type":["string","null"]}}}
+  },
+  "type":"object",
+  "additionalProperties":false,
+  "required":["schema_version","id","entity_type","identity"],
+  "properties":{
+    "schema_version":{"const":4},
+    "id":{"type":"string","minLength":1},
+    "entity_type":{"const":"work"},
+    "identity":{"type":"object","additionalProperties":false,"required":["format","title_original","title_ru","year"],"properties":{"format":{"enum":["movie","series","miniseries"]},"medium":{"enum":["live_action","animation","hybrid"]},"title_original":{"type":"string","minLength":1},"title_ru":{"type":"string","minLength":1},"alternate_titles":{"type":"array","uniqueItems":true,"items":{"type":"string","minLength":1}},"year":{"type":["integer","null"],"minimum":1880},"release_date":{"type":["string","null"]},"external_ids":{"type":"object","additionalProperties":false,"properties":{"tmdb":{"anyOf":[{"type":"null"},{"type":"object","additionalProperties":false,"required":["media_type","id"],"properties":{"media_type":{"enum":["movie","tv"]},"id":{"type":"integer","minimum":1}}}]},"imdb":{"type":["string","null"],"pattern":"^tt[0-9]+$"}}}}},
+    "metadata":{"type":"object","additionalProperties":false,"properties":{"external":{"$ref":"#/$defs/metadataExternal"},"overrides":{"$ref":"#/$defs/metadataOverrides"},"semantic":{"type":"object","additionalProperties":false,"properties":{"traits":{"type":"array","items":{"$ref":"https://chatgpt-lib.local/schemas/common.schema.json#/$defs/semanticTrait"}}}}}},
+    "viewer_signals":{"$ref":"#/$defs/signalMap"},
+    "group_signals":{"$ref":"#/$defs/groupSignalMap"},
+    "target_states":{"$ref":"#/$defs/targetStateMap"},
+    "seasons":{"type":"array","items":{"$ref":"#/$defs/season"}},
+    "canonical_relations":{"type":"array","items":{"$ref":"#/$defs/canonicalRelation"}},
+    "provenance":{"type":"object","additionalProperties":false,"properties":{"created_at":{"type":["string","null"]},"updated_at":{"type":["string","null"]}}}
+  },
+  "allOf":[{"if":{"properties":{"identity":{"properties":{"format":{"const":"movie"}},"required":["format"]}}},"then":{"properties":{"seasons":{"maxItems":0}}}}]
+}

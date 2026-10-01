@@ -1,0 +1,29 @@
+schema_version: 4
+id: grand-budapest-hotel-2014
+entity_type: work
+identity:
+  format: movie
+  title_original: The Grand Budapest Hotel
+  title_ru: Отель «Гранд Будапешт»
+  year: 2014
+viewer_signals:
+  primary:
+    viewing:
+      status: watched
+    rating:
+      score: 6.0
+      source: inferred
+      confidence: medium
+    feedback:
+      summary: Обычный фильм; жене понравился заметно больше.
+      signals: []
+  partner:
+    viewing:
+      status: watched
+    reaction:
+      value: liked
+      source: explicit
+      confidence: high
+provenance:
+  created_at: '2026-10-01'
+  updated_at: '2026-10-01'

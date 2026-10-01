@@ -1,0 +1,22 @@
+schema_version: 4
+id: parasites-2019
+entity_type: work
+identity:
+  format: movie
+  title_original: Parasite
+  title_ru: Паразиты
+  year: 2019
+viewer_signals:
+  primary:
+    viewing:
+      status: watched
+    rating:
+      score: 6.0
+      source: inferred
+      confidence: medium
+    feedback:
+      summary: Кажется переоценённым; один раз посмотреть нормально.
+      signals: []
+provenance:
+  created_at: '2026-10-01'
+  updated_at: '2026-10-01'

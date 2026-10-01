@@ -1,0 +1,22 @@
+schema_version: 4
+id: last-samurai-2003
+entity_type: work
+identity:
+  format: movie
+  title_original: The Last Samurai
+  title_ru: Последний самурай
+  year: 2003
+viewer_signals:
+  primary:
+    viewing:
+      status: unwatched
+    rating:
+      score: null
+      source: none
+      confidence: none
+    feedback:
+      summary: Не смотрел.
+      signals: []
+provenance:
+  created_at: '2026-10-01'
+  updated_at: '2026-10-01'

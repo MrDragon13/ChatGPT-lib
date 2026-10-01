@@ -1,0 +1,22 @@
+schema_version: 4
+id: source-code-2011
+entity_type: work
+identity:
+  format: movie
+  title_original: Source Code
+  title_ru: Исходный код
+  year: 2011
+viewer_signals:
+  primary:
+    viewing:
+      status: watched
+    rating:
+      score: 7.0
+      source: inferred
+      confidence: medium
+    feedback:
+      summary: В целом неплохой фильм.
+      signals: []
+provenance:
+  created_at: '2026-10-01'
+  updated_at: '2026-10-01'

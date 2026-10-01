@@ -1,0 +1,22 @@
+schema_version: 4
+id: there-will-be-blood-2007
+entity_type: work
+identity:
+  format: movie
+  title_original: There Will Be Blood
+  title_ru: Нефть
+  year: 2007
+viewer_signals:
+  primary:
+    viewing:
+      status: unwatched
+    rating:
+      score: null
+      source: none
+      confidence: none
+    feedback:
+      summary: Не смотрел.
+      signals: []
+provenance:
+  created_at: '2026-10-01'
+  updated_at: '2026-10-01'

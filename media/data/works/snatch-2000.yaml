@@ -1,0 +1,22 @@
+schema_version: 4
+id: snatch-2000
+entity_type: work
+identity:
+  format: movie
+  title_original: Snatch
+  title_ru: Большой куш
+  year: 2000
+viewer_signals:
+  primary:
+    viewing:
+      status: forgotten
+    rating:
+      score: null
+      source: none
+      confidence: none
+    feedback:
+      summary: Смотрел давно, фильм почти не помнит.
+      signals: []
+provenance:
+  created_at: '2026-10-01'
+  updated_at: '2026-10-01'

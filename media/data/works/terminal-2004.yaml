@@ -1,0 +1,22 @@
+schema_version: 4
+id: terminal-2004
+entity_type: work
+identity:
+  format: movie
+  title_original: The Terminal
+  title_ru: Терминал
+  year: 2004
+viewer_signals:
+  primary:
+    viewing:
+      status: watched
+    rating:
+      score: 8.0
+      source: inferred
+      confidence: medium
+    feedback:
+      summary: Хороший.
+      signals: []
+provenance:
+  created_at: '2026-10-01'
+  updated_at: '2026-10-01'

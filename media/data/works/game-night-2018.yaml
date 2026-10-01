@@ -1,0 +1,45 @@
+schema_version: 4
+id: game-night-2018
+entity_type: work
+identity:
+  format: movie
+  title_original: Game Night
+  title_ru: Игра в ночь
+  year: 2018
+viewer_signals:
+  primary:
+    viewing:
+      status: watched
+    rating:
+      score: 7.0
+      source: explicit
+      confidence: high
+    feedback:
+      summary: 'Максимум около 7/10: достаточно интересный и смешной, но местами перебор
+        с абсурдом, кринжем и испанским стыдом; исполнение могло быть лучше.'
+      signals:
+      - term: entertainment.engaging
+        sentiment: positive
+        strength: 2
+        source: inferred
+        confidence: high
+      - term: reaction.cringe
+        sentiment: negative
+        strength: 3
+        source: inferred
+        confidence: high
+      - term: humor.absurd
+        sentiment: negative
+        strength: 2
+        source: inferred
+        confidence: high
+  partner:
+    viewing:
+      status: watched
+    reaction:
+      value: liked
+      source: explicit
+      confidence: high
+provenance:
+  created_at: '2026-10-01'
+  updated_at: '2026-10-01'

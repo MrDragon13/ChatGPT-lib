@@ -1,0 +1,22 @@
+schema_version: 4
+id: gladiator-2000
+entity_type: work
+identity:
+  format: movie
+  title_original: Gladiator
+  title_ru: Гладиатор
+  year: 2000
+viewer_signals:
+  primary:
+    viewing:
+      status: watched
+    rating:
+      score: 9.5
+      source: inferred
+      confidence: high
+    feedback:
+      summary: Смотрел много раз.
+      signals: []
+provenance:
+  created_at: '2026-10-01'
+  updated_at: '2026-10-01'

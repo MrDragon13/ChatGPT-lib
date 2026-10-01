@@ -1,0 +1,22 @@
+schema_version: 4
+id: inglourious-basterds-2009
+entity_type: work
+identity:
+  format: movie
+  title_original: Inglourious Basterds
+  title_ru: Бесславные ублюдки
+  year: 2009
+viewer_signals:
+  primary:
+    viewing:
+      status: watched
+    rating:
+      score: 7.0
+      source: inferred
+      confidence: medium
+    feedback:
+      summary: Неплохо.
+      signals: []
+provenance:
+  created_at: '2026-10-01'
+  updated_at: '2026-10-01'

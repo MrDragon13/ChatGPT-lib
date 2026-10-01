@@ -1,0 +1,22 @@
+schema_version: 4
+id: twelve-monkeys-1995
+entity_type: work
+identity:
+  format: movie
+  title_original: 12 Monkeys
+  title_ru: 12 обезьян
+  year: 1995
+viewer_signals:
+  primary:
+    viewing:
+      status: watched
+    rating:
+      score: 5.5
+      source: inferred
+      confidence: medium
+    feedback:
+      summary: На один раз; немного душноват.
+      signals: []
+provenance:
+  created_at: '2026-10-01'
+  updated_at: '2026-10-01'
