@@ -2,35 +2,44 @@
 
 Companion tracker for `docs/superpowers/plans/2026-10-01-media-web-experience.md`.
 
-Last reconciled against branch `feature/media-web-experience`, PR #13, head `831bd5a8bea87df3af66461364242583eb8c2b86`.
+Final implementation review completed on PR #13 / branch `feature/media-web-experience`. The last production-code polish head is `02ac37aca6124d41c0609378b586fe7811ba2108`; subsequent commits add only critique/audit/design/status documentation.
 
 ## Current state
 
 - **Task 1 — Versioned web manifest exporter: COMPLETE.** Manifest v1 is deterministic, schema-validated, read-only, reuses `recommend_context`, exposes canonical Russian vocabulary labels, and contains no write/provider credentials. Real export: **103 works / 362,998 bytes**, so v1 remains a single `manifest.json`.
-- **Task 2 — Impeccable direction / comp / type / color: COMPLETE via documented degraded path.** Three comps exist; `home-c` is approved. Onest Variable, near-black/graphite neutrals, milk-white type, single tungsten accent, Taste **7 / 8 / 4** are locked in `.impeccable/surfaces/home.md`. The Impeccable launcher is not executable in this harness, so no claim is made that slash-command binaries ran.
-- **Task 3 — React/Vite data client, routing, shell: COMPLETE.** React/Vite/TypeScript client, committed lockfile, hash routing, manifest loader, target resolution, centralized TMDB image URLs, Onest/tokens, semantic loading/error shell are implemented. Reproducible CI uses Node 22.22.2 + `npm ci`.
-- **Task 4 — Home / Library / Detail surfaces: COMPLETE after review fixes.** Home, Library and Detail surfaces/selectors/tests are implemented. Review-driven additions are now present and green: recommendation candidates after hero alternatives are preserved as the `Посмотреть следующим` rail, and a visible `Я / Партнёр / Вместе` target switcher preserves the current route/query filters while replacing only `target`.
-- **Task 5 — Motion and responsive behavior: COMPLETE, pending only final whole-gate confirmation.** Shared Motion transitions, reduced-motion behavior and responsive Playwright checks exist. Review fixes removed spatial hover under reduced motion. Current browser run passes responsive and motion coverage.
-- **Task 6 — Pages pipeline and automated gates: IN PROGRESS; one browser a11y timing issue remains.** `media-pages.yml`, Web Check, secret scan, Playwright responsive/motion/a11y checks and review captures exist. On current head, unit tests (**29/29**), typecheck, production build, static credential scan and **6/7 browser checks** pass; Media Check is green. The sole Web Check failure is the empty-library axe scan running during the entrance opacity animation, which temporarily composites otherwise AA-safe accent/muted tokens against the canvas and reports 4.02:1 / 3.89:1. This is a test-stability issue, not evidence that the final static token colors fail AA. A11y scans should run in the stable reduced-motion state; motion behavior remains covered separately.
-- **Task 7 — Critique / audit / polish / document: IN PROGRESS.** Desktop review work exists and mobile review captures were added on current head, but screenshot capture is skipped while Web Check is red. Final fresh desktop/mobile critique, `DESIGN.md` / `.impeccable/design.json`, whole-branch review and ready-for-review transition remain outstanding.
+- **Task 2 — Impeccable direction / comp / type / color: COMPLETE via documented degraded path.** Three comps exist; `home-c` is approved. Onest Variable, near-black/graphite neutrals, milk-white type, single tungsten accent and Taste **7 / 8 / 4** are locked in `.impeccable/surfaces/home.md`. The Impeccable launcher is not executable in this harness, so no claim is made that slash-command binaries ran.
+- **Task 3 — React/Vite data client, routing, shell: COMPLETE.** React/Vite/TypeScript client, committed lockfile, hash routing, manifest loader, target resolution, centralized TMDB image URLs, Onest/tokens and semantic loading/error shell are implemented. Reproducible CI uses Node 22.22.2 + `npm ci`.
+- **Task 4 — Home / Library / Detail surfaces: COMPLETE.** Recommendation candidates after hero alternatives are preserved as `Посмотреть следующим`; the visible `Я / Партнёр / Вместе` switcher preserves route/filter state; sparse personal signals do not fabricate or reserve filler panels; TMDB display is intentionally secondary and rounded to one decimal.
+- **Task 5 — Motion and responsive behavior: COMPLETE.** Shared Motion transitions, responsive re-composition, hover/focus parity and reduced-motion behavior are covered. Reduced-motion removes spatial hover/entrance movement without losing functionality.
+- **Task 6 — Pages pipeline and automated gates: COMPLETE.** `media-pages.yml`, `Web Check`, credential scanning, Playwright responsive/motion/a11y checks and review captures are implemented. The transient axe contrast issue was traced to an in-flight opacity animation; axe now audits the stable reduced-motion state while full motion stays independently tested.
+- **Task 7 — Critique / audit / polish / document: COMPLETE.** Fresh desktop/mobile captures were reviewed. Two bounded detail findings (empty sparse-signal columns and over-dominant/raw-precision TMDB score) were pinned RED and fixed GREEN. Degraded-path critique and audit are stored under `.impeccable/`; final system documentation is in `DESIGN.md` and `.impeccable/design.json`.
 
-## Current RED evidence
+## Verification evidence
 
-Current head `831bd5a8bea87df3af66461364242583eb8c2b86`:
+Production-code polish head `02ac37aca6124d41c0609378b586fe7811ba2108`:
 
-1. `Media Check` — **success**.
-2. `Web Check` — unit tests **29/29**, typecheck, build and static credential scan all **success**.
-3. Browser suite — **6 passed / 1 failed**. The only failure is `e2e/a11y.spec.ts` → `empty and missing states remain accessible`.
-4. Axe sampled `.library-intro` while its Motion reveal opacity was still in flight, producing transient computed colors `#856c42` and `#716d66` over `#080808`. Canonical tokens remain `--color-accent: #e0b56c` and `--color-text-muted: #bdb7ab`.
+1. **Media Check — success.** Project tests, canonical validation, generated rebuild check, web-manifest export and doctor all passed.
+2. **Web Check — success.** Unit tests, strict typecheck, Vite production build and static credential scan all passed.
+3. **Browser checks — 7/7 passed.** Responsive, full/reduced motion, axe WCAG checks and keyboard path are green.
+4. **Review capture — passed.** Six fresh screenshots (Today/Library/Detail × desktop/mobile) were produced; the post-polish detail captures confirm the sparse-signal blank field is gone and TMDB is rendered as secondary context (`8.3`, not raw `8.272`).
+5. **Quality audit — 19/20.** No P1/P2 blocker remains. Performance remains 3/4 only because remote provider artwork and route-level bundle splitting are intentionally not prematurely optimized.
 
-## Next actions
+## Whole-branch review
 
-1. Make the a11y audit deterministic by running axe scans under `prefers-reduced-motion: reduce`, while keeping motion behavior covered by the separate motion E2E suite.
-2. Re-run the full Web Check: unit tests → typecheck → build → secret scan → Playwright responsive/motion/a11y → review screenshots.
-3. Inspect fresh desktop and mobile captures and complete Task 7 critique/audit/polish fixes through RED→GREEN where needed.
-4. Generate `DESIGN.md` and `.impeccable/design.json` from the actual final interface.
-5. Run whole-branch review and final exact-head Media/Web gates, then mark PR #13 ready for review.
+Compared with `main` (`f6ae4a176760f0b77a09d0f71792444aaa025c4a`):
+
+- no canonical `media/data/works/*.yaml` or generated media records are modified;
+- no production mock-movie arrays are introduced;
+- frontend recommendations consume backend-exported recommendation context rather than implementing a second scoring engine;
+- browser stays read-only and contains no GitHub write token, TMDB credential or broker secret;
+- Pages build/deploy permissions are separated: read-only build, deployment-only `pages: write` + `id-token: write`;
+- all ordinary UI copy is Russian; required TMDB attribution remains visible;
+- PR #13 remains an architectural/frontend PR and is not eligible for media data auto-merge.
+
+## Final gate
+
+This status commit is documentation-only and intentionally the final branch change. Its PR synchronize event re-runs both Media Check and Web Check against the complete branch diff. Once those exact-head checks are green, PR #13 can be marked ready for review with no further file changes.
 
 ## Integration rule
 
-PR #13 is an architectural/frontend PR and is **not** eligible for media data auto-merge. Do not merge it until final review/gates are green and the user explicitly approves integration.
+Do not merge PR #13 until the final exact-head gates are green and the user explicitly approves integration.
