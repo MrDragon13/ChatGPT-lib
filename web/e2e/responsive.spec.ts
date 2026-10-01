@@ -28,6 +28,13 @@ test("mobile pages do not overflow and library keeps two poster columns", async 
   const todayOverflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(todayOverflow).toBeLessThanOrEqual(1);
 
+  await page.goto("#/history?target=primary");
+  await expect(page.getByRole("heading", { name: "История" })).toBeVisible();
+  const historyOverflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  expect(historyOverflow).toBeLessThanOrEqual(1);
+  const firstHistoryHref = await page.locator(".history-item").first().getAttribute("href");
+  expect(firstHistoryHref).toContain("target=primary");
+
   await page.goto("#/library?target=couple");
   await expect(page.getByRole("heading", { name: "Медиатека" })).toBeVisible();
   const libraryOverflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);

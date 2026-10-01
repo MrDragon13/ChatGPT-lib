@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { libraryHref, resolveTarget, workHref } from "./router";
+import { historyHref, libraryHref, resolveTarget, workHref } from "./router";
 
 const targetConfig = {
   default_target: "couple",
@@ -33,5 +33,9 @@ describe("hash hrefs", () => {
     expect(libraryHref("couple", { viewing: "unwatched", genre: "genre.drama" })).toBe(
       "#/library?target=couple&viewing=unwatched&genre=genre.drama",
     );
+  });
+
+  it("preserves target in the history link", () => {
+    expect(historyHref("couple")).toBe("#/history?target=couple");
   });
 });

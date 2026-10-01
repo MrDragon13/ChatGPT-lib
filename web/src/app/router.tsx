@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import type { ManifestTargetConfig, TargetId } from "../data/types";
 import { WorkDetailPage } from "../features/detail/WorkDetailPage";
+import { HistoryPage } from "../features/history/HistoryPage";
 import { HomePage } from "../features/home/HomePage";
 import { LibraryPage } from "../features/library/LibraryPage";
 
@@ -22,6 +23,11 @@ export function workHref(workId: string, target: TargetId): string {
   return `#/work/${encodeURIComponent(workId)}?${query.toString()}`;
 }
 
+export function historyHref(target: TargetId): string {
+  const query = new URLSearchParams({ target });
+  return `#/history?${query.toString()}`;
+}
+
 export function libraryHref(
   target: TargetId,
   filters: Record<string, string | null | undefined> = {},
@@ -37,6 +43,7 @@ export function AppRoutes() {
   return (
     <Routes>
       <Route path="/today" element={<HomePage />} />
+      <Route path="/history" element={<HistoryPage />} />
       <Route path="/library" element={<LibraryPage />} />
       <Route path="/work/:id" element={<WorkDetailPage />} />
       <Route path="*" element={<Navigate to="/today" replace />} />
