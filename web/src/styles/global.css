@@ -48,10 +48,21 @@ select:focus-visible,
   gap: 24px;
 }
 
-.site-header nav {
+.site-header__controls,
+.site-header__primary,
+.target-switcher {
   display: flex;
   align-items: center;
+}
+
+.site-header__controls {
+  gap: clamp(18px, 2.4vw, 36px);
+  min-width: 0;
+}
+
+.site-header__primary {
   gap: 20px;
+  white-space: nowrap;
 }
 
 .site-header a {
@@ -62,8 +73,38 @@ select:focus-visible,
 }
 
 .brand {
+  flex: 0 0 auto;
   font-weight: 680;
   letter-spacing: -0.02em;
+}
+
+.target-switcher {
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid rgb(243 240 232 / 0.1);
+  border-radius: 12px;
+  background: rgb(243 240 232 / 0.035);
+  white-space: nowrap;
+}
+
+.target-switcher__link {
+  min-height: 36px !important;
+  padding: 0 11px;
+  border-radius: 9px;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  font-weight: 560;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.target-switcher__link:hover {
+  color: var(--color-text);
+  background: rgb(243 240 232 / 0.055);
+}
+
+.target-switcher__link[aria-current="page"] {
+  color: var(--color-canvas);
+  background: var(--color-accent);
 }
 
 .route-placeholder,
@@ -123,13 +164,23 @@ select:focus-visible,
   display: block;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 760px) {
   .site-header {
     align-items: flex-start;
   }
 
-  .site-header nav {
+  .site-header__controls {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+  }
+
+  .site-header__primary {
     gap: 12px;
+  }
+
+  .target-switcher__link {
+    padding-inline: 9px;
   }
 
   .site-credits {
@@ -138,5 +189,30 @@ select:focus-visible,
 
   .tmdb-credit {
     justify-self: start;
+  }
+}
+
+@media (max-width: 430px) {
+  .site-header {
+    gap: 12px;
+  }
+
+  .brand {
+    min-height: 38px !important;
+  }
+
+  .site-header__primary a {
+    min-height: 38px;
+    font-size: 0.88rem;
+  }
+
+  .target-switcher {
+    margin-right: -2px;
+  }
+
+  .target-switcher__link {
+    min-height: 34px !important;
+    padding-inline: 8px;
+    font-size: 0.76rem;
   }
 }
