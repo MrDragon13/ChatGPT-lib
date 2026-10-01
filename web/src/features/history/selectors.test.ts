@@ -129,6 +129,30 @@ describe("viewing history selector", () => {
     expect(buildHistoryItems(data, "couple")).toEqual([]);
   });
 
+  it("excludes unwatched-only viewer state but keeps actual viewing activity", () => {
+    const data = manifest([
+      work("unwatched", {
+        viewerSignals: { primary: { viewing: { status: "unwatched" } } },
+        createdAt: "2026-09-30",
+      }),
+      work("watched", {
+        viewerSignals: { primary: { viewing: { status: "watched" } } },
+        createdAt: "2026-09-29",
+      }),
+      work("unwatched-reviewed", {
+        viewerSignals: {
+          primary: {
+            viewing: { status: "unwatched" },
+            feedback: { summary: "Есть отдельный отзыв" },
+          },
+        },
+        createdAt: "2026-09-28",
+      }),
+    ]);
+
+    expect(itemIds(data, "primary")).toEqual(["watched", "unwatched-reviewed"]);
+  });
+
   it("prefers the newest valid exact history timestamp over work provenance", () => {
     const data = manifest([
       work("exact", {
