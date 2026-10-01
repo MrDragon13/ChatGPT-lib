@@ -27,6 +27,7 @@ export type HomeViewModel = {
   target: TargetId;
   hero: HomeCandidate | null;
   alternatives: HomeCandidate[];
+  next: HomeCandidate[];
   couple: HomeCandidate[];
   recent: RecentWork[];
 };
@@ -169,6 +170,7 @@ export function buildHomeViewModel(manifest: WebManifest, target: TargetId): Hom
     target,
     hero: recommendations[0] ?? null,
     alternatives: recommendations.slice(1, 4),
+    next: recommendations.slice(4, 16),
     couple: recommendationViews(manifest, "couple").slice(0, 12),
     recent: recentViews(manifest, target),
   };
