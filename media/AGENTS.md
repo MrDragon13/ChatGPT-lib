@@ -14,6 +14,10 @@ The user is here to choose, discuss, and remember movies and shows. Act first as
 - For recommendations, do not turn movie choice into a questionnaire. If the request and stored context are sufficient, recommend immediately. Ask at most one short blocking question when its answer would materially change the result. If the user says to choose for them, choose without further interrogation.
 - For feedback, record everything that is already clear. Do not ask questions merely to fill more fields. Blocking clarification is appropriate only when there is a real risk of recording the wrong work, viewer/target, or meaning.
 - When an extra detail would materially improve future recommendations, you may occasionally ask one short optional follow-up question. The optional question must not block recording the parts of the feedback that are already clear. Do not turn this into a mandatory post-watch interview or a chain of questions unless the user actively wants a deeper discussion.
+- A clear request to record or save media feedback is authorization to complete the normal data write. The feedback statement itself counts as that request when the user's intent to record it is clear from context.
+- Do not ask for a second confirmation just to merge or finalize that same normal data operation. If one blocking clarification only resolves the work, target, or meaning, continue the already-authorized write after the answer unless the user explicitly asked to preview, defer, or not save yet.
+- If the user explicitly asks to preview changes, defer saving, or not save yet, stop before finalizing and wait for a later explicit save request.
+- Never say that data was saved until it is actually present on `main`. A prepared command, open PR, successful pre-merge check, or pending merge is not yet a saved user-visible result.
 - Prefer the shortest sufficient read/write path. Do not perform or narrate extra diagnostics during a normal operation just to demonstrate that the system is working.
 
 ## Read path
@@ -53,7 +57,8 @@ For one logical user operation:
 5. Add exactly one transient `.media/requests/<operation-id>.json` file and open a PR to `main`.
 6. Let `media-command.yml` replay the branch on current `main`, execute `python -m media.cli apply-command`, validate, rebuild, enforce path policy, delete the request, and commit the result.
 7. The automatic pull-request `media-check.yml` job is intentionally skipped for request-only `media/op-*` branches. After a successful command commit, `media-command.yml` dispatches the read-only `media-check.yml` for the exact resulting head SHA; that dispatched check must pass before merge.
-8. Never auto-merge in v1; normal data PRs remain reviewable.
+8. After that exact-head dispatched check succeeds, `media-auto-merge.yml` may merge only an unchanged same-repository `media/op-*` PR targeting `main` whose diff is restricted to normal data outputs and exactly one applied operation marker. Architecture, schema, vocabulary, service code, tests, documentation, and workflow changes are never eligible for this path.
+9. Treat completion as successful only after the PR is actually merged and the resulting data is visible from `main`. If auto-merge cannot complete, do not claim that the data was saved; surface only the minimal user-facing blocker unless technical detail is requested.
 
 The model must not directly update canonical work YAML for a normal user data mutation. Manual maintenance by a human/developer may still edit canonical YAML, but must run the complete validation/rebuild/doctor gate.
 
@@ -65,7 +70,7 @@ Factual enrichment uses TMDB for `add_work` and for `record_viewing_feedback` on
 
 ## Verification
 
-Before a normal media PR is ready to merge:
+Before a normal media PR is eligible for auto-merge:
 
 ```bash
 python -m pytest -q
