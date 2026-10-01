@@ -5,7 +5,7 @@ import { AboutCredits } from "../components/AboutCredits";
 import { TargetSwitcher } from "../components/TargetSwitcher";
 import { loadManifest } from "../data/client";
 import type { TargetId, WebManifest } from "../data/types";
-import { libraryHref, resolveTarget } from "./router";
+import { historyHref, libraryHref, resolveTarget } from "./router";
 
 type AppContextValue = {
   manifest: WebManifest;
@@ -73,6 +73,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="site-header__controls">
             <nav className="site-header__primary" aria-label="Основная навигация">
               <Link to={`/today?target=${encodeURIComponent(target)}`}>Сегодня</Link>
+              <a href={historyHref(target)}>История</a>
               <a href={libraryHref(target)}>Медиатека</a>
             </nav>
             <TargetSwitcher targets={manifest.targets} activeTarget={target} />
