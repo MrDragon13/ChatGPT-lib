@@ -146,7 +146,7 @@ The first implementation intentionally exposes only:
 - `recommend-context`;
 - `doctor`.
 
-`record-viewing_feedback` is a single atomic user operation capable of carrying viewing state, rating, reaction, and feedback for one or more targets. This avoids creating several independent commits for the common case: “we watched X, I rate it 8.5, partner liked it.”
+`record_viewing_feedback` is a single atomic user operation capable of carrying viewing state, rating, reaction, and feedback for one or more targets. This avoids creating several independent commits for the common case: “we watched X, I rate it 8.5, partner liked it.”
 
 Each operation has a strict JSON Schema. The model outputs typed command JSON, never free-form YAML patches.
 
@@ -265,6 +265,8 @@ Recommendation interactions should distinguish temporary skips from durable pref
 - “not today” may create an interaction such as skipped/not_today;
 - “I never want to watch this” may update durable interest to `not_interested`.
 
+Persisting recommendation interactions beyond the operations explicitly included in the first implementation is deferred until a dedicated command contract is added; the semantic distinction above is still normative.
+
 ## Metadata enrichment
 
 Factual enrichment uses a provider abstraction and does not require an LLM.
@@ -294,12 +296,12 @@ ChatGPT reads `generated/index.jsonl`, generated profiles, and selected canonica
 
 ### Writes
 
-ChatGPT creates a small typed command request on a dedicated branch/PR. GitHub Actions is the remote execution host:
+ChatGPT creates a small typed command request on a dedicated same-repository branch, preferably named `media/op-<operation_id>`, and opens a PR. GitHub Actions is the remote execution host:
 
 ```text
 ChatGPT
 → typed request
-→ branch / PR
+→ trusted same-repo branch / PR
 → media-command workflow
 → Python service layer
 → canonical YAML changes
@@ -309,7 +311,7 @@ ChatGPT
 
 GitHub Actions contains orchestration steps only. The domain behavior remains in Python modules.
 
-Transient command request files are not a second canonical source of truth. After successful application they should be removed from the final data diff or reduced to technical audit metadata according to the implementation plan.
+The transient request may live at `.media/requests/<operation_id>.json` while the workflow is processing it. A successfully applied command removes that request from the final PR diff. The request directory is transport, not source of truth.
 
 ## GitHub workflows
 
@@ -329,17 +331,24 @@ Generated text artifacts must be deterministic and byte-identical for the same r
 
 ### `media-command.yml`
 
-Processes a typed media command:
+Processes a typed media command from a trusted same-repository media operation branch:
 
-1. validate command JSON Schema;
-2. check `operation_id` idempotency;
-3. resolve entities;
-4. optionally use TMDB where required;
-5. plan and apply ChangeSet in a temporary workspace;
-6. validate canonical state;
-7. rebuild generated text artifacts;
-8. commit the resulting canonical/generated changes to the same branch;
-9. produce a machine-readable result.
+1. verify the PR/head repository and reserved operation branch pattern;
+2. validate command JSON Schema;
+3. check `operation_id` idempotency;
+4. resolve entities;
+5. optionally use TMDB where required;
+6. plan and apply ChangeSet in a temporary workspace;
+7. validate canonical state;
+8. rebuild generated text artifacts;
+9. verify the resulting diff against the operation-specific write allowlist;
+10. remove the transient request;
+11. commit the resulting canonical/generated/audit changes to the same branch;
+12. produce a machine-readable result.
+
+The command workflow must not expose secrets or obtain write-back behavior for untrusted fork PRs. In the first implementation, command execution is supported only for same-repository branches created for media operations.
+
+The workflow must avoid self-trigger loops after it pushes its result commit, for example by requiring the transient request to exist before the apply job runs.
 
 ### `media-maintenance.yml`
 
@@ -351,7 +360,7 @@ Every mutable command requires an immutable `operation_id`.
 
 Retrying the same operation must return `already_applied` (with the original commit/result where possible) rather than duplicating interactions or mutations.
 
-A lightweight technical operation receipt may be used under a tooling namespace such as `.media/operations/`; it is orchestration/audit metadata, not canonical media-domain data.
+A lightweight technical operation receipt may be committed under `.media/operations/<operation_id>.json`; it is orchestration/audit metadata, not canonical media-domain data. Receipt content is intentionally minimal and must not duplicate private free-form feedback.
 
 Commands are planned against a specific base SHA. If `main` changes before application, the system must not blindly apply an old textual diff. It reloads the latest entity state and replays the semantic command through normal resolution/merge/validation rules.
 
@@ -389,18 +398,21 @@ Provider outage must not block writes for already-resolved existing works that d
 
 No command schema contains arbitrary shell/script fields.
 
-GitHub workflow permissions should be minimal and scoped to what the job requires, expected to be primarily `contents: write` and `pull-requests: write` for the command workflow. Secrets are exposed only to workflows that need them.
+GitHub workflow permissions should be minimal and scoped to what the job requires, expected to be primarily `contents: write` and `pull-requests: write` for the command workflow. Secrets are exposed only to jobs that need them and only after the same-repository trust check.
 
-Normal media commands are allowed to touch canonical data and declared generated outputs. Attempts by a normal command to mutate architecture-sensitive paths are rejected.
+Normal command writes are default-deny. Every command type has an explicit output-path allowlist. For the first implementation, a command may change only the canonical entity files that its semantic operation owns, declared generated text artifacts, and its minimal `.media/operations/<operation_id>.json` receipt. The transient `.media/requests/<operation_id>.json` file must disappear from the final applied diff.
 
-Architecture-sensitive paths include at least:
+A normal command must never modify code, schemas, vocabulary, agent instructions, configuration of the command machinery, or GitHub workflows. This includes at least:
 
 - `media/schemas/**`;
 - `media/vocabulary.yaml`;
 - `media/AGENTS.md`;
 - `.github/workflows/**`;
 - `media/domain/**`;
-- `media/service/**`.
+- `media/service/**`;
+- `media/repository/**`;
+- `media/providers/**`;
+- `media/commands/schemas/**`.
 
 Changes to these remain normal manually reviewed architectural PRs.
 
@@ -428,9 +440,9 @@ Operational logs/results contain technical identifiers (`operation_id`, base SHA
 Four levels are required:
 
 1. **Unit tests** for resolver, signal merge rules, command handling, ChangeSet generation, idempotency, and query logic.
-2. **Contract tests** for command schemas, canonical schemas, vocabulary checks, and provider normalization.
+2. **Contract tests** for command schemas, canonical schemas, vocabulary checks, provider normalization, and per-operation output-path allowlists.
 3. **Integration tests** using a small synthetic fixture media repository and exercising command → apply → validate → rebuild → resulting files.
-4. **Workflow smoke tests** for changes to GitHub workflow/orchestration code.
+4. **Workflow smoke tests** for changes to GitHub workflow/orchestration code, including same-repo trust checks and self-trigger-loop prevention.
 
 TMDB unit/integration tests use mocked or recorded fixtures. Normal pytest must not depend on live network access. A real-provider smoke test may be manual/separate.
 
@@ -474,9 +486,11 @@ The implementation is complete when all of the following hold:
 5. Reusing an `operation_id` cannot duplicate signals or interaction effects.
 6. Invalid mutations leave canonical repository state unchanged.
 7. CI fails when canonical data changed but committed generated artifacts are stale.
-8. A normal command attempting to mutate schema/vocabulary/tooling architecture is rejected.
+8. A normal command attempting to mutate schema/vocabulary/tooling architecture, or any path outside its operation-specific allowlist, is rejected.
 9. Rebuilding deterministic generated text artifacts twice from the same revision produces byte-identical output.
 10. Full project tests, validator, generated drift checks, SQLite rebuild, and doctor are green before a normal media PR is considered ready to merge.
+11. Secret-bearing command execution is rejected for fork/untrusted PR heads and accepted only for the explicitly supported same-repository media-operation flow.
+12. A workflow result commit cannot recursively re-apply the same transient request.
 
 ## Deferred extensions
 
