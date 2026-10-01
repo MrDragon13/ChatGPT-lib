@@ -1,0 +1,22 @@
+schema_version: 4
+id: three-billboards-2017
+entity_type: work
+identity:
+  format: movie
+  title_original: Three Billboards Outside Ebbing, Missouri
+  title_ru: Три билборда на границе Эббинга, Миссури
+  year: 2017
+viewer_signals:
+  primary:
+    viewing:
+      status: watched
+    rating:
+      score: 8.0
+      source: inferred
+      confidence: medium
+    feedback:
+      summary: Хороший фильм.
+      signals: []
+provenance:
+  created_at: '2026-10-01'
+  updated_at: '2026-10-01'

@@ -1,0 +1,22 @@
+schema_version: 4
+id: sicario-2015
+entity_type: work
+identity:
+  format: movie
+  title_original: Sicario
+  title_ru: Убийца
+  year: 2015
+viewer_signals:
+  primary:
+    viewing:
+      status: unwatched
+    rating:
+      score: null
+      source: none
+      confidence: none
+    feedback:
+      summary: Не смотрел.
+      signals: []
+provenance:
+  created_at: '2026-10-01'
+  updated_at: '2026-10-01'

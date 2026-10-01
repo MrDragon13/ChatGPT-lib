@@ -1,0 +1,22 @@
+schema_version: 4
+id: arrival-2016
+entity_type: work
+identity:
+  format: movie
+  title_original: Arrival
+  title_ru: Прибытие
+  year: 2016
+viewer_signals:
+  primary:
+    viewing:
+      status: unwatched
+    rating:
+      score: null
+      source: none
+      confidence: none
+    feedback:
+      summary: В разговоре трактовано как не смотрел.
+      signals: []
+provenance:
+  created_at: '2026-10-01'
+  updated_at: '2026-10-01'

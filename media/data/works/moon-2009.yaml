@@ -1,0 +1,22 @@
+schema_version: 4
+id: moon-2009
+entity_type: work
+identity:
+  format: movie
+  title_original: Moon
+  title_ru: Луна 2112
+  year: 2009
+viewer_signals:
+  primary:
+    viewing:
+      status: unwatched
+    rating:
+      score: null
+      source: none
+      confidence: none
+    feedback:
+      summary: Не смотрел.
+      signals: []
+provenance:
+  created_at: '2026-10-01'
+  updated_at: '2026-10-01'

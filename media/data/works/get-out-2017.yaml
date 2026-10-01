@@ -1,0 +1,22 @@
+schema_version: 4
+id: get-out-2017
+entity_type: work
+identity:
+  format: movie
+  title_original: Get Out
+  title_ru: Прочь
+  year: 2017
+viewer_signals:
+  primary:
+    viewing:
+      status: unwatched
+    rating:
+      score: null
+      source: none
+      confidence: none
+    feedback:
+      summary: Не смотрел.
+      signals: []
+provenance:
+  created_at: '2026-10-01'
+  updated_at: '2026-10-01'

@@ -1,0 +1,23 @@
+schema_version: 4
+id: gentlemen-2019
+entity_type: work
+identity:
+  format: movie
+  title_original: The Gentlemen
+  title_ru: Джентльмены
+  year: 2019
+viewer_signals:
+  primary:
+    viewing:
+      status: dropped
+    rating:
+      score: null
+      source: none
+      confidence: none
+    feedback:
+      summary: Начинал, но так и не досмотрел; причины не трактовать как отрицательную
+        оценку.
+      signals: []
+provenance:
+  created_at: '2026-10-01'
+  updated_at: '2026-10-01'

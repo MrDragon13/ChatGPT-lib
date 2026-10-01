@@ -1,0 +1,22 @@
+schema_version: 4
+id: ready-player-one-2018
+entity_type: work
+identity:
+  format: movie
+  title_original: Ready Player One
+  title_ru: Первому игроку приготовиться
+  year: 2018
+viewer_signals:
+  primary:
+    viewing:
+      status: watched
+    rating:
+      score: 10.0
+      source: inferred
+      confidence: high
+    feedback:
+      summary: Смотрел примерно пять раз; один из самых сильных сигналов вкуса.
+      signals: []
+provenance:
+  created_at: '2026-10-01'
+  updated_at: '2026-10-01'

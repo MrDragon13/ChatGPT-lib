@@ -1,0 +1,22 @@
+schema_version: 4
+id: the-matrix-1999
+entity_type: work
+identity:
+  format: movie
+  title_original: The Matrix
+  title_ru: Матрица
+  year: 1999
+viewer_signals:
+  primary:
+    viewing:
+      status: watched
+    rating:
+      score: 9.5
+      source: inferred
+      confidence: high
+    feedback:
+      summary: Первая часть — отлично.
+      signals: []
+provenance:
+  created_at: '2026-10-01'
+  updated_at: '2026-10-01'

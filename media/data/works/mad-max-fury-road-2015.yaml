@@ -1,0 +1,22 @@
+schema_version: 4
+id: mad-max-fury-road-2015
+entity_type: work
+identity:
+  format: movie
+  title_original: 'Mad Max: Fury Road'
+  title_ru: 'Безумный Макс: Дорога ярости'
+  year: 2015
+viewer_signals:
+  primary:
+    viewing:
+      status: watched
+    rating:
+      score: 8.5
+      source: inferred
+      confidence: medium
+    feedback:
+      summary: Понравился.
+      signals: []
+provenance:
+  created_at: '2026-10-01'
+  updated_at: '2026-10-01'

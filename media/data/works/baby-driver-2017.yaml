@@ -1,0 +1,22 @@
+schema_version: 4
+id: baby-driver-2017
+entity_type: work
+identity:
+  format: movie
+  title_original: Baby Driver
+  title_ru: Малыш на драйве
+  year: 2017
+viewer_signals:
+  primary:
+    viewing:
+      status: unwatched
+    rating:
+      score: null
+      source: none
+      confidence: none
+    feedback:
+      summary: Не смотрел; потенциальный кандидат.
+      signals: []
+provenance:
+  created_at: '2026-10-01'
+  updated_at: '2026-10-01'

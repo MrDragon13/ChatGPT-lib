@@ -1,0 +1,22 @@
+schema_version: 4
+id: isle-of-dogs-2018
+entity_type: work
+identity:
+  format: movie
+  title_original: Isle of Dogs
+  title_ru: Остров собак
+  year: 2018
+viewer_signals:
+  primary:
+    viewing:
+      status: unwatched
+    rating:
+      score: null
+      source: none
+      confidence: none
+    feedback:
+      summary: Не смотрел.
+      signals: []
+provenance:
+  created_at: '2026-10-01'
+  updated_at: '2026-10-01'

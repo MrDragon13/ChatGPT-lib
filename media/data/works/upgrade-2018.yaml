@@ -1,0 +1,22 @@
+schema_version: 4
+id: upgrade-2018
+entity_type: work
+identity:
+  format: movie
+  title_original: Upgrade
+  title_ru: Апгрейд
+  year: 2018
+viewer_signals:
+  primary:
+    viewing:
+      status: unwatched
+    rating:
+      score: null
+      source: none
+      confidence: none
+    feedback:
+      summary: Не успел оценить в опросе; оставлен кандидатом.
+      signals: []
+provenance:
+  created_at: '2026-10-01'
+  updated_at: '2026-10-01'
