@@ -1,0 +1,10 @@
+{
+  "id": "home-a",
+  "title": "Редакционный каскад",
+  "viewport": "1440x900",
+  "source": "degraded-static-svg",
+  "approved": false,
+  "content_basis": ["arrival-2016", "knives-out-2019", "blade-runner-2049-2017"],
+  "notes": "Асимметричный editorial split: hero copy слева, backdrop справа, poster и запасные варианты ниже.",
+  "prompt": "Кинематографичный русский интерфейс личной медиатеки; charcoal/graphite, tungsten accent, один главный фильм и два вторичных, реальные названия и сигналы, без выдуманных постеров."
+}
