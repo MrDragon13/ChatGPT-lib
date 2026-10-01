@@ -70,7 +70,8 @@ def parse_command(data: Mapping[str, Any], schema_dir: Path | None = None) -> Me
             work_id: ProviderWorkRef(value["media_type"], value["id"])
             for work_id, value in (data.get("tmdb_overrides") or {}).items()
         }
-        return RefreshMetadataCommand(data["schema_version"], data["operation_id"], data["scope"], overrides)
+        years = dict(data.get("year_overrides") or {})
+        return RefreshMetadataCommand(data["schema_version"], data["operation_id"], data["scope"], overrides, years)
     return RecommendContextRequest(data["schema_version"], data["target"], data.get("text"), data.get("only_unwatched", False), data.get("runtime_max"), data.get("include_not_interested", False), data.get("limit", 20))
 
 
