@@ -112,6 +112,19 @@ describe("buildHomeViewModel", () => {
     expect(model.alternatives.map((item) => item.id)).toEqual(["second"]);
   });
 
+  it("keeps recommendation candidates after the hero alternatives for the next-watch rail", () => {
+    const value = manifest();
+    const extraIds = ["third", "fourth", "fifth", "sixth"];
+    value.recommendations.primary.candidates.push(
+      ...extraIds.map((id) => ({ id, title_ru: id, evidence: { strengths: [], concerns: [] } })),
+    );
+    value.works.push(...extraIds.map((id) => work(id)));
+
+    const model = buildHomeViewModel(value, "primary");
+    expect(model.alternatives.map((item) => item.id)).toEqual(["second", "third", "fourth"]);
+    expect(model.next.map((item) => item.id)).toEqual(["fifth", "sixth"]);
+  });
+
   it("maps recommendation evidence through canonical vocabulary labels", () => {
     const model = buildHomeViewModel(manifest(), "primary");
     expect(model.hero?.reasonLabels).toEqual(["Интрига"]);
