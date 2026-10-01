@@ -64,13 +64,33 @@ jobs:
               exit 3
             fi
           done
-      - name: Apply typed media command
+      - name: Inspect operation kind without secrets
+        id: operation
+        shell: bash
+        env:
+          REQUEST: ${{ steps.request.outputs.request }}
+        run: |
+          cp -- "$REQUEST" /tmp/media-request.json
+          operation=$(python -c "import json; print(json.load(open('/tmp/media-request.json'))['operation'])")
+          echo "operation=$operation" >> "$GITHUB_OUTPUT"
+      - name: Apply command without provider secret
+        if: ${{ steps.operation.outputs.operation != 'add_work' }}
+        shell: bash
+        env:
+          REQUEST: ${{ steps.request.outputs.request }}
+        run: |
+          set +e
+          python -m media.cli apply-command "$REQUEST" --format json | tee /tmp/media-result.json
+          status=${PIPESTATUS[0]}
+          set -e
+          exit "$status"
+      - name: Apply add-work command with TMDB secret
+        if: ${{ steps.operation.outputs.operation == 'add_work' }}
         shell: bash
         env:
           TMDB_READ_TOKEN: ${{ secrets.TMDB_READ_TOKEN }}
           REQUEST: ${{ steps.request.outputs.request }}
         run: |
-          cp -- "$REQUEST" /tmp/media-request.json
           set +e
           python -m media.cli apply-command "$REQUEST" --format json | tee /tmp/media-result.json
           status=${PIPESTATUS[0]}
