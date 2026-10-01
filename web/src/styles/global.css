@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--color-canvas);
+  color: var(--color-text);
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100dvh;
+  background: var(--color-canvas);
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+a {
+  color: inherit;
+}
+
+a:focus-visible,
+button:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+.app-shell {
+  width: min(100%, var(--content-max));
+  margin-inline: auto;
+  padding: 20px clamp(16px, 3vw, 44px) 56px;
+}
+
+.site-header {
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.site-header nav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.site-header a {
+  text-decoration: none;
+}
+
+.brand {
+  font-weight: 680;
+  letter-spacing: -0.02em;
+}
+
+.route-placeholder,
+.state-message {
+  min-height: 60dvh;
+  display: grid;
+  align-content: center;
+}
+
+.state-message {
+  max-width: 65ch;
+  margin-inline: auto;
+  padding: 32px;
+}
+
+@media (max-width: 640px) {
+  .site-header {
+    align-items: flex-start;
+  }
+
+  .site-header nav {
+    gap: 12px;
+  }
+}
