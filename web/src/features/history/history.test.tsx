@@ -112,8 +112,14 @@ describe("viewing history page", () => {
   });
 
   it("keeps day-precision activity on the same calendar date across time zones", () => {
-    const originalTimezone = process.env.TZ;
-    process.env.TZ = "America/Los_Angeles";
+    const runtime = globalThis as typeof globalThis & {
+      process?: { env: Record<string, string | undefined> };
+    };
+    const env = runtime.process?.env;
+    if (!env) throw new Error("Vitest runtime process environment is unavailable");
+
+    const originalTimezone = env.TZ;
+    env.TZ = "America/Los_Angeles";
     try {
       render(
         <HistoryView
@@ -136,8 +142,8 @@ describe("viewing history page", () => {
       );
       expect(screen.getByText(/1 января 2026/)).toBeInTheDocument();
     } finally {
-      if (originalTimezone === undefined) delete process.env.TZ;
-      else process.env.TZ = originalTimezone;
+      if (originalTimezone === undefined) delete env.TZ;
+      else env.TZ = originalTimezone;
     }
   });
 });
