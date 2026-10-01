@@ -56,3 +56,12 @@ jobs:
       - name: Run browser checks
         working-directory: web
         run: npm run test:e2e -- responsive.spec.ts motion.spec.ts a11y.spec.ts
+      - name: Capture review screenshots
+        working-directory: web
+        run: npm run test:e2e -- review.spec.ts
+      - name: Upload review screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: media-web-review
+          path: web/test-results/review
+          if-no-files-found: error
