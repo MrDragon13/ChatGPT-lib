@@ -1,0 +1,13 @@
+schema_version: 4
+target: primary
+preferences:
+  - id: genre-secondary-to-execution
+    statement: Жанр сам по себе вторичен; качество реализации важнее жанровой принадлежности.
+    source: explicit
+    confidence: exact
+rules:
+  - id: slow-pacing-context
+    statement: Медленный темп сам по себе не является минусом, если он оправдан историей, персонажами или эмоциональной отдачей.
+    source: explicit
+    confidence: exact
+constraints: []

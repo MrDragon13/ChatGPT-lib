@@ -1,0 +1,44 @@
+schema_version: 4
+terms:
+  genre.science_fiction: {kind: genre, label_ru: Научная фантастика, definition: Произведения с научно-фантастическими идеями и допущениями., parent: genre, aliases: [sci-fi, фантастика]}
+  genre.drama: {kind: genre, label_ru: Драма, definition: Произведения с выраженным драматическим конфликтом., parent: genre, aliases: []}
+  genre.action: {kind: genre, label_ru: Боевик, definition: Произведения где существенную роль играет физическое действие и опасность., parent: genre, aliases: []}
+  genre.adventure: {kind: genre, label_ru: Приключения, definition: Истории построенные вокруг путешествия поиска или приключения., parent: genre, aliases: []}
+  genre.comedy: {kind: genre, label_ru: Комедия, definition: Произведения где юмор является существенной частью жанра., parent: genre, aliases: []}
+  genre.crime: {kind: genre, label_ru: Криминал, definition: Истории связанные с преступлениями или преступной средой., parent: genre, aliases: []}
+  genre.mystery: {kind: genre, label_ru: Детектив / тайна, definition: Истории построенные вокруг загадки расследования или скрытой причины событий., parent: genre, aliases: [детектив]}
+  genre.thriller: {kind: genre, label_ru: Триллер, definition: Произведения ориентированные на напряжение и угрозу., parent: genre, aliases: []}
+  story.intrigue: {kind: aspect, label_ru: Интрига, definition: Сюжет поддерживает желание узнать что произошло или произойдёт дальше., parent: story, aliases: [сюжетная интрига]}
+  story.twists: {kind: aspect, label_ru: Сюжетные повороты, definition: Значимые изменения понимания ситуации или сюжета., parent: story, aliases: []}
+  story.logic: {kind: aspect, label_ru: Внутренняя логика, definition: События и правила истории воспринимаются последовательными и обоснованными., parent: story, aliases: []}
+  story.payoff: {kind: aspect, label_ru: Сюжетная отдача, definition: История удовлетворительно окупает заданные ожидания и развитие., parent: story, aliases: []}
+  story.problem_solving: {kind: aspect, label_ru: Решение задач, definition: История строится вокруг рационального технического или стратегического решения задач., parent: story, aliases: [problem_solving]}
+  narrative.time_loop: {kind: narrative, label_ru: Временная петля, definition: Персонажи переживают повторяющийся временной интервал., parent: narrative, aliases: [time_loop]}
+  pacing.fast: {kind: trait, label_ru: Быстрый темп, definition: События и сцены развиваются с высокой скоростью., parent: pacing, aliases: []}
+  pacing.moderate: {kind: trait, label_ru: Умеренный темп, definition: Темп развития событий воспринимается средним., parent: pacing, aliases: []}
+  pacing.slow: {kind: trait, label_ru: Медленный темп, definition: Низкая скорость развития действия как свойство произведения., parent: pacing, aliases: []}
+  humor.witty: {kind: trait, label_ru: Остроумный юмор, definition: Юмор опирается на остроумные реплики наблюдения или словесную игру., parent: humor, aliases: []}
+  humor.dark: {kind: trait, label_ru: Чёрный юмор, definition: Юмор использует мрачные или тяжёлые темы., parent: humor, aliases: []}
+  humor.absurd: {kind: trait, label_ru: Абсурдный юмор, definition: Юмор строится на намеренно нелепых или абсурдных ситуациях., parent: humor, aliases: []}
+  atmosphere.immersive: {kind: trait, label_ru: Погружающая атмосфера, definition: Мир и тон произведения создают выраженное ощущение погружения., parent: atmosphere, aliases: []}
+  characters.charisma: {kind: aspect, label_ru: Харизма персонажей, definition: Персонажи привлекательны и выразительны как экранные личности., parent: characters, aliases: []}
+  characters.depth: {kind: aspect, label_ru: Глубина персонажей, definition: Персонажи имеют заметную психологическую и мотивационную проработку., parent: characters, aliases: []}
+  visuals.strong: {kind: aspect, label_ru: Сильная визуальная часть, definition: Визуальная постановка является заметным достоинством произведения., parent: visuals, aliases: []}
+  reaction.cringe: {kind: reaction, label_ru: Кринж / испанский стыд, definition: Неприятное чувство неловкости или стыда за происходящее., parent: reaction, aliases: [кринж, испанский стыд]}
+  reaction.pacing_dragging: {kind: reaction, label_ru: Ощущение затянутости, definition: Ощущение что произведение движется медленнее чем оправдывает содержание., parent: reaction, aliases: [затянуто, душновато]}
+  reaction.excessive_darkness: {kind: reaction, label_ru: Избыточная мрачность, definition: Ощущение что мрачность ухудшает впечатление., parent: reaction, aliases: []}
+  content.violence: {kind: content, label_ru: Насилие, definition: В произведении присутствует заметное физическое насилие., parent: content, aliases: []}
+  content.gore: {kind: content, label_ru: Натуралистичное насилие, definition: В произведении присутствуют натуралистичные изображения травм или крови., parent: content, aliases: []}
+  content.sexual_content: {kind: content, label_ru: Сексуальный контент, definition: В произведении присутствует заметный сексуальный контент., parent: content, aliases: []}
+  content.strong_language: {kind: content, label_ru: Грубая лексика, definition: В произведении присутствует выраженная грубая или обсценная лексика., parent: content, aliases: []}
+  content.frightening: {kind: content, label_ru: Пугающий контент, definition: В произведении есть сцены или темы способные заметно пугать., parent: content, aliases: []}
+  entertainment.engaging: {kind: aspect, label_ru: Увлекательность, definition: Произведение удерживает внимание и воспринимается интересным., parent: entertainment, aliases: []}
+  emotion.impact: {kind: aspect, label_ru: Эмоциональное воздействие, definition: Произведение вызывает сильный эмоциональный отклик., parent: emotion, aliases: [emotional_impact]}
+  dialogue.strong: {kind: aspect, label_ru: Сильные диалоги, definition: Диалоги являются заметным достоинством произведения., parent: dialogue, aliases: []}
+  action.strong: {kind: aspect, label_ru: Сильный экшен, definition: Экшен-сцены являются заметным достоинством произведения., parent: action, aliases: []}
+  worldbuilding.strong: {kind: aspect, label_ru: Сильное построение мира, definition: Мир произведения имеет выразительные и последовательные правила и детали., parent: worldbuilding, aliases: [worldbuilding]}
+  tone.light: {kind: trait, label_ru: Лёгкий тон, definition: Общий тон произведения преимущественно лёгкий., parent: tone, aliases: []}
+  tone.serious: {kind: trait, label_ru: Серьёзный тон, definition: Общий тон произведения преимущественно серьёзный., parent: tone, aliases: []}
+  tone.dark: {kind: trait, label_ru: Мрачный тон, definition: Общий тон произведения преимущественно мрачный., parent: tone, aliases: []}
+  structure.ensemble: {kind: trait, label_ru: Ансамблевая структура, definition: История строится вокруг нескольких значимых персонажей как группы., parent: structure, aliases: []}
+  structure.mystery: {kind: trait, label_ru: Структура загадки, definition: Раскрытие загадки формирует основную структуру повествования., parent: structure, aliases: []}
