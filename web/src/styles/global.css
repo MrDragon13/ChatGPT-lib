@@ -88,7 +88,7 @@ select:focus-visible,
 }
 
 .target-switcher__link {
-  min-height: 36px !important;
+  min-height: 44px !important;
   padding: 0 11px;
   border-radius: 9px;
   color: var(--color-text-muted);
@@ -152,8 +152,8 @@ select:focus-visible,
 }
 
 .tmdb-credit a {
-  min-width: 42px;
-  min-height: 42px;
+  min-width: 44px;
+  min-height: 44px;
   display: grid;
   place-items: center;
 }
@@ -197,12 +197,7 @@ select:focus-visible,
     gap: 12px;
   }
 
-  .brand {
-    min-height: 38px !important;
-  }
-
   .site-header__primary a {
-    min-height: 38px;
     font-size: 0.88rem;
   }
 
@@ -211,7 +206,6 @@ select:focus-visible,
   }
 
   .target-switcher__link {
-    min-height: 34px !important;
     padding-inline: 8px;
     font-size: 0.76rem;
   }
