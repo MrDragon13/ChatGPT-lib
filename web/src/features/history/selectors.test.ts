@@ -114,6 +114,21 @@ describe("viewing history selector", () => {
     expect(items[0].activityAt).toBe("2026-09-28T12:00:00Z");
   });
 
+  it("does not treat viewing-only state as group history", () => {
+    const data = manifest([
+      work("invalid-group-viewing", {
+        groupSignals: {
+          couple: {
+            viewing: { status: "watched" },
+            history: [{ at: "2026-10-01T12:00:00Z" }],
+          },
+        },
+      }),
+    ]);
+
+    expect(buildHistoryItems(data, "couple")).toEqual([]);
+  });
+
   it("prefers the newest valid exact history timestamp over work provenance", () => {
     const data = manifest([
       work("exact", {
