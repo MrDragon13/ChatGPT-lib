@@ -149,6 +149,10 @@ affinities:
 explicit_preferences: []
 rules: []
 constraints: []
-summary: {}
+summary:
+  ratings_count: 53
+  reactions_count: 4
+  relations_count: 0
+  viewing_count: 110
 evidence:
   entity_count: 106
