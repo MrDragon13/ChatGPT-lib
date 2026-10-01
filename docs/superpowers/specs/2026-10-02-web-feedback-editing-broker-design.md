@@ -67,7 +67,7 @@ Only one GitHub account may use the write UI.
 
 1. The frontend opens the broker's GitHub login endpoint in a popup.
 2. The broker creates an OAuth `state` value and PKCE verifier/challenge.
-3. The broker stores the callback-verification material in a short-lived signed/HttpOnly cookie on the broker origin; no KV/D1 state store is required.
+3. The broker stores the callback-verification material in a short-lived authenticated cookie on the broker origin with `Secure`, `HttpOnly`, and `SameSite=Lax`; sensitive verifier material must not be exposed to frontend JavaScript, and no KV/D1 state store is required.
 4. GitHub redirects the popup to the broker callback.
 5. The broker verifies `state`, exchanges the authorization code server-side, and calls GitHub's authenticated user endpoint.
 6. The broker compares the returned numeric GitHub user id with `OWNER_GITHUB_USER_ID`.
@@ -103,6 +103,14 @@ CORS permits only the production Pages origin (`https://mrdragon13.github.io`). 
 The OAuth callback uses exact-origin `postMessage`; wildcard target origins are forbidden.
 
 The web app must not render feedback using raw HTML and must not introduce `dangerouslySetInnerHTML` for this feature.
+
+### Abuse protection
+
+The broker applies a small rate limit to authentication starts, feedback submissions, and operation-status polling. Limits are intentionally conservative for a single-owner application and are enforced before expensive GitHub API work where possible.
+
+Rate limiting is defense in depth, not an authorization mechanism. A request still needs a valid owner broker session for protected endpoints, and the broker still enforces the fixed repository/action allowlist after rate-limit checks.
+
+The implementation must avoid feedback-text or token values in rate-limit keys. Suitable keys are coarse network/client signals for unauthenticated auth-start protection and the verified owner/session identity for authenticated write/status limits.
 
 ## Broker API
 
@@ -291,6 +299,7 @@ HTTP-level broker responses:
 - `403` — authenticated GitHub user is not the configured owner;
 - `409 active_operation` — another write for the same work/target is still active;
 - `422` — malformed or unsupported edit payload;
+- `429` — rate limit exceeded; frontend pauses/reduces retries and shows a concise temporary-limit state;
 - `502/503` — temporary upstream GitHub failure.
 
 After PR creation, terminal operation failures are normalized as:
@@ -366,8 +375,10 @@ Cover at least:
 - owner GitHub user id -> session issued;
 - any other GitHub user id -> `403`;
 - invalid/missing OAuth state -> rejected;
+- OAuth verification cookie uses `Secure`, `HttpOnly`, and `SameSite=Lax` and expires quickly;
 - expired broker session -> `401`;
 - CORS does not allow arbitrary origins;
+- rate limiting protects auth starts, submissions, and excessive polling without logging feedback/token values;
 - rating range and `0.5` increment validation;
 - reaction enum validation;
 - all edit fields omitted -> `422`;
@@ -395,7 +406,8 @@ Cover at least:
 - save is disabled for a no-op;
 - pending operation does not replace published canonical values;
 - failed operation preserves published values;
-- published status triggers cache-busted manifest refresh.
+- published status triggers cache-busted manifest refresh;
+- `429` status polling/submission backs off instead of hammering the broker.
 
 ### Browser tests
 
