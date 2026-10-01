@@ -23,6 +23,13 @@ describe("loadManifest", () => {
     await expect(loadManifest()).resolves.toEqual(validManifest);
   });
 
+  it("adds a cache-busting revision only when requested", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => validManifest });
+    vi.stubGlobal("fetch", fetchMock);
+    await loadManifest("operation-123");
+    expect(String(fetchMock.mock.calls[0][0])).toContain("data/manifest.json?rev=operation-123");
+  });
+
   it("rejects an unsupported schema version in Russian", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ...validManifest, schema_version: 2 }) }));
     await expect(loadManifest()).rejects.toThrow("Версия данных медиатеки не поддерживается");
