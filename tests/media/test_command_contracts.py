@@ -17,6 +17,10 @@ def valid_set_interest_dict(priority: int | None = 3) -> dict:
     return {"schema_version": 1, "operation_id": VALID_UUID, "operation": "set_interest", "work_ref": {"id": "arrival-2016"}, "target": "primary", "state": "shortlist", "priority": priority}
 
 
+def valid_refresh_metadata_dict() -> dict:
+    return {"schema_version": 1, "operation_id": VALID_UUID, "operation": "refresh_metadata", "scope": "all_movies"}
+
+
 def test_record_feedback_requires_operation_id_and_known_fields():
     data = valid_record_feedback_dict(); data.pop("operation_id")
     with pytest.raises(CommandValidationError): parse_command(data)
@@ -69,3 +73,33 @@ def test_record_feedback_create_if_missing_is_typed_and_defaults_false():
 def test_feedback_term_membership_is_not_checked_by_command_schema():
     data = valid_record_feedback_dict(); data["target_updates"][0]["feedback"] = {"summary": "Specific semantic comment", "signals": [{"term": "nonexistent.future.term", "sentiment": "negative", "strength": 2, "source": "explicit", "confidence": "high"}]}
     command = parse_command(data); assert command.target_updates[0].feedback["signals"][0]["term"] == "nonexistent.future.term"
+
+
+def test_refresh_metadata_minimal_command_is_typed():
+    command = parse_command(valid_refresh_metadata_dict())
+    assert type(command).__name__ == "RefreshMetadataCommand"
+    assert command.scope == "all_movies"
+    assert command.tmdb_overrides == {}
+
+
+def test_refresh_metadata_is_strict_and_all_movies_only():
+    bad = valid_refresh_metadata_dict(); bad["scope"] = "all_works"
+    with pytest.raises(CommandValidationError): parse_command(bad)
+    bad = valid_refresh_metadata_dict(); bad["unexpected"] = True
+    with pytest.raises(CommandValidationError): parse_command(bad)
+
+
+def test_refresh_metadata_operation_id_is_canonical_uuid():
+    bad = valid_refresh_metadata_dict(); bad["operation_id"] = "NOT-A-UUID"
+    with pytest.raises(CommandValidationError): parse_command(bad)
+
+
+def test_refresh_metadata_override_requires_movie_and_positive_tmdb_id():
+    data = valid_refresh_metadata_dict(); data["tmdb_overrides"] = {"arrival-2016": {"media_type": "movie", "id": 329865}}
+    command = parse_command(data)
+    assert command.tmdb_overrides["arrival-2016"].media_type == "movie"
+    assert command.tmdb_overrides["arrival-2016"].id == 329865
+    bad = valid_refresh_metadata_dict(); bad["tmdb_overrides"] = {"arrival-2016": {"media_type": "tv", "id": 329865}}
+    with pytest.raises(CommandValidationError): parse_command(bad)
+    bad = valid_refresh_metadata_dict(); bad["tmdb_overrides"] = {"arrival-2016": {"media_type": "movie", "id": 0}}
+    with pytest.raises(CommandValidationError): parse_command(bad)
