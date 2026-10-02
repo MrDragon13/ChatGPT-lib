@@ -51,6 +51,7 @@ export type OperationPull = {
 
 export type WorkflowRun = {
   name?: string;
+  display_title?: string;
   status: string;
   conclusion: string | null;
   head_sha?: string;
@@ -290,13 +291,14 @@ export async function getOperationStatus(
   if (activeRun(commandRun)) return { ...base, status: "applying", actions_url: commandRun.html_url };
   if (failedConclusion(commandRun)) return { ...base, status: "failed", reason: "command_failed", actions_url: commandRun.html_url };
 
-  const checkRuns = await listWorkflowRuns(env, token, "media-check.yml", { branch });
-  const checkRun = checkRuns.at(0);
+  const checkRuns = await listWorkflowRuns(env, token, "media-check.yml", { branch, event: "workflow_dispatch" });
+  const checkRun = checkRuns.find((run) => run.head_sha === pull.head.sha);
   if (!checkRun || activeRun(checkRun)) return { ...base, status: "checking", actions_url: checkRun?.html_url ?? commandRun.html_url };
   if (failedConclusion(checkRun)) return { ...base, status: "failed", reason: "check_failed", actions_url: checkRun.html_url };
 
-  const mergeRuns = await listWorkflowRuns(env, token, "media-auto-merge.yml", { branch });
-  const mergeRun = mergeRuns.at(0);
+  const mergeRuns = await listWorkflowRuns(env, token, "media-auto-merge.yml", { event: "workflow_run" });
+  const mergeTitle = `Media Auto Merge · ${branch}`;
+  const mergeRun = mergeRuns.find((run) => run.display_title === mergeTitle);
   if (failedConclusion(mergeRun)) return { ...base, status: "failed", reason: "merge_failed", actions_url: mergeRun?.html_url };
   return { ...base, status: "checking", actions_url: mergeRun?.html_url ?? checkRun.html_url };
 }
