@@ -101,7 +101,7 @@ const worker = {
           return responseWithCors(jsonResponse({
             error: "github_operation_failed",
             operation_id: error.operationId,
-            stage: "github_operation",
+            stage: error.stage,
             upstream_status: error.upstreamStatus,
           }, error.upstreamStatus === 503 ? 503 : 502), origin, env);
         }
