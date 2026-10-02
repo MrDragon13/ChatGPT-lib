@@ -23,10 +23,10 @@ async function installBrokerMocks(page: Page) {
   let editedWorkId = "";
   let submittedRating = 9.5;
 
-  await page.route(`${brokerOrigin}/v1/auth/start`, async (route) => {
+  await page.context().route(`${brokerOrigin}/v1/auth/start`, async (route) => {
     await route.fulfill({
       contentType: "text/html",
-      body: `<!doctype html><body data-mock-broker="ready"><script>window.opener.postMessage({type:'media-broker-auth',token:'broker-token'}, '${appOrigin}');</script></body>`,
+      body: `<!doctype html><script>window.opener.postMessage({type:'media-broker-auth',token:'broker-token'}, '${appOrigin}'); window.close();</script>`,
     });
   });
 
@@ -76,8 +76,7 @@ test("owner can login, edit rating, observe progress and receive refreshed canon
   await expect(edit).toBeVisible();
   const popupPromise = page.waitForEvent("popup");
   await edit.click();
-  const popup = await popupPromise;
-  await expect(popup.locator("body[data-mock-broker='ready']")).toBeVisible();
+  await popupPromise;
 
   const rating = page.getByLabel("Оценка");
   await expect(rating).toBeVisible();
@@ -96,11 +95,11 @@ test("owner can login, edit rating, observe progress and receive refreshed canon
 
 test("expired session requires a new login before editing continues", async ({ page }) => {
   let loginCount = 0;
-  await page.route(`${brokerOrigin}/v1/auth/start`, async (route) => {
+  await page.context().route(`${brokerOrigin}/v1/auth/start`, async (route) => {
     loginCount += 1;
     await route.fulfill({
       contentType: "text/html",
-      body: `<!doctype html><body data-mock-broker="ready"><script>window.opener.postMessage({type:'media-broker-auth',token:'broker-token-${loginCount}'}, '${appOrigin}');</script></body>`,
+      body: `<!doctype html><script>window.opener.postMessage({type:'media-broker-auth',token:'broker-token-${loginCount}'}, '${appOrigin}'); window.close();</script>`,
     });
   });
   await page.route(`${brokerOrigin}/v1/feedback`, async (route) => {
@@ -115,8 +114,7 @@ test("expired session requires a new login before editing continues", async ({ p
   const edit = page.getByRole("button", { name: "Изменить впечатление" });
   let popup = page.waitForEvent("popup");
   await edit.click();
-  const firstPopup = await popup;
-  await expect(firstPopup.locator("body[data-mock-broker='ready']")).toBeVisible();
+  await popup;
   const rating = page.getByLabel("Оценка");
   await rating.fill((await rating.inputValue()) === "9" ? "8.5" : "9");
   await page.getByRole("button", { name: "Сохранить" }).click();
@@ -125,8 +123,7 @@ test("expired session requires a new login before editing continues", async ({ p
   await page.getByRole("button", { name: "Закрыть" }).click();
   popup = page.waitForEvent("popup");
   await edit.click();
-  const secondPopup = await popup;
-  await expect(secondPopup.locator("body[data-mock-broker='ready']")).toBeVisible();
+  await popup;
   await expect(page.getByLabel("Оценка")).toBeVisible();
   expect(loginCount).toBe(2);
 });
@@ -142,8 +139,7 @@ test("editor remains usable on mobile, keyboard accessible and reduced-motion sa
   await expect(edit).toBeFocused();
   const popup = page.waitForEvent("popup");
   await page.keyboard.press("Enter");
-  const popupPage = await popup;
-  await expect(popupPage.locator("body[data-mock-broker='ready']")).toBeVisible();
+  await popup;
 
   await expect(page.getByRole("form", { name: "Редактирование впечатления" })).toBeVisible();
   await expect(page.getByLabel("Оценка")).toBeVisible();
