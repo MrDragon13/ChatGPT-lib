@@ -17,8 +17,17 @@ function responseWithCors(response: Response, origin: string | null, env: Broker
   return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
 }
 
-async function authRateLimited(env: BrokerEnv, route: string): Promise<boolean> {
-  const result = await env.AUTH_RATE_LIMITER.limit({ key: `auth:${route}` });
+function clientNetworkSignal(request: Request): string {
+  return request.headers.get("cf-connecting-ip")?.trim() || "unknown";
+}
+
+async function authRateLimited(request: Request, env: BrokerEnv, route: string): Promise<boolean> {
+  const result = await env.AUTH_RATE_LIMITER.limit({ key: `auth:${route}:${clientNetworkSignal(request)}` });
+  return !result.success;
+}
+
+async function statusRateLimited(env: BrokerEnv, ownerId: string): Promise<boolean> {
+  const result = await env.AUTH_RATE_LIMITER.limit({ key: `status:${ownerId}` });
   return !result.success;
 }
 
@@ -51,7 +60,7 @@ const worker = {
     }
 
     if (request.method === "GET" && (url.pathname === "/v1/auth/start" || url.pathname === "/v1/auth/callback")) {
-      if (await authRateLimited(env, url.pathname)) {
+      if (await authRateLimited(request, env, url.pathname)) {
         return responseWithCors(jsonResponse({ error: "rate_limited" }, 429), origin, env);
       }
       try {
@@ -105,6 +114,9 @@ const worker = {
     if (operationMatch) {
       const ownerId = await authorizedOwner(request, env);
       if (!ownerId) return responseWithCors(jsonResponse({ error: "unauthorized" }, 401), origin, env);
+      if (await statusRateLimited(env, ownerId)) {
+        return responseWithCors(jsonResponse({ error: "rate_limited" }, 429), origin, env);
+      }
       try {
         const status = await getOperationStatus(operationMatch[1], env);
         return responseWithCors(jsonResponse(status), origin, env);
