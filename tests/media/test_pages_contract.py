@@ -58,3 +58,9 @@ def test_pages_build_exposes_only_optional_public_broker_url() -> None:
     assert "GITHUB_APP_PRIVATE_KEY" not in text
     assert "GITHUB_APP_CLIENT_SECRET" not in text
     assert "BROKER_SESSION_SECRET" not in text
+
+
+def test_pages_browser_gate_exercises_production_bundle_without_mock_broker() -> None:
+    text = _workflow_text()
+    assert "npm run test:e2e -- responsive.spec.ts motion.spec.ts a11y.spec.ts" in text
+    assert "edit-feedback.spec.ts" not in text
