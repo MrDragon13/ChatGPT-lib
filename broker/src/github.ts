@@ -5,6 +5,16 @@ const encoder = new TextEncoder();
 const API_VERSION = "2026-03-10";
 const USER_AGENT = "chatgpt-lib-media-broker";
 
+export type GitHubApiStage =
+  | "app_jwt"
+  | "installation_token"
+  | "github_api"
+  | "main_ref"
+  | "create_branch"
+  | "write_request"
+  | "create_pull_request"
+  | "delete_branch";
+
 function required(env: BrokerEnv, key: keyof BrokerEnv): string {
   const value = env[key];
   if (typeof value !== "string" || value.length === 0) throw new Error(`missing broker config: ${String(key)}`);
@@ -45,8 +55,9 @@ async function createAppJwt(env: BrokerEnv, now = new Date()): Promise<string> {
 export class GitHubApiError extends Error {
   constructor(
     message: string,
-    public readonly status: number,
+    public readonly status: number | null,
     public readonly requestId: string | null = null,
+    public readonly stage: GitHubApiStage = "github_api",
   ) {
     super(message);
     this.name = "GitHubApiError";
@@ -54,7 +65,18 @@ export class GitHubApiError extends Error {
 }
 
 export async function mintInstallationToken(env: BrokerEnv, now = new Date()): Promise<string> {
-  const jwt = await createAppJwt(env, now);
+  let jwt: string;
+  try {
+    jwt = await createAppJwt(env, now);
+  } catch (error) {
+    throw new GitHubApiError(
+      error instanceof Error ? error.message : "failed to create GitHub App JWT",
+      null,
+      null,
+      "app_jwt",
+    );
+  }
+
   const response = await fetch(
     `https://api.github.com/app/installations/${encodeURIComponent(required(env, "GITHUB_APP_INSTALLATION_ID"))}/access_tokens`,
     {
@@ -78,11 +100,21 @@ export async function mintInstallationToken(env: BrokerEnv, now = new Date()): P
     },
   );
   if (!response.ok) {
-    throw new GitHubApiError("failed to mint installation token", response.status, response.headers.get("x-github-request-id"));
+    throw new GitHubApiError(
+      "failed to mint installation token",
+      response.status,
+      response.headers.get("x-github-request-id"),
+      "installation_token",
+    );
   }
   const data = await response.json() as { token?: unknown };
   if (typeof data.token !== "string" || data.token.length === 0) {
-    throw new GitHubApiError("installation token missing from GitHub response", 502, response.headers.get("x-github-request-id"));
+    throw new GitHubApiError(
+      "installation token missing from GitHub response",
+      502,
+      response.headers.get("x-github-request-id"),
+      "installation_token",
+    );
   }
   return data.token;
 }
@@ -106,9 +138,9 @@ async function githubRequest(
   return fetch(`${repoBase(env)}${path}`, { ...init, headers });
 }
 
-async function expectJson<T>(response: Response, action: string): Promise<T> {
+async function expectJson<T>(response: Response, action: string, stage: GitHubApiStage = "github_api"): Promise<T> {
   if (!response.ok) {
-    throw new GitHubApiError(action, response.status, response.headers.get("x-github-request-id"));
+    throw new GitHubApiError(action, response.status, response.headers.get("x-github-request-id"), stage);
   }
   return response.json() as Promise<T>;
 }
@@ -118,13 +150,22 @@ export async function getRepoJson<T>(
   token: string,
   path: string,
   action: string,
+  stage: GitHubApiStage = "github_api",
 ): Promise<T> {
-  return expectJson<T>(await githubRequest(env, token, path), action);
+  return expectJson<T>(await githubRequest(env, token, path), action, stage);
 }
 
 export async function getMainSha(env: BrokerEnv, token: string): Promise<string> {
-  const data = await getRepoJson<{ object?: { sha?: unknown } }>(env, token, "/git/ref/heads/main", "failed to read main ref");
-  if (typeof data.object?.sha !== "string" || !data.object.sha) throw new GitHubApiError("main ref response missing sha", 502);
+  const data = await getRepoJson<{ object?: { sha?: unknown } }>(
+    env,
+    token,
+    "/git/ref/heads/main",
+    "failed to read main ref",
+    "main_ref",
+  );
+  if (typeof data.object?.sha !== "string" || !data.object.sha) {
+    throw new GitHubApiError("main ref response missing sha", 502, null, "main_ref");
+  }
   return data.object.sha;
 }
 
@@ -133,7 +174,14 @@ export async function createBranch(env: BrokerEnv, token: string, branch: string
     method: "POST",
     body: JSON.stringify({ ref: `refs/heads/${branch}`, sha }),
   });
-  if (!response.ok) throw new GitHubApiError("failed to create operation branch", response.status, response.headers.get("x-github-request-id"));
+  if (!response.ok) {
+    throw new GitHubApiError(
+      "failed to create operation branch",
+      response.status,
+      response.headers.get("x-github-request-id"),
+      "create_branch",
+    );
+  }
 }
 
 export async function putRequestFile(
@@ -152,7 +200,14 @@ export async function putRequestFile(
       branch,
     }),
   });
-  if (!response.ok) throw new GitHubApiError("failed to create operation request", response.status, response.headers.get("x-github-request-id"));
+  if (!response.ok) {
+    throw new GitHubApiError(
+      "failed to create operation request",
+      response.status,
+      response.headers.get("x-github-request-id"),
+      "write_request",
+    );
+  }
 }
 
 export async function createOperationPullRequest(
@@ -171,14 +226,25 @@ export async function createOperationPullRequest(
       base: "main",
     }),
   });
-  const data = await expectJson<{ number?: unknown }>(response, "failed to create operation pull request");
-  if (typeof data.number !== "number") throw new GitHubApiError("pull request response missing number", 502);
+  const data = await expectJson<{ number?: unknown }>(
+    response,
+    "failed to create operation pull request",
+    "create_pull_request",
+  );
+  if (typeof data.number !== "number") {
+    throw new GitHubApiError("pull request response missing number", 502, null, "create_pull_request");
+  }
   return data.number;
 }
 
 export async function deleteBranch(env: BrokerEnv, token: string, branch: string): Promise<void> {
   const response = await githubRequest(env, token, `/git/refs/heads/${branch}`, { method: "DELETE" });
   if (!response.ok && response.status !== 404) {
-    throw new GitHubApiError("failed to clean up operation branch", response.status, response.headers.get("x-github-request-id"));
+    throw new GitHubApiError(
+      "failed to clean up operation branch",
+      response.status,
+      response.headers.get("x-github-request-id"),
+      "delete_branch",
+    );
   }
 }
