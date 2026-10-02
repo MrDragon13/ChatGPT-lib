@@ -32,7 +32,7 @@ explicit_preferences: []
 rules: []
 constraints: []
 summary:
-  ratings_count: 5
+  ratings_count: 6
   reactions_count: 5
   relations_count: 0
   viewing_count: 5

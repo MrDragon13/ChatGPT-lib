@@ -1,0 +1,16 @@
+{
+  "applied_at": "2026-10-02T23:34:06.247834+00:00",
+  "changed_entities": [
+    "man-from-uncle-2015"
+  ],
+  "changed_files": [
+    "media/data/works/man-from-uncle-2015.yaml",
+    "media/generated/index.jsonl",
+    "media/generated/profiles/couple.yaml",
+    "media/generated/profiles/partner.yaml",
+    ".media/operations/9e0090ff-8ace-4f85-a5f4-da4a00fc2439.json"
+  ],
+  "operation": "record_viewing_feedback",
+  "operation_id": "9e0090ff-8ace-4f85-a5f4-da4a00fc2439",
+  "status": "applied"
+}
