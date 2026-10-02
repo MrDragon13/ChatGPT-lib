@@ -25,6 +25,18 @@ def test_auto_merge_starts_after_command_and_waits_for_authoritative_check():
     assert "workflow_dispatch" in text
     assert "CHECKED_SHA" in text
     assert "head_sha" in text
-    assert "actions: read" in text
+    assert "actions: write" in text
     assert "run-name:" in text
     assert "github.event.workflow_run.head_branch" in text
+
+
+def test_auto_merge_dispatches_pages_for_exact_merge_sha():
+    auto_merge = _text("media-auto-merge.yml")
+    pages = _text("media-pages.yml")
+
+    assert "MERGE_SHA" in auto_merge
+    assert 'gh workflow run media-pages.yml --ref main -f expected_sha="$MERGE_SHA"' in auto_merge
+    assert "expected_sha:" in pages
+    assert "inputs.expected_sha" in pages
+    assert "run-name:" in pages
+    assert "github.sha" in pages
