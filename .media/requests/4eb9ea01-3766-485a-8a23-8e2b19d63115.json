@@ -1,1 +1,0 @@
-{"schema_version":1,"operation_id":"4eb9ea01-3766-485a-8a23-8e2b19d63115","operation":"record_viewing_feedback","work_ref":{"id":"groundhog-day-1993"},"create_if_missing":false,"target_updates":[{"target":"partner","rating":{"score":7,"source":"explicit","confidence":"exact"}}]}
