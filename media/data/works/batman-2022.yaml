@@ -34,12 +34,23 @@ viewer_signals:
         rating: *id001
   partner:
     rating: &id002
-      score: 7
+      score: 7.5
       source: explicit
       confidence: exact
     history:
     - at: '2026-10-02T16:42:39.832187Z'
       previous: {}
+      current:
+        rating:
+          score: 7
+          source: explicit
+          confidence: exact
+    - at: '2026-10-02T20:22:09.484153Z'
+      previous:
+        rating:
+          score: 7
+          source: explicit
+          confidence: exact
       current:
         rating: *id002
 provenance:
