@@ -1,4 +1,4 @@
-import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 import { AboutCredits } from "../components/AboutCredits";
@@ -6,6 +6,8 @@ import { TargetSwitcher } from "../components/TargetSwitcher";
 import { loadManifest } from "../data/client";
 import type { TargetId, WebManifest } from "../data/types";
 import { historyHref, libraryHref, resolveTarget } from "./router";
+
+const MANIFEST_REFRESH_THROTTLE_MS = 15_000;
 
 type AppContextValue = {
   manifest: WebManifest;
@@ -25,12 +27,16 @@ export function AppShell({ children }: { children: ReactNode }) {
   const location = useLocation();
   const [manifest, setManifest] = useState<WebManifest | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const lastManifestLoadAt = useRef(0);
 
   useEffect(() => {
     let active = true;
     loadManifest()
       .then((value) => {
-        if (active) setManifest(value);
+        if (active) {
+          setManifest(value);
+          lastManifestLoadAt.current = Date.now();
+        }
       })
       .catch((reason: unknown) => {
         if (active) setError(reason instanceof Error ? reason.message : "Не удалось загрузить медиатеку");
@@ -43,6 +49,43 @@ export function AppShell({ children }: { children: ReactNode }) {
   const refreshManifest = useCallback(async (cacheBust?: string) => {
     const value = await loadManifest(cacheBust);
     setManifest(value);
+    lastManifestLoadAt.current = Date.now();
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    let inFlight = false;
+
+    const refreshIfStale = async () => {
+      if (cancelled || inFlight) return;
+      if (Date.now() - lastManifestLoadAt.current < MANIFEST_REFRESH_THROTTLE_MS) return;
+      inFlight = true;
+      try {
+        const value = await loadManifest();
+        if (cancelled) return;
+        setManifest(value);
+        lastManifestLoadAt.current = Date.now();
+      } catch {
+        // Keep the last good manifest when a background refresh fails.
+      } finally {
+        inFlight = false;
+      }
+    };
+
+    const onFocus = () => {
+      void refreshIfStale();
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") void refreshIfStale();
+    };
+
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
   }, []);
 
   const target = useMemo(() => {
