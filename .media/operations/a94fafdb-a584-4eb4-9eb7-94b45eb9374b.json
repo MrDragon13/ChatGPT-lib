@@ -1,0 +1,16 @@
+{
+  "applied_at": "2026-10-02T22:33:22.759611+00:00",
+  "changed_entities": [
+    "game-night-2018"
+  ],
+  "changed_files": [
+    "media/data/works/game-night-2018.yaml",
+    "media/generated/index.jsonl",
+    "media/generated/profiles/couple.yaml",
+    "media/generated/profiles/partner.yaml",
+    ".media/operations/a94fafdb-a584-4eb4-9eb7-94b45eb9374b.json"
+  ],
+  "operation": "record_viewing_feedback",
+  "operation_id": "a94fafdb-a584-4eb4-9eb7-94b45eb9374b",
+  "status": "applied"
+}
