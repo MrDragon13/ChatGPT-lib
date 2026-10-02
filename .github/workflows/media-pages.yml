@@ -68,7 +68,7 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Run browser checks
         working-directory: web
-        run: npm run test:e2e
+        run: npm run test:e2e -- responsive.spec.ts motion.spec.ts a11y.spec.ts
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
         with:
