@@ -318,11 +318,13 @@ export function FeedbackEditor({
     if (submitting || (pending && pending.status !== "failed") || validationError || !dirty) return;
     setSubmitting(true);
     setMessage(null);
-    try {
-      const result = await broker.submitFeedback({ work_id: workId, target, ...change });
+
+    const input: FeedbackEditInput = { work_id: workId, target, ...change };
+    const beginPending = (operationId: string, status: OperationStatusResponse["status"]) => {
       setRefreshCompleted(false);
-      setPending({ operationId: result.operation_id, status: result.status, baseline: current, proposed: change });
-    } catch (error) {
+      setPending({ operationId, status, baseline: current, proposed: change });
+    };
+    const showFailure = (error: unknown) => {
       if (error instanceof BrokerHttpError && error.status === 409) {
         setMessage("Изменение уже проверяется");
       } else if (error instanceof BrokerHttpError && error.status === 401) {
@@ -331,6 +333,31 @@ export function FeedbackEditor({
         setMessage(submissionFailureMessage(error));
       } else {
         setMessage("Не удалось отправить изменение. Попробуйте ещё раз.");
+      }
+    };
+
+    try {
+      const result = await broker.submitFeedback(input);
+      beginPending(result.operation_id, result.status);
+    } catch (error) {
+      if (error instanceof TypeError) {
+        try {
+          const result = await broker.submitFeedback(input);
+          beginPending(result.operation_id, result.status);
+        } catch (retryError) {
+          if (
+            retryError instanceof BrokerHttpError &&
+            retryError.status === 409 &&
+            retryError.code === "active_operation" &&
+            retryError.operationId
+          ) {
+            beginPending(retryError.operationId, "submitted");
+          } else {
+            showFailure(retryError);
+          }
+        }
+      } else {
+        showFailure(error);
       }
     } finally {
       setSubmitting(false);

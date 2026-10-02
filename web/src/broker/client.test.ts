@@ -33,6 +33,28 @@ describe("broker client", () => {
     expect(JSON.parse(String(init?.body))).toEqual({ work_id: "game-night-2018", target: "primary", rating: 8.5 });
   });
 
+  it("preserves active operation metadata from a 409 response", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({
+      error: "active_operation",
+      operation_id: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
+      pr_number: 37,
+    }), {
+      status: 409,
+      headers: { "content-type": "application/json" },
+    }));
+
+    await expect(submitFeedback("https://broker.example", "broker-token", {
+      work_id: "game-night-2018",
+      target: "partner",
+      rating: 7,
+    })).rejects.toMatchObject({
+      status: 409,
+      code: "active_operation",
+      operationId: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
+      prNumber: 37,
+    });
+  });
+
   it("surfaces 401 as a typed broker error", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ error: "unauthorized" }), {
       status: 401,

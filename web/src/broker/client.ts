@@ -6,6 +6,8 @@ export class BrokerHttpError extends Error {
     public readonly code: string,
     public readonly stage: string | null = null,
     public readonly upstreamStatus: number | null = null,
+    public readonly operationId: string | null = null,
+    public readonly prNumber: number | null = null,
   ) {
     super(code);
     this.name = "BrokerHttpError";
@@ -21,6 +23,8 @@ async function requestJson<T>(url: string, token: string, init: RequestInit = {}
     error?: unknown;
     stage?: unknown;
     upstream_status?: unknown;
+    operation_id?: unknown;
+    pr_number?: unknown;
   } & T;
   if (!response.ok) {
     throw new BrokerHttpError(
@@ -28,6 +32,8 @@ async function requestJson<T>(url: string, token: string, init: RequestInit = {}
       typeof payload.error === "string" ? payload.error : "broker_error",
       typeof payload.stage === "string" ? payload.stage : null,
       typeof payload.upstream_status === "number" ? payload.upstream_status : null,
+      typeof payload.operation_id === "string" ? payload.operation_id : null,
+      typeof payload.pr_number === "number" ? payload.pr_number : null,
     );
   }
   return payload;
