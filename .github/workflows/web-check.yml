@@ -46,7 +46,14 @@ jobs:
         run: npm run typecheck
       - name: Build web
         working-directory: web
+        env:
+          VITE_MEDIA_BROKER_URL: https://broker.test
         run: npm run build
+      - name: Assert broker URL is embedded
+        working-directory: web
+        env:
+          EXPECTED_BROKER_URL: https://broker.test
+        run: node ./scripts/assert-broker-build-env.mjs dist
       - name: Scan static artifact
         working-directory: web
         run: npm run scan:dist
