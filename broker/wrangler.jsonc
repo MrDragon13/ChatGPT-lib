@@ -8,6 +8,17 @@
     "REPO_NAME": "ChatGPT-lib",
     "ALLOWED_ORIGIN": "https://mrdragon13.github.io"
   },
+  "secrets": {
+    "required": [
+      "GITHUB_APP_ID",
+      "GITHUB_APP_CLIENT_ID",
+      "GITHUB_APP_INSTALLATION_ID",
+      "OWNER_GITHUB_USER_ID",
+      "GITHUB_APP_PRIVATE_KEY",
+      "GITHUB_APP_CLIENT_SECRET",
+      "BROKER_SESSION_SECRET"
+    ]
+  },
   "ratelimits": [
     {
       "name": "AUTH_RATE_LIMITER",
