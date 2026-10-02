@@ -83,16 +83,19 @@ function renderPage(target: "primary" | "couple") {
 }
 
 describe("personal-first target editing", () => {
-  it("uses Я consistently for the primary signal", () => {
+  it("uses Я consistently for the primary signal without a redundant current-context badge", () => {
     renderPage("primary");
     expect(screen.getByRole("heading", { name: "Я" })).toBeInTheDocument();
+    expect(screen.queryByText("Текущий контекст")).not.toBeInTheDocument();
   });
 
-  it("opens a target-named editor outside the compact signal panel", () => {
+  it("opens a target-named editor outside the compact signal panel with a quiet editing state", () => {
     renderPage("primary");
 
     const primaryPanel = screen.getByRole("heading", { name: "Я" }).closest(".signal-panel");
+    const partnerPanel = screen.getByRole("heading", { name: "Партнёр" }).closest(".signal-panel");
     expect(primaryPanel).not.toBeNull();
+    expect(partnerPanel).not.toBeNull();
 
     const edit = within(primaryPanel as HTMLElement).getByRole("button", { name: "Изменить моё впечатление" });
     expect(edit).toHaveTextContent("Изменить");
@@ -105,6 +108,10 @@ describe("personal-first target editing", () => {
     expect(screen.getByLabelText("Реакция")).toHaveValue("liked");
     expect(screen.getByLabelText("Отзыв")).toHaveValue("Умная фантастика без суеты.");
     expect(form.querySelector(".feedback-form__heading")).toHaveTextContent("Сохранится в: Я");
+
+    expect(within(primaryPanel as HTMLElement).queryByRole("button", { name: /Редактируется/ })).not.toBeInTheDocument();
+    expect(within(primaryPanel as HTMLElement).getByText("Редактируется")).toHaveClass("signal-panel__editing-status");
+    expect(within(partnerPanel as HTMLElement).getByRole("button", { name: "Добавить впечатление партнёра" })).toBeDisabled();
   });
 
   it("keeps an empty Вместе record distinct and copies Я only on explicit request", async () => {
@@ -121,6 +128,7 @@ describe("personal-first target editing", () => {
     expect(form.querySelector(".feedback-form__heading")).toHaveTextContent("Сохранится в: Вместе");
     expect(screen.getByLabelText("Оценка")).toHaveValue(null);
     expect(screen.getByLabelText("Реакция")).toHaveValue("unknown");
+    expect(screen.getByRole("option", { name: "Без реакции" })).toBeInTheDocument();
     expect(screen.getByLabelText("Отзыв")).toHaveValue("");
 
     fireEvent.click(screen.getByRole("button", { name: "Взять «Я» за основу" }));
