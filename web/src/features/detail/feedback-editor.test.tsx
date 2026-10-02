@@ -149,7 +149,7 @@ describe("FeedbackEditor", () => {
     expect(screen.getByText("Изменение отправлено")).toBeInTheDocument();
 
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(2_999);
+      await vi.advanceTimersByTimeAsync(4_999);
     });
     expect(getOperationStatus).not.toHaveBeenCalled();
 

@@ -33,7 +33,10 @@ export async function loadManifest(cacheBust?: string): Promise<WebManifest> {
   const url = cacheBust ? `${baseUrl}?rev=${encodeURIComponent(cacheBust)}` : baseUrl;
   let response: Response;
   try {
-    response = await fetch(url, { headers: { Accept: "application/json" } });
+    response = await fetch(url, {
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    });
   } catch {
     throw new ManifestLoadError("Не удалось загрузить медиатеку", "load_failed");
   }

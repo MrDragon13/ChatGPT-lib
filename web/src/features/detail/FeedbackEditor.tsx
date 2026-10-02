@@ -159,7 +159,7 @@ export function FeedbackEditor({
   templateSourceTarget,
   broker,
   refreshManifest,
-  pollIntervalMs = 3_000,
+  pollIntervalMs = 5_000,
   open: controlledOpen,
   onOpenChange,
   hideTrigger = false,
@@ -207,15 +207,20 @@ export function FeedbackEditor({
   useEffect(() => {
     if (!pending || pending.status === "failed" || pending.status === "published") return;
     let cancelled = false;
+    let inFlight = false;
     let timer: number | undefined;
 
     const poll = async () => {
+      if (cancelled || inFlight) return;
+      timer = undefined;
+      inFlight = true;
       try {
         const status = await broker.getOperationStatus(pending.operationId);
         if (cancelled) return;
         setPending((value) => value?.operationId === pending.operationId
           ? { ...value, status: status.status }
           : value);
+        setMessage(null);
         if (status.status === "published") {
           try {
             await refreshManifest(pending.operationId);
@@ -235,12 +240,31 @@ export function FeedbackEditor({
         }
         setMessage("Не удалось проверить статус. Повторяем…");
         timer = window.setTimeout(poll, Math.min(pollIntervalMs * 2, 10_000));
+      } finally {
+        inFlight = false;
       }
     };
 
+    const pollNow = () => {
+      if (cancelled || inFlight) return;
+      if (timer !== undefined) {
+        window.clearTimeout(timer);
+        timer = undefined;
+      }
+      void poll();
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") pollNow();
+    };
+
+    window.addEventListener("focus", pollNow);
+    document.addEventListener("visibilitychange", onVisibilityChange);
     timer = window.setTimeout(poll, pollIntervalMs);
     return () => {
       cancelled = true;
+      window.removeEventListener("focus", pollNow);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
       if (timer !== undefined) window.clearTimeout(timer);
     };
   }, [pending?.operationId, broker.getOperationStatus, refreshManifest, pollIntervalMs]);
