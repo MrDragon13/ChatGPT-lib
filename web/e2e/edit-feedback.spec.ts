@@ -19,7 +19,13 @@ async function openFirstPrimaryDetail(page: Page): Promise<string> {
 }
 
 function primaryFeedbackCard(page: Page): Locator {
-  return page.getByRole("heading", { name: "Я" }).locator("xpath=ancestor::article[1]");
+  return page.locator(".signal-panel").filter({
+    has: page.getByRole("heading", { name: "Я", exact: true }),
+  }).first();
+}
+
+function primaryFeedbackForm(page: Page): Locator {
+  return page.getByRole("form", { name: "Редактирование впечатления — Я" });
 }
 
 async function installBrokerMocks(page: Page) {
@@ -77,24 +83,36 @@ test("owner can login, edit rating, observe progress and receive refreshed canon
   const workId = await openFirstPrimaryDetail(page);
   const card = primaryFeedbackCard(page);
 
-  const edit = card.getByRole("button", { name: "Изменить впечатление" });
+  const edit = card.getByRole("button", { name: "Изменить моё впечатление" });
   await expect(edit).toBeVisible();
   const popupPromise = page.waitForEvent("popup");
   await edit.click();
   await popupPromise;
 
-  const rating = card.getByLabel("Оценка");
+  const form = primaryFeedbackForm(page);
+  const panel = page.locator(".feedback-editor-panel");
+  await expect(form).toBeVisible();
+  await expect(panel).toBeVisible();
+  await expect(card.locator("form")).toHaveCount(0);
+
+  const panelBox = await panel.boundingBox();
+  const gridBox = await page.locator(".signal-grid").boundingBox();
+  expect(panelBox).not.toBeNull();
+  expect(gridBox).not.toBeNull();
+  expect(Math.abs((panelBox?.width ?? 0) - (gridBox?.width ?? 0))).toBeLessThanOrEqual(2);
+
+  const rating = form.getByLabel("Оценка");
   await expect(rating).toBeVisible();
   const current = await rating.inputValue();
   const next = current === "9.5" ? "9" : "9.5";
   await rating.fill(next);
-  await card.getByRole("button", { name: "Сохранить" }).click();
+  await form.getByRole("button", { name: "Сохранить" }).click();
 
-  await expect(card.getByText("Изменение отправлено")).toBeVisible();
-  await expect(card.getByText("Проверяется")).toBeVisible({ timeout: 8_000 });
-  await expect(card.getByText("Опубликовано")).toBeVisible({ timeout: 8_000 });
+  await expect(page.getByText("Изменение отправлено")).toBeVisible();
+  await expect(page.getByText("Проверяется")).toBeVisible({ timeout: 8_000 });
+  await expect(page.getByText("Опубликовано")).toBeVisible({ timeout: 8_000 });
   await expect(page.getByText(`${next}/10`)).toBeVisible({ timeout: 8_000 });
-  await expect(card.getByText("Опубликовано")).toHaveCount(0, { timeout: 8_000 });
+  await expect(page.getByText("Опубликовано")).toHaveCount(0, { timeout: 8_000 });
   expect(workId).toBeTruthy();
 });
 
@@ -117,20 +135,22 @@ test("expired session requires a new login before editing continues", async ({ p
 
   await openFirstPrimaryDetail(page);
   const card = primaryFeedbackCard(page);
-  const edit = card.getByRole("button", { name: "Изменить впечатление" });
+  const edit = card.getByRole("button", { name: "Изменить моё впечатление" });
   let popup = page.waitForEvent("popup");
   await edit.click();
   await popup;
-  const rating = card.getByLabel("Оценка");
+  let form = primaryFeedbackForm(page);
+  const rating = form.getByLabel("Оценка");
   await rating.fill((await rating.inputValue()) === "9" ? "8.5" : "9");
-  await card.getByRole("button", { name: "Сохранить" }).click();
-  await expect(card.getByText("Сессия истекла. Войдите через GitHub снова.")).toBeVisible();
+  await form.getByRole("button", { name: "Сохранить" }).click();
+  await expect(page.getByText("Сессия истекла. Войдите через GitHub снова.")).toBeVisible();
 
-  await card.getByRole("button", { name: "Закрыть" }).click();
+  await form.getByRole("button", { name: "Отмена" }).click();
   popup = page.waitForEvent("popup");
   await edit.click();
   await popup;
-  await expect(card.getByLabel("Оценка")).toBeVisible();
+  form = primaryFeedbackForm(page);
+  await expect(form.getByLabel("Оценка")).toBeVisible();
   expect(loginCount).toBe(2);
 });
 
@@ -141,17 +161,19 @@ test("editor remains usable on mobile, keyboard accessible and reduced-motion sa
   await openFirstPrimaryDetail(page);
   const card = primaryFeedbackCard(page);
 
-  const edit = card.getByRole("button", { name: "Изменить впечатление" });
+  const edit = card.getByRole("button", { name: "Изменить моё впечатление" });
   await edit.focus();
   await expect(edit).toBeFocused();
   const popup = page.waitForEvent("popup");
   await page.keyboard.press("Enter");
   await popup;
 
-  await expect(card.getByRole("form", { name: "Редактирование впечатления" })).toBeVisible();
-  await expect(card.getByLabel("Оценка")).toBeVisible();
-  await expect(card.getByLabel("Впечатление")).toBeVisible();
-  await expect(card.getByLabel("Отзыв")).toBeVisible();
+  const form = primaryFeedbackForm(page);
+  await expect(form).toBeVisible();
+  await expect(form.getByLabel("Оценка")).toBeVisible();
+  await expect(form.getByLabel("Реакция")).toBeVisible();
+  await expect(form.getByLabel("Отзыв")).toBeVisible();
+  await expect(card.locator("form")).toHaveCount(0);
   await expect(page.locator(".detail-hero")).toHaveAttribute("data-motion", "reduced");
 
   const result = await new AxeBuilder({ page })
@@ -165,6 +187,6 @@ test("broker failure never breaks public read-only content", async ({ page }) =>
   await openFirstPrimaryDetail(page);
   await expect(page.locator(".detail-page")).toBeVisible();
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-  await primaryFeedbackCard(page).getByRole("button", { name: "Изменить впечатление" }).click();
+  await primaryFeedbackCard(page).getByRole("button", { name: "Изменить моё впечатление" }).click();
   await expect(page.locator(".detail-page")).toBeVisible();
 });

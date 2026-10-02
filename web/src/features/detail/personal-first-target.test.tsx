@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 
@@ -88,23 +88,47 @@ describe("personal-first target editing", () => {
     expect(screen.getByRole("heading", { name: "Я" })).toBeInTheDocument();
   });
 
+  it("opens a target-named editor outside the compact signal panel", () => {
+    renderPage("primary");
+
+    const primaryPanel = screen.getByRole("heading", { name: "Я" }).closest(".signal-panel");
+    expect(primaryPanel).not.toBeNull();
+
+    const edit = within(primaryPanel as HTMLElement).getByRole("button", { name: "Изменить моё впечатление" });
+    expect(edit).toHaveTextContent("Изменить");
+    fireEvent.click(edit);
+
+    const form = screen.getByRole("form", { name: "Редактирование впечатления — Я" });
+    expect(primaryPanel).not.toContainElement(form);
+    expect(form.closest(".feedback-editor-panel")).not.toBeNull();
+    expect(screen.getByLabelText("Оценка")).toHaveValue(8.5);
+    expect(screen.getByLabelText("Реакция")).toHaveValue("liked");
+    expect(screen.getByLabelText("Отзыв")).toHaveValue("Умная фантастика без суеты.");
+    expect(form.querySelector(".feedback-form__heading")).toHaveTextContent("Сохранится в: Я");
+  });
+
   it("keeps an empty Вместе record distinct and copies Я only on explicit request", async () => {
     const submitFeedback = renderPage("couple");
 
     expect(screen.getByText("Пока нет общего впечатления.")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Добавить общее впечатление" }));
+    const couplePanel = screen.getByRole("heading", { name: "Вместе" }).closest(".signal-panel");
+    expect(couplePanel).not.toBeNull();
+    const add = within(couplePanel as HTMLElement).getByRole("button", { name: "Добавить общее впечатление" });
+    expect(add).toHaveTextContent("Добавить");
+    fireEvent.click(add);
 
-    expect(screen.getByText("Сохранится в: Вместе")).toBeInTheDocument();
+    const form = screen.getByRole("form", { name: "Редактирование впечатления — Вместе" });
+    expect(form.querySelector(".feedback-form__heading")).toHaveTextContent("Сохранится в: Вместе");
     expect(screen.getByLabelText("Оценка")).toHaveValue(null);
-    expect(screen.getByLabelText("Впечатление")).toHaveValue("unknown");
+    expect(screen.getByLabelText("Реакция")).toHaveValue("unknown");
     expect(screen.getByLabelText("Отзыв")).toHaveValue("");
 
     fireEvent.click(screen.getByRole("button", { name: "Взять «Я» за основу" }));
 
     expect(screen.getByText("Взято за основу: Я")).toBeInTheDocument();
-    expect(screen.getByText("Сохранится в: Вместе")).toBeInTheDocument();
+    expect(form.querySelector(".feedback-form__heading")).toHaveTextContent("Сохранится в: Вместе");
     expect(screen.getByLabelText("Оценка")).toHaveValue(8.5);
-    expect(screen.getByLabelText("Впечатление")).toHaveValue("liked");
+    expect(screen.getByLabelText("Реакция")).toHaveValue("liked");
     expect(screen.getByLabelText("Отзыв")).toHaveValue("Умная фантастика без суеты.");
 
     fireEvent.change(screen.getByLabelText("Оценка"), { target: { value: "9" } });

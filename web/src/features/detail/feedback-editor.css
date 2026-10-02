@@ -1,7 +1,6 @@
 .feedback-editor {
-  margin-top: 18px;
-  padding-top: 18px;
-  border-top: 1px solid rgb(243 240 232 / 0.1);
+  margin: 0;
+  padding: 0;
 }
 
 .feedback-editor__bar {
@@ -9,6 +8,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 20px;
+  margin-bottom: 18px;
 }
 
 .feedback-editor__trigger,
@@ -45,6 +45,7 @@
   display: grid;
   justify-items: end;
   gap: 3px;
+  margin-left: auto;
   color: var(--color-text-muted);
   font-size: 0.76rem;
   text-align: right;
@@ -61,59 +62,71 @@
 }
 
 .feedback-editor__message {
-  margin: 12px 0 0;
+  margin: 0 0 18px;
   color: var(--color-text-muted);
   font-size: 0.82rem;
 }
 
 .feedback-form {
   display: grid;
-  gap: 20px;
-  margin-top: 22px;
-  padding-top: 22px;
-  border-top: 1px solid rgb(243 240 232 / 0.1);
+  gap: 24px;
+  margin: 0;
 }
 
-.feedback-form__context {
-  display: grid;
-  gap: 12px;
-  padding: 14px;
-  border: 1px solid rgb(243 240 232 / 0.12);
-  background: rgb(243 240 232 / 0.035);
+.feedback-form__heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgb(243 240 232 / 0.12);
 }
 
-.feedback-form__context > div:first-child {
-  display: grid;
-  gap: 4px;
+.feedback-form__heading h3 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: clamp(1.1rem, 2vw, 1.45rem);
+  font-weight: 590;
+  letter-spacing: -0.02em;
 }
 
-.feedback-form__context strong {
-  font-size: 0.9rem;
+.feedback-form__heading > span {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.feedback-form__heading > span strong {
+  color: var(--color-text);
   font-weight: 590;
 }
 
-.feedback-form__context span,
-.feedback-template p {
-  color: var(--color-text-muted);
-  font-size: 0.76rem;
-}
-
 .feedback-template {
-  display: grid;
-  gap: 10px;
-  padding-top: 12px;
-  border-top: 1px solid rgb(243 240 232 / 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
 }
 
 .feedback-template p {
   margin: 0;
-  line-height: 1.45;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.feedback-form .feedback-template__action {
+  min-height: 38px;
+  flex: 0 0 auto;
+  padding: 0 13px;
+  color: var(--color-text);
 }
 
 .feedback-form__row {
   display: grid;
-  grid-template-columns: minmax(0, 0.4fr) minmax(220px, 0.6fr);
-  gap: 18px;
+  grid-template-columns: minmax(150px, 0.32fr) minmax(260px, 0.68fr);
+  gap: 20px;
+  max-width: 760px;
 }
 
 .feedback-form label {
@@ -131,22 +144,47 @@
 .feedback-form select,
 .feedback-form textarea {
   width: 100%;
-  border: 1px solid rgb(243 240 232 / 0.16);
+  border: 1px solid rgb(243 240 232 / 0.18);
   border-radius: 0;
   background: var(--color-surface-soft);
   color: var(--color-text);
   font: inherit;
+  transition: border-color 140ms ease, background 140ms ease;
+}
+
+.feedback-form input:hover:not(:disabled),
+.feedback-form select:hover:not(:disabled),
+.feedback-form textarea:hover:not(:disabled) {
+  border-color: rgb(243 240 232 / 0.3);
+}
+
+.feedback-form input:disabled,
+.feedback-form select:disabled,
+.feedback-form textarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
 }
 
 .feedback-form input,
 .feedback-form select {
-  min-height: 46px;
-  padding: 0 12px;
+  min-height: 48px;
+  padding: 0 13px;
+}
+
+.feedback-form input[type="number"] {
+  appearance: textfield;
+  font-variant-numeric: tabular-nums;
+}
+
+.feedback-form input[type="number"]::-webkit-inner-spin-button,
+.feedback-form input[type="number"]::-webkit-outer-spin-button {
+  margin: 0;
+  appearance: none;
 }
 
 .feedback-form textarea {
-  min-height: 128px;
-  padding: 12px;
+  min-height: 132px;
+  padding: 13px;
   resize: vertical;
   line-height: 1.55;
 }
@@ -156,7 +194,7 @@
 }
 
 .feedback-form__error {
-  margin: -10px 0 0;
+  margin: -12px 0 0;
   color: var(--color-accent);
   font-size: 0.78rem;
 }
@@ -165,7 +203,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 20px;
+  padding-top: 4px;
 }
 
 .feedback-form__actions > div {
@@ -175,10 +214,12 @@
 
 .feedback-form button {
   padding: 0 15px;
-  background: var(--color-text);
-  color: var(--color-background, #080808);
   font-size: 0.82rem;
   font-weight: 580;
+}
+
+.feedback-form button:active:not(:disabled) {
+  transform: translateY(1px);
 }
 
 .feedback-form button:disabled {
@@ -191,26 +232,35 @@
   color: var(--color-text-muted);
 }
 
-.signal-panel .feedback-form__row {
-  grid-template-columns: 1fr;
+.feedback-form .feedback-form__primary {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: #080808;
 }
 
-.signal-panel .feedback-form__actions {
-  align-items: stretch;
-  flex-direction: column;
+.feedback-form .feedback-form__primary:hover:not(:disabled) {
+  border-color: var(--color-text);
+  background: var(--color-text);
 }
 
-.signal-panel .feedback-form__actions > div {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+.feedback-form .feedback-form__tertiary {
+  min-height: 36px;
+  padding-inline: 0;
+  border-color: transparent;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-weight: 500;
 }
 
-.signal-panel .feedback-form button {
-  width: 100%;
+.feedback-form .feedback-form__tertiary:hover:not(:disabled) {
+  border-color: transparent;
+  color: var(--color-text);
 }
 
 @media (max-width: 620px) {
   .feedback-editor__bar,
+  .feedback-form__heading,
+  .feedback-template,
   .feedback-form__actions {
     align-items: stretch;
     flex-direction: column;
@@ -218,11 +268,24 @@
 
   .feedback-operation {
     justify-items: start;
+    margin-left: 0;
     text-align: left;
+  }
+
+  .feedback-form__heading {
+    gap: 7px;
+  }
+
+  .feedback-form__heading > span {
+    white-space: normal;
   }
 
   .feedback-form__row {
     grid-template-columns: 1fr;
+  }
+
+  .feedback-form .feedback-template__action {
+    width: 100%;
   }
 
   .feedback-form__actions > div {
@@ -231,7 +294,11 @@
   }
 
   .feedback-editor__trigger,
-  .feedback-form button {
+  .feedback-form__actions > div button {
     width: 100%;
+  }
+
+  .feedback-form .feedback-form__tertiary {
+    width: max-content;
   }
 }
