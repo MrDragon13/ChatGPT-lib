@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "vitest",
-    "test:run": "vitest run",
+    "test:run": "node scripts/check-config.mjs && vitest run",
     "typecheck": "tsc --noEmit",
     "deploy": "wrangler deploy",
     "types": "wrangler types src/worker-configuration.d.ts"
