@@ -6,8 +6,13 @@ ROOT=Path(__file__).parents[2]; WORKFLOWS=ROOT/".github"/"workflows"
 def _text(name:str)->str: return (WORKFLOWS/name).read_text(encoding="utf-8")
 def test_media_check_is_read_only_and_runs_full_gate():
     text=_text("media-check.yml"); assert "contents: read" in text; assert "contents: write" not in text; assert "python -m pytest -q" in text; assert "python -m media.tools.validate ." in text; assert "python -m media.cli rebuild --check" in text; assert "python -m media.cli doctor --format json" in text; assert "expected_sha" in text; assert "actions/checkout@v7" in text; assert "actions/setup-python@v7" in text
-def test_media_check_skips_request_only_operation_prs_but_allows_dispatched_head_checks():
-    text=_text("media-check.yml"); assert "github.event_name != 'pull_request'" in text; assert "!startsWith(github.head_ref, 'media/op-')" in text
+def test_media_check_is_dispatch_only_to_avoid_non_authoritative_pull_request_runs():
+    text=_text("media-check.yml")
+    trigger_block=text.split("on:",1)[1].split("permissions:",1)[0]
+    assert "workflow_dispatch:" in trigger_block
+    assert "pull_request:" not in trigger_block
+    assert "github.event_name != 'pull_request'" not in text
+    assert "github.event.pull_request.head.sha" not in text
 def test_media_command_has_same_repo_branch_guard_before_secrets():
     text=_text("media-command.yml"); assert "github.event.pull_request.head.repo.full_name == github.repository" in text; assert "startsWith(github.head_ref, 'media/op-')" in text; assert "TMDB_READ_TOKEN" in text; assert "env:\n          TMDB_READ_TOKEN:" in text; assert "OPENAI" not in text.upper(); assert "pull-requests: write" in text; assert "actions: write" in text
 def test_media_command_gates_tmdb_secret_on_provider_need_not_operation_name_only():
