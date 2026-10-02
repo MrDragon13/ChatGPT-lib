@@ -92,15 +92,18 @@ describe("work detail editor target scope", () => {
     expect(coupleCard).not.toBeNull();
     const couple = within(coupleCard!);
 
-    fireEvent.click(couple.getByRole("button", { name: "Изменить впечатление" }));
+    fireEvent.click(couple.getByRole("button", { name: "Изменить общее впечатление" }));
 
-    expect(couple.getByText("Сохранится в: Вместе")).toBeInTheDocument();
-    expect(couple.getByLabelText("Оценка")).toHaveValue(8);
-    expect(couple.getByLabelText("Впечатление")).toHaveValue("mixed");
-    expect(couple.getByLabelText("Отзыв")).toHaveValue("Общее мнение.");
+    const form = screen.getByRole("form", { name: "Редактирование впечатления — Вместе" });
+    expect(coupleCard).not.toContainElement(form);
+    expect(form.closest(".feedback-editor-panel")).not.toBeNull();
+    expect(form.querySelector(".feedback-form__heading")).toHaveTextContent("Сохранится в: Вместе");
+    expect(within(form).getByLabelText("Оценка")).toHaveValue(8);
+    expect(within(form).getByLabelText("Реакция")).toHaveValue("mixed");
+    expect(within(form).getByLabelText("Отзыв")).toHaveValue("Общее мнение.");
 
-    fireEvent.change(couple.getByLabelText("Оценка"), { target: { value: "9" } });
-    fireEvent.click(couple.getByRole("button", { name: "Сохранить" }));
+    fireEvent.change(within(form).getByLabelText("Оценка"), { target: { value: "9" } });
+    fireEvent.click(within(form).getByRole("button", { name: "Сохранить" }));
     await waitFor(() => expect(submitFeedback).toHaveBeenCalledWith({
       work_id: "arrival-2016",
       target: "couple",
