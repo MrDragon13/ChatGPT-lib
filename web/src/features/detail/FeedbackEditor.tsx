@@ -143,6 +143,14 @@ function publishedBaselineLabel(value: EditableSnapshot): string {
   return parts.length ? parts.join(" · ") : "пока без оценки и отзыва";
 }
 
+function submissionFailureMessage(error: BrokerHttpError): string {
+  const details = [`Код: ${error.code}`];
+  if (error.stage) details.push(`этап: ${error.stage}`);
+  details.push(`HTTP ${error.status}`);
+  if (error.upstreamStatus !== null) details.push(`GitHub ${error.upstreamStatus}`);
+  return `Не удалось отправить изменение. ${details.join(" · ")}.`;
+}
+
 export function FeedbackEditor({
   workId,
   target,
@@ -294,6 +302,8 @@ export function FeedbackEditor({
         setMessage("Изменение уже проверяется");
       } else if (error instanceof BrokerHttpError && error.status === 401) {
         setMessage("Сессия истекла. Войдите через GitHub снова.");
+      } else if (error instanceof BrokerHttpError) {
+        setMessage(submissionFailureMessage(error));
       } else {
         setMessage("Не удалось отправить изменение. Попробуйте ещё раз.");
       }
