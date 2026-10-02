@@ -35,6 +35,7 @@ def test_auto_merge_dispatches_pages_for_exact_merge_sha():
     pages = _text("media-pages.yml")
 
     assert "MERGE_SHA" in auto_merge
+    assert 'REPO: ${{ github.repository }}\n          MERGE_SHA:' in auto_merge
     assert 'gh workflow run media-pages.yml --repo "$REPO" --ref main -f expected_sha="$MERGE_SHA"' in auto_merge
     assert "expected_sha:" in pages
     assert "inputs.expected_sha" in pages
