@@ -74,6 +74,42 @@
   border-top: 1px solid rgb(243 240 232 / 0.1);
 }
 
+.feedback-form__context {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgb(243 240 232 / 0.12);
+  background: rgb(243 240 232 / 0.035);
+}
+
+.feedback-form__context > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.feedback-form__context strong {
+  font-size: 0.9rem;
+  font-weight: 590;
+}
+
+.feedback-form__context span,
+.feedback-template p {
+  color: var(--color-text-muted);
+  font-size: 0.76rem;
+}
+
+.feedback-template {
+  display: grid;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid rgb(243 240 232 / 0.1);
+}
+
+.feedback-template p {
+  margin: 0;
+  line-height: 1.45;
+}
+
 .feedback-form__row {
   display: grid;
   grid-template-columns: minmax(0, 0.4fr) minmax(220px, 0.6fr);
@@ -153,6 +189,24 @@
 .feedback-form .feedback-form__secondary {
   background: transparent;
   color: var(--color-text-muted);
+}
+
+.signal-panel .feedback-form__row {
+  grid-template-columns: 1fr;
+}
+
+.signal-panel .feedback-form__actions {
+  align-items: stretch;
+  flex-direction: column;
+}
+
+.signal-panel .feedback-form__actions > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.signal-panel .feedback-form button {
+  width: 100%;
 }
 
 @media (max-width: 620px) {
