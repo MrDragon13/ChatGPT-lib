@@ -58,3 +58,21 @@ test("mobile pages do not overflow and library keeps two poster columns", async 
     expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
   }
 });
+
+test("site header stays pinned to the top while scrolling", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 700 });
+  await page.goto("#/library?target=primary");
+  await expect(page.getByRole("heading", { name: "Медиатека" })).toBeVisible();
+
+  const header = page.locator(".site-header");
+  await expect(header).toBeVisible();
+
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+
+  const box = await header.boundingBox();
+  expect(box).not.toBeNull();
+  expect(Math.abs(box?.y ?? 9999)).toBeLessThanOrEqual(1);
+  await expect(header).toHaveCSS("position", "sticky");
+  await expect(header).toHaveCSS("top", "0px");
+});
