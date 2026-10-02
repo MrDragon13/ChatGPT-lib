@@ -16,6 +16,12 @@ const REACTIONS: Array<{ value: FeedbackReaction; label: string }> = [
 
 const REACTION_VALUES = new Set<FeedbackReaction>(REACTIONS.map((entry) => entry.value));
 
+const TARGET_LABELS: Record<string, string> = {
+  primary: "Я",
+  partner: "Партнёр",
+  couple: "Вместе",
+};
+
 type EditableSnapshot = {
   rating: number | null;
   reaction: FeedbackReaction | null;
@@ -35,16 +41,36 @@ export type FeedbackEditorProps = {
   workId: string;
   target: TargetId;
   signal: DetailSignal | null;
+  templateSignal?: DetailSignal | null;
+  templateSourceTarget?: TargetId;
   broker: BrokerSessionValue;
   refreshManifest(cacheBust?: string): Promise<void>;
   pollIntervalMs?: number;
 };
 
+function targetLabel(target: TargetId): string {
+  return TARGET_LABELS[target] ?? target;
+}
+
+function addLabel(target: TargetId): string {
+  if (target === "primary") return "Добавить моё впечатление";
+  if (target === "partner") return "Добавить впечатление партнёра";
+  if (target === "couple") return "Добавить общее впечатление";
+  return "Добавить впечатление";
+}
+
+function editorTitle(target: TargetId): string {
+  if (target === "primary") return "Моё впечатление";
+  if (target === "partner") return "Впечатление партнёра";
+  if (target === "couple") return "Общее впечатление";
+  return "Впечатление";
+}
+
 function reactionValue(value: string | null | undefined): FeedbackReaction | null {
   return value && REACTION_VALUES.has(value as FeedbackReaction) ? value as FeedbackReaction : null;
 }
 
-function snapshot(signal: DetailSignal | null): EditableSnapshot {
+function snapshot(signal: DetailSignal | null | undefined): EditableSnapshot {
   return {
     rating: signal?.rating ?? null,
     reaction: reactionValue(signal?.reaction),
@@ -125,6 +151,8 @@ export function FeedbackEditor({
   workId,
   target,
   signal,
+  templateSignal = null,
+  templateSourceTarget,
   broker,
   refreshManifest,
   pollIntervalMs = 3_000,
@@ -133,11 +161,16 @@ export function FeedbackEditor({
     () => snapshot(signal),
     [signal?.rating, signal?.reaction, signal?.feedbackSummary],
   );
+  const template = useMemo(
+    () => snapshot(templateSignal),
+    [templateSignal?.rating, templateSignal?.reaction, templateSignal?.feedbackSummary],
+  );
   const [open, setOpen] = useState(false);
   const [openAfterLogin, setOpenAfterLogin] = useState(false);
   const [ratingInput, setRatingInput] = useState(() => current.rating?.toString() ?? "");
   const [reaction, setReaction] = useState<FeedbackReaction>(() => current.reaction ?? "unknown");
   const [feedbackSummary, setFeedbackSummary] = useState(() => current.feedbackSummary ?? "");
+  const [templateApplied, setTemplateApplied] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [pending, setPending] = useState<PendingOperation | null>(null);
   const [refreshCompleted, setRefreshCompleted] = useState(false);
@@ -155,6 +188,7 @@ export function FeedbackEditor({
     setRatingInput(current.rating?.toString() ?? "");
     setReaction(current.reaction ?? "unknown");
     setFeedbackSummary(current.feedbackSummary ?? "");
+    setTemplateApplied(false);
   }, [current.rating, current.reaction, current.feedbackSummary, pending]);
 
   useEffect(() => {
@@ -214,6 +248,7 @@ export function FeedbackEditor({
     [current, ratingInput, reaction, feedbackSummary],
   );
   const dirty = Object.keys(change).length > 0;
+  const canUseTemplate = !signal && Boolean(templateSignal && templateSourceTarget);
 
   const beginEdit = () => {
     setMessage(null);
@@ -223,6 +258,20 @@ export function FeedbackEditor({
       return;
     }
     setOpen((value) => !value);
+  };
+
+  const applyTemplate = () => {
+    setRatingInput(template.rating?.toString() ?? "");
+    setReaction(template.reaction ?? "unknown");
+    setFeedbackSummary(template.feedbackSummary ?? "");
+    setTemplateApplied(true);
+  };
+
+  const resetTemplate = () => {
+    setRatingInput(current.rating?.toString() ?? "");
+    setReaction(current.reaction ?? "unknown");
+    setFeedbackSummary(current.feedbackSummary ?? "");
+    setTemplateApplied(false);
   };
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -259,7 +308,7 @@ export function FeedbackEditor({
     <div className="feedback-editor">
       <div className="feedback-editor__bar">
         <button className="feedback-editor__trigger" type="button" onClick={beginEdit}>
-          Изменить впечатление
+          {signal ? "Изменить впечатление" : addLabel(target)}
         </button>
         {pending ? (
           <div className={`feedback-operation feedback-operation--${pending.status}`} role="status" aria-live="polite">
@@ -273,6 +322,31 @@ export function FeedbackEditor({
 
       {open ? (
         <form className="feedback-form" aria-label="Редактирование впечатления" onSubmit={submit}>
+          <div className="feedback-form__context">
+            <div>
+              <strong>{editorTitle(target)}</strong>
+              <span>Сохранится в: {targetLabel(target)}</span>
+            </div>
+            {canUseTemplate ? (
+              <div className="feedback-template">
+                <p>
+                  {templateApplied
+                    ? `Взято за основу: ${targetLabel(templateSourceTarget!)}`
+                    : `Отдельной записи «${targetLabel(target)}» пока нет.`}
+                </p>
+                <button
+                  type="button"
+                  className="feedback-form__secondary"
+                  onClick={templateApplied ? resetTemplate : applyTemplate}
+                >
+                  {templateApplied
+                    ? "Начать с пустой формы"
+                    : `Взять «${targetLabel(templateSourceTarget!)}» за основу`}
+                </button>
+              </div>
+            ) : null}
+          </div>
+
           <div className="feedback-form__row">
             <label>
               <span>Оценка</span>

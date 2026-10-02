@@ -11,7 +11,7 @@ import { buildWorkDetailView, type DetailSignal, type WorkDetailModel } from "./
 import "./detail.css";
 
 const TARGET_LABELS: Record<string, string> = {
-  primary: "Вы",
+  primary: "Я",
   partner: "Партнёр",
   couple: "Вместе",
 };
@@ -36,34 +36,58 @@ function formatExternalRating(value: number): string {
   return value.toFixed(1).replace(/\.0$/, "");
 }
 
-function SignalPanel({ signal, active }: { signal: DetailSignal; active: boolean }) {
+function emptySignalMessage(target: TargetId): string {
+  if (target === "primary") return "Пока нет моего впечатления.";
+  if (target === "partner") return "Пока нет впечатления партнёра.";
+  if (target === "couple") return "Пока нет общего впечатления.";
+  return "Пока нет записанного впечатления.";
+}
+
+function SignalPanel({
+  target,
+  signal,
+  active,
+  editControl,
+}: {
+  target: TargetId;
+  signal: DetailSignal | null;
+  active: boolean;
+  editControl?: React.ReactNode;
+}) {
   return (
     <article className={`signal-panel${active ? " signal-panel--active" : ""}`}>
       <div className="signal-panel__heading">
-        <h3>{TARGET_LABELS[signal.target] ?? signal.target}</h3>
-        {active ? <span>Текущий профиль</span> : null}
+        <h3>{TARGET_LABELS[target] ?? target}</h3>
+        {active ? <span>Текущий контекст</span> : null}
       </div>
-      <dl>
-        {signal.rating !== null ? (
-          <div>
-            <dt>Оценка</dt>
-            <dd>{signal.rating}/10</dd>
-          </div>
-        ) : null}
-        {signal.reaction ? (
-          <div>
-            <dt>Впечатление</dt>
-            <dd>{REACTION_LABELS[signal.reaction] ?? signal.reaction}</dd>
-          </div>
-        ) : null}
-        {signal.viewingStatus ? (
-          <div>
-            <dt>Просмотр</dt>
-            <dd>{VIEWING_LABELS[signal.viewingStatus] ?? signal.viewingStatus}</dd>
-          </div>
-        ) : null}
-      </dl>
-      {signal.feedbackSummary ? <p className="signal-panel__summary">{signal.feedbackSummary}</p> : null}
+      {signal ? (
+        <>
+          <dl>
+            {signal.rating !== null ? (
+              <div>
+                <dt>Оценка</dt>
+                <dd>{signal.rating}/10</dd>
+              </div>
+            ) : null}
+            {signal.reaction ? (
+              <div>
+                <dt>Впечатление</dt>
+                <dd>{REACTION_LABELS[signal.reaction] ?? signal.reaction}</dd>
+              </div>
+            ) : null}
+            {signal.viewingStatus ? (
+              <div>
+                <dt>Просмотр</dt>
+                <dd>{VIEWING_LABELS[signal.viewingStatus] ?? signal.viewingStatus}</dd>
+              </div>
+            ) : null}
+          </dl>
+          {signal.feedbackSummary ? <p className="signal-panel__summary">{signal.feedbackSummary}</p> : null}
+        </>
+      ) : (
+        <p className="signal-panel__empty">{emptySignalMessage(target)}</p>
+      )}
+      {editControl}
     </article>
   );
 }
@@ -72,23 +96,21 @@ export function WorkDetailView({
   view,
   activeTarget,
   editControl,
+  editControls,
 }: {
   view: WorkDetailModel;
   activeTarget: TargetId;
   editControl?: React.ReactNode;
+  editControls?: Partial<Record<TargetId, React.ReactNode>>;
 }) {
   const reduceMotion = useReducedMotion();
-  const orderedSignals = [
-    view.signals[activeTarget],
-    ...Object.entries(view.signals)
-      .filter(([target]) => target !== activeTarget)
-      .map(([, signal]) => signal),
-  ].filter((signal): signal is DetailSignal => Boolean(signal));
+  const targetIds = Object.keys(view.signals) as TargetId[];
+  const orderedTargets = [activeTarget, ...targetIds.filter((target) => target !== activeTarget)];
 
   const hasCredits = view.directors.length > 0 || view.cast.length > 0;
   const revealInitial = reduceMotion ? false : revealMotion.hidden;
   const revealTransition = reduceMotion ? { duration: 0 } : revealMotion.transition;
-  const signalColumnCount = Math.min(Math.max(orderedSignals.length, 1), 3);
+  const signalColumnCount = Math.min(Math.max(orderedTargets.length, 1), 3);
 
   return (
     <article className="detail-page">
@@ -137,20 +159,22 @@ export function WorkDetailView({
           <p className="eyebrow">Личное</p>
           <h2 id="detail-signals-title">Наши впечатления</h2>
         </div>
-        {orderedSignals.length ? (
-          <div className={`signal-grid signal-grid--${signalColumnCount}`}>
-            {orderedSignals.map((signal) => (
-              <SignalPanel key={signal.target} signal={signal} active={signal.target === activeTarget} />
-            ))}
-          </div>
-        ) : (
-          <p className="detail-muted">Для этого профиля пока нет записанного впечатления.</p>
-        )}
-        {editControl ?? (
+        <div className={`signal-grid signal-grid--${signalColumnCount}`}>
+          {orderedTargets.map((target) => (
+            <SignalPanel
+              key={target}
+              target={target}
+              signal={view.signals[target] ?? null}
+              active={target === activeTarget}
+              editControl={editControls?.[target]}
+            />
+          ))}
+        </div>
+        {!editControls ? (editControl ?? (
           <div className="future-edit-boundary" data-testid="future-edit-boundary">
             <span>Режим только для чтения</span>
           </div>
-        )}
+        )) : null}
       </motion.section>
 
       {view.externalRating !== null ? (
@@ -228,21 +252,25 @@ export function WorkDetailPage() {
     );
   }
 
-  const editTarget = target === "couple" && !view.activeSignal && view.signals.primary
-    ? "primary"
-    : target;
-  const editSignal = view.signals[editTarget] ?? null;
+  const editControls = broker.configured
+    ? (Object.keys(view.signals) as TargetId[]).reduce<Partial<Record<TargetId, React.ReactNode>>>((controls, editTarget) => {
+        const signal = view.signals[editTarget] ?? null;
+        const canCopyPrimary = editTarget === "couple" && !signal && Boolean(view.signals.primary);
+        controls[editTarget] = (
+          <FeedbackEditor
+            key={`${view.id}:${editTarget}`}
+            workId={view.id}
+            target={editTarget}
+            signal={signal}
+            templateSignal={canCopyPrimary ? view.signals.primary : null}
+            templateSourceTarget={canCopyPrimary ? "primary" : undefined}
+            broker={broker}
+            refreshManifest={refreshManifest}
+          />
+        );
+        return controls;
+      }, {})
+    : undefined;
 
-  const editControl = broker.configured ? (
-    <FeedbackEditor
-      key={`${view.id}:${editTarget}`}
-      workId={view.id}
-      target={editTarget}
-      signal={editSignal}
-      broker={broker}
-      refreshManifest={refreshManifest}
-    />
-  ) : undefined;
-
-  return <WorkDetailView view={view} activeTarget={target} editControl={editControl} />;
+  return <WorkDetailView view={view} activeTarget={target} editControls={editControls} />;
 }

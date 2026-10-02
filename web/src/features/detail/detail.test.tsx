@@ -58,7 +58,7 @@ function work(overrides: Partial<WebWork> = {}): WebWork {
 function manifest(item = work()): WebManifest {
   return {
     schema_version: 1,
-    default_target: "couple",
+    default_target: "primary",
     targets: { viewers: ["primary", "partner"], groups: { couple: ["primary", "partner"] } },
     vocabulary: {
       "genre.science_fiction": { kind: "genre", label_ru: "Фантастика" },
@@ -92,7 +92,7 @@ describe("work detail", () => {
     expect(view.signals.couple?.rating).toBe(8);
   });
 
-  it("sizes the signal grid to the number of real panels instead of reserving empty columns", () => {
+  it("keeps all configured target contexts visible when some have no signal", () => {
     const sparse = work({
       viewer_signals: {
         primary: {
@@ -105,8 +105,10 @@ describe("work detail", () => {
     });
     const view = buildWorkDetailView(manifest(sparse), sparse.id, "couple")!;
     const { container } = render(<WorkDetailView view={view} activeTarget="couple" />);
-    expect(container.querySelector(".signal-grid")).toHaveClass("signal-grid--1");
-    expect(container.querySelectorAll(".signal-panel")).toHaveLength(1);
+    expect(container.querySelector(".signal-grid")).toHaveClass("signal-grid--3");
+    expect(container.querySelectorAll(".signal-panel")).toHaveLength(3);
+    expect(screen.getByText("Пока нет общего впечатления.")).toBeInTheDocument();
+    expect(screen.getByText("Пока нет впечатления партнёра.")).toBeInTheDocument();
   });
 
   it("presents the public TMDB score to one decimal place", () => {
@@ -141,7 +143,7 @@ describe("work detail", () => {
     expect(screen.getByTestId("future-edit-boundary")).toHaveTextContent("Режим только для чтения");
   });
 
-  it("renders the edit control beside the still-published canonical signal", () => {
+  it("renders the legacy edit control beside the published canonical signals", () => {
     const view = buildWorkDetailView(manifest(), "arrival-2016", "primary")!;
     render(<WorkDetailView
       view={view}

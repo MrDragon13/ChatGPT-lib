@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 
@@ -24,7 +24,7 @@ vi.mock("../../broker/BrokerSessionProvider", () => ({
 function manifest(): WebManifest {
   return {
     schema_version: 1,
-    default_target: "couple",
+    default_target: "primary",
     targets: { viewers: ["partner", "primary"], groups: { couple: ["primary", "partner"] } },
     vocabulary: {},
     profiles: {},
@@ -42,7 +42,13 @@ function manifest(): WebManifest {
             feedback: { summary: "Умная фантастика без суеты." },
           },
         },
-        group_signals: {},
+        group_signals: {
+          couple: {
+            rating: { score: 8 },
+            reaction: { value: "mixed" },
+            feedback: { summary: "Общее мнение." },
+          },
+        },
         interest: {},
         traits: [],
         collections: [],
@@ -52,8 +58,8 @@ function manifest(): WebManifest {
   };
 }
 
-describe("work detail editor prefill", () => {
-  it("prefills the existing primary impression when the default couple target has no group signal", async () => {
+describe("work detail editor target scope", () => {
+  it("prefills and saves an existing couple impression as couple", async () => {
     appContext = {
       manifest: manifest(),
       target: "couple",
@@ -81,17 +87,23 @@ describe("work detail editor prefill", () => {
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Изменить впечатление" }));
+    const coupleHeading = screen.getByRole("heading", { name: "Вместе" });
+    const coupleCard = coupleHeading.closest("article");
+    expect(coupleCard).not.toBeNull();
+    const couple = within(coupleCard!);
 
-    expect(screen.getByLabelText("Оценка")).toHaveValue(8.5);
-    expect(screen.getByLabelText("Впечатление")).toHaveValue("liked");
-    expect(screen.getByLabelText("Отзыв")).toHaveValue("Умная фантастика без суеты.");
+    fireEvent.click(couple.getByRole("button", { name: "Изменить впечатление" }));
 
-    fireEvent.change(screen.getByLabelText("Оценка"), { target: { value: "9" } });
-    fireEvent.click(screen.getByRole("button", { name: "Сохранить" }));
+    expect(couple.getByText("Сохранится в: Вместе")).toBeInTheDocument();
+    expect(couple.getByLabelText("Оценка")).toHaveValue(8);
+    expect(couple.getByLabelText("Впечатление")).toHaveValue("mixed");
+    expect(couple.getByLabelText("Отзыв")).toHaveValue("Общее мнение.");
+
+    fireEvent.change(couple.getByLabelText("Оценка"), { target: { value: "9" } });
+    fireEvent.click(couple.getByRole("button", { name: "Сохранить" }));
     await waitFor(() => expect(submitFeedback).toHaveBeenCalledWith({
       work_id: "arrival-2016",
-      target: "primary",
+      target: "couple",
       rating: 9,
     }));
   });

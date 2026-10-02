@@ -43,7 +43,7 @@ def test_manifest_uses_configured_targets_vocabulary_and_canonical_signals(tmp_p
     manifest = module.build_web_manifest(root / "media")
 
     assert manifest["schema_version"] == 1
-    assert manifest["default_target"] == "couple"
+    assert manifest["default_target"] == "primary"
     assert manifest["targets"] == {
         "viewers": ["partner", "primary"],
         "groups": {"couple": ["primary", "partner"]},
