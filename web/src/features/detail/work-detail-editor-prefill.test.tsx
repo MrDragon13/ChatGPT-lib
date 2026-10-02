@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 
@@ -53,19 +53,24 @@ function manifest(): WebManifest {
 }
 
 describe("work detail editor prefill", () => {
-  it("prefills the existing primary impression when the default couple target has no group signal", () => {
+  it("prefills the existing primary impression when the default couple target has no group signal", async () => {
     appContext = {
       manifest: manifest(),
       target: "couple",
       refreshManifest: vi.fn(async () => undefined),
     };
+    const submitFeedback = vi.fn(async () => ({
+      operation_id: "11111111-2222-4333-8444-555555555555",
+      pr_number: 42,
+      status: "submitted" as const,
+    }));
     brokerValue = {
       configured: true,
       authenticated: true,
       login: vi.fn(),
       logout: vi.fn(),
-      submitFeedback: vi.fn(),
-      getOperationStatus: vi.fn(),
+      submitFeedback,
+      getOperationStatus: vi.fn(async () => ({ status: "submitted" as const, pr_number: 42 })),
     };
 
     render(
@@ -81,5 +86,13 @@ describe("work detail editor prefill", () => {
     expect(screen.getByLabelText("Оценка")).toHaveValue(8.5);
     expect(screen.getByLabelText("Впечатление")).toHaveValue("liked");
     expect(screen.getByLabelText("Отзыв")).toHaveValue("Умная фантастика без суеты.");
+
+    fireEvent.change(screen.getByLabelText("Оценка"), { target: { value: "9" } });
+    fireEvent.click(screen.getByRole("button", { name: "Сохранить" }));
+    await waitFor(() => expect(submitFeedback).toHaveBeenCalledWith({
+      work_id: "arrival-2016",
+      target: "primary",
+      rating: 9,
+    }));
   });
 });
