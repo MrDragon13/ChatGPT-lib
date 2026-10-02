@@ -37,6 +37,13 @@ function env(): BrokerEnv {
   };
 }
 
+function json(value: unknown, status = 200): Response {
+  return new Response(JSON.stringify(value), {
+    status,
+    headers: { "content-type": "application/json" },
+  });
+}
+
 beforeAll(async () => {
   privateKeyPem = await generatePrivateKeyPem();
 });
@@ -45,10 +52,7 @@ afterEach(() => vi.restoreAllMocks());
 
 describe("broker diagnostics", () => {
   it("returns a safe stage and upstream status when GitHub App token minting fails", async () => {
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(
-      JSON.stringify({ message: "Not Found" }),
-      { status: 404, headers: { "content-type": "application/json" } },
-    ));
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(json({ message: "Not Found" }, 404));
 
     const brokerEnv = env();
     const token = await issueSession("197501470", brokerEnv);
@@ -67,6 +71,46 @@ describe("broker diagnostics", () => {
       error: "github_unavailable",
       stage: "installation_token",
       upstream_status: 404,
+    });
+  });
+
+  it("preserves the exact GitHub stage after operation submission has started", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (request, init) => {
+      const url = new URL(String(request));
+      const method = init?.method ?? "GET";
+
+      if (url.pathname.endsWith("/app/installations/67890/access_tokens")) {
+        return json({ token: "installation-token" }, 201);
+      }
+      if (url.pathname.endsWith("/pulls") && method === "GET") {
+        return json([]);
+      }
+      if (url.pathname.endsWith("/git/ref/heads/main") && method === "GET") {
+        return json({ object: { sha: "main-sha" } });
+      }
+      if (url.pathname.endsWith("/git/refs") && method === "POST") {
+        return json({ message: "Validation Failed" }, 422);
+      }
+      throw new Error(`unexpected GitHub call: ${method} ${url}`);
+    });
+
+    const brokerEnv = env();
+    const token = await issueSession("197501470", brokerEnv);
+    const response = await worker.fetch(new Request("https://broker.example/v1/feedback", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json",
+        origin: "https://mrdragon13.github.io",
+      },
+      body: JSON.stringify({ work_id: "arrival-2016", target: "primary", rating: 9 }),
+    }), brokerEnv);
+
+    expect(response.status).toBe(502);
+    await expect(response.json()).resolves.toMatchObject({
+      error: "github_operation_failed",
+      stage: "create_branch",
+      upstream_status: 422,
     });
   });
 });
