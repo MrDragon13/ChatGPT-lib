@@ -2,6 +2,7 @@ import type { BrokerEnv } from "./env";
 import type { FeedbackInput } from "./feedback";
 import {
   GitHubApiError,
+  type GitHubApiStage,
   createBranch,
   createOperationPullRequest,
   deleteBranch,
@@ -75,6 +76,7 @@ export class OperationSubmissionError extends Error {
     public readonly operationId: string,
     public readonly upstreamStatus: number | null = null,
     public readonly requestId: string | null = null,
+    public readonly stage: GitHubApiStage | "github_operation" = "github_operation",
   ) {
     super(message);
     this.name = "OperationSubmissionError";
@@ -164,7 +166,7 @@ export function buildFeedbackCommand(input: FeedbackInput, operationId: string):
 
 function submissionError(error: unknown, operationId: string): OperationSubmissionError {
   if (error instanceof GitHubApiError) {
-    return new OperationSubmissionError(error.message, operationId, error.status, error.requestId);
+    return new OperationSubmissionError(error.message, operationId, error.status, error.requestId, error.stage);
   }
   return new OperationSubmissionError(
     error instanceof Error ? error.message : "feedback operation submission failed",
