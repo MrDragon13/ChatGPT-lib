@@ -1,0 +1,1 @@
+{"schema_version":1,"operation_id":"80800c01-a14a-421a-9116-327911c014db","operation":"record_viewing_feedback","work_ref":{"id":"batman-2022"},"create_if_missing":false,"target_updates":[{"target":"partner","rating":{"score":7,"source":"explicit","confidence":"exact"}}]}
