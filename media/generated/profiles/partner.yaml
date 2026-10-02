@@ -19,6 +19,7 @@ explicit_preferences: []
 rules: []
 constraints: []
 summary:
+  ratings_count: 1
   reactions_count: 5
   relations_count: 0
   viewing_count: 4
