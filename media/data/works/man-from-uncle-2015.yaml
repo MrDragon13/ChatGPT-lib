@@ -23,9 +23,19 @@ viewer_signals:
     feedback:
       summary: Хороший.
       signals: []
+  partner:
+    rating: &id001
+      score: 8
+      source: explicit
+      confidence: exact
+    history:
+    - at: '2026-10-02T23:33:54.716055Z'
+      previous: {}
+      current:
+        rating: *id001
 provenance:
   created_at: '2026-10-01'
-  updated_at: '2026-10-01'
+  updated_at: '2026-10-02'
 metadata:
   external:
     genres:
