@@ -46,6 +46,9 @@ export type FeedbackEditorProps = {
   broker: BrokerSessionValue;
   refreshManifest(cacheBust?: string): Promise<void>;
   pollIntervalMs?: number;
+  open?: boolean;
+  onOpenChange?(open: boolean): void;
+  hideTrigger?: boolean;
 };
 
 function targetLabel(target: TargetId): string {
@@ -57,13 +60,6 @@ function addLabel(target: TargetId): string {
   if (target === "partner") return "Добавить впечатление партнёра";
   if (target === "couple") return "Добавить общее впечатление";
   return "Добавить впечатление";
-}
-
-function editorTitle(target: TargetId): string {
-  if (target === "primary") return "Моё впечатление";
-  if (target === "partner") return "Впечатление партнёра";
-  if (target === "couple") return "Общее впечатление";
-  return "Впечатление";
 }
 
 function reactionValue(value: string | null | undefined): FeedbackReaction | null {
@@ -156,6 +152,9 @@ export function FeedbackEditor({
   broker,
   refreshManifest,
   pollIntervalMs = 3_000,
+  open: controlledOpen,
+  onOpenChange,
+  hideTrigger = false,
 }: FeedbackEditorProps) {
   const current = useMemo(
     () => snapshot(signal),
@@ -165,7 +164,8 @@ export function FeedbackEditor({
     () => snapshot(templateSignal),
     [templateSignal?.rating, templateSignal?.reaction, templateSignal?.feedbackSummary],
   );
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
   const [openAfterLogin, setOpenAfterLogin] = useState(false);
   const [ratingInput, setRatingInput] = useState(() => current.rating?.toString() ?? "");
   const [reaction, setReaction] = useState<FeedbackReaction>(() => current.reaction ?? "unknown");
@@ -176,10 +176,15 @@ export function FeedbackEditor({
   const [refreshCompleted, setRefreshCompleted] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
+  const updateOpen = (next: boolean) => {
+    if (controlledOpen === undefined) setInternalOpen(next);
+    onOpenChange?.(next);
+  };
+
   useEffect(() => {
     if (openAfterLogin && broker.authenticated) {
       setOpenAfterLogin(false);
-      setOpen(true);
+      updateOpen(true);
     }
   }, [broker.authenticated, openAfterLogin]);
 
@@ -238,7 +243,7 @@ export function FeedbackEditor({
       setPending(null);
       setRefreshCompleted(false);
       setMessage(null);
-      setOpen(false);
+      updateOpen(false);
     }
   }, [current, pending, refreshCompleted]);
 
@@ -249,6 +254,7 @@ export function FeedbackEditor({
   );
   const dirty = Object.keys(change).length > 0;
   const canUseTemplate = !signal && Boolean(templateSignal && templateSourceTarget);
+  const operationPending = Boolean(pending && pending.status !== "failed" && pending.status !== "published");
 
   const beginEdit = () => {
     setMessage(null);
@@ -257,7 +263,7 @@ export function FeedbackEditor({
       broker.login();
       return;
     }
-    setOpen((value) => !value);
+    updateOpen(!open);
   };
 
   const applyTemplate = () => {
@@ -276,7 +282,7 @@ export function FeedbackEditor({
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (submitting || validationError || !dirty) return;
+    if (submitting || pending || validationError || !dirty) return;
     setSubmitting(true);
     setMessage(null);
     try {
@@ -306,46 +312,54 @@ export function FeedbackEditor({
 
   return (
     <div className="feedback-editor">
-      <div className="feedback-editor__bar">
-        <button className="feedback-editor__trigger" type="button" onClick={beginEdit}>
-          {signal ? "Изменить впечатление" : addLabel(target)}
-        </button>
-        {pending ? (
-          <div className={`feedback-operation feedback-operation--${pending.status}`} role="status" aria-live="polite">
-            <strong>{operationStatusLabel(pending.status)}</strong>
-            <span>Опубликовано сейчас: {publishedBaselineLabel(pending.baseline)}</span>
-          </div>
-        ) : null}
-      </div>
+      {(!hideTrigger || pending) ? (
+        <div className="feedback-editor__bar">
+          {!hideTrigger ? (
+            <button className="feedback-editor__trigger" type="button" onClick={beginEdit}>
+              {signal ? "Изменить впечатление" : addLabel(target)}
+            </button>
+          ) : null}
+          {pending ? (
+            <div className={`feedback-operation feedback-operation--${pending.status}`} role="status" aria-live="polite">
+              <strong>{operationStatusLabel(pending.status)}</strong>
+              <span>Опубликовано сейчас: {publishedBaselineLabel(pending.baseline)}</span>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
       {message ? <p className="feedback-editor__message" role="status">{message}</p> : null}
 
       {open ? (
-        <form className="feedback-form" aria-label="Редактирование впечатления" onSubmit={submit}>
-          <div className="feedback-form__context">
-            <div>
-              <strong>{editorTitle(target)}</strong>
-              <span>Сохранится в: {targetLabel(target)}</span>
-            </div>
-            {canUseTemplate ? (
-              <div className="feedback-template">
-                <p>
-                  {templateApplied
-                    ? `Взято за основу: ${targetLabel(templateSourceTarget!)}`
-                    : `Отдельной записи «${targetLabel(target)}» пока нет.`}
-                </p>
-                <button
-                  type="button"
-                  className="feedback-form__secondary"
-                  onClick={templateApplied ? resetTemplate : applyTemplate}
-                >
-                  {templateApplied
-                    ? "Начать с пустой формы"
-                    : `Взять «${targetLabel(templateSourceTarget!)}» за основу`}
-                </button>
-              </div>
-            ) : null}
+        <form
+          className="feedback-form"
+          aria-label={`Редактирование впечатления — ${targetLabel(target)}`}
+          onSubmit={submit}
+        >
+          <div className="feedback-form__heading">
+            <h3>Редактирование · {targetLabel(target)}</h3>
+            <span>Сохранится в: <strong>{targetLabel(target)}</strong></span>
           </div>
+
+          {canUseTemplate ? (
+            <div className="feedback-template">
+              <p>
+                {templateApplied
+                  ? `Взято за основу: ${targetLabel(templateSourceTarget!)}`
+                  : `Отдельной записи «${targetLabel(target)}» пока нет.`}
+              </p>
+              <button
+                type="button"
+                className="feedback-form__secondary feedback-template__action"
+                onClick={templateApplied ? resetTemplate : applyTemplate}
+                disabled={operationPending || submitting}
+              >
+                {templateApplied
+                  ? "Начать с пустой формы"
+                  : `Взять «${targetLabel(templateSourceTarget!)}» за основу`}
+              </button>
+            </div>
+          ) : null}
 
           <div className="feedback-form__row">
             <label>
@@ -359,11 +373,16 @@ export function FeedbackEditor({
                 value={ratingInput}
                 onChange={(event) => setRatingInput(event.currentTarget.value)}
                 aria-describedby={validationError ? "feedback-rating-error" : undefined}
+                disabled={operationPending || submitting}
               />
             </label>
             <label>
-              <span>Впечатление</span>
-              <select value={reaction} onChange={(event) => setReaction(event.currentTarget.value as FeedbackReaction)}>
+              <span>Реакция</span>
+              <select
+                value={reaction}
+                onChange={(event) => setReaction(event.currentTarget.value as FeedbackReaction)}
+                disabled={operationPending || submitting}
+              >
                 {REACTIONS.map((entry) => <option key={entry.value} value={entry.value}>{entry.label}</option>)}
               </select>
             </label>
@@ -376,18 +395,33 @@ export function FeedbackEditor({
               rows={5}
               value={feedbackSummary}
               onChange={(event) => setFeedbackSummary(event.currentTarget.value)}
+              disabled={operationPending || submitting}
             />
           </label>
 
           <div className="feedback-form__actions">
-            <button type="button" className="feedback-form__secondary" onClick={() => setFeedbackSummary("")}>
+            <button
+              type="button"
+              className="feedback-form__tertiary"
+              onClick={() => setFeedbackSummary("")}
+              disabled={!feedbackSummary || operationPending || submitting}
+            >
               Очистить отзыв
             </button>
             <div>
-              <button type="button" className="feedback-form__secondary" onClick={() => setOpen(false)}>
-                Закрыть
+              <button
+                type="button"
+                className="feedback-form__secondary"
+                onClick={() => updateOpen(false)}
+                disabled={operationPending || submitting}
+              >
+                Отмена
               </button>
-              <button type="submit" disabled={!dirty || Boolean(validationError) || submitting}>
+              <button
+                className="feedback-form__primary"
+                type="submit"
+                disabled={!dirty || Boolean(validationError) || submitting || Boolean(pending)}
+              >
                 {submitting ? "Отправляем…" : "Сохранить"}
               </button>
             </div>
