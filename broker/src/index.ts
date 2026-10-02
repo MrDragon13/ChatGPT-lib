@@ -101,10 +101,16 @@ const worker = {
           return responseWithCors(jsonResponse({
             error: "github_operation_failed",
             operation_id: error.operationId,
+            stage: "github_operation",
+            upstream_status: error.upstreamStatus,
           }, error.upstreamStatus === 503 ? 503 : 502), origin, env);
         }
         if (error instanceof GitHubApiError) {
-          return responseWithCors(jsonResponse({ error: "github_unavailable" }, 502), origin, env);
+          return responseWithCors(jsonResponse({
+            error: "github_unavailable",
+            stage: error.stage,
+            upstream_status: error.status,
+          }, 502), origin, env);
         }
         return responseWithCors(jsonResponse({ error: "broker_unavailable" }, 503), origin, env);
       }
@@ -122,7 +128,11 @@ const worker = {
         return responseWithCors(jsonResponse(status), origin, env);
       } catch (error) {
         if (error instanceof GitHubApiError) {
-          return responseWithCors(jsonResponse({ error: "github_unavailable" }, 502), origin, env);
+          return responseWithCors(jsonResponse({
+            error: "github_unavailable",
+            stage: error.stage,
+            upstream_status: error.status,
+          }, 502), origin, env);
         }
         return responseWithCors(jsonResponse({ error: "broker_unavailable" }, 503), origin, env);
       }
