@@ -62,7 +62,11 @@ def build_web_manifest(media_root: Path) -> dict[str, Any]:
     sorted_viewers = sorted(viewers)
     sorted_groups = {group_id: list(groups[group_id]) for group_id in sorted(groups)}
     targets = sorted(viewers | set(groups))
-    default_target = "couple" if "couple" in groups else (sorted_viewers[0] if sorted_viewers else None)
+    default_target = (
+        "primary"
+        if "primary" in viewers
+        else (sorted_viewers[0] if sorted_viewers else ("couple" if "couple" in groups else None))
+    )
 
     index_rows = {
         row["id"]: row
