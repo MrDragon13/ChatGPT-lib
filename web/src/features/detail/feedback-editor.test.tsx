@@ -67,7 +67,7 @@ describe("FeedbackEditor", () => {
     renderEditor({ broker: broker({ authenticated: false, login }) });
     fireEvent.click(screen.getByRole("button", { name: "Изменить впечатление" }));
     expect(login).toHaveBeenCalledTimes(1);
-    expect(screen.queryByRole("form", { name: "Редактирование впечатления" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("form", { name: "Редактирование впечатления — Я" })).not.toBeInTheDocument();
   });
 
   it("prefills current values and submits only the changed field", async () => {
@@ -76,7 +76,7 @@ describe("FeedbackEditor", () => {
     fireEvent.click(screen.getByRole("button", { name: "Изменить впечатление" }));
 
     expect(screen.getByLabelText("Оценка")).toHaveValue(8.5);
-    expect(screen.getByLabelText("Впечатление")).toHaveValue("liked");
+    expect(screen.getByLabelText("Реакция")).toHaveValue("liked");
     expect(screen.getByLabelText("Отзыв")).toHaveValue("Умная фантастика без суеты.");
     expect(screen.queryByLabelText(/статус просмотра/i)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Сохранить" })).toBeDisabled();
