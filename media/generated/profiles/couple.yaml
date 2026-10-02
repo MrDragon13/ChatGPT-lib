@@ -33,9 +33,25 @@ affinities:
       weight: 0.98
   entertainment.engaging:
     score: 1.0
-    confidence: low
-    evidence_count: 1
+    confidence: medium
+    evidence_count: 3
     evidence:
+    - entity_id: deja-vu-2006
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
+    - entity_id: deja-vu-2006
+      source_target: partner
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
     - entity_id: game-night-2018
       source_target: primary
       source_kind: feedback
@@ -57,6 +73,19 @@ affinities:
       source: inferred
       confidence: high
       weight: 1.26
+  narrative.time_loop:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: deja-vu-2006
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
   reaction.cringe:
     score: -1.0
     confidence: low
@@ -104,6 +133,19 @@ affinities:
       source: inferred
       confidence: medium
       weight: 1.47
+  story.logic:
+    score: 0.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: deja-vu-2006
+      source_target: primary
+      source_kind: feedback
+      sentiment: mixed
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
   story.problem_solving:
     score: 1.0
     confidence: medium
@@ -134,9 +176,9 @@ affinities:
       confidence: medium
       weight: 0.98
   visuals.strong:
-    score: 1.0
-    confidence: medium
-    evidence_count: 3
+    score: 0.6875
+    confidence: high
+    evidence_count: 4
     evidence:
     - entity_id: blade-runner-2049-2017
       source_target: primary
@@ -146,6 +188,14 @@ affinities:
       source: inferred
       confidence: high
       weight: 1.26
+    - entity_id: deja-vu-2006
+      source_target: primary
+      source_kind: feedback
+      sentiment: negative
+      strength: 1
+      source: explicit
+      confidence: high
+      weight: 0.9
     - entity_id: masters-of-the-universe-2026
       source_target: primary
       source_kind: feedback
@@ -166,9 +216,9 @@ explicit_preferences: []
 rules: []
 constraints: []
 summary:
-  ratings_count: 57
+  ratings_count: 59
   reactions_count: 6
   relations_count: 0
-  viewing_count: 111
+  viewing_count: 112
 evidence:
   entity_count: 107

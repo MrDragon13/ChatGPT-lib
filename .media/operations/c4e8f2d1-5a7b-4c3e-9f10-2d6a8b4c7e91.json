@@ -1,0 +1,17 @@
+{
+  "applied_at": "2026-10-02T21:54:22.905366+00:00",
+  "changed_entities": [
+    "deja-vu-2006"
+  ],
+  "changed_files": [
+    "media/data/works/deja-vu-2006.yaml",
+    "media/generated/index.jsonl",
+    "media/generated/profiles/couple.yaml",
+    "media/generated/profiles/partner.yaml",
+    "media/generated/profiles/primary.yaml",
+    ".media/operations/c4e8f2d1-5a7b-4c3e-9f10-2d6a8b4c7e91.json"
+  ],
+  "operation": "record_viewing_feedback",
+  "operation_id": "c4e8f2d1-5a7b-4c3e-9f10-2d6a8b4c7e91",
+  "status": "applied"
+}

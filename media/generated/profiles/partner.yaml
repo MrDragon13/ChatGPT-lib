@@ -2,6 +2,19 @@ schema_version: 4
 target: partner
 generated_from: canonical-v4
 affinities:
+  entertainment.engaging:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: deja-vu-2006
+      source_target: partner
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
   visuals.strong:
     score: 1.0
     confidence: low
@@ -19,9 +32,9 @@ explicit_preferences: []
 rules: []
 constraints: []
 summary:
-  ratings_count: 3
+  ratings_count: 4
   reactions_count: 5
   relations_count: 0
-  viewing_count: 4
+  viewing_count: 5
 evidence:
   entity_count: 107
