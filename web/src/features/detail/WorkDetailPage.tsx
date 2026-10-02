@@ -1,5 +1,6 @@
-import { Clock, Star } from "@phosphor-icons/react";
+import { Clock, PencilSimple, Plus, Star } from "@phosphor-icons/react";
 import { motion, useReducedMotion } from "motion/react";
+import { Fragment, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import { useAppContext } from "../../app/AppShell";
@@ -43,19 +44,31 @@ function emptySignalMessage(target: TargetId): string {
   return "Пока нет записанного впечатления.";
 }
 
+function targetImpressionLabel(target: TargetId): string {
+  if (target === "primary") return "моё впечатление";
+  if (target === "partner") return "впечатление партнёра";
+  if (target === "couple") return "общее впечатление";
+  return "впечатление";
+}
+
 function SignalPanel({
   target,
   signal,
   active,
-  editControl,
+  editAction,
+  column,
 }: {
   target: TargetId;
   signal: DetailSignal | null;
   active: boolean;
-  editControl?: React.ReactNode;
+  editAction?: React.ReactNode;
+  column: number;
 }) {
   return (
-    <article className={`signal-panel${active ? " signal-panel--active" : ""}`}>
+    <article
+      className={`signal-panel${active ? " signal-panel--active" : ""}`}
+      style={{ gridColumn: column, gridRow: 1 }}
+    >
       <div className="signal-panel__heading">
         <h3>{TARGET_LABELS[target] ?? target}</h3>
         {active ? <span>Текущий контекст</span> : null}
@@ -71,7 +84,7 @@ function SignalPanel({
             ) : null}
             {signal.reaction ? (
               <div>
-                <dt>Впечатление</dt>
+                <dt>Реакция</dt>
                 <dd>{REACTION_LABELS[signal.reaction] ?? signal.reaction}</dd>
               </div>
             ) : null}
@@ -87,7 +100,7 @@ function SignalPanel({
       ) : (
         <p className="signal-panel__empty">{emptySignalMessage(target)}</p>
       )}
-      {editControl}
+      {editAction ? <div className="signal-panel__action">{editAction}</div> : null}
     </article>
   );
 }
@@ -96,12 +109,16 @@ export function WorkDetailView({
   view,
   activeTarget,
   editControl,
-  editControls,
+  editActions,
+  editingTarget = null,
+  editorPanel,
 }: {
   view: WorkDetailModel;
   activeTarget: TargetId;
   editControl?: React.ReactNode;
-  editControls?: Partial<Record<TargetId, React.ReactNode>>;
+  editActions?: Partial<Record<TargetId, React.ReactNode>>;
+  editingTarget?: TargetId | null;
+  editorPanel?: React.ReactNode;
 }) {
   const reduceMotion = useReducedMotion();
   const targetIds = Object.keys(view.signals) as TargetId[];
@@ -160,17 +177,24 @@ export function WorkDetailView({
           <h2 id="detail-signals-title">Наши впечатления</h2>
         </div>
         <div className={`signal-grid signal-grid--${signalColumnCount}`}>
-          {orderedTargets.map((target) => (
-            <SignalPanel
-              key={target}
-              target={target}
-              signal={view.signals[target] ?? null}
-              active={target === activeTarget}
-              editControl={editControls?.[target]}
-            />
+          {orderedTargets.map((target, index) => (
+            <Fragment key={target}>
+              <SignalPanel
+                target={target}
+                signal={view.signals[target] ?? null}
+                active={target === activeTarget}
+                editAction={editActions?.[target]}
+                column={index + 1}
+              />
+              {editingTarget === target && editorPanel ? (
+                <div className="feedback-editor-panel" data-edit-target={target}>
+                  {editorPanel}
+                </div>
+              ) : null}
+            </Fragment>
           ))}
         </div>
-        {!editControls ? (editControl ?? (
+        {!editActions ? (editControl ?? (
           <div className="future-edit-boundary" data-testid="future-edit-boundary">
             <span>Режим только для чтения</span>
           </div>
@@ -241,6 +265,19 @@ export function WorkDetailPage() {
   const { manifest, target, refreshManifest } = useAppContext();
   const broker = useBrokerSession();
   const view = id ? buildWorkDetailView(manifest, id, target) : null;
+  const [editingTarget, setEditingTarget] = useState<TargetId | null>(null);
+  const [loginTarget, setLoginTarget] = useState<TargetId | null>(null);
+
+  useEffect(() => {
+    setEditingTarget(null);
+    setLoginTarget(null);
+  }, [id, target]);
+
+  useEffect(() => {
+    if (!loginTarget || !broker.authenticated) return;
+    setEditingTarget(loginTarget);
+    setLoginTarget(null);
+  }, [broker.authenticated, loginTarget]);
 
   if (!view) {
     return (
@@ -252,25 +289,68 @@ export function WorkDetailPage() {
     );
   }
 
-  const editControls = broker.configured
-    ? (Object.keys(view.signals) as TargetId[]).reduce<Partial<Record<TargetId, React.ReactNode>>>((controls, editTarget) => {
+  const beginEditing = (editTarget: TargetId) => {
+    if (editingTarget || loginTarget) return;
+    if (!broker.authenticated) {
+      setLoginTarget(editTarget);
+      broker.login();
+      return;
+    }
+    setEditingTarget(editTarget);
+  };
+
+  const editActions = broker.configured
+    ? (Object.keys(view.signals) as TargetId[]).reduce<Partial<Record<TargetId, React.ReactNode>>>((actions, editTarget) => {
         const signal = view.signals[editTarget] ?? null;
-        const canCopyPrimary = editTarget === "couple" && !signal && Boolean(view.signals.primary);
-        controls[editTarget] = (
-          <FeedbackEditor
-            key={`${view.id}:${editTarget}`}
-            workId={view.id}
-            target={editTarget}
-            signal={signal}
-            templateSignal={canCopyPrimary ? view.signals.primary : null}
-            templateSourceTarget={canCopyPrimary ? "primary" : undefined}
-            broker={broker}
-            refreshManifest={refreshManifest}
-          />
+        const isEditing = editingTarget === editTarget;
+        const isLoggingIn = loginTarget === editTarget;
+        const disabled = Boolean(editingTarget || loginTarget);
+        const actionVerb = signal ? "Изменить" : "Добавить";
+        actions[editTarget] = (
+          <button
+            className="signal-panel__edit-button"
+            type="button"
+            onClick={() => beginEditing(editTarget)}
+            disabled={disabled}
+            aria-label={isEditing
+              ? `Редактируется: ${targetImpressionLabel(editTarget)}`
+              : `${actionVerb} ${targetImpressionLabel(editTarget)}`}
+          >
+            {isEditing ? null : signal ? <PencilSimple aria-hidden="true" /> : <Plus aria-hidden="true" />}
+            <span>{isEditing ? "Редактируется" : isLoggingIn ? "Входим…" : actionVerb}</span>
+          </button>
         );
-        return controls;
+        return actions;
       }, {})
     : undefined;
 
-  return <WorkDetailView view={view} activeTarget={target} editControls={editControls} />;
+  const editSignal = editingTarget ? view.signals[editingTarget] ?? null : null;
+  const canCopyPrimary = editingTarget === "couple" && !editSignal && Boolean(view.signals.primary);
+  const editorPanel = editingTarget ? (
+    <FeedbackEditor
+      key={`${view.id}:${editingTarget}`}
+      workId={view.id}
+      target={editingTarget}
+      signal={editSignal}
+      templateSignal={canCopyPrimary ? view.signals.primary : null}
+      templateSourceTarget={canCopyPrimary ? "primary" : undefined}
+      broker={broker}
+      refreshManifest={refreshManifest}
+      open
+      hideTrigger
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) setEditingTarget(null);
+      }}
+    />
+  ) : undefined;
+
+  return (
+    <WorkDetailView
+      view={view}
+      activeTarget={target}
+      editActions={editActions}
+      editingTarget={editingTarget}
+      editorPanel={editorPanel}
+    />
+  );
 }
