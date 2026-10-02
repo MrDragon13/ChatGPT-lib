@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import { BrokerHttpError } from "../../broker/client";
 import type { BrokerSessionValue } from "../../broker/BrokerSessionProvider";
 import type { DetailSignal } from "./selectors";
 import { FeedbackEditor } from "./FeedbackEditor";
@@ -45,7 +46,7 @@ describe("FeedbackEditor failed-operation retry", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Изменить впечатление" }));
-    fireEvent.change(screen.getByLabelText("Оценка"), { target: { value: "9" } });
+    fireEvent.change(screen.getByRole("spinbutton", { name: "Оценка" }), { target: { value: "9" } });
     fireEvent.click(screen.getByRole("button", { name: "Сохранить" }));
 
     expect(await screen.findByText("Не удалось применить")).toBeInTheDocument();
@@ -54,5 +55,43 @@ describe("FeedbackEditor failed-operation retry", () => {
 
     fireEvent.click(save);
     await waitFor(() => expect(submitFeedback).toHaveBeenCalledTimes(2));
+  });
+
+  it("adopts the existing operation when the first submit response is lost", async () => {
+    const operationId = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee";
+    const activeOperation = Object.assign(
+      new BrokerHttpError(409, "active_operation"),
+      { operationId, prNumber: 37 },
+    );
+    const submitFeedback = vi.fn()
+      .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+      .mockRejectedValueOnce(activeOperation);
+    const broker: BrokerSessionValue = {
+      configured: true,
+      authenticated: true,
+      login: vi.fn(),
+      logout: vi.fn(),
+      submitFeedback,
+      getOperationStatus: vi.fn(async () => ({ status: "checking" as const, pr_number: 37 })),
+    };
+
+    render(
+      <FeedbackEditor
+        workId="game-night-2018"
+        target="partner"
+        signal={{ ...signal, target: "partner", rating: null }}
+        broker={broker}
+        refreshManifest={vi.fn(async () => undefined)}
+        pollIntervalMs={60_000}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Изменить впечатление" }));
+    fireEvent.change(screen.getByRole("spinbutton", { name: "Оценка" }), { target: { value: "7" } });
+    fireEvent.click(screen.getByRole("button", { name: "Сохранить" }));
+
+    await waitFor(() => expect(submitFeedback).toHaveBeenCalledTimes(2));
+    expect(screen.getByText("Изменение отправлено")).toBeInTheDocument();
+    expect(screen.queryByText("Не удалось отправить изменение. Попробуйте ещё раз.")).not.toBeInTheDocument();
   });
 });
