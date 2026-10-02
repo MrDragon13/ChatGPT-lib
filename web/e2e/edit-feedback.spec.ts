@@ -26,7 +26,7 @@ async function installBrokerMocks(page: Page) {
   await page.route(`${brokerOrigin}/v1/auth/start`, async (route) => {
     await route.fulfill({
       contentType: "text/html",
-      body: `<!doctype html><script>window.opener.postMessage({type:'media-broker-auth',token:'broker-token'}, '${appOrigin}'); setTimeout(() => window.close(), 100);</script>`,
+      body: `<!doctype html><body data-mock-broker="ready"><script>window.opener.postMessage({type:'media-broker-auth',token:'broker-token'}, '${appOrigin}');</script></body>`,
     });
   });
 
@@ -76,7 +76,8 @@ test("owner can login, edit rating, observe progress and receive refreshed canon
   await expect(edit).toBeVisible();
   const popupPromise = page.waitForEvent("popup");
   await edit.click();
-  await popupPromise;
+  const popup = await popupPromise;
+  await expect(popup.locator("body[data-mock-broker='ready']")).toBeVisible();
 
   const rating = page.getByLabel("Оценка");
   await expect(rating).toBeVisible();
@@ -99,7 +100,7 @@ test("expired session requires a new login before editing continues", async ({ p
     loginCount += 1;
     await route.fulfill({
       contentType: "text/html",
-      body: `<!doctype html><script>window.opener.postMessage({type:'media-broker-auth',token:'broker-token-${loginCount}'}, '${appOrigin}'); setTimeout(() => window.close(), 100);</script>`,
+      body: `<!doctype html><body data-mock-broker="ready"><script>window.opener.postMessage({type:'media-broker-auth',token:'broker-token-${loginCount}'}, '${appOrigin}');</script></body>`,
     });
   });
   await page.route(`${brokerOrigin}/v1/feedback`, async (route) => {
@@ -114,7 +115,8 @@ test("expired session requires a new login before editing continues", async ({ p
   const edit = page.getByRole("button", { name: "Изменить впечатление" });
   let popup = page.waitForEvent("popup");
   await edit.click();
-  await popup;
+  const firstPopup = await popup;
+  await expect(firstPopup.locator("body[data-mock-broker='ready']")).toBeVisible();
   const rating = page.getByLabel("Оценка");
   await rating.fill((await rating.inputValue()) === "9" ? "8.5" : "9");
   await page.getByRole("button", { name: "Сохранить" }).click();
@@ -123,7 +125,8 @@ test("expired session requires a new login before editing continues", async ({ p
   await page.getByRole("button", { name: "Закрыть" }).click();
   popup = page.waitForEvent("popup");
   await edit.click();
-  await popup;
+  const secondPopup = await popup;
+  await expect(secondPopup.locator("body[data-mock-broker='ready']")).toBeVisible();
   await expect(page.getByLabel("Оценка")).toBeVisible();
   expect(loginCount).toBe(2);
 });
@@ -139,7 +142,8 @@ test("editor remains usable on mobile, keyboard accessible and reduced-motion sa
   await expect(edit).toBeFocused();
   const popup = page.waitForEvent("popup");
   await page.keyboard.press("Enter");
-  await popup;
+  const popupPage = await popup;
+  await expect(popupPage.locator("body[data-mock-broker='ready']")).toBeVisible();
 
   await expect(page.getByRole("form", { name: "Редактирование впечатления" })).toBeVisible();
   await expect(page.getByLabel("Оценка")).toBeVisible();
