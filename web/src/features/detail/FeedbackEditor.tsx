@@ -11,7 +11,7 @@ const REACTIONS: Array<{ value: FeedbackReaction; label: string }> = [
   { value: "mixed", label: "Смешанное впечатление" },
   { value: "neutral", label: "Нейтрально" },
   { value: "disliked", label: "Не понравилось" },
-  { value: "unknown", label: "Без оценки впечатления" },
+  { value: "unknown", label: "Без реакции" },
 ];
 
 const REACTION_VALUES = new Set<FeedbackReaction>(REACTIONS.map((entry) => entry.value));
