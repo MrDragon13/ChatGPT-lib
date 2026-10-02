@@ -127,7 +127,11 @@ describe("FeedbackEditor", () => {
     await waitFor(() => expect(save).toBeDisabled());
     fireEvent.click(save);
     expect(submitFeedback).toHaveBeenCalledTimes(1);
-    act(() => resolveSubmission?.({ operation_id: "11111111-2222-4333-8444-555555555555", pr_number: 42, status: "submitted" }));
+    await act(async () => {
+      resolveSubmission?.({ operation_id: "11111111-2222-4333-8444-555555555555", pr_number: 42, status: "submitted" });
+      await Promise.resolve();
+    });
+    expect(await screen.findByText("Изменение отправлено")).toBeInTheDocument();
   });
 
   it("renders an active-operation conflict without overwriting canonical state", async () => {
