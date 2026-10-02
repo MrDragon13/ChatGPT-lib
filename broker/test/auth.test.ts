@@ -131,4 +131,16 @@ describe("GitHub owner authentication", () => {
     expect(response.status).toBe(429);
     expect(env.AUTH_RATE_LIMITER.limit).toHaveBeenCalledTimes(1);
   });
+
+  it("scopes unauthenticated auth limiting to a coarse client network signal", async () => {
+    const env = makeEnv();
+    const response = await worker.fetch(new Request("https://broker.example/v1/auth/start", {
+      headers: { "CF-Connecting-IP": "203.0.113.7" },
+    }), env);
+
+    expect(response.status).toBe(302);
+    expect(env.AUTH_RATE_LIMITER.limit).toHaveBeenCalledWith({
+      key: "auth:/v1/auth/start:203.0.113.7",
+    });
+  });
 });
