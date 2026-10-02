@@ -4,6 +4,8 @@ import { resolve } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 
 const reviewDir = resolve("test-results/review");
+const brokerOrigin = "https://broker.test";
+const appOrigin = "http://127.0.0.1:4173";
 
 test.beforeAll(() => {
   mkdirSync(reviewDir, { recursive: true });
@@ -19,6 +21,14 @@ async function warmLazyArtwork(page: Page) {
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   await page.waitForLoadState("networkidle");
   await page.evaluate(() => window.scrollTo(0, 0));
+}
+
+async function openFirstPrimaryDetail(page: Page) {
+  await page.goto("#/library?target=primary");
+  const href = await page.locator(".library-card").first().getAttribute("href");
+  expect(href).toBeTruthy();
+  await page.goto(href ?? "#/library?target=primary");
+  await expect(page.locator(".detail-hero")).toHaveAttribute("data-motion", "reduced");
 }
 
 test("capture art-direction review surfaces", async ({ page }) => {
@@ -55,4 +65,30 @@ test("capture art-direction review surfaces", async ({ page }) => {
   await page.goto(mobileFirstHref ?? "#/library?target=couple");
   await expect(page.locator(".detail-hero")).toHaveAttribute("data-motion", "reduced");
   await page.screenshot({ path: resolve(reviewDir, "detail-mobile.png"), fullPage: true });
+});
+
+test("capture feedback editor review surfaces", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.context().route(`${brokerOrigin}/v1/auth/start`, async (route) => {
+    await route.fulfill({
+      contentType: "text/html",
+      body: `<!doctype html><script>window.opener.postMessage({type:'media-broker-auth',token:'broker-token'}, '${appOrigin}'); window.close();</script>`,
+    });
+  });
+
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openFirstPrimaryDetail(page);
+
+  const primaryCard = page.locator(".signal-panel").filter({
+    has: page.getByRole("heading", { name: "Я", exact: true }),
+  }).first();
+  const popup = page.waitForEvent("popup");
+  await primaryCard.getByRole("button", { name: "Изменить моё впечатление" }).click();
+  await popup;
+  await expect(page.getByRole("form", { name: "Редактирование впечатления — Я" })).toBeVisible();
+  await page.screenshot({ path: resolve(reviewDir, "detail-editor-desktop.png"), fullPage: true });
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.getByRole("form", { name: "Редактирование впечатления — Я" })).toBeVisible();
+  await page.screenshot({ path: resolve(reviewDir, "detail-editor-mobile.png"), fullPage: true });
 });
