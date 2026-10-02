@@ -4,6 +4,8 @@ export class BrokerHttpError extends Error {
   constructor(
     public readonly status: number,
     public readonly code: string,
+    public readonly stage: string | null = null,
+    public readonly upstreamStatus: number | null = null,
   ) {
     super(code);
     this.name = "BrokerHttpError";
@@ -15,9 +17,18 @@ async function requestJson<T>(url: string, token: string, init: RequestInit = {}
   headers.set("authorization", `Bearer ${token}`);
   if (init.body !== undefined) headers.set("content-type", "application/json");
   const response = await fetch(url, { ...init, headers });
-  const payload = await response.json().catch(() => ({})) as { error?: unknown } & T;
+  const payload = await response.json().catch(() => ({})) as {
+    error?: unknown;
+    stage?: unknown;
+    upstream_status?: unknown;
+  } & T;
   if (!response.ok) {
-    throw new BrokerHttpError(response.status, typeof payload.error === "string" ? payload.error : "broker_error");
+    throw new BrokerHttpError(
+      response.status,
+      typeof payload.error === "string" ? payload.error : "broker_error",
+      typeof payload.stage === "string" ? payload.stage : null,
+      typeof payload.upstream_status === "number" ? payload.upstream_status : null,
+    );
   }
   return payload;
 }
