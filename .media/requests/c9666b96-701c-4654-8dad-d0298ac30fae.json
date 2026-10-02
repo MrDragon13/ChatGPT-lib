@@ -1,1 +1,0 @@
-{"schema_version":1,"operation_id":"c9666b96-701c-4654-8dad-d0298ac30fae","operation":"record_viewing_feedback","work_ref":{"id":"grand-budapest-hotel-2014"},"create_if_missing":false,"target_updates":[{"target":"partner","rating":{"score":8,"source":"explicit","confidence":"exact"}}]}
