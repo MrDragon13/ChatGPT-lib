@@ -228,12 +228,17 @@ export function WorkDetailPage() {
     );
   }
 
+  const editTarget = target === "couple" && !view.activeSignal && view.signals.primary
+    ? "primary"
+    : target;
+  const editSignal = view.signals[editTarget] ?? null;
+
   const editControl = broker.configured ? (
     <FeedbackEditor
-      key={`${view.id}:${target}`}
+      key={`${view.id}:${editTarget}`}
       workId={view.id}
-      target={target}
-      signal={view.activeSignal}
+      target={editTarget}
+      signal={editSignal}
       broker={broker}
       refreshManifest={refreshManifest}
     />
