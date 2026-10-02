@@ -280,6 +280,7 @@ export function FeedbackEditor({
   }, [current, pending, refreshCompleted]);
 
   const validationError = ratingError(ratingInput);
+  const ratingSliderValue = ratingInput.trim() && !validationError ? ratingInput : "5.5";
   const change = useMemo(
     () => proposedChange(current, ratingInput, reaction, feedbackSummary),
     [current, ratingInput, reaction, feedbackSummary],
@@ -396,20 +397,38 @@ export function FeedbackEditor({
           ) : null}
 
           <div className="feedback-form__row">
-            <label>
-              <span>Оценка</span>
-              <input
-                type="number"
-                min="1"
-                max="10"
-                step="0.5"
-                inputMode="decimal"
-                value={ratingInput}
-                onChange={(event) => setRatingInput(event.currentTarget.value)}
-                aria-describedby={validationError ? "feedback-rating-error" : undefined}
-                disabled={operationPending || submitting}
-              />
-            </label>
+            <div className="feedback-form__rating-control">
+              <label>
+                <span>Оценка</span>
+                <input
+                  type="number"
+                  min="1"
+                  max="10"
+                  step="0.5"
+                  inputMode="decimal"
+                  value={ratingInput}
+                  onChange={(event) => setRatingInput(event.currentTarget.value)}
+                  aria-describedby={validationError ? "feedback-rating-error" : undefined}
+                  disabled={operationPending || submitting}
+                />
+              </label>
+              <div className="feedback-form__rating-slider">
+                <input
+                  type="range"
+                  min="1"
+                  max="10"
+                  step="0.5"
+                  value={ratingSliderValue}
+                  onChange={(event) => setRatingInput(event.currentTarget.value)}
+                  aria-label="Оценка, ползунок"
+                  disabled={operationPending || submitting}
+                />
+                <div className="feedback-form__rating-scale" aria-hidden="true">
+                  <span>1</span>
+                  <span>10</span>
+                </div>
+              </div>
+            </div>
             <label>
               <span>Реакция</span>
               <select
