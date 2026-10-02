@@ -1,4 +1,5 @@
 name: Media Pages
+run-name: Media Pages · ${{ inputs.expected_sha != '' && inputs.expected_sha || github.sha }}
 
 on:
   push:
@@ -10,6 +11,11 @@ on:
       - '.github/workflows/media-pages.yml'
       - 'pyproject.toml'
   workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: Optional exact main SHA expected by the caller
+        required: false
+        type: string
 
 concurrency:
   group: media-pages
@@ -24,6 +30,13 @@ jobs:
     steps:
       - name: Checkout exact revision
         uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.expected_sha != '' && inputs.expected_sha || github.sha }}
+      - name: Verify expected SHA
+        if: ${{ inputs.expected_sha != '' }}
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "${{ inputs.expected_sha }}"
       - name: Set up Python
         uses: actions/setup-python@v7
         with:

@@ -188,6 +188,24 @@ describe("feedback operation status", () => {
     await expect(getOperationStatus(operationId, env())).resolves.toMatchObject({ status: "published", merge_sha: "merge-sha" });
   });
 
+  it("reports published for an exact-sha Pages dispatch even when the workflow head moved", async () => {
+    mockScenario({
+      pr: openPr({ state: "closed", merged_at: "2026-10-02T10:00:00Z", merge_commit_sha: "merge-sha" }),
+      pagesRuns: [{
+        status: "completed",
+        conclusion: "success",
+        head_sha: "newer-main-sha",
+        display_title: "Media Pages · merge-sha",
+        html_url: "https://github.com/actions/runs/pages-dispatch",
+      }],
+    });
+    await expect(getOperationStatus(operationId, env())).resolves.toMatchObject({
+      status: "published",
+      merge_sha: "merge-sha",
+      actions_url: "https://github.com/actions/runs/pages-dispatch",
+    });
+  });
+
   it("reports deploy failure for the exact merge sha", async () => {
     mockScenario({
       pr: openPr({ state: "closed", merged_at: "2026-10-02T10:00:00Z", merge_commit_sha: "merge-sha" }),

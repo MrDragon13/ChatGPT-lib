@@ -276,8 +276,11 @@ export async function getOperationStatus(
   }
 
   if (pull.merged_at && pull.merge_commit_sha) {
-    const pagesRuns = await listWorkflowRuns(env, token, "media-pages.yml", { head_sha: pull.merge_commit_sha });
-    const exact = pagesRuns.find((run) => run.head_sha === pull.merge_commit_sha);
+    const pagesRuns = await listWorkflowRuns(env, token, "media-pages.yml", { branch: "main" });
+    const pagesTitle = `Media Pages · ${pull.merge_commit_sha}`;
+    const exact = pagesRuns.find(
+      (run) => run.head_sha === pull.merge_commit_sha || run.display_title === pagesTitle,
+    );
     const mergedBase = { ...base, merge_sha: pull.merge_commit_sha, actions_url: exact?.html_url };
     if (!exact || activeRun(exact)) return { ...mergedBase, status: "merged" };
     if (exact.conclusion === "success") return { ...mergedBase, status: "published" };

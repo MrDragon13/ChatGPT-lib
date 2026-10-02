@@ -7,7 +7,7 @@ on:
     types: [completed]
 
 permissions:
-  actions: read
+  actions: write
   contents: write
   pull-requests: write
 
@@ -158,6 +158,7 @@ jobs:
           exit 4
 
       - name: Merge verified normal data operation
+        id: merge
         if: ${{ steps.pr.outputs.eligible == 'true' }}
         shell: bash
         env:
@@ -172,3 +173,20 @@ jobs:
             -f merge_method=merge)
           printf '%s\n' "$RESPONSE"
           printf '%s' "$RESPONSE" | jq -e '.merged == true' >/dev/null
+          MERGE_SHA=$(printf '%s' "$RESPONSE" | jq -r '.sha // empty')
+          if [ -z "$MERGE_SHA" ]; then
+            echo "::error::Merge response did not contain a merge SHA"
+            exit 5
+          fi
+          echo "sha=$MERGE_SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Dispatch Media Pages for exact merge
+        if: ${{ steps.pr.outputs.eligible == 'true' }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MERGE_SHA: ${{ steps.merge.outputs.sha }}
+        run: |
+          set -euo pipefail
+          test -n "$MERGE_SHA"
+          gh workflow run media-pages.yml --ref main -f expected_sha="$MERGE_SHA"
