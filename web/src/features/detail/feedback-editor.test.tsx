@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { BrokerHttpError } from "../../broker/client";
 import type { BrokerSessionValue } from "../../broker/BrokerSessionProvider";
 import type { DetailSignal } from "./selectors";
-import { FeedbackEditor, operationStatusLabel } from "./FeedbackEditor";
+import { FeedbackEditor, type FeedbackEditorProps, operationStatusLabel } from "./FeedbackEditor";
 
 const baseSignal: DetailSignal = {
   target: "primary",
@@ -38,13 +38,13 @@ function renderEditor(options: {
 } = {}) {
   const brokerValue = options.broker ?? broker();
   const refreshManifest = options.refreshManifest ?? vi.fn(async () => undefined);
-  const props = {
+  const props: FeedbackEditorProps = {
     workId: "arrival-2016",
     target: "primary",
     signal: options.signal === undefined ? baseSignal : options.signal,
     broker: brokerValue,
     refreshManifest,
-    pollIntervalMs: options.pollIntervalMs ?? 60_000,
+    ...(options.pollIntervalMs === undefined ? {} : { pollIntervalMs: options.pollIntervalMs }),
   };
   return { ...render(<FeedbackEditor {...props} />), broker: brokerValue, refreshManifest, props };
 }
@@ -132,6 +132,31 @@ describe("FeedbackEditor", () => {
       await Promise.resolve();
     });
     expect(await screen.findByText("Изменение отправлено")).toBeInTheDocument();
+  });
+
+  it("keeps default status polling within the broker read-rate budget", async () => {
+    vi.useFakeTimers();
+    const getOperationStatus = vi.fn(async () => ({ status: "submitted" as const, pr_number: 42 }));
+    renderEditor({ broker: broker({ getOperationStatus }) });
+    fireEvent.click(screen.getByRole("button", { name: "Изменить впечатление" }));
+    fireEvent.change(screen.getByLabelText("Оценка"), { target: { value: "9" } });
+    fireEvent.click(screen.getByRole("button", { name: "Сохранить" }));
+
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(screen.getByText("Изменение отправлено")).toBeInTheDocument();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(2_999);
+    });
+    expect(getOperationStatus).not.toHaveBeenCalled();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1);
+    });
+    expect(getOperationStatus).toHaveBeenCalledTimes(1);
   });
 
   it("renders an active-operation conflict without overwriting canonical state", async () => {
