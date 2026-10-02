@@ -19,7 +19,9 @@ async function openFirstPrimaryDetail(page: Page): Promise<string> {
 }
 
 function primaryFeedbackCard(page: Page): Locator {
-  return page.getByRole("heading", { name: "Я" }).locator("xpath=ancestor::article[1]");
+  return page.locator(".signal-panel").filter({
+    has: page.getByRole("heading", { name: "Я", exact: true }),
+  }).first();
 }
 
 function primaryFeedbackForm(page: Page): Locator {
