@@ -190,4 +190,4 @@ jobs:
         run: |
           set -euo pipefail
           test -n "$MERGE_SHA"
-          gh workflow run media-pages.yml --repo "$REPO" --ref main -f expected_sha="$MERGE_SHA"
+          gh workflow run media-pages.yml --repo "$REPO" --ref main -f expected_sha="$MERGE_SHA" -f publish_mode=media
