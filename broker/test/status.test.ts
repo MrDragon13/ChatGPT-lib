@@ -1,6 +1,8 @@
 import { beforeAll, afterEach, describe, expect, it, vi } from "vitest";
 
 import type { BrokerEnv } from "../src/env";
+import worker from "../src/index";
+import { issueSession } from "../src/auth";
 import { getOperationStatus } from "../src/operations";
 
 let privateKeyPem = "";
@@ -19,7 +21,7 @@ async function generatePrivateKeyPem(): Promise<string> {
   return `-----BEGIN PRIVATE KEY-----\n${lines.join("\n")}\n-----END PRIVATE KEY-----`;
 }
 
-function env(): BrokerEnv {
+function env(writeAllowed = true): BrokerEnv {
   return {
     REPO_OWNER: "MrDragon13",
     REPO_NAME: "ChatGPT-lib",
@@ -32,7 +34,7 @@ function env(): BrokerEnv {
     GITHUB_APP_CLIENT_SECRET: "client-secret",
     BROKER_SESSION_SECRET: "session-secret-that-is-long-enough",
     AUTH_RATE_LIMITER: { limit: vi.fn(async () => ({ success: true })) },
-    WRITE_RATE_LIMITER: { limit: vi.fn(async () => ({ success: true })) },
+    WRITE_RATE_LIMITER: { limit: vi.fn(async () => ({ success: writeAllowed })) },
   };
 }
 
@@ -166,5 +168,18 @@ describe("feedback operation status", () => {
   it("reports merge failure when the operation PR closes without merging", async () => {
     mockScenario({ pr: openPr({ state: "closed", merged_at: null, merge_commit_sha: null }) });
     await expect(getOperationStatus(operationId, env())).resolves.toMatchObject({ status: "failed", reason: "merge_failed" });
+  });
+
+  it("rate limits authenticated operation polling before GitHub status lookup", async () => {
+    const brokerEnv = env(false);
+    const token = await issueSession("197501470", brokerEnv);
+    mockScenario({ pr: openPr() });
+
+    const response = await worker.fetch(new Request(`https://broker.example/v1/operations/${operationId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }), brokerEnv);
+
+    expect(response.status).toBe(429);
+    expect(brokerEnv.WRITE_RATE_LIMITER.limit).toHaveBeenCalledWith({ key: "status:197501470" });
   });
 });
