@@ -26,7 +26,7 @@ async function installBrokerMocks(page: Page) {
   await page.route(`${brokerOrigin}/v1/auth/start`, async (route) => {
     await route.fulfill({
       contentType: "text/html",
-      body: `<!doctype html><script>window.opener.postMessage({type:'media-broker-auth',token:'broker-token'}, '${appOrigin}'); window.close();</script>`,
+      body: `<!doctype html><script>window.opener.postMessage({type:'media-broker-auth',token:'broker-token'}, '${appOrigin}'); setTimeout(() => window.close(), 100);</script>`,
     });
   });
 
@@ -99,7 +99,7 @@ test("expired session requires a new login before editing continues", async ({ p
     loginCount += 1;
     await route.fulfill({
       contentType: "text/html",
-      body: `<!doctype html><script>window.opener.postMessage({type:'media-broker-auth',token:'broker-token-${loginCount}'}, '${appOrigin}'); window.close();</script>`,
+      body: `<!doctype html><script>window.opener.postMessage({type:'media-broker-auth',token:'broker-token-${loginCount}'}, '${appOrigin}'); setTimeout(() => window.close(), 100);</script>`,
     });
   });
   await page.route(`${brokerOrigin}/v1/feedback`, async (route) => {
