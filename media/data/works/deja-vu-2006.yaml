@@ -14,18 +14,81 @@ identity:
     imdb: tt0453467
 viewer_signals:
   primary:
-    viewing:
-      status: unwatched
-    rating:
-      score: null
-      source: none
-      confidence: none
-    feedback:
-      summary: Не смотрел.
-      signals: []
+    viewing: &id001
+      status: watched
+    rating: &id002
+      score: 7.5
+      source: explicit
+      confidence: exact
+    feedback: &id003
+      summary: Интересный фильм с хорошо продуманным сюжетом и замкнутой временной
+        петлёй. Возможно, уже смотрел его раньше, но был не против посмотреть снова.
+        Снизил балл за моменты, где глупость двигает сюжет, и за визуальную стилистику,
+        которая не впечатлила. В целом неплох для совместного просмотра.
+      signals:
+      - term: entertainment.engaging
+        sentiment: positive
+        strength: 2
+        source: explicit
+        confidence: high
+      - term: story.logic
+        sentiment: mixed
+        strength: 2
+        source: explicit
+        confidence: high
+      - term: narrative.time_loop
+        sentiment: positive
+        strength: 2
+        source: explicit
+        confidence: high
+      - term: visuals.strong
+        sentiment: negative
+        strength: 1
+        source: explicit
+        confidence: high
+    history:
+    - at: '2026-10-02T21:54:11.465570Z'
+      previous:
+        viewing:
+          status: unwatched
+        rating:
+          score: null
+          source: none
+          confidence: none
+        feedback:
+          summary: Не смотрел.
+          signals: []
+      current:
+        viewing: *id001
+        rating: *id002
+        feedback: *id003
+  partner:
+    viewing: &id004
+      status: watched
+    rating: &id005
+      score: 8
+      source: explicit
+      confidence: exact
+    feedback: &id006
+      summary: Прикольный и интересный фильм, есть над чем задуматься. Ничего не поняла,
+        но ей нравится, когда не всё понятно и муж потом объясняет. Жаль, что фильм
+        мало собрал в прокате.
+      signals:
+      - term: entertainment.engaging
+        sentiment: positive
+        strength: 2
+        source: explicit
+        confidence: high
+    history:
+    - at: '2026-10-02T21:54:11.464696Z'
+      previous: {}
+      current:
+        viewing: *id004
+        rating: *id005
+        feedback: *id006
 provenance:
   created_at: '2026-10-01'
-  updated_at: '2026-10-01'
+  updated_at: '2026-10-02'
 metadata:
   external:
     genres:
