@@ -21,7 +21,8 @@ async function generatePrivateKeyPem(): Promise<string> {
   return `-----BEGIN PRIVATE KEY-----\n${lines.join("\n")}\n-----END PRIVATE KEY-----`;
 }
 
-function env(writeAllowed = true): BrokerEnv {
+function env(options: { authAllowed?: boolean; writeAllowed?: boolean } = {}): BrokerEnv {
+  const { authAllowed = true, writeAllowed = true } = options;
   return {
     REPO_OWNER: "MrDragon13",
     REPO_NAME: "ChatGPT-lib",
@@ -33,7 +34,7 @@ function env(writeAllowed = true): BrokerEnv {
     GITHUB_APP_PRIVATE_KEY: privateKeyPem,
     GITHUB_APP_CLIENT_SECRET: "client-secret",
     BROKER_SESSION_SECRET: "session-secret-that-is-long-enough",
-    AUTH_RATE_LIMITER: { limit: vi.fn(async () => ({ success: true })) },
+    AUTH_RATE_LIMITER: { limit: vi.fn(async () => ({ success: authAllowed })) },
     WRITE_RATE_LIMITER: { limit: vi.fn(async () => ({ success: writeAllowed })) },
   };
 }
@@ -171,7 +172,7 @@ describe("feedback operation status", () => {
   });
 
   it("rate limits authenticated operation polling before GitHub status lookup", async () => {
-    const brokerEnv = env(false);
+    const brokerEnv = env({ authAllowed: false });
     const token = await issueSession("197501470", brokerEnv);
     mockScenario({ pr: openPr() });
 
@@ -180,6 +181,7 @@ describe("feedback operation status", () => {
     }), brokerEnv);
 
     expect(response.status).toBe(429);
-    expect(brokerEnv.WRITE_RATE_LIMITER.limit).toHaveBeenCalledWith({ key: "status:197501470" });
+    expect(brokerEnv.AUTH_RATE_LIMITER.limit).toHaveBeenCalledWith({ key: "status:197501470" });
+    expect(brokerEnv.WRITE_RATE_LIMITER.limit).not.toHaveBeenCalled();
   });
 });
