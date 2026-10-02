@@ -22,7 +22,7 @@ const REACTION_LABELS: Record<string, string> = {
   disliked: "Не понравилось",
   neutral: "Нейтрально",
   mixed: "Смешанное впечатление",
-  unknown: "Без оценки впечатления",
+  unknown: "Без реакции",
 };
 
 const VIEWING_LABELS: Record<string, string> = {
@@ -71,7 +71,6 @@ function SignalPanel({
     >
       <div className="signal-panel__heading">
         <h3>{TARGET_LABELS[target] ?? target}</h3>
-        {active ? <span>Текущий контекст</span> : null}
       </div>
       {signal ? (
         <>
@@ -306,18 +305,26 @@ export function WorkDetailPage() {
         const isLoggingIn = loginTarget === editTarget;
         const disabled = Boolean(editingTarget || loginTarget);
         const actionVerb = signal ? "Изменить" : "Добавить";
+
+        if (isEditing) {
+          actions[editTarget] = (
+            <span className="signal-panel__editing-status" role="status">
+              Редактируется
+            </span>
+          );
+          return actions;
+        }
+
         actions[editTarget] = (
           <button
-            className="signal-panel__edit-button"
+            className={`signal-panel__edit-button${disabled ? " signal-panel__edit-button--blocked" : ""}`}
             type="button"
             onClick={() => beginEditing(editTarget)}
             disabled={disabled}
-            aria-label={isEditing
-              ? `Редактируется: ${targetImpressionLabel(editTarget)}`
-              : `${actionVerb} ${targetImpressionLabel(editTarget)}`}
+            aria-label={`${actionVerb} ${targetImpressionLabel(editTarget)}`}
           >
-            {isEditing ? null : signal ? <PencilSimple aria-hidden="true" /> : <Plus aria-hidden="true" />}
-            <span>{isEditing ? "Редактируется" : isLoggingIn ? "Входим…" : actionVerb}</span>
+            {signal ? <PencilSimple aria-hidden="true" /> : <Plus aria-hidden="true" />}
+            <span>{isLoggingIn ? "Входим…" : actionVerb}</span>
           </button>
         );
         return actions;
