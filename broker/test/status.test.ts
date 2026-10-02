@@ -80,7 +80,12 @@ function mockScenario(scenario: Scenario): void {
       return json({ workflow_runs: scenario.commandRuns ?? [] });
     }
     if (url.pathname.includes("/actions/workflows/media-check.yml/runs")) {
-      return json({ workflow_runs: scenario.checkRuns ?? [] });
+      const requestedEvent = url.searchParams.get("event");
+      const runs = (scenario.checkRuns ?? []).filter((run) => {
+        if (!requestedEvent || !("event" in run)) return true;
+        return run.event === requestedEvent;
+      });
+      return json({ workflow_runs: runs });
     }
     if (url.pathname.includes("/actions/workflows/media-auto-merge.yml/runs")) {
       return json({ workflow_runs: scenario.mergeRuns ?? [] });
@@ -132,12 +137,37 @@ describe("feedback operation status", () => {
     await expect(getOperationStatus(operationId, env())).resolves.toMatchObject({ status: "failed", reason: "check_failed" });
   });
 
+  it("ignores approval-required pull_request checks when the exact dispatched check succeeds", async () => {
+    mockScenario({
+      pr: openPr(),
+      commandRuns: [{ status: "completed", conclusion: "success", head_sha: "request-head" }],
+      checkRuns: [
+        { event: "pull_request", status: "completed", conclusion: "action_required", head_sha: "operation-head" },
+        { event: "workflow_dispatch", status: "completed", conclusion: "success", head_sha: "operation-head", html_url: "https://github.com/actions/runs/check" },
+      ],
+      mergeRuns: [{
+        status: "in_progress",
+        conclusion: null,
+        display_title: `Media Auto Merge · ${branch}`,
+        html_url: "https://github.com/actions/runs/merge",
+      }],
+    });
+    await expect(getOperationStatus(operationId, env())).resolves.toMatchObject({
+      status: "checking",
+      actions_url: "https://github.com/actions/runs/merge",
+    });
+  });
+
   it("reports merge failure after a successful check when auto merge fails", async () => {
     mockScenario({
       pr: openPr(),
       commandRuns: [{ status: "completed", conclusion: "success", head_sha: "operation-head" }],
       checkRuns: [{ status: "completed", conclusion: "success", head_sha: "operation-head" }],
-      mergeRuns: [{ status: "completed", conclusion: "failure", head_branch: branch }],
+      mergeRuns: [{
+        status: "completed",
+        conclusion: "failure",
+        display_title: `Media Auto Merge · ${branch}`,
+      }],
     });
     await expect(getOperationStatus(operationId, env())).resolves.toMatchObject({ status: "failed", reason: "merge_failed" });
   });

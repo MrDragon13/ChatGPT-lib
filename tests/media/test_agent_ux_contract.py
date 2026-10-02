@@ -27,11 +27,13 @@ def test_feedback_write_does_not_require_second_confirmation():
 def test_normal_data_write_has_guarded_auto_merge_workflow():
     text = _text(".github/workflows/media-auto-merge.yml")
     assert "workflow_run:" in text
-    assert "workflows: [Media Check]" in text
+    assert "workflows: [Media Command]" in text
     assert "github.event.workflow_run.conclusion == 'success'" in text
-    assert "github.event.workflow_run.event == 'workflow_dispatch'" in text
+    assert "github.event.workflow_run.event == 'pull_request'" in text
     assert "startsWith(github.event.workflow_run.head_branch, 'media/op-')" in text
-    assert "head.sha" in text
+    assert "media-check.yml" in text
+    assert "event=workflow_dispatch" in text
+    assert "head_sha" in text
     assert "base.ref" in text
     assert "media/data/works/" in text
     assert ".media/operations/" in text
