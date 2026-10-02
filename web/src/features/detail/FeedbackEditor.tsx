@@ -127,7 +127,7 @@ export function FeedbackEditor({
   signal,
   broker,
   refreshManifest,
-  pollIntervalMs = 2_500,
+  pollIntervalMs = 3_000,
 }: FeedbackEditorProps) {
   const current = useMemo(
     () => snapshot(signal),
