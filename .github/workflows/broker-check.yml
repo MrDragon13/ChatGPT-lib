@@ -1,0 +1,31 @@
+name: Broker Check
+
+on:
+  pull_request:
+    paths:
+      - 'broker/**'
+      - '.github/workflows/broker-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: broker
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.22.2'
+          cache: npm
+          cache-dependency-path: broker/package-lock.json
+      - name: Install broker dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Run broker tests
+        run: npm run test:run
+      - name: Typecheck broker
+        run: npm run typecheck

@@ -3,8 +3,10 @@ import { motion, useReducedMotion } from "motion/react";
 import { useParams } from "react-router-dom";
 
 import { useAppContext } from "../../app/AppShell";
+import { useBrokerSession } from "../../broker/BrokerSessionProvider";
 import type { TargetId } from "../../data/types";
 import { revealMotion } from "../../motion/transitions";
+import { FeedbackEditor } from "./FeedbackEditor";
 import { buildWorkDetailView, type DetailSignal, type WorkDetailModel } from "./selectors";
 import "./detail.css";
 
@@ -69,9 +71,11 @@ function SignalPanel({ signal, active }: { signal: DetailSignal; active: boolean
 export function WorkDetailView({
   view,
   activeTarget,
+  editControl,
 }: {
   view: WorkDetailModel;
   activeTarget: TargetId;
+  editControl?: React.ReactNode;
 }) {
   const reduceMotion = useReducedMotion();
   const orderedSignals = [
@@ -142,9 +146,11 @@ export function WorkDetailView({
         ) : (
           <p className="detail-muted">Для этого профиля пока нет записанного впечатления.</p>
         )}
-        <div className="future-edit-boundary" data-testid="future-edit-boundary">
-          <span>Режим только для чтения</span>
-        </div>
+        {editControl ?? (
+          <div className="future-edit-boundary" data-testid="future-edit-boundary">
+            <span>Режим только для чтения</span>
+          </div>
+        )}
       </motion.section>
 
       {view.externalRating !== null ? (
@@ -208,7 +214,8 @@ export function WorkDetailView({
 
 export function WorkDetailPage() {
   const { id } = useParams();
-  const { manifest, target } = useAppContext();
+  const { manifest, target, refreshManifest } = useAppContext();
+  const broker = useBrokerSession();
   const view = id ? buildWorkDetailView(manifest, id, target) : null;
 
   if (!view) {
@@ -221,5 +228,16 @@ export function WorkDetailPage() {
     );
   }
 
-  return <WorkDetailView view={view} activeTarget={target} />;
+  const editControl = broker.configured ? (
+    <FeedbackEditor
+      key={`${view.id}:${target}`}
+      workId={view.id}
+      target={target}
+      signal={view.activeSignal}
+      broker={broker}
+      refreshManifest={refreshManifest}
+    />
+  ) : undefined;
+
+  return <WorkDetailView view={view} activeTarget={target} editControl={editControl} />;
 }

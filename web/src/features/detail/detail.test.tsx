@@ -135,10 +135,21 @@ describe("work detail", () => {
     expect(screen.getByRole("heading", { name: "Прибытие" })).toBeInTheDocument();
   });
 
-  it("keeps v1 detail read-only while preserving a future action boundary", () => {
+  it("keeps a read-only fallback when no edit control is supplied", () => {
     const view = buildWorkDetailView(manifest(), "arrival-2016", "primary")!;
     render(<WorkDetailView view={view} activeTarget="primary" />);
-    expect(screen.getByTestId("future-edit-boundary")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /редакт|сохран/i })).not.toBeInTheDocument();
+    expect(screen.getByTestId("future-edit-boundary")).toHaveTextContent("Режим только для чтения");
+  });
+
+  it("renders the edit control beside the still-published canonical signal", () => {
+    const view = buildWorkDetailView(manifest(), "arrival-2016", "primary")!;
+    render(<WorkDetailView
+      view={view}
+      activeTarget="primary"
+      editControl={<button type="button">Изменить впечатление</button>}
+    />);
+    expect(screen.getByText("8.5/10")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Изменить впечатление" })).toBeInTheDocument();
+    expect(screen.queryByTestId("future-edit-boundary")).not.toBeInTheDocument();
   });
 });

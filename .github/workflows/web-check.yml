@@ -55,7 +55,9 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Run browser checks
         working-directory: web
-        run: npm run test:e2e -- responsive.spec.ts motion.spec.ts a11y.spec.ts
+        env:
+          VITE_MEDIA_BROKER_URL: https://broker.test
+        run: npm run test:e2e -- responsive.spec.ts motion.spec.ts a11y.spec.ts edit-feedback.spec.ts
       - name: Capture review screenshots
         working-directory: web
         run: npm run test:e2e -- review.spec.ts

@@ -1,0 +1,23 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "chatgpt-lib-media-broker",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "vars": {
+    "REPO_OWNER": "MrDragon13",
+    "REPO_NAME": "ChatGPT-lib",
+    "ALLOWED_ORIGIN": "https://mrdragon13.github.io"
+  },
+  "ratelimits": [
+    {
+      "name": "AUTH_RATE_LIMITER",
+      "namespace_id": "1001",
+      "simple": { "limit": 20, "period": 60 }
+    },
+    {
+      "name": "WRITE_RATE_LIMITER",
+      "namespace_id": "1002",
+      "simple": { "limit": 10, "period": 60 }
+    }
+  ]
+}

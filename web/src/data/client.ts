@@ -28,9 +28,9 @@ function assertManifestV1(value: unknown): asserts value is WebManifest {
   }
 }
 
-export async function loadManifest(
-  url = `${import.meta.env.BASE_URL}data/manifest.json`,
-): Promise<WebManifest> {
+export async function loadManifest(cacheBust?: string): Promise<WebManifest> {
+  const baseUrl = `${import.meta.env.BASE_URL}data/manifest.json`;
+  const url = cacheBust ? `${baseUrl}?rev=${encodeURIComponent(cacheBust)}` : baseUrl;
   let response: Response;
   try {
     response = await fetch(url, { headers: { Accept: "application/json" } });
