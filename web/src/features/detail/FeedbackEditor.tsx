@@ -282,7 +282,7 @@ export function FeedbackEditor({
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (submitting || pending || validationError || !dirty) return;
+    if (submitting || (pending && pending.status !== "failed") || validationError || !dirty) return;
     setSubmitting(true);
     setMessage(null);
     try {
@@ -420,7 +420,7 @@ export function FeedbackEditor({
               <button
                 className="feedback-form__primary"
                 type="submit"
-                disabled={!dirty || Boolean(validationError) || submitting || Boolean(pending)}
+                disabled={!dirty || Boolean(validationError) || submitting || Boolean(pending && pending.status !== "failed")}
               >
                 {submitting ? "Отправляем…" : "Сохранить"}
               </button>
