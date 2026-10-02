@@ -101,7 +101,7 @@ test("owner can login, edit rating, observe progress and receive refreshed canon
   expect(gridBox).not.toBeNull();
   expect(Math.abs((panelBox?.width ?? 0) - (gridBox?.width ?? 0))).toBeLessThanOrEqual(2);
 
-  const rating = form.getByLabel("Оценка");
+  const rating = form.getByLabel("Оценка", { exact: true });
   await expect(rating).toBeVisible();
   const current = await rating.inputValue();
   const next = current === "9.5" ? "9" : "9.5";
@@ -140,7 +140,7 @@ test("expired session requires a new login before editing continues", async ({ p
   await edit.click();
   await popup;
   let form = primaryFeedbackForm(page);
-  const rating = form.getByLabel("Оценка");
+  const rating = form.getByLabel("Оценка", { exact: true });
   await rating.fill((await rating.inputValue()) === "9" ? "8.5" : "9");
   await form.getByRole("button", { name: "Сохранить" }).click();
   await expect(page.getByText("Сессия истекла. Войдите через GitHub снова.")).toBeVisible();
@@ -150,7 +150,7 @@ test("expired session requires a new login before editing continues", async ({ p
   await edit.click();
   await popup;
   form = primaryFeedbackForm(page);
-  await expect(form.getByLabel("Оценка")).toBeVisible();
+  await expect(form.getByLabel("Оценка", { exact: true })).toBeVisible();
   expect(loginCount).toBe(2);
 });
 
@@ -170,7 +170,8 @@ test("editor remains usable on mobile, keyboard accessible and reduced-motion sa
 
   const form = primaryFeedbackForm(page);
   await expect(form).toBeVisible();
-  await expect(form.getByLabel("Оценка")).toBeVisible();
+  await expect(form.getByLabel("Оценка", { exact: true })).toBeVisible();
+  await expect(form.getByRole("slider", { name: "Оценка, ползунок" })).toBeVisible();
   await expect(form.getByLabel("Реакция")).toBeVisible();
   await expect(form.getByLabel("Отзыв")).toBeVisible();
   await expect(card.locator("form")).toHaveCount(0);
