@@ -64,3 +64,12 @@ def test_pages_browser_gate_exercises_production_bundle_without_mock_broker() ->
     text = _workflow_text()
     assert "npm run test:e2e -- responsive.spec.ts motion.spec.ts a11y.spec.ts" in text
     assert "edit-feedback.spec.ts" not in text
+
+
+def test_pages_final_production_build_happens_after_browser_checks() -> None:
+    text = _workflow_text()
+    browser = text.index("npm run test:e2e -- responsive.spec.ts motion.spec.ts a11y.spec.ts")
+    build = text.index("npm run build")
+    scan = text.index("npm run scan:dist")
+    upload = text.index("actions/upload-pages-artifact@v4")
+    assert browser < build < scan < upload, "browser webServer must not overwrite the publishable dist"
