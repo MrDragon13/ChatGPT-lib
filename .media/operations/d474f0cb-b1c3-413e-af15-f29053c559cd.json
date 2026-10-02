@@ -1,0 +1,14 @@
+{
+  "applied_at": "2026-10-02T15:10:42.730570+00:00",
+  "changed_entities": [
+    "batman-2022"
+  ],
+  "changed_files": [
+    "media/data/works/batman-2022.yaml",
+    "media/generated/index.jsonl",
+    ".media/operations/d474f0cb-b1c3-413e-af15-f29053c559cd.json"
+  ],
+  "operation": "record_viewing_feedback",
+  "operation_id": "d474f0cb-b1c3-413e-af15-f29053c559cd",
+  "status": "applied"
+}
