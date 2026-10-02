@@ -159,7 +159,6 @@
 .signal-panel__heading {
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
   gap: 14px;
 }
 
@@ -167,13 +166,6 @@
   margin: 0;
   font-size: 1.05rem;
   font-weight: 600;
-}
-
-.signal-panel__heading > span {
-  color: var(--color-accent);
-  font-size: 0.68rem;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
 }
 
 .signal-panel dl {
@@ -230,6 +222,7 @@
   font-size: 0.82rem;
   font-weight: 570;
   cursor: pointer;
+  transition: border-color 140ms ease, color 140ms ease;
 }
 
 .signal-panel__edit-button svg {
@@ -253,7 +246,35 @@
 
 .signal-panel__edit-button:disabled {
   cursor: default;
-  opacity: 0.48;
+  opacity: 1;
+}
+
+.signal-panel__edit-button--blocked {
+  border-color: rgb(243 240 232 / 0.08);
+  color: rgb(243 240 232 / 0.42);
+}
+
+.signal-panel__edit-button--blocked svg {
+  color: rgb(224 181 108 / 0.38);
+}
+
+.signal-panel__editing-status {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--color-accent);
+  font-size: 0.82rem;
+  font-weight: 570;
+}
+
+.signal-panel__editing-status::before {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  content: "";
+  box-shadow: 0 0 0 3px rgb(224 181 108 / 0.1);
 }
 
 .feedback-editor-panel {
