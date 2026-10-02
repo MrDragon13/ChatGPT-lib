@@ -104,7 +104,7 @@ describe("personal-first target editing", () => {
     expect(screen.getByLabelText("Оценка")).toHaveValue(8.5);
     expect(screen.getByLabelText("Реакция")).toHaveValue("liked");
     expect(screen.getByLabelText("Отзыв")).toHaveValue("Умная фантастика без суеты.");
-    expect(screen.getByText("Сохранится в: Я")).toBeInTheDocument();
+    expect(form.querySelector(".feedback-form__heading")).toHaveTextContent("Сохранится в: Я");
   });
 
   it("keeps an empty Вместе record distinct and copies Я only on explicit request", async () => {
@@ -117,8 +117,8 @@ describe("personal-first target editing", () => {
     expect(add).toHaveTextContent("Добавить");
     fireEvent.click(add);
 
-    expect(screen.getByRole("form", { name: "Редактирование впечатления — Вместе" })).toBeInTheDocument();
-    expect(screen.getByText("Сохранится в: Вместе")).toBeInTheDocument();
+    const form = screen.getByRole("form", { name: "Редактирование впечатления — Вместе" });
+    expect(form.querySelector(".feedback-form__heading")).toHaveTextContent("Сохранится в: Вместе");
     expect(screen.getByLabelText("Оценка")).toHaveValue(null);
     expect(screen.getByLabelText("Реакция")).toHaveValue("unknown");
     expect(screen.getByLabelText("Отзыв")).toHaveValue("");
@@ -126,7 +126,7 @@ describe("personal-first target editing", () => {
     fireEvent.click(screen.getByRole("button", { name: "Взять «Я» за основу" }));
 
     expect(screen.getByText("Взято за основу: Я")).toBeInTheDocument();
-    expect(screen.getByText("Сохранится в: Вместе")).toBeInTheDocument();
+    expect(form.querySelector(".feedback-form__heading")).toHaveTextContent("Сохранится в: Вместе");
     expect(screen.getByLabelText("Оценка")).toHaveValue(8.5);
     expect(screen.getByLabelText("Реакция")).toHaveValue("liked");
     expect(screen.getByLabelText("Отзыв")).toHaveValue("Умная фантастика без суеты.");
