@@ -185,8 +185,9 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
           MERGE_SHA: ${{ steps.merge.outputs.sha }}
         run: |
           set -euo pipefail
           test -n "$MERGE_SHA"
-          gh workflow run media-pages.yml --ref main -f expected_sha="$MERGE_SHA"
+          gh workflow run media-pages.yml --repo "$REPO" --ref main -f expected_sha="$MERGE_SHA"
