@@ -24,7 +24,7 @@
 - [Как пользоваться медиатекой](docs/guides/media-usage.md) — пользовательские сценарии.
 - [Как разрабатывать](docs/guides/development.md) — developer workflow, TDD и ownership документации.
 - [Архитектура системы](docs/architecture/overview.md) — компоненты, data flow и security boundaries.
-- [Media subsystem](media/README.md) — локальная точка входа в `media/`.
+- [Personal Media Library v5](media/README.md) — локальная точка входа в `media/` и compatibility entry path для subsystem docs.
 - [Старт нового киноассистента](media/START_PROMPT.md) — human-facing launcher.
 - [`AGENTS.md`](AGENTS.md) — router для LLM/agent workflows.
 
