@@ -75,11 +75,7 @@ jobs:
           OP_MARKERS=()
           for path in "${FILES[@]}"; do
             case "$path" in
-              media/data/works/*.yaml)
-                ;;
-              media/generated/index.jsonl)
-                ;;
-              media/generated/profiles/*.yaml)
+              media/data/works/*.yaml|media/preferences/inferred/*.yaml|media/data/interactions/*.jsonl|media/generated/index.jsonl|media/generated/profiles/*.yaml)
                 ;;
               .media/operations/*.json)
                 OP_MARKERS+=("$path")
@@ -103,11 +99,46 @@ jobs:
             echo "::error::Operation marker is not applied"
             exit 3
           fi
+
           case "$OP_KIND" in
-            add_work|record_viewing_feedback|set_interest)
+            add_work|record_viewing_feedback|set_interest|edit_viewing_feedback|set_semantic_fingerprint)
+              for path in "${FILES[@]}"; do
+                case "$path" in
+                  media/data/works/*.yaml|media/generated/index.jsonl|media/generated/profiles/*.yaml|.media/operations/*.json)
+                    ;;
+                  *)
+                    echo "::error::$OP_KIND may not auto-merge path: $path"
+                    exit 3
+                    ;;
+                esac
+              done
+              ;;
+            set_inferred_preferences)
+              for path in "${FILES[@]}"; do
+                case "$path" in
+                  media/preferences/inferred/*.yaml|media/generated/profiles/*.yaml|.media/operations/*.json)
+                    ;;
+                  *)
+                    echo "::error::$OP_KIND may not auto-merge path: $path"
+                    exit 3
+                    ;;
+                esac
+              done
+              ;;
+            record_recommendation_interaction)
+              for path in "${FILES[@]}"; do
+                case "$path" in
+                  media/data/interactions/*.jsonl|media/generated/profiles/*.yaml|.media/operations/*.json)
+                    ;;
+                  *)
+                    echo "::error::$OP_KIND may not auto-merge path: $path"
+                    exit 3
+                    ;;
+                esac
+              done
               ;;
             *)
-              echo "::error::Operation kind is not eligible for v1.2 auto-merge: $OP_KIND"
+              echo "::error::Operation kind is not eligible for v5 auto-merge: $OP_KIND"
               exit 3
               ;;
           esac
