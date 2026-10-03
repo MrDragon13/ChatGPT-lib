@@ -302,3 +302,46 @@ def reconcile_similarity_for_new_work(
             rel = f"media/data/relations/similarity/{path.name}"
             updated_documents[rel] = output
     return updated_documents
+
+
+def similarity_context(media_root: Path, target: str) -> list[dict[str, Any]]:
+    repo = YamlRepository(Path(media_root))
+    resolve_target_kind(repo, target)
+    doc = load_similarity_document(repo, target)
+    result: list[dict[str, Any]] = []
+    for relation in doc["relations"]:
+        left = relation.get("left")
+        right = relation.get("right")
+        if not isinstance(left, dict) or not isinstance(right, dict):
+            continue
+        result.append({
+            "left": dict(left),
+            "right": dict(right),
+            "terms": list(relation.get("terms") or []),
+            "note": relation.get("note"),
+            "updated_at": relation.get("updated_at"),
+            "provenance": dict(relation.get("provenance") or {}),
+        })
+    return result
+
+
+def similarities_for_endpoint(media_root: Path, target: str, endpoint: dict[str, Any]) -> list[dict[str, Any]]:
+    wanted = endpoint_key(endpoint)
+    result: list[dict[str, Any]] = []
+    for relation in similarity_context(media_root, target):
+        left_key = endpoint_key(relation["left"])
+        right_key = endpoint_key(relation["right"])
+        if left_key == wanted:
+            other = relation["right"]
+        elif right_key == wanted:
+            other = relation["left"]
+        else:
+            continue
+        result.append({
+            "other": dict(other),
+            "terms": list(relation.get("terms") or []),
+            "note": relation.get("note"),
+            "updated_at": relation.get("updated_at"),
+            "provenance": dict(relation.get("provenance") or {}),
+        })
+    return result
