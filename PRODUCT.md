@@ -2,6 +2,8 @@
 
 <!-- impeccable:product-schema 1 -->
 
+Scope: media-web product brief; not repository/system architecture.
+
 ## Platform
 
 web
