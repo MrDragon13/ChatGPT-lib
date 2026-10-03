@@ -10,6 +10,7 @@ import { revealMotion } from "../../motion/transitions";
 import { FeedbackEditor } from "./FeedbackEditor";
 import { buildWorkDetailView, type DetailSignal, type WorkDetailModel } from "./selectors";
 import "./detail.css";
+import "./intelligence.css";
 
 const TARGET_LABELS: Record<string, string> = {
   primary: "Я",
@@ -199,6 +200,30 @@ export function WorkDetailView({
           </div>
         )) : null}
       </motion.section>
+
+      {view.fingerprint.length ? (
+        <motion.section
+          className="detail-fingerprint"
+          aria-labelledby="detail-fingerprint-title"
+          initial={revealInitial}
+          whileInView={revealMotion.visible}
+          viewport={{ once: true, amount: 0.16 }}
+          transition={revealTransition}
+        >
+          <div className="detail-section-heading">
+            <p className="eyebrow">Характер фильма</p>
+            <h2 id="detail-fingerprint-title">О фильме</h2>
+          </div>
+          <ul className="detail-fingerprint__traits">
+            {view.fingerprint.map((trait) => (
+              <li key={trait.term}>
+                <strong>{trait.label}</strong>
+                <span>{trait.source} · {trait.confidence} уверенность</span>
+              </li>
+            ))}
+          </ul>
+        </motion.section>
+      ) : null}
 
       {view.externalRating !== null ? (
         <motion.section
