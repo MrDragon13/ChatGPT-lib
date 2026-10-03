@@ -32,6 +32,13 @@ def test_media_command_stages_all_v5_canonical_outputs():
     text=_text("media-command.yml")
     assert "media/preferences/inferred" in text
     assert "media/data/interactions" in text
+def test_media_command_handles_optional_v5_output_directories_without_pathspec_failure():
+    text=_text("media-command.yml")
+    stage=text.split("- name: Stage operation outputs",1)[1].split("- name: Verify staged path policy",1)[0]
+    assert "STAGE_PATHS=(" in stage
+    assert "for path in media/data/interactions media/preferences/inferred" in stage
+    assert 'git ls-files -- "$path" | grep -q .' in stage
+    assert 'git add -A -- "${STAGE_PATHS[@]}"' in stage
 def test_media_command_configures_bot_identity_before_replay_merge():
     text=_text("media-command.yml")
     merge_index=text.index("git merge --no-edit origin/main")
