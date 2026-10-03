@@ -5,7 +5,8 @@ import pytest
 from media.commands.schema import parse_command
 from media.domain.errors import CommandValidationError
 from media.service.transaction import execute_command
-from media.tools.common import load_yaml
+from media.tools.common import dump_yaml, load_yaml
+from media.tools.rebuild import check_generated, rebuild_generated
 from tests.media.fixture_repo import copy_fixture_repo
 
 UUID1 = "123e4567-e89b-42d3-a456-426614174010"
@@ -36,6 +37,30 @@ def test_set_semantic_fingerprint_replaces_traits_and_preserves_viewer_signals(t
     ]
     assert work["viewer_signals"] == before
     assert result.status == "applied"
+
+
+def test_set_semantic_fingerprint_rebuilds_rating_dependent_profiles(tmp_path):
+    root = copy_fixture_repo(tmp_path)
+    work_path = root / "media/data/works/arrival-2016.yaml"
+    work = load_yaml(work_path)
+    work["viewer_signals"]["primary"]["rating"] = {
+        "score": 9,
+        "source": "explicit",
+        "confidence": "exact",
+    }
+    dump_yaml(work_path, work)
+    rebuild_generated(root / "media")
+
+    result = execute_command(
+        root,
+        fingerprint({"term":"pacing.fast","source":"llm_inferred","confidence":"high"}),
+        now=datetime(2026,10,3,tzinfo=timezone.utc),
+    )
+
+    assert "media/generated/profiles/primary.yaml" in result.changed_files
+    assert "media/generated/profiles/couple.yaml" in result.changed_files
+    assert "media/generated/profiles/partner.yaml" not in result.changed_files
+    assert check_generated(root / "media") == []
 
 
 def test_set_semantic_fingerprint_rejects_unknown_vocabulary_term(tmp_path):
