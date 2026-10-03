@@ -28,6 +28,11 @@ def test_refresh_metadata_is_provider_dependent_in_command_workflow():
     assert "steps.operation.outputs.needs_provider == 'true'" in text
 def test_media_command_replays_on_current_main_and_controls_paths():
     text=_text("media-command.yml"); assert "git fetch origin main" in text; assert "git merge --no-edit origin/main" in text; assert "exactly one pending" in text.lower(); assert 'rm -- "$REQUEST"' in text; assert "verify_changed_paths" in text; assert "git diff --cached --name-only" in text; assert "media/schemas" in text; assert "media/vocabulary.yaml" in text; assert "media/service" in text; assert "media/domain" in text
+def test_media_command_configures_bot_identity_before_replay_merge():
+    text=_text("media-command.yml")
+    merge_index=text.index("git merge --no-edit origin/main")
+    assert text.index('git config user.name "github-actions[bot]"') < merge_index
+    assert text.index('git config user.email "41898282+github-actions[bot]@users.noreply.github.com"') < merge_index
 def test_media_command_dispatches_read_only_check_for_new_head_and_has_no_auto_merge():
     text=_text("media-command.yml"); assert "media-check.yml" in text; assert "expected_sha" in text; assert "gh workflow run" in text; assert "auto-merge" not in text.lower(); assert "merge_pull_request" not in text
 def test_refresh_metadata_is_explicitly_not_auto_merge_eligible():
