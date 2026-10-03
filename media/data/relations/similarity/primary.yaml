@@ -1,0 +1,15 @@
+schema_version: 1
+target: primary
+relations:
+- type: similar
+  left:
+    kind: canonical
+    work_id: deja-vu-2006
+  right:
+    kind: canonical
+    work_id: source-code-2011
+  terms: []
+  note: Мне кажется, «Дежавю» похож на «Исходный код».
+  updated_at: '2026-10-03T19:27:53.517299+00:00'
+  provenance:
+    source: explicit
