@@ -17,6 +17,7 @@ _ALLOWED = {
     "set_interest": _COMMON,
     "add_work": _COMMON,
     "refresh_metadata": _COMMON,
+    "set_semantic_fingerprint": _COMMON,
 }
 
 
