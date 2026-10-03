@@ -22,6 +22,10 @@ _INTERACTIONS = (
     "media/generated/profiles/*.yaml",
     ".media/operations/*.json",
 )
+_SIMILARITY = (
+    "media/data/relations/similarity/*.yaml",
+    ".media/operations/*.json",
+)
 _ALLOWED = {
     "record_viewing_feedback": _COMMON,
     "edit_viewing_feedback": _COMMON,
@@ -31,6 +35,8 @@ _ALLOWED = {
     "set_semantic_fingerprint": _COMMON,
     "set_inferred_preferences": _INFERRED,
     "record_recommendation_interaction": _INTERACTIONS,
+    "set_work_similarity": _SIMILARITY,
+    "remove_work_similarity": _SIMILARITY,
 }
 
 
