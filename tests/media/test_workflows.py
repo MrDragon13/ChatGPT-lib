@@ -28,7 +28,6 @@ def test_media_command_dispatches_read_only_check_for_new_head_and_has_no_auto_m
     text=_text("media-command.yml"); assert "media-check.yml" in text; assert "expected_sha" in text; assert "gh workflow run" in text; assert "auto-merge" not in text.lower(); assert "merge_pull_request" not in text
 def test_refresh_metadata_is_explicitly_not_auto_merge_eligible():
     text=_text("media-auto-merge.yml")
-    assert "add_work|record_viewing_feedback|set_interest" in text
     case_block=text.split('case "$OP_KIND" in',1)[1].split('esac',1)[0]
     assert "refresh_metadata" not in case_block
 def test_maintenance_is_manual_and_read_only():
@@ -45,6 +44,33 @@ def test_record_viewing_feedback_remains_normal_data_auto_merge_eligible():
     case_block=text.split('case "$OP_KIND" in',1)[1].split('esac',1)[0]
     assert "record_viewing_feedback" in case_block
 
+def test_v5_normal_data_operations_are_guarded_auto_merge_eligible():
+    text=_text("media-auto-merge.yml")
+    case_block=text.split('case "$OP_KIND" in',1)[1].split('esac',1)[0]
+    for operation in (
+        "edit_viewing_feedback",
+        "set_inferred_preferences",
+        "set_semantic_fingerprint",
+        "record_recommendation_interaction",
+    ):
+        assert operation in case_block
+    assert "refresh_metadata" not in case_block
+
+
+def test_v5_auto_merge_path_allowlist_covers_only_new_canonical_data_outputs():
+    text=_text("media-auto-merge.yml")
+    assert "media/preferences/inferred/*.yaml" in text
+    assert "media/data/interactions/*.jsonl" in text
+    assert "media/data/works/*.yaml" in text
+    for forbidden in (
+        "media/schemas/*.json",
+        "media/commands/schemas/*.json",
+        "media/vocabulary.yaml)",
+        "media/service/*.py",
+        "media/domain/*.py",
+    ):
+        assert forbidden not in text
+
 def test_broker_check_is_read_only_and_secret_free():
     text=_text("broker-check.yml")
     assert "contents: read" in text
@@ -55,7 +81,6 @@ def test_broker_check_is_read_only_and_secret_free():
     assert "CLOUDFLARE_API_TOKEN" not in text
     assert "GITHUB_APP_PRIVATE_KEY" not in text
     assert "GITHUB_APP_CLIENT_SECRET" not in text
-
 def test_broker_deploy_is_manual_main_sha_gated_and_uses_only_cloudflare_deploy_secrets():
     text=_text("broker-deploy.yml")
     assert "workflow_dispatch:" in text
@@ -70,7 +95,6 @@ def test_broker_deploy_is_manual_main_sha_gated_and_uses_only_cloudflare_deploy_
     assert "secrets.CLOUDFLARE_ACCOUNT_ID" in text
     assert "GITHUB_APP_PRIVATE_KEY" not in text
     assert "GITHUB_APP_CLIENT_SECRET" not in text
-
 def test_pages_deploy_remains_independent_of_cloudflare_credentials():
     text=_text("media-pages.yml")
     assert "CLOUDFLARE_API_TOKEN" not in text
