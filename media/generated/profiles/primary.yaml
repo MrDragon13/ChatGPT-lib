@@ -74,9 +74,9 @@ affinities:
       trait_confidence: medium
       weight: 0.165375
   entertainment.engaging:
-    score: 1.0
+    score: 0.956067
     confidence: medium
-    evidence_count: 2
+    evidence_count: 3
     evidence:
     - entity_id: deja-vu-2006
       source_target: primary
@@ -94,6 +94,24 @@ affinities:
       source: inferred
       confidence: high
       weight: 1.26
+    - entity_id: null
+      source_target: primary
+      source_kind: inferred_preference
+      hypothesis_id: engaging-execution-positive
+      statement: Вовлекающая подача выглядит устойчивым плюсом, когда фильм удерживает
+        интерес даже при отдельных недостатках.
+      affinity: 0.7
+      confidence: medium
+      supporting_evidence:
+      - &id004
+        entity_id: deja-vu-2006
+        kind: explicit_feedback
+        source_target: primary
+      - &id005
+        entity_id: game-night-2018
+        kind: explicit_feedback
+        source_target: primary
+      weight: 0.525
   humor.absurd:
     score: -1.0
     confidence: low
@@ -189,9 +207,9 @@ affinities:
       confidence: high
       weight: 1.26
   story.intrigue:
-    score: 1.0
+    score: 0.971449
     confidence: medium
-    evidence_count: 3
+    evidence_count: 4
     evidence:
     - entity_id: knives-out-2019
       source_target: primary
@@ -218,6 +236,28 @@ affinities:
       source: inferred
       confidence: medium
       weight: 1.47
+    - entity_id: null
+      source_target: primary
+      source_kind: inferred_preference
+      hypothesis_id: intrigue-problem-solving-pattern
+      statement: Похоже, особенно хорошо работают истории с интригой и активным решением
+        задач; сигнал повторяется на нескольких разных произведениях.
+      affinity: 0.8
+      confidence: medium
+      supporting_evidence:
+      - &id001
+        entity_id: knives-out-2019
+        kind: explicit_feedback
+        source_target: primary
+      - &id002
+        entity_id: sherlock-bbc
+        kind: explicit_feedback
+        source_target: primary
+      - &id003
+        entity_id: ready-player-one-2018
+        kind: rating_correlation
+        source_target: primary
+      weight: 0.525
   story.logic:
     score: 0.084144
     confidence: low
@@ -241,9 +281,9 @@ affinities:
       trait_confidence: medium
       weight: 0.165375
   story.problem_solving:
-    score: 1.0
+    score: 0.971264
     confidence: medium
-    evidence_count: 4
+    evidence_count: 5
     evidence:
     - entity_id: ready-player-one-2018
       source_target: primary
@@ -278,6 +318,19 @@ affinities:
       source: inferred
       confidence: medium
       weight: 0.98
+    - entity_id: null
+      source_target: primary
+      source_kind: inferred_preference
+      hypothesis_id: intrigue-problem-solving-pattern
+      statement: Похоже, особенно хорошо работают истории с интригой и активным решением
+        задач; сигнал повторяется на нескольких разных произведениях.
+      affinity: 0.8
+      confidence: medium
+      supporting_evidence:
+      - *id001
+      - *id002
+      - *id003
+      weight: 0.525
   story.twists:
     score: 1.0
     confidence: low
@@ -414,3 +467,26 @@ summary:
   viewing_count: 107
 evidence:
   entity_count: 107
+inferred_preferences:
+- id: intrigue-problem-solving-pattern
+  statement: Похоже, особенно хорошо работают истории с интригой и активным решением
+    задач; сигнал повторяется на нескольких разных произведениях.
+  affinity: 0.8
+  confidence: medium
+  terms:
+  - story.intrigue
+  - story.problem_solving
+  evidence:
+  - *id001
+  - *id002
+  - *id003
+- id: engaging-execution-positive
+  statement: Вовлекающая подача выглядит устойчивым плюсом, когда фильм удерживает
+    интерес даже при отдельных недостатках.
+  affinity: 0.7
+  confidence: medium
+  terms:
+  - entertainment.engaging
+  evidence:
+  - *id004
+  - *id005
