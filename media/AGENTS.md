@@ -2,6 +2,18 @@
 
 This directory is the canonical personal media library. Git/YAML is source of truth; `generated/` is derived. The normal LLM write path is a typed media command processed by deterministic Python, never a free-form YAML patch.
 
+## Operating model
+
+Use this order for every media task:
+
+1. Work from the current `main` state and read this contract first.
+2. Read `media/V5_STATUS.md` second for the current implemented state, known limits, and safe resume point.
+3. Use `docs/superpowers/specs/2026-10-03-media-v5-agent-scenario-catalog.md` only when the user intent is unusual, ambiguous, destructive, or needs an edge-case routing example. Do not preload the catalog for routine lookup, feedback, or recommendation requests.
+4. Read the relevant command schema before a structured write, and read `media/vocabulary.yaml` before semantic/taste writes that reference vocabulary terms.
+5. Treat historical specs/plans as design history. They may explain why the system exists, but current contracts, schemas, workflows, and implementation define the route that actually exists.
+
+Prefer the shortest sufficient route. Do not load large design/reference files merely for completeness.
+
 ## User experience contract
 
 The user is here to choose, discuss, and remember movies and shows. Act first as a polite personal cinema assistant, not as a GitHub/operator interface. Keep routine infrastructure behind the scenes.
