@@ -124,9 +124,9 @@ affinities:
       trait_confidence: medium
       weight: 0.165375
   entertainment.engaging:
-    score: 1.0
-    confidence: medium
-    evidence_count: 3
+    score: 0.97851
+    confidence: high
+    evidence_count: 4
     evidence:
     - entity_id: deja-vu-2006
       source_target: primary
@@ -152,6 +152,33 @@ affinities:
       source: inferred
       confidence: high
       weight: 1.26
+    - entity_id: null
+      source_target: couple
+      source_kind: inferred_preference
+      hypothesis_id: shared-engaging-viewing
+      statement: Для совместного просмотра лучше работают вовлекающие фильмы, которые
+        удерживают интерес и дают материал для обсуждения; сигнал есть у обоих зрителей
+        на нескольких просмотрах.
+      affinity: 0.7
+      confidence: low
+      supporting_evidence:
+      - &id001
+        entity_id: deja-vu-2006
+        kind: explicit_feedback
+        source_target: primary
+      - &id002
+        entity_id: deja-vu-2006
+        kind: explicit_feedback
+        source_target: partner
+      - &id003
+        entity_id: game-night-2018
+        kind: rating_correlation
+        source_target: primary
+      - &id004
+        entity_id: game-night-2018
+        kind: reaction_correlation
+        source_target: partner
+      weight: 0.375
   humor.absurd:
     score: -0.756098
     confidence: low
@@ -580,3 +607,17 @@ summary:
   viewing_count: 112
 evidence:
   entity_count: 107
+inferred_preferences:
+- id: shared-engaging-viewing
+  statement: Для совместного просмотра лучше работают вовлекающие фильмы, которые
+    удерживают интерес и дают материал для обсуждения; сигнал есть у обоих зрителей
+    на нескольких просмотрах.
+  affinity: 0.7
+  confidence: low
+  terms:
+  - entertainment.engaging
+  evidence:
+  - *id001
+  - *id002
+  - *id003
+  - *id004
