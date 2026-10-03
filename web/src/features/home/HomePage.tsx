@@ -84,6 +84,18 @@ function TasteSection({ taste, target }: { taste: HomeTasteModel; target: string
                       <span className="taste-statement__meta">
                         Гипотеза{confidenceLabel(item.confidence) ? ` · ${confidenceLabel(item.confidence)}` : ""}
                       </span>
+                      {item.evidence.length ? (
+                        <details className="taste-evidence">
+                          <summary>Почему система так думает?</summary>
+                          <ul>
+                            {item.evidence.map((evidence) => (
+                              <li key={evidence.workId}>
+                                <a href={workHref(evidence.workId, target)}>{evidence.title}</a>
+                              </li>
+                            ))}
+                          </ul>
+                        </details>
+                      ) : null}
                     </li>
                   ))}
                 </ul>
