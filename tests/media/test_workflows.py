@@ -39,6 +39,11 @@ def test_media_command_handles_optional_v5_output_directories_without_pathspec_f
     assert "for path in media/data/interactions media/preferences/inferred" in stage
     assert 'git ls-files -- "$path" | grep -q .' in stage
     assert 'git add -A -- "${STAGE_PATHS[@]}"' in stage
+def test_media_command_stages_similarity_outputs_as_optional_canonical_data():
+    text=_text("media-command.yml")
+    stage=text.split("- name: Stage operation outputs",1)[1].split("- name: Verify staged path policy",1)[0]
+    assert "media/data/relations/similarity" in stage
+    assert 'git ls-files -- "$path" | grep -q .' in stage
 def test_media_command_configures_bot_identity_before_replay_merge():
     text=_text("media-command.yml")
     merge_index=text.index("git merge --no-edit origin/main")
@@ -77,11 +82,33 @@ def test_v5_normal_data_operations_are_guarded_auto_merge_eligible():
     assert "refresh_metadata" not in case_block
 
 
+def test_similarity_operations_are_guarded_auto_merge_eligible_on_relation_paths_only():
+    text=_text("media-auto-merge.yml")
+    case_block=_op_kind_case(text)
+    assert "set_work_similarity" in case_block
+    assert "remove_work_similarity" in case_block
+    assert "media/data/relations/similarity/*.yaml" in text
+    similarity_arm=case_block.split("set_work_similarity|remove_work_similarity)",1)[1].split(";;",1)[0]
+    assert "media/data/relations/similarity/*.yaml" in similarity_arm
+    assert "media/data/works/*.yaml" not in similarity_arm
+    assert "media/preferences/inferred/*.yaml" not in similarity_arm
+
+
+def test_work_creation_auto_merge_allows_similarity_reconciliation_without_broadening_edits():
+    text=_text("media-auto-merge.yml")
+    case_block=_op_kind_case(text)
+    create_arm=case_block.split("add_work|record_viewing_feedback)",1)[1].split(";;",1)[0]
+    assert "media/data/relations/similarity/*.yaml" in create_arm
+    edit_arm=case_block.split("edit_viewing_feedback|set_interest|set_semantic_fingerprint)",1)[1].split(";;",1)[0]
+    assert "media/data/relations/similarity/*.yaml" not in edit_arm
+
+
 def test_v5_auto_merge_path_allowlist_covers_only_new_canonical_data_outputs():
     text=_text("media-auto-merge.yml")
     assert "media/preferences/inferred/*.yaml" in text
     assert "media/data/interactions/*.jsonl" in text
     assert "media/data/works/*.yaml" in text
+    assert "media/data/relations/similarity/*.yaml" in text
     for forbidden in (
         "media/schemas/*.json",
         "media/commands/schemas/*.json",
