@@ -8,12 +8,13 @@ from media.domain.commands import RecommendContextRequest, TasteContextRequest
 from media.repository.index_repo import IndexRepository
 from media.repository.yaml_repo import YamlRepository
 from media.service.recommend import build_recommend_context
+from media.service.similarity import similarity_context
 from media.service.taste_context import build_taste_context
 from media.tools.common import load_yaml
 from media.tools.schema_utils import validate_against_schema
 
 
-WEB_MANIFEST_SCHEMA_VERSION = 2
+WEB_MANIFEST_SCHEMA_VERSION = 3
 
 
 def _load_profile(media_root: Path, target: str) -> dict[str, Any]:
@@ -52,7 +53,65 @@ def _semantic_fingerprint(data: dict[str, Any]) -> list[dict[str, Any]]:
     return result
 
 
-def _work_view(data: dict[str, Any], index_row: dict[str, Any]) -> dict[str, Any]:
+def _canonical_web_endpoint(work_id: str, work_data: dict[str, Any]) -> dict[str, Any]:
+    identity = work_data.get("identity") or {}
+    return {
+        "kind": "canonical",
+        "id": work_id,
+        "title_original": identity.get("title_original"),
+        "title_ru": identity.get("title_ru"),
+        "year": identity.get("year"),
+    }
+
+
+def _web_similarity_other(endpoint: dict[str, Any], works: dict[str, dict[str, Any]]) -> dict[str, Any] | None:
+    if endpoint.get("kind") == "canonical":
+        work_id = endpoint.get("work_id")
+        if not isinstance(work_id, str) or work_id not in works:
+            return None
+        return _canonical_web_endpoint(work_id, works[work_id])
+    if endpoint.get("kind") == "external":
+        return dict(endpoint)
+    return None
+
+
+def _similarity_projection(
+    media_root: Path,
+    works: dict[str, dict[str, Any]],
+    targets: list[str],
+) -> dict[str, dict[str, list[dict[str, Any]]]]:
+    projection = {
+        work_id: {target: [] for target in targets}
+        for work_id in works
+    }
+    for target in targets:
+        for relation in similarity_context(media_root, target):
+            left = relation["left"]
+            right = relation["right"]
+            shared = {
+                "terms": list(relation.get("terms") or []),
+                "note": relation.get("note"),
+                "updated_at": relation.get("updated_at"),
+                "provenance": dict(relation.get("provenance") or {}),
+            }
+            if left.get("kind") == "canonical" and isinstance(left.get("work_id"), str):
+                left_id = left["work_id"]
+                other = _web_similarity_other(right, works)
+                if left_id in projection and other is not None:
+                    projection[left_id][target].append({"other": other, **shared})
+            if right.get("kind") == "canonical" and isinstance(right.get("work_id"), str):
+                right_id = right["work_id"]
+                other = _web_similarity_other(left, works)
+                if right_id in projection and other is not None:
+                    projection[right_id][target].append({"other": other, **shared})
+    return projection
+
+
+def _work_view(
+    data: dict[str, Any],
+    index_row: dict[str, Any],
+    similarities: dict[str, list[dict[str, Any]]],
+) -> dict[str, Any]:
     metadata = data.get("metadata") or {}
     provenance = data.get("provenance") or {}
     return {
@@ -64,6 +123,7 @@ def _work_view(data: dict[str, Any], index_row: dict[str, Any]) -> dict[str, Any
         "interest": dict(index_row.get("interest") or {}),
         "traits": list(index_row.get("traits") or []),
         "semantic_fingerprint": _semantic_fingerprint(data),
+        "similarities": {target: list(items) for target, items in similarities.items()},
         "collections": list(index_row.get("collections") or []),
         "provenance": {
             "created_at": provenance.get("created_at"),
@@ -89,10 +149,13 @@ def build_web_manifest(media_root: Path) -> dict[str, Any]:
         row["id"]: row
         for row in IndexRepository(media_root / "generated" / "index.jsonl").rows()
     }
+    work_records = sorted(repo.iter_works(), key=lambda item: item.id)
+    work_documents = {record.id: record.data for record in work_records}
+    similarities = _similarity_projection(media_root, work_documents, targets)
 
     works = [
-        _work_view(record.data, index_rows.get(record.id, {}))
-        for record in sorted(repo.iter_works(), key=lambda item: item.id)
+        _work_view(record.data, index_rows.get(record.id, {}), similarities[record.id])
+        for record in work_records
     ]
 
     recommendations: dict[str, dict[str, Any]] = {}
