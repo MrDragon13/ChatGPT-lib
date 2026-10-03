@@ -36,6 +36,24 @@ def _all_keys(value: Any) -> list[str]:
     return []
 
 
+def _write_similarity(root: Path, relations: list[dict[str, Any]], target: str = "primary") -> None:
+    path = root / "media/data/relations/similarity" / f"{target}.yaml"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    dump_yaml(path, {"schema_version": 1, "target": target, "relations": relations})
+
+
+def _similarity(left: dict[str, Any], right: dict[str, Any], note: str = "Оба держат интригой") -> dict[str, Any]:
+    return {
+        "type": "similar",
+        "left": left,
+        "right": right,
+        "terms": ["story.intrigue"],
+        "note": note,
+        "updated_at": "2026-10-03T20:00:00+00:00",
+        "provenance": {"source": "explicit"},
+    }
+
+
 def test_manifest_uses_configured_targets_vocabulary_and_canonical_signals(tmp_path):
     root = copy_fixture_repo(tmp_path)
     prepare_derived(root)
@@ -43,7 +61,7 @@ def test_manifest_uses_configured_targets_vocabulary_and_canonical_signals(tmp_p
 
     manifest = module.build_web_manifest(root / "media")
 
-    assert manifest["schema_version"] == 2
+    assert manifest["schema_version"] == 3
     assert manifest["default_target"] == "primary"
     assert manifest["targets"] == {
         "viewers": ["partner", "primary"],
@@ -56,7 +74,45 @@ def test_manifest_uses_configured_targets_vocabulary_and_canonical_signals(tmp_p
     assert arrival["identity"]["title_ru"] == "Прибытие"
     assert arrival["viewer_signals"]["primary"]["viewing"]["status"] == "watched"
     assert arrival["viewer_signals"]["partner"]["viewing"]["status"] == "watched"
+    assert set(arrival["similarities"]) == {"primary", "partner", "couple"}
     assert set(manifest["taste_contexts"]) == {"primary", "partner", "couple"}
+
+
+def test_manifest_projects_one_canonical_similarity_symmetrically_to_both_work_pages(tmp_path):
+    root = copy_fixture_repo(tmp_path)
+    _write_similarity(root, [_similarity(
+        {"kind": "canonical", "work_id": "arrival-2016"},
+        {"kind": "canonical", "work_id": "unwatched-fit-2020"},
+    )])
+    prepare_derived(root)
+    manifest = _web_export_module().build_web_manifest(root / "media")
+    works = {work["id"]: work for work in manifest["works"]}
+
+    arrival = works["arrival-2016"]["similarities"]["primary"]
+    puzzle = works["unwatched-fit-2020"]["similarities"]["primary"]
+    assert len(arrival) == len(puzzle) == 1
+    assert arrival[0]["other"] == {
+        "kind": "canonical",
+        "id": "unwatched-fit-2020",
+        "title_original": "Puzzle Run",
+        "title_ru": "Забег с загадкой",
+        "year": 2020,
+    }
+    assert puzzle[0]["other"]["id"] == "arrival-2016"
+    assert arrival[0]["terms"] == ["story.intrigue"]
+    assert arrival[0]["provenance"] == {"source": "explicit"}
+
+
+def test_manifest_projects_external_similarity_without_fabricating_local_work(tmp_path):
+    root = copy_fixture_repo(tmp_path)
+    external = {"kind": "external", "provider": "tmdb", "media_type": "movie", "id": 45612, "title": "Source Code", "year": 2011}
+    _write_similarity(root, [_similarity(external, {"kind": "canonical", "work_id": "arrival-2016"})])
+    prepare_derived(root)
+    manifest = _web_export_module().build_web_manifest(root / "media")
+    works = {work["id"]: work for work in manifest["works"]}
+
+    assert works["arrival-2016"]["similarities"]["primary"][0]["other"] == external
+    assert "source-code-2011" not in works
 
 
 def test_manifest_exports_structured_semantic_fingerprint_and_keeps_compact_traits(tmp_path):
@@ -122,6 +178,7 @@ def test_manifest_missing_intelligence_layers_are_explicitly_empty(tmp_path):
     assert sparse["viewer_signals"] == {}
     assert sparse["group_signals"] == {}
     assert sparse["semantic_fingerprint"] == []
+    assert all(value == [] for value in sparse["similarities"].values())
     assert manifest["taste_contexts"]["partner"]["profile"]["inferred_preferences"] == []
 
 
