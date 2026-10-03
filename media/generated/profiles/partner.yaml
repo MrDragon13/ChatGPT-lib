@@ -19,7 +19,7 @@ affinities:
   atmosphere.immersive:
     score: 1.0
     confidence: low
-    evidence_count: 1
+    evidence_count: 2
     evidence:
     - entity_id: batman-2022
       source_target: partner
@@ -30,6 +30,29 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.16875
+    - entity_id: grand-budapest-hotel-2014
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.225
+  characters.charisma:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: grand-budapest-hotel-2014
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.225
   characters.depth:
     score: 1.0
     confidence: low
@@ -57,6 +80,48 @@ affinities:
       source: explicit
       confidence: high
       weight: 1.8
+  humor.absurd:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: grand-budapest-hotel-2014
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: medium
+      weight: 0.175
+  humor.witty:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: grand-budapest-hotel-2014
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.225
+  pacing.fast:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: grand-budapest-hotel-2014
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: medium
+      weight: 0.175
   pacing.slow:
     score: 1.0
     confidence: low
@@ -85,6 +150,20 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: medium
       weight: 0.13125
+  structure.ensemble:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: grand-budapest-hotel-2014
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.225
   structure.mystery:
     score: 1.0
     confidence: low
@@ -113,10 +192,24 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.16875
-  visuals.strong:
+  tone.light:
     score: 1.0
     confidence: low
-    evidence_count: 2
+    evidence_count: 1
+    evidence:
+    - entity_id: grand-budapest-hotel-2014
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: medium
+      weight: 0.175
+  visuals.strong:
+    score: 1.0
+    confidence: medium
+    evidence_count: 3
     evidence:
     - entity_id: batman-2022
       source_target: partner
@@ -127,6 +220,15 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.16875
+    - entity_id: grand-budapest-hotel-2014
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.225
     - entity_id: masters-of-the-universe-2026
       source_target: partner
       source_kind: feedback
