@@ -13,25 +13,36 @@ const validManifest = {
   works: [],
 };
 
+const validManifestV2 = {
+  ...validManifest,
+  schema_version: 2,
+  taste_contexts: {},
+};
+
 afterEach(() => {
   vi.unstubAllGlobals();
 });
 
 describe("loadManifest", () => {
-  it("loads manifest v1", async () => {
+  it("loads manifest v1 during rollout compatibility", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => validManifest }));
     await expect(loadManifest()).resolves.toEqual(validManifest);
   });
 
+  it("loads the current manifest v2", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => validManifestV2 }));
+    await expect(loadManifest()).resolves.toEqual(validManifestV2);
+  });
+
   it("adds a cache-busting revision only when requested", async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => validManifest });
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => validManifestV2 });
     vi.stubGlobal("fetch", fetchMock);
     await loadManifest("operation-123");
     expect(String(fetchMock.mock.calls[0][0])).toContain("data/manifest.json?rev=operation-123");
   });
 
-  it("rejects an unsupported schema version in Russian", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ...validManifest, schema_version: 2 }) }));
+  it("rejects an unsupported future schema version in Russian", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ...validManifestV2, schema_version: 3 }) }));
     await expect(loadManifest()).rejects.toThrow("Версия данных медиатеки не поддерживается");
   });
 
