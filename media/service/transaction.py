@@ -21,7 +21,7 @@ from media.service.path_policy import verify_changed_paths
 from media.service.preferences import plan_set_inferred_preferences
 from media.service.refresh import plan_refresh_metadata
 from media.tools.build_index import write_index
-from media.tools.build_profiles import write_profiles
+from media.tools.build_profiles import build_profile
 from media.tools.common import dump_yaml, iter_jsonl, write_jsonl
 from media.tools.validate import validate_repository
 
@@ -97,6 +97,14 @@ def _sync_with_rollback(original: Path, temporary: Path, paths: list[str]) -> No
         raise
 
 
+def _rebuild_requested_generated(temp_root: Path, plan: MutationPlan) -> None:
+    media_root=temp_root/"media"
+    if plan.rebuild_index:
+        write_index(media_root)
+    for target in plan.rebuild_profile_targets:
+        dump_yaml(media_root/"generated"/"profiles"/f"{target}.yaml",build_profile(media_root,target))
+
+
 def execute_command(repo_root: Path, command: MutableCommand, *, now: datetime | None = None, provider: Any = None) -> OperationResult:
     repo_root=Path(repo_root); receipt=_receipt_path(repo_root,command.operation_id)
     if receipt.exists(): return _load_receipt(receipt)
@@ -109,7 +117,7 @@ def execute_command(repo_root: Path, command: MutableCommand, *, now: datetime |
         if plan.changed_entities:
             issues=validate_repository(temp_root)
             if issues: raise TransactionValidationError("; ".join(f"{issue.code}: {issue.message}" for issue in issues[:10]))
-            write_index(temp_root/"media"); write_profiles(temp_root/"media")
+            _rebuild_requested_generated(temp_root,plan)
         media_paths=_changed_paths(repo_root,temp_root) if plan.changed_entities else []; status="applied" if plan.changed_entities else "no_change"
         receipt_rel=str(receipt.relative_to(repo_root)).replace("\\","/"); changed_files=tuple(media_paths+[receipt_rel]); applied_at=(now or datetime.now(timezone.utc)).isoformat()
         payload={"operation_id":plan.operation_id,"operation":plan.operation,"status":status,"changed_entities":list(plan.changed_entities),"changed_files":list(changed_files),"applied_at":applied_at}
