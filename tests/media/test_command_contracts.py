@@ -112,3 +112,96 @@ def test_refresh_metadata_year_override_is_typed_and_bounded():
     assert command.year_overrides == {"gentlemen-2019": 2020}
     bad = valid_refresh_metadata_dict(); bad["year_overrides"] = {"gentlemen-2019": 1879}
     with pytest.raises(CommandValidationError): parse_command(bad)
+
+
+def test_edit_viewing_feedback_command_supports_explicit_set_clear_and_purge():
+    data = {
+        "schema_version": 1,
+        "operation_id": VALID_UUID,
+        "operation": "edit_viewing_feedback",
+        "work_ref": {"id": "arrival-2016"},
+        "target_edits": [{
+            "target": "primary",
+            "set": {"rating": {"score": 9.0, "source": "explicit", "confidence": "exact"}},
+            "clear": ["feedback"],
+            "purge": False,
+        }],
+    }
+    command = parse_command(data)
+    assert type(command).__name__ == "EditViewingFeedbackCommand"
+    assert command.target_edits[0].target == "primary"
+    assert command.target_edits[0].set_values["rating"]["score"] == 9.0
+    assert command.target_edits[0].clear == ("feedback",)
+    assert command.target_edits[0].purge is False
+
+
+def test_edit_viewing_feedback_rejects_implicit_or_unknown_clear_components():
+    bad = {
+        "schema_version": 1,
+        "operation_id": VALID_UUID,
+        "operation": "edit_viewing_feedback",
+        "work_ref": {"id": "arrival-2016"},
+        "target_edits": [{"target": "primary", "clear": ["everything"]}],
+    }
+    with pytest.raises(CommandValidationError):
+        parse_command(bad)
+
+
+def test_set_inferred_preferences_command_carries_evidence_backed_replacement():
+    data = {
+        "schema_version": 1,
+        "operation_id": VALID_UUID,
+        "operation": "set_inferred_preferences",
+        "target": "primary",
+        "hypotheses": [{
+            "id": "intrigue-problem-solving",
+            "statement": "Высокие оценки повторяются у фильмов с интригой и решением задач.",
+            "confidence": "medium",
+            "terms": ["story.intrigue", "story.problem_solving"],
+            "evidence": [
+                {"entity_id": "arrival-2016", "kind": "rating_correlation"},
+                {"entity_id": "knives-out-2019", "kind": "explicit_feedback"},
+            ],
+        }],
+    }
+    command = parse_command(data)
+    assert type(command).__name__ == "SetInferredPreferencesCommand"
+    assert command.target == "primary"
+    assert command.hypotheses[0]["confidence"] == "medium"
+    assert command.hypotheses[0]["evidence"][0]["entity_id"] == "arrival-2016"
+
+
+def test_set_semantic_fingerprint_command_is_typed_and_strict():
+    data = {
+        "schema_version": 1,
+        "operation_id": VALID_UUID,
+        "operation": "set_semantic_fingerprint",
+        "work_ref": {"id": "arrival-2016"},
+        "traits": [
+            {"term": "story.intrigue", "source": "llm_inferred", "confidence": "high"},
+            {"term": "pacing.slow", "source": "external_source", "confidence": "medium"},
+        ],
+    }
+    command = parse_command(data)
+    assert type(command).__name__ == "SetSemanticFingerprintCommand"
+    assert command.traits[0]["term"] == "story.intrigue"
+    bad = dict(data); bad["unexpected"] = True
+    with pytest.raises(CommandValidationError):
+        parse_command(bad)
+
+
+def test_record_recommendation_interaction_command_preserves_ephemeral_event_type():
+    data = {
+        "schema_version": 1,
+        "operation_id": VALID_UUID,
+        "operation": "record_recommendation_interaction",
+        "session_id": "evening-2026-10-03",
+        "target": "couple",
+        "work_ref": {"title": "The Invitation", "year": 2015},
+        "event": "not_tonight",
+        "note": "Хочется чего-то полегче.",
+    }
+    command = parse_command(data)
+    assert type(command).__name__ == "RecordRecommendationInteractionCommand"
+    assert command.event == "not_tonight"
+    assert command.work_ref.title == "The Invitation"
