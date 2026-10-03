@@ -13,6 +13,7 @@ _COMMON = (
 )
 _ALLOWED = {
     "record_viewing_feedback": _COMMON,
+    "edit_viewing_feedback": _COMMON,
     "set_interest": _COMMON,
     "add_work": _COMMON,
     "refresh_metadata": _COMMON,
@@ -23,22 +24,14 @@ def allowed_paths_for_operation(operation: str) -> tuple[str, ...]:
     return _ALLOWED.get(operation, ())
 
 
-def _is_allowed_path(path: str) -> bool:
-    value = PurePosixPath(path)
-    if value.parent == PurePosixPath("media/data/works") and value.suffix == ".yaml":
-        return True
-    if value == PurePosixPath("media/generated/index.jsonl"):
-        return True
-    if value.parent == PurePosixPath("media/generated/profiles") and value.suffix == ".yaml":
-        return True
-    if value.parent == PurePosixPath(".media/operations") and value.suffix == ".json":
-        return True
-    return False
+def _matches(path: str, pattern: str) -> bool:
+    value=PurePosixPath(path); expected=PurePosixPath(pattern)
+    if "*" not in pattern: return value == expected
+    return value.match(pattern)
 
 
 def verify_changed_paths(operation: str, paths: Iterable[str]) -> None:
-    if not allowed_paths_for_operation(operation):
-        raise PathPolicyError(f"no write policy for operation: {operation}")
-    rejected = [path for path in paths if not _is_allowed_path(path)]
-    if rejected:
-        raise PathPolicyError(f"operation {operation} may not modify: {', '.join(sorted(rejected))}")
+    allowed=allowed_paths_for_operation(operation)
+    if not allowed: raise PathPolicyError(f"no write policy for operation: {operation}")
+    rejected=[path for path in paths if not any(_matches(path,pattern) for pattern in allowed)]
+    if rejected: raise PathPolicyError(f"operation {operation} may not modify: {', '.join(sorted(rejected))}")
