@@ -1,0 +1,16 @@
+{
+  "applied_at": "2026-10-03T08:19:47.414531+00:00",
+  "changed_entities": [
+    "ready-player-one-2018"
+  ],
+  "changed_files": [
+    "media/data/works/ready-player-one-2018.yaml",
+    "media/generated/index.jsonl",
+    "media/generated/profiles/couple.yaml",
+    "media/generated/profiles/primary.yaml",
+    ".media/operations/c4923889-ca54-4b15-ac2d-efd2a2914a53.json"
+  ],
+  "operation": "set_semantic_fingerprint",
+  "operation_id": "c4923889-ca54-4b15-ac2d-efd2a2914a53",
+  "status": "applied"
+}

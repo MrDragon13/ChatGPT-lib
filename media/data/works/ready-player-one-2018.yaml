@@ -25,7 +25,7 @@ viewer_signals:
       signals: []
 provenance:
   created_at: '2026-10-01'
-  updated_at: '2026-10-01'
+  updated_at: '2026-10-03'
 metadata:
   external:
     genres:
@@ -122,3 +122,29 @@ metadata:
       provider: tmdb
       provider_id: 333339
       fetched_at: '2026-10-01T11:51:04.162463Z'
+  semantic:
+    traits:
+    - term: pacing.fast
+      source: llm_inferred
+      confidence: high
+    - term: atmosphere.immersive
+      source: llm_inferred
+      confidence: high
+    - term: visuals.strong
+      source: llm_inferred
+      confidence: high
+    - term: action.strong
+      source: llm_inferred
+      confidence: high
+    - term: worldbuilding.strong
+      source: llm_inferred
+      confidence: high
+    - term: story.problem_solving
+      source: llm_inferred
+      confidence: medium
+    - term: structure.ensemble
+      source: llm_inferred
+      confidence: medium
+    - term: tone.light
+      source: llm_inferred
+      confidence: medium
