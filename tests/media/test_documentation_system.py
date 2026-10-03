@@ -193,3 +193,46 @@ def test_media_usage_covers_similarity_and_candidate_assessment():
     ):
         assert phrase in text
     assert "не добав" in text and "медиатек" in text
+
+
+def test_media_readme_is_compact_subsystem_router():
+    text = _text("media/README.md")
+    for target in (
+        "../docs/architecture/media-model.md",
+        "../docs/architecture/intelligence.md",
+        "../docs/guides/media-usage.md",
+        "../docs/reference/media-commands.md",
+        "../docs/status/current.md",
+    ):
+        assert f"]({target})" in text
+    assert len(text) < 7000
+
+
+def test_v5_status_is_small_compatibility_router():
+    text = _text("media/V5_STATUS.md")
+    assert "Media Intelligence v5.1" in text
+    assert "../docs/status/current.md" in text
+    assert "historical" in text.lower() or "истор" in text.lower()
+    assert len(text) < 3500
+    assert "Task 1–4" not in text
+    assert "Media Dev Check #" not in text
+
+
+def test_product_and_design_are_explicitly_scoped_to_media_web():
+    product = _text("PRODUCT.md")
+    design = _text("DESIGN.md")
+    assert "Scope: media-web" in product
+    assert "not repository/system architecture" in product.lower()
+    assert "Scope: media-web" in design
+    assert "not repository/system architecture" in design.lower()
+
+
+def test_agent_bootstrap_does_not_require_historical_specs_or_long_status():
+    root = _text("AGENTS.md")
+    media = _text("media/AGENTS.md")
+    assert "docs/README.md" in root
+    assert "docs/status/current.md" in root
+    assert "Read `media/V5_STATUS.md` second" not in root
+    assert "docs/architecture/" in media
+    assert "docs/reference/" in media
+    assert "media/V5_STATUS.md" not in media
