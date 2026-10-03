@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from media.commands.schema import _SCHEMA_BY_OPERATION
 from media.service.web_export import WEB_MANIFEST_SCHEMA_VERSION
 
 
@@ -118,3 +119,77 @@ def test_write_pipeline_separates_normal_typed_and_manual_developer_routes():
         assert phrase in text
     assert "manual developer" in text
     assert "refresh_metadata" in text
+
+
+def test_media_command_reference_matches_registered_operations():
+    text = _text("docs/reference/media-commands.md")
+    documented = set(re.findall(r"^\| `([a-z0-9_]+)` \|", text, flags=re.MULTILINE))
+    assert documented == set(_SCHEMA_BY_OPERATION)
+
+
+def test_operations_guide_uses_existing_verification_commands():
+    text = _text("docs/guides/operations.md")
+    for command in (
+        "python -m pytest -q",
+        "python -m media.tools.validate .",
+        "python -m media.cli rebuild --check",
+        "python -m media.cli doctor --format json",
+        "python -m media.cli web-export",
+        "npm run test:run",
+        "npm run typecheck",
+        "npm run build",
+    ):
+        assert command in text
+
+
+def test_reference_invariants_include_cross_system_safety_rules():
+    text = _text("docs/reference/invariants.md").lower()
+    for phrase in (
+        "canonical",
+        "generated",
+        "typed command",
+        "similarity",
+        "preference",
+        "target",
+        "browser",
+        "secret",
+        "unknown",
+        "vocabulary",
+    ):
+        assert phrase in text
+
+
+def test_current_status_is_durable_not_a_pr_ledger():
+    text = _text("docs/status/current.md")
+    for required in (
+        "v5.1",
+        "assess_candidate",
+        "set_work_similarity",
+        "manifest v3",
+    ):
+        assert required in text
+    for forbidden in (
+        "Current head:",
+        "Media Dev Check #",
+        "Web Check #",
+        "Task 1",
+        "Task 2",
+        "docs/documentation-system-reorganization",
+        "resume from branch",
+    ):
+        assert forbidden not in text
+
+
+def test_media_usage_covers_similarity_and_candidate_assessment():
+    text = _text("docs/guides/media-usage.md").lower()
+    for phrase in (
+        "assess_candidate",
+        "set_work_similarity",
+        "remove_work_similarity",
+        "external",
+        "primary",
+        "partner",
+        "couple",
+    ):
+        assert phrase in text
+    assert "не добав" in text and "медиатек" in text
