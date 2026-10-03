@@ -123,7 +123,19 @@ jobs:
         env:
           REQUEST: ${{ steps.request.outputs.request }}
         run: |
-          git add -A -- media/data/works media/data/interactions media/preferences/inferred media/generated/index.jsonl media/generated/profiles .media/operations "$REQUEST"
+          STAGE_PATHS=(
+            media/data/works
+            media/generated/index.jsonl
+            media/generated/profiles
+            .media/operations
+            "$REQUEST"
+          )
+          for path in media/data/interactions media/preferences/inferred; do
+            if [ -e "$path" ] || git ls-files -- "$path" | grep -q .; then
+              STAGE_PATHS+=("$path")
+            fi
+          done
+          git add -A -- "${STAGE_PATHS[@]}"
       - name: Verify staged path policy
         shell: bash
         env:
