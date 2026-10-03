@@ -31,11 +31,17 @@ export type HomeTasteAffinity = {
   evidenceCount: number;
 };
 
+export type HomeTasteEvidence = {
+  workId: string;
+  title: string;
+};
+
 export type HomeTasteStatement = {
   id: string;
   statement: string;
   label: string | null;
   confidence: string | null;
+  evidence: HomeTasteEvidence[];
 };
 
 export type HomeTasteModel = {
@@ -203,7 +209,21 @@ function tasteStatement(manifest: WebManifest, value: unknown): HomeTasteStateme
     statement,
     label: vocabularyLabel(manifest, stringValue(item.term)),
     confidence: stringValue(item.confidence),
+    evidence: [],
   };
+}
+
+function tasteEvidence(manifest: WebManifest, pointers: Array<{ entity_id?: string | null }>): HomeTasteEvidence[] {
+  const works = new Map(manifest.works.map((work) => [work.id, work]));
+  const seen = new Set<string>();
+  return pointers.flatMap((pointer) => {
+    const workId = stringValue(pointer.entity_id);
+    if (!workId || seen.has(workId)) return [];
+    const work = works.get(workId);
+    if (!work) return [];
+    seen.add(workId);
+    return [{ workId, title: titleFor(work) }];
+  });
 }
 
 function tasteView(manifest: WebManifest, target: TargetId): HomeTasteModel | null {
@@ -228,6 +248,7 @@ function tasteView(manifest: WebManifest, target: TargetId): HomeTasteModel | nu
     statement: item.statement,
     label: item.terms.length === 1 ? vocabularyLabel(manifest, item.terms[0]) : null,
     confidence: item.confidence,
+    evidence: tasteEvidence(manifest, item.evidence),
   }));
 
   const couple = context.couple
