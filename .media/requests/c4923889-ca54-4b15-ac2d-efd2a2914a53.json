@@ -1,8 +1,10 @@
 {
   "schema_version": 1,
-  "operation_id": "c4923889-ca54-4b15-ac2d-efd2a2914a53",
   "operation": "set_semantic_fingerprint",
-  "work_ref": {"id": "ready-player-one-2018"},
+  "operation_id": "c4923889-ca54-4b15-ac2d-efd2a2914a53",
+  "work_ref": {
+    "id": "ready-player-one-2018"
+  },
   "traits": [
     {"term": "pacing.fast", "source": "llm_inferred", "confidence": "high"},
     {"term": "atmosphere.immersive", "source": "llm_inferred", "confidence": "high"},
