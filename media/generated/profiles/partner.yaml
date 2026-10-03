@@ -207,9 +207,9 @@ affinities:
       trait_confidence: medium
       weight: 0.175
   visuals.strong:
-    score: 1.0
+    score: 0.941606
     confidence: medium
-    evidence_count: 3
+    evidence_count: 4
     evidence:
     - entity_id: batman-2022
       source_target: partner
@@ -237,6 +237,28 @@ affinities:
       source: explicit
       confidence: high
       weight: 1.8
+    - entity_id: null
+      source_target: partner
+      source_kind: inferred_preference
+      hypothesis_id: visual-presentation-positive-signal
+      statement: Есть слабый повторяющийся сигнал, что сильная визуальная подача повышает
+        впечатление, но данных пока мало для более уверенного вывода.
+      affinity: 0.6
+      confidence: low
+      supporting_evidence:
+      - &id001
+        entity_id: masters-of-the-universe-2026
+        kind: explicit_feedback
+        source_target: partner
+      - &id002
+        entity_id: batman-2022
+        kind: rating_correlation
+        source_target: partner
+      - &id003
+        entity_id: grand-budapest-hotel-2014
+        kind: rating_correlation
+        source_target: partner
+      weight: 0.375
 explicit_preferences: []
 rules: []
 constraints: []
@@ -247,3 +269,15 @@ summary:
   viewing_count: 5
 evidence:
   entity_count: 107
+inferred_preferences:
+- id: visual-presentation-positive-signal
+  statement: Есть слабый повторяющийся сигнал, что сильная визуальная подача повышает
+    впечатление, но данных пока мало для более уверенного вывода.
+  affinity: 0.6
+  confidence: low
+  terms:
+  - visuals.strong
+  evidence:
+  - *id001
+  - *id002
+  - *id003
