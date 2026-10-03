@@ -2,6 +2,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).parents[2]
+SCENARIO_CATALOG = "docs/superpowers/specs/2026-10-03-media-v5-agent-scenario-catalog.md"
 
 
 def _text(path: str) -> str:
@@ -99,3 +100,37 @@ def test_v5_starter_prompt_mentions_new_user_capabilities_without_becoming_manua
     assert "внешний поиск" in text
     assert "media/AGENTS.md" in text
     assert len(text) < 8000
+
+
+def test_repository_root_has_compact_agent_router():
+    text = _text("AGENTS.md")
+    assert "media/AGENTS.md" in text
+    assert "media/V5_STATUS.md" in text
+    assert "media/START_PROMPT.md" in text
+    assert "source of truth" in text.lower()
+    assert len(text) < 4000
+
+
+def test_starter_prompt_has_deterministic_bootstrap_and_no_stale_privacy_claim():
+    text = _text("media/START_PROMPT.md")
+    agents_pos = text.index("media/AGENTS.md")
+    status_pos = text.index("media/V5_STATUS.md")
+    assert agents_pos < status_pos
+    assert "связанные с ними файлы" not in text
+    assert "приватный GitHub-репозиторий" not in text
+    assert len(text) < 5500
+
+
+def test_media_agent_contract_declares_read_order_and_conditional_scenario_catalog():
+    text = _text("media/AGENTS.md")
+    assert "## Operating model" in text
+    assert "media/V5_STATUS.md" in text
+    assert SCENARIO_CATALOG in text
+    assert "only when" in text.lower()
+
+
+def test_root_readme_points_to_v5_and_current_web_write_path():
+    text = _text("README.md")
+    assert "[Personal Media Library v5](media/README.md)" in text
+    assert "будущие быстрые правки" not in text
+    assert "typed-command broker" in text
