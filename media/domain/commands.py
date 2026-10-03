@@ -94,6 +94,14 @@ class RecommendContextRequest:
     limit: int
 
 
+@dataclass(frozen=True)
+class TasteContextRequest:
+    schema_version: int
+    target: str
+    recent_limit: int
+    representative_limit: int
+
+
 MediaCommand: TypeAlias = (
     RecordViewingFeedbackCommand
     | EditViewingFeedbackCommand
