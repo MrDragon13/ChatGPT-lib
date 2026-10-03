@@ -89,6 +89,50 @@
   font-size: 0.76rem;
 }
 
+.taste-evidence {
+  margin-top: 12px;
+}
+
+.taste-evidence summary {
+  width: fit-content;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.taste-evidence summary:hover,
+.taste-evidence summary:focus-visible {
+  color: var(--color-accent);
+}
+
+.taste-evidence summary:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+.taste-evidence ul {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.taste-evidence li,
+.taste-evidence li:first-child {
+  padding: 0;
+  border: 0;
+}
+
+.taste-evidence a {
+  color: var(--color-text);
+  text-decoration-color: rgb(224 181 108 / 0.55);
+  text-underline-offset: 3px;
+}
+
+.taste-evidence a:hover,
+.taste-evidence a:focus-visible {
+  text-decoration-color: var(--color-accent);
+}
+
 .taste-couple {
   display: flex;
   flex-wrap: wrap;
