@@ -7,6 +7,7 @@ from media.domain.commands import TasteContextRequest
 from media.domain.errors import UnknownTargetError
 from media.repository.index_repo import IndexRepository
 from media.repository.yaml_repo import YamlRepository
+from media.service.similarity import similarity_context
 from media.tools.build_profiles import build_profile
 
 _CONFIDENCE_RANK = {"high": 3, "medium": 2, "low": 1, "none": 0}
@@ -128,6 +129,7 @@ def build_taste_context(media_root: Path, request: TasteContextRequest) -> dict[
             "low":[item[2] for item in low[:request.representative_limit]],
         },
         "recent_feedback":_feedback_rows(repo,request.target,members,request.recent_limit),
+        "similarities":similarity_context(media_root,request.target),
         "exclusions":{"watched":sorted(watched),"not_interested":sorted(not_interested)},
     }
     if members:

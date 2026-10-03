@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://chatgpt-lib.local/schemas/web-manifest.schema.json",
-  "title": "Media web manifest v2",
+  "title": "Media web manifest v3",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -14,8 +14,56 @@
     "recommendations",
     "works"
   ],
+  "$defs": {
+    "similarityOther": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "id", "title_original", "title_ru", "year"],
+          "properties": {
+            "kind": {"const": "canonical"},
+            "id": {"type": "string", "minLength": 1},
+            "title_original": {"type": ["string", "null"]},
+            "title_ru": {"type": ["string", "null"]},
+            "year": {"type": ["integer", "null"]}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "provider", "id", "title", "year"],
+          "properties": {
+            "kind": {"const": "external"},
+            "provider": {"enum": ["tmdb", "imdb"]},
+            "media_type": {"enum": ["movie", "tv"]},
+            "id": {"type": ["integer", "string"]},
+            "title": {"type": "string", "minLength": 1},
+            "year": {"type": ["integer", "null"]}
+          }
+        }
+      ]
+    },
+    "workSimilarity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["other", "terms", "note", "updated_at", "provenance"],
+      "properties": {
+        "other": {"$ref": "#/$defs/similarityOther"},
+        "terms": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "note": {"type": ["string", "null"]},
+        "updated_at": {"type": "string", "minLength": 1},
+        "provenance": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["source"],
+          "properties": {"source": {"const": "explicit"}}
+        }
+      }
+    }
+  },
   "properties": {
-    "schema_version": {"const": 2},
+    "schema_version": {"const": 3},
     "default_target": {"type": ["string", "null"]},
     "targets": {
       "type": "object",
@@ -144,6 +192,7 @@
           "interest",
           "traits",
           "semantic_fingerprint",
+          "similarities",
           "collections",
           "provenance"
         ],
@@ -176,6 +225,13 @@
                 "source": {"type": "string"},
                 "confidence": {"type": "string"}
               }
+            }
+          },
+          "similarities": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {"$ref": "#/$defs/workSimilarity"}
             }
           },
           "collections": {

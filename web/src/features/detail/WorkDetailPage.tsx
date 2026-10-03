@@ -225,6 +225,41 @@ export function WorkDetailView({
         </motion.section>
       ) : null}
 
+      {view.similarities.length ? (
+        <motion.section
+          className="detail-similarities"
+          aria-labelledby="detail-similarities-title"
+          initial={revealInitial}
+          whileInView={revealMotion.visible}
+          viewport={{ once: true, amount: 0.16 }}
+          transition={revealTransition}
+        >
+          <div className="detail-section-heading">
+            <p className="eyebrow">По твоему мнению</p>
+            <h2 id="detail-similarities-title">Похожие фильмы</h2>
+          </div>
+          <ul className="detail-similarities__list">
+            {view.similarities.map((item) => (
+              <li key={item.key}>
+                {item.href ? (
+                  <a className="detail-similarity__title" href={item.href}>
+                    <strong>{item.title}</strong>
+                    {item.year ? <span>{item.year}</span> : null}
+                  </a>
+                ) : (
+                  <div className="detail-similarity__title">
+                    <strong>{item.title}</strong>
+                    <span>{[item.year, item.provider].filter(Boolean).join(" · ")}</span>
+                  </div>
+                )}
+                {item.terms.length ? <p>{item.terms.join(" · ")}</p> : null}
+                {item.note ? <p className="detail-similarity__note">{item.note}</p> : null}
+              </li>
+            ))}
+          </ul>
+        </motion.section>
+      ) : null}
+
       {view.externalRating !== null ? (
         <motion.section
           className="detail-external"

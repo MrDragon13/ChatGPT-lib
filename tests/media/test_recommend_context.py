@@ -1,6 +1,7 @@
 from media.commands.schema import parse_command
 from media.repository.index_repo import IndexRepository
 from media.service.recommend import build_recommend_context
+from media.tools.common import dump_yaml
 from tests.media.fixture_repo import copy_fixture_repo, prepare_derived
 
 
@@ -8,6 +9,10 @@ def request(target="primary", **overrides):
     data={"schema_version":1,"operation":"recommend_context","target":target,"only_unwatched":True,"include_not_interested":False,"limit":20}; data.update(overrides); return parse_command(data)
 
 def ids(context): return [item["id"] for item in context["candidates"]]
+
+def _write_similarity(root):
+    path=root/"media/data/relations/similarity/primary.yaml"; path.parent.mkdir(parents=True,exist_ok=True)
+    dump_yaml(path,{"schema_version":1,"target":"primary","relations":[{"type":"similar","left":{"kind":"canonical","work_id":"arrival-2016"},"right":{"kind":"canonical","work_id":"unwatched-fit-2020"},"terms":["story.intrigue"],"note":"Оба держат интригой","updated_at":"2026-10-03T20:00:00+00:00","provenance":{"source":"explicit"}}]})
 
 def test_recommend_context_has_strengths_and_concerns_but_no_match_score(tmp_path):
     root=copy_fixture_repo(tmp_path); prepare_derived(root); context=build_recommend_context(root/"media",request()); candidate=next(x for x in context["candidates"] if x["id"]=="unwatched-fit-2020"); assert "strengths" in candidate["evidence"]; assert "concerns" in candidate["evidence"]; assert "story.intrigue" in candidate["evidence"]["strengths"]; assert "match_score" not in candidate
@@ -38,3 +43,17 @@ def test_internal_recommendation_candidates_are_bounded_to_local_index(tmp_path)
     )
     assert local_ids
     assert set(ids(context)) <= local_ids
+
+
+def test_candidate_evidence_includes_explicit_similarity_without_match_score(tmp_path):
+    root=copy_fixture_repo(tmp_path); prepare_derived(root); _write_similarity(root)
+    context=build_recommend_context(root/"media",request("primary"))
+    candidate=next(item for item in context["candidates"] if item["id"]=="unwatched-fit-2020")
+    assert candidate["evidence"]["similarities"]==[{
+        "other":{"kind":"canonical","work_id":"arrival-2016"},
+        "terms":["story.intrigue"],
+        "note":"Оба держат интригой",
+        "updated_at":"2026-10-03T20:00:00+00:00",
+        "provenance":{"source":"explicit"},
+    }]
+    assert "match_score" not in candidate

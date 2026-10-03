@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chatgpt-lib.local/schemas/work-similarity.schema.json",
+  "$defs": {
+    "canonicalEndpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "work_id"],
+      "properties": {
+        "kind": {"const": "canonical"},
+        "work_id": {"type": "string", "minLength": 1}
+      }
+    },
+    "tmdbEndpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "provider", "media_type", "id", "title"],
+      "properties": {
+        "kind": {"const": "external"},
+        "provider": {"const": "tmdb"},
+        "media_type": {"enum": ["movie", "tv"]},
+        "id": {"type": "integer", "minimum": 1},
+        "title": {"type": "string", "minLength": 1},
+        "year": {"type": ["integer", "null"], "minimum": 1880}
+      }
+    },
+    "imdbEndpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "provider", "id", "title"],
+      "properties": {
+        "kind": {"const": "external"},
+        "provider": {"const": "imdb"},
+        "id": {"type": "string", "pattern": "^tt[0-9]+$"},
+        "title": {"type": "string", "minLength": 1},
+        "year": {"type": ["integer", "null"], "minimum": 1880}
+      }
+    },
+    "endpoint": {
+      "oneOf": [
+        {"$ref": "#/$defs/canonicalEndpoint"},
+        {"$ref": "#/$defs/tmdbEndpoint"},
+        {"$ref": "#/$defs/imdbEndpoint"}
+      ]
+    },
+    "relation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "left", "right", "terms", "note", "updated_at", "provenance"],
+      "properties": {
+        "type": {"const": "similar"},
+        "left": {"$ref": "#/$defs/endpoint"},
+        "right": {"$ref": "#/$defs/endpoint"},
+        "terms": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 3}
+        },
+        "note": {"type": ["string", "null"], "maxLength": 2000},
+        "updated_at": {"type": "string", "minLength": 4},
+        "provenance": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["source"],
+          "properties": {"source": {"const": "explicit"}}
+        }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "target", "relations"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "target": {"type": "string", "minLength": 1},
+    "relations": {"type": "array", "items": {"$ref": "#/$defs/relation"}}
+  }
+}

@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from media.commands.schema import load_command
-from media.domain.commands import AddWorkCommand, RecommendContextRequest, RecordViewingFeedbackCommand, RefreshMetadataCommand, TasteContextRequest
+from media.domain.commands import AddWorkCommand, AssessCandidateRequest, RecommendContextRequest, RecordViewingFeedbackCommand, RefreshMetadataCommand, TasteContextRequest
 from media.domain.errors import (
     AmbiguousIdentityError,
     CommandValidationError,
@@ -20,6 +20,7 @@ from media.domain.errors import (
     UnknownTargetError,
 )
 from media.providers.tmdb import TMDBProvider
+from media.service.assessment import build_candidate_assessment_context
 from media.service.query import search_works, show_work
 from media.service.recommend import build_recommend_context
 from media.service.taste_context import build_taste_context
@@ -53,6 +54,7 @@ def _parser() -> argparse.ArgumentParser:
     show=sub.add_parser("show"); show.add_argument("work_ref"); show.add_argument("--format",choices=("human","json"),default="human")
     recommend=sub.add_parser("recommend-context"); recommend.add_argument("--request",required=True); recommend.add_argument("--format",choices=("human","json"),default="human")
     taste=sub.add_parser("taste-context"); taste.add_argument("--request",required=True); taste.add_argument("--format",choices=("human","json"),default="human")
+    assess=sub.add_parser("assess-candidate"); assess.add_argument("--request",required=True); assess.add_argument("--format",choices=("human","json"),default="human")
     apply=sub.add_parser("apply-command"); apply.add_argument("request"); apply.add_argument("--dry-run",action="store_true"); apply.add_argument("--format",choices=("human","json"),default="human")
     doctor_cmd=sub.add_parser("doctor"); doctor_cmd.add_argument("--format",choices=("human","json"),default="human")
     rebuild=sub.add_parser("rebuild"); rebuild.add_argument("--check",action="store_true")
@@ -73,9 +75,13 @@ def main(argv: list[str] | None = None) -> int:
             request=load_command(Path(args.request))
             if not isinstance(request,TasteContextRequest): raise CommandValidationError("taste-context request must use operation=taste_context")
             _emit(build_taste_context(media_root,request),output_format); return 0
+        if args.command=="assess-candidate":
+            request=load_command(Path(args.request))
+            if not isinstance(request,AssessCandidateRequest): raise CommandValidationError("assess-candidate request must use operation=assess_candidate")
+            _emit(build_candidate_assessment_context(media_root,request),output_format); return 0
         if args.command=="apply-command":
             command=load_command(Path(args.request))
-            if isinstance(command,(RecommendContextRequest,TasteContextRequest)): raise CommandValidationError(f"{command.__class__.__name__} is read-only and cannot be applied")
+            if isinstance(command,(RecommendContextRequest,TasteContextRequest,AssessCandidateRequest)): raise CommandValidationError(f"{command.__class__.__name__} is read-only and cannot be applied")
             provider=None
             needs_provider=isinstance(command,(AddWorkCommand,RefreshMetadataCommand)) or (isinstance(command,RecordViewingFeedbackCommand) and command.create_if_missing)
             if needs_provider:

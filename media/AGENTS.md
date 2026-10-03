@@ -24,6 +24,7 @@ The user is here to choose, discuss, and remember movies and shows. Act first as
 - On success, summarize the user-visible result, not the implementation.
 - When something blocks the request, explain the problem in plain language first and ask only for the minimum user action or clarification needed.
 - For recommendations, do not turn movie choice into a questionnaire. If the request and stored context are sufficient, recommend immediately. Ask at most one short blocking question when its answer would materially change the result. If the user says to choose for them, choose without further interrogation.
+- For candidate assessment, answer with a qualitative assessment and explain the strongest supporting/contradicting evidence. Use no fake precise percentage and do not invent a deterministic match score.
 - For feedback, record everything that is already clear. Do not ask questions merely to fill more fields. When an extra detail would materially improve future recommendations, you may occasionally ask one short optional follow-up question. The optional question must not block recording the parts of the feedback that are already clear.
 - A clear request to record or save media feedback is authorization to complete the normal data write.
 - Do not ask for a second confirmation just to merge or finalize that same normal data operation. If one blocking clarification only resolves the work, target, or meaning, continue the already-authorized write after the answer unless the user explicitly asked to preview, defer, or not save yet.
@@ -35,8 +36,9 @@ The user is here to choose, discuss, and remember movies and shows. Act first as
 1. Read this file.
 2. For broad lookup, read `media/generated/index.jsonl` first.
 3. For taste reasoning, use `python -m media.cli taste-context --request <request.json> --format json` or the equivalent `taste-context` service contract before opening many canonical YAML files.
-4. Load only selected canonical works when full detail is required.
-5. Read `media/vocabulary.yaml` and the relevant schema before producing structured semantic writes.
+4. For “will I like X?” use `assess_candidate` / `assess-candidate` to assemble candidate, taste-context, and explicit-similarity evidence without writing data.
+5. Load only selected canonical works when full detail is required.
+6. Read `media/vocabulary.yaml` and the relevant schema before producing structured semantic/similarity writes.
 
 ## Intent router
 
@@ -48,9 +50,12 @@ Classify the user's intent before selecting a command. Do not map a keyword dire
 - **clear** — remove only named current components with `edit_viewing_feedback.clear`; absence never means deletion.
 - **purge** — explicit destructive removal of the target signal/history only when the command's purge semantics match the user's request. Do not infer purge from “убери отзыв”.
 - **interest** — update shortlist/candidate/not_interested state with `set_interest`, independently of viewing or rating.
+- **similarity write** — save the target's explicit “A is similar to B” assertion through `set_work_similarity`; relation identity is undirected and endpoint order is irrelevant.
+- **similarity remove** — remove the target's current unordered similarity pair through `remove_work_similarity`; do not create a negative relation record.
+- **assess candidate** — answer “will I like X?” through read-only `assess_candidate`; assemble evidence, then produce a qualitative assessment rather than a synthetic probability.
 - **recommend internal** — Internal-only recommendation from the local index when the user explicitly says “из моей медиатеки”, “из сохранённого”, or equivalent.
 - **recommend external** — discover concrete works outside the local catalog using taste context and external sources/provider facts. External discovery is the default for a general recommendation request; local media is memory, exclusion, and evidence, not the candidate boundary.
-- **explain** — explain a recommendation, affinity, inferred hypothesis, correlation, confidence, or source without writing taste.
+- **explain** — explain a recommendation, affinity, inferred hypothesis, correlation, similarity, candidate assessment, confidence, or source without writing taste.
 - **reanalyze taste** — derive replacement inferred hypotheses from raw/explicit evidence and persist only through `set_inferred_preferences` after schema/evidence validation.
 - **semantic enrich** — update knowledge about the work itself through `set_semantic_fingerprint`; never silently turn film traits into explicit user preferences.
 - **metadata maintenance** — factual provider refresh such as `refresh_metadata(all_movies)`; manual review path.
@@ -62,21 +67,41 @@ If one user event contains several related normal signals, prefer one atomic typ
 
 ### Internal-only recommendation
 
-Use local `generated/index.jsonl`, the relevant taste context, viewing state, interest state, and stored interactions. Candidates must come only from the local library. For `couple`, expose agreement/disagreement instead of silently averaging viewers.
+Use local `generated/index.jsonl`, the relevant taste context, viewing state, interest state, explicit similarity evidence, and stored interactions. Candidates must come only from the local library. For `couple`, expose agreement/disagreement instead of silently averaging viewers.
 
 ### External recommendation
 
-External discovery is the default for a general recommendation request. Build compact taste context first, use concrete liked/disliked anchors, then search current external sources/providers for candidates. Exclude watched/not_interested items using local memory. A work does not need to be added to the library merely because it was recommended.
+External discovery is the default for a general recommendation request. Build compact taste context first, use concrete liked/disliked anchors and explicit similarity hints, then search current external sources/providers for candidates. Exclude watched/not_interested items using local memory. A work does not need to be added to the library merely because it was recommended.
 
 Current request constraints such as “не сегодня”, runtime, mood, or “хочу лёгкое” are ephemeral unless the user explicitly states a stable preference. `not_tonight` must remain an interaction, not `not_interested`.
 
 When useful, record recommendation lifecycle events with `record_recommendation_interaction`: `recommended`, `selected`, `already_watched`, `not_tonight`, or `not_interested`. “Почему это?” is explain-only and writes nothing.
 
+### Candidate assessment
+
+`assess_candidate` is read-only. It validates target/candidate identity and assembles candidate facts, compact taste context, and matching explicit similarities. Canonical and stable external candidates are both valid; a title-only external candidate may be assessed when identity is sufficient for the read, but assessment itself never creates or mutates a work.
+
+The agent interprets this context and gives a qualitative assessment with confidence wording, concrete anchors, and risks/contradictions. There is no opaque deterministic score and no fake precise percentage. An external candidate remains external unless the user separately asks to add or record it.
+
+## Explicit work similarity
+
+Explicit work similarity is target-specific subjective knowledge stored separately from factual `work.canonical_relations`.
+
+- The relation is undirected: A↔B and B↔A are one canonical identity, not mirrored records.
+- `primary`, `partner`, and `couple` assertions are independent; never copy one target's opinion to another.
+- `terms` use existing canonical vocabulary; optional `note` preserves nuance when vocabulary is insufficient.
+- Canonical and stable external endpoints are supported. Persistent external identity needs a stable provider ID; if identity is genuinely ambiguous, ask at most one short blocking clarification rather than saving a title-only guess.
+- External similarity endpoints do not create canonical works. They also do not create viewing, rating, reaction, or interest state.
+- Repeating an assertion is an upsert of the current opinion; removing it uses `remove_work_similarity`.
+- Derived/system semantic similarity stays derived unless the user explicitly asserts it.
+
+Similarity is evidence for recommendations and explanations, not a stable preference by itself. It can be a useful anchor, correlation clue, or counterexample, but one similarity relation alone must not manufacture an inferred preference or affinity.
+
 ## Taste learning and reanalysis
 
 Evidence hierarchy is explicit user evidence > repeated independent correlations > one rating-derived correlation. Ratings are weak deterministic evidence only when a film has semantic traits; a single rating cannot manufacture a high-confidence preference.
 
-`set_inferred_preferences` replaces the inferred hypothesis set for one target. Every hypothesis must have a numeric affinity, confidence, vocabulary terms, and evidence pointers that resolve to canonical works, explicit preference IDs, or canonical recommendation interactions as allowed by validation. Inferred output is not independent evidence for another inferred output. Do not self-reinforce a previous inference merely because it exists in a generated profile.
+`set_inferred_preferences` replaces the inferred hypothesis set for one target. Every hypothesis must have a numeric affinity, confidence, vocabulary terms, and evidence pointers that resolve to canonical works, explicit preference IDs, or canonical recommendation interactions as allowed by validation. Explicit similarity may support reasoning only together with independent evidence; it is not itself an affinity. Inferred output is not independent evidence for another inferred output. Do not self-reinforce a previous inference merely because it exists in a generated profile.
 
 When the user says an inferred conclusion is wrong, prefer the true intent: explicit counter-evidence/correction if they state a stable preference; inferred-hypothesis removal/reanalysis if they only reject the inference; feedback clear/purge only if they ask to remove the underlying observations.
 
@@ -93,6 +118,7 @@ When the user says an inferred conclusion is wrong, prefer the true intent: expl
 - Preserve `explicit` vs `inferred` provenance and confidence.
 - `unwatched` and `dropped` are not negative reactions by themselves.
 - Reaction, rating, viewing, feedback, rewatch and interest are independent signals.
+- Explicit similarity is independent from liking: “A похож на B” is not “I like A/B/trait X”.
 - Do not persist ephemeral recommendation context such as “not tonight” as a stable preference.
 - Normal data entry must not modify schemas or vocabulary. Those are separate architectural changes.
 - Never edit `generated/` as source data.
@@ -114,8 +140,10 @@ Normal user data commands include:
 - `set_inferred_preferences`
 - `set_semantic_fingerprint`
 - `record_recommendation_interaction`
+- `set_work_similarity`
+- `remove_work_similarity`
 
-Read-only request commands include `recommend_context` and `taste_context`/`taste-context` CLI routing. `refresh_metadata` is typed maintenance, not a normal auto-merge operation.
+Read-only request commands include `recommend_context`, `taste_context`/`taste-context`, and `assess_candidate`/`assess-candidate` CLI routing. `refresh_metadata` is typed maintenance, not a normal auto-merge operation.
 
 ### Feedback lifecycle
 
@@ -126,6 +154,10 @@ Read-only request commands include `recommend_context` and `taste_context`/`tast
 ### Recommendation memory
 
 `record_recommendation_interaction` appends to canonical monthly JSONL. An external candidate may be stored by stable title/year/provider identity without creating a canonical work. Interaction counts may inform context; interaction events do not become affinity by themselves.
+
+### Similarity lifecycle
+
+`set_work_similarity` writes one current explicit relation for `(target, unordered pair)`, replacing its terms/note on repeated assertion. `remove_work_similarity` removes that same relation regardless of endpoint order. External endpoints are reconciled to canonical work IDs deterministically when a matching work is later created.
 
 ## Normal LLM write protocol
 
@@ -154,6 +186,8 @@ Eligible normal data operations after the exact-head dispatched Media Check succ
 - `set_inferred_preferences`
 - `set_semantic_fingerprint`
 - `record_recommendation_interaction`
+- `set_work_similarity`
+- `remove_work_similarity`
 
 `refresh_metadata(scope=all_movies)` is provider-dependent bulk maintenance and **must not auto-merge**. It remains open for explicit human review/merge. Architecture/vocabulary/schema/workflow changes are also manual.
 
@@ -179,6 +213,9 @@ If any step fails, canonical data must not be left partially modified.
 - “Посмотрели X, мне 8.5, жене понравилось” → one feedback operation, optionally creating X if missing.
 - “Поставь теперь 7 вместо 8” → correction, no second confirmation.
 - “Убери текст отзыва, оценку оставь” → clear feedback only.
+- “A похож на B” → similarity write via `set_work_similarity`; save one undirected target-specific assertion.
+- “Я больше не считаю A похожим на B” → similarity remove via `remove_work_similarity`.
+- “Мне понравится X?” → assess candidate via read-only `assess_candidate`; qualitative assessment with evidence, no write.
 - “Что посмотреть из моей медиатеки?” → recommend internal.
 - “Посоветуй фильм на вечер” → recommend external using local taste memory and exclusions.
 - “Не сегодня” → `not_tonight` interaction only.

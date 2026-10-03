@@ -75,7 +75,7 @@ jobs:
           OP_MARKERS=()
           for path in "${FILES[@]}"; do
             case "$path" in
-              media/data/works/*.yaml|media/preferences/inferred/*.yaml|media/data/interactions/*.jsonl|media/generated/index.jsonl|media/generated/profiles/*.yaml)
+              media/data/works/*.yaml|media/preferences/inferred/*.yaml|media/data/interactions/*.jsonl|media/data/relations/similarity/*.yaml|media/generated/index.jsonl|media/generated/profiles/*.yaml)
                 ;;
               .media/operations/*.json)
                 OP_MARKERS+=("$path")
@@ -101,10 +101,34 @@ jobs:
           fi
 
           case "$OP_KIND" in
-            add_work|record_viewing_feedback|set_interest|edit_viewing_feedback|set_semantic_fingerprint)
+            add_work|record_viewing_feedback)
+              for path in "${FILES[@]}"; do
+                case "$path" in
+                  media/data/works/*.yaml|media/data/relations/similarity/*.yaml|media/generated/index.jsonl|media/generated/profiles/*.yaml|.media/operations/*.json)
+                    ;;
+                  *)
+                    echo "::error::$OP_KIND may not auto-merge path: $path"
+                    exit 3
+                    ;;
+                esac
+              done
+              ;;
+            edit_viewing_feedback|set_interest|set_semantic_fingerprint)
               for path in "${FILES[@]}"; do
                 case "$path" in
                   media/data/works/*.yaml|media/generated/index.jsonl|media/generated/profiles/*.yaml|.media/operations/*.json)
+                    ;;
+                  *)
+                    echo "::error::$OP_KIND may not auto-merge path: $path"
+                    exit 3
+                    ;;
+                esac
+              done
+              ;;
+            set_work_similarity|remove_work_similarity)
+              for path in "${FILES[@]}"; do
+                case "$path" in
+                  media/data/relations/similarity/*.yaml|.media/operations/*.json)
                     ;;
                   *)
                     echo "::error::$OP_KIND may not auto-merge path: $path"

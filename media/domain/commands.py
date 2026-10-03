@@ -84,6 +84,26 @@ class RecordRecommendationInteractionCommand:
 
 
 @dataclass(frozen=True)
+class SetWorkSimilarityCommand:
+    schema_version: int
+    operation_id: str
+    target: str
+    left: WorkRef
+    right: WorkRef
+    terms: tuple[str, ...]
+    note: str | None = None
+
+
+@dataclass(frozen=True)
+class RemoveWorkSimilarityCommand:
+    schema_version: int
+    operation_id: str
+    target: str
+    left: WorkRef
+    right: WorkRef
+
+
+@dataclass(frozen=True)
 class RecommendContextRequest:
     schema_version: int
     target: str
@@ -102,6 +122,14 @@ class TasteContextRequest:
     representative_limit: int
 
 
+@dataclass(frozen=True)
+class AssessCandidateRequest:
+    schema_version: int
+    target: str
+    candidate: WorkRef
+    text: str | None
+
+
 MediaCommand: TypeAlias = (
     RecordViewingFeedbackCommand
     | EditViewingFeedbackCommand
@@ -111,4 +139,8 @@ MediaCommand: TypeAlias = (
     | SetInferredPreferencesCommand
     | SetSemanticFingerprintCommand
     | RecordRecommendationInteractionCommand
+    | SetWorkSimilarityCommand
+    | RemoveWorkSimilarityCommand
 )
+
+ReadRequest: TypeAlias = RecommendContextRequest | TasteContextRequest | AssessCandidateRequest

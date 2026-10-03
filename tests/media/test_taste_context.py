@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from media.commands.schema import parse_command
+from media.tools.build_profiles import build_profile
 from media.tools.common import dump_yaml, load_yaml
 from media.tools.rebuild import rebuild_generated
 from tests.media.fixture_repo import copy_fixture_repo
@@ -18,6 +19,24 @@ def request(target="primary", recent_limit=3, representative_limit=3):
 
 def _file_map(root: Path) -> dict[str, bytes]:
     return {str(path.relative_to(root)): path.read_bytes() for path in root.rglob("*") if path.is_file()}
+
+
+def _write_similarity(root: Path, target="primary") -> None:
+    path=root/"media/data/relations/similarity"/f"{target}.yaml"
+    path.parent.mkdir(parents=True,exist_ok=True)
+    dump_yaml(path,{
+        "schema_version":1,
+        "target":target,
+        "relations":[{
+            "type":"similar",
+            "left":{"kind":"canonical","work_id":"arrival-2016"},
+            "right":{"kind":"canonical","work_id":"unwatched-fit-2020"},
+            "terms":["story.intrigue"],
+            "note":"Оба держат интригой",
+            "updated_at":"2026-10-03T20:00:00+00:00",
+            "provenance":{"source":"explicit"},
+        }],
+    })
 
 
 def test_taste_context_is_read_only_and_compact_for_primary(tmp_path):
@@ -88,3 +107,25 @@ def test_taste_context_respects_representative_and_recent_limits(tmp_path):
     assert len(result["representative"]["high"]) <= 1
     assert len(result["representative"]["low"]) <= 1
     assert len(result["recent_feedback"]) <= 1
+
+
+def test_explicit_similarity_is_separate_taste_evidence_not_affinity(tmp_path):
+    root=copy_fixture_repo(tmp_path)
+    rebuild_generated(root/"media")
+    _write_similarity(root)
+    before_affinities=build_profile(root/"media","primary").get("affinities") or {}
+    before_files=_file_map(root)
+
+    from media.service.taste_context import build_taste_context
+    result=build_taste_context(root/"media",request())
+
+    assert result["similarities"]==[{
+        "left":{"kind":"canonical","work_id":"arrival-2016"},
+        "right":{"kind":"canonical","work_id":"unwatched-fit-2020"},
+        "terms":["story.intrigue"],
+        "note":"Оба держат интригой",
+        "updated_at":"2026-10-03T20:00:00+00:00",
+        "provenance":{"source":"explicit"},
+    }]
+    assert (build_profile(root/"media","primary").get("affinities") or {})==before_affinities
+    assert _file_map(root)==before_files

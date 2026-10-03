@@ -11,6 +11,9 @@ _COMMON = (
     "media/generated/profiles/*.yaml",
     ".media/operations/*.json",
 )
+_CREATE_COMMON = _COMMON + (
+    "media/data/relations/similarity/*.yaml",
+)
 _INFERRED = (
     "media/preferences/inferred/*.yaml",
     "media/generated/index.jsonl",
@@ -22,15 +25,21 @@ _INTERACTIONS = (
     "media/generated/profiles/*.yaml",
     ".media/operations/*.json",
 )
+_SIMILARITY = (
+    "media/data/relations/similarity/*.yaml",
+    ".media/operations/*.json",
+)
 _ALLOWED = {
-    "record_viewing_feedback": _COMMON,
+    "record_viewing_feedback": _CREATE_COMMON,
     "edit_viewing_feedback": _COMMON,
     "set_interest": _COMMON,
-    "add_work": _COMMON,
+    "add_work": _CREATE_COMMON,
     "refresh_metadata": _COMMON,
     "set_semantic_fingerprint": _COMMON,
     "set_inferred_preferences": _INFERRED,
     "record_recommendation_interaction": _INTERACTIONS,
+    "set_work_similarity": _SIMILARITY,
+    "remove_work_similarity": _SIMILARITY,
 }
 
 

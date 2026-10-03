@@ -92,6 +92,40 @@ def test_v5_agent_contract_routes_reanalysis_and_semantic_enrichment_safely():
     assert "Film fingerprint describes the work, never the viewer reaction" in text
 
 
+def test_v51_agent_contract_routes_candidate_assessment_and_similarity_safely():
+    text = _text("media/AGENTS.md")
+    for phrase in (
+        "assess candidate",
+        "similarity write",
+        "similarity remove",
+        "assess_candidate",
+        "set_work_similarity",
+        "remove_work_similarity",
+        "undirected",
+        "External similarity endpoints do not create canonical works",
+        "Similarity is evidence for recommendations and explanations, not a stable preference by itself",
+        "qualitative assessment",
+        "no fake precise percentage",
+    ):
+        assert phrase in text
+
+
+def test_v51_scenario_catalog_covers_similarity_and_candidate_assessment():
+    text = _text(SCENARIO_CATALOG)
+    for phrase in (
+        "«A похож на B»",
+        "set_work_similarity",
+        "«Я больше не считаю A похожим на B»",
+        "remove_work_similarity",
+        "«Мне понравится X?»",
+        "assess_candidate",
+        "external endpoint does not create a canonical work",
+        "similarity is a hint/evidence, not a preference",
+        "qualitative verdict/confidence",
+    ):
+        assert phrase in text
+
+
 def test_v5_starter_prompt_mentions_new_user_capabilities_without_becoming_manual():
     text = _text("media/START_PROMPT.md")
     assert "исправлять и удалять" in text
@@ -100,6 +134,13 @@ def test_v5_starter_prompt_mentions_new_user_capabilities_without_becoming_manua
     assert "внешний поиск" in text
     assert "media/AGENTS.md" in text
     assert len(text) < 8000
+
+
+def test_v51_starter_prompt_mentions_similarity_and_candidate_assessment_concisely():
+    text = _text("media/START_PROMPT.md")
+    assert "считать два фильма похожими" in text
+    assert "понравится ли мне конкретный фильм" in text
+    assert len(text) < 5500
 
 
 def test_repository_root_has_compact_agent_router():

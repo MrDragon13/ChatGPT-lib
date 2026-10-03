@@ -65,6 +65,7 @@ export type TasteContext = {
     low: TasteRepresentativeWork[];
   };
   recent_feedback: Record<string, unknown>[];
+  similarities?: Record<string, unknown>[];
   exclusions: {
     watched: string[];
     not_interested: string[];
@@ -101,6 +102,31 @@ export type WorkIdentity = {
   [key: string]: unknown;
 };
 
+export type CanonicalSimilarityOther = {
+  kind: "canonical";
+  id: string;
+  title_original: string | null;
+  title_ru: string | null;
+  year: number | null;
+};
+
+export type ExternalSimilarityOther = {
+  kind: "external";
+  provider: "tmdb" | "imdb" | string;
+  media_type?: "movie" | "tv" | string;
+  id: number | string;
+  title: string;
+  year: number | null;
+};
+
+export type WorkSimilarity = {
+  other: CanonicalSimilarityOther | ExternalSimilarityOther;
+  terms: string[];
+  note: string | null;
+  updated_at: string;
+  provenance: { source: "explicit" | string };
+};
+
 export type WebWork = {
   id: string;
   identity: WorkIdentity;
@@ -110,6 +136,8 @@ export type WebWork = {
   interest: Record<string, unknown>;
   traits: string[];
   semantic_fingerprint?: SemanticTrait[];
+  // v3 exporter always emits this; optional keeps cached v2 manifests readable during deploy overlap.
+  similarities?: Record<TargetId, WorkSimilarity[]>;
   collections: string[];
   provenance: {
     created_at: string | null;
@@ -118,8 +146,8 @@ export type WebWork = {
 };
 
 export type WebManifest = {
-  // The exporter always emits v2. v1 remains readable during a staged static deploy/cache overlap.
-  schema_version: 1 | 2;
+  // The exporter emits v3. v1/v2 remain readable during a staged static deploy/cache overlap.
+  schema_version: 1 | 2 | 3;
   default_target: TargetId | null;
   targets: {
     viewers: TargetId[];

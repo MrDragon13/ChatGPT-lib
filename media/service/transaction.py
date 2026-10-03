@@ -9,23 +9,46 @@ from pathlib import Path
 from typing import Any
 
 from media.domain.changeset import MutationPlan, OperationResult
-from media.domain.commands import AddWorkCommand, EditViewingFeedbackCommand, RecordRecommendationInteractionCommand, RecordViewingFeedbackCommand, RefreshMetadataCommand, SetInferredPreferencesCommand, SetInterestCommand, SetSemanticFingerprintCommand
+from media.domain.commands import (
+    AddWorkCommand,
+    EditViewingFeedbackCommand,
+    RecordRecommendationInteractionCommand,
+    RecordViewingFeedbackCommand,
+    RefreshMetadataCommand,
+    RemoveWorkSimilarityCommand,
+    SetInferredPreferencesCommand,
+    SetInterestCommand,
+    SetSemanticFingerprintCommand,
+    SetWorkSimilarityCommand,
+)
 from media.domain.errors import CommandValidationError, NotFoundError, TransactionValidationError
 from media.domain.types import WorkRef
 from media.repository.yaml_repo import YamlRepository
-from media.service.enrich import plan_add_work, plan_add_work_resolved
+from media.service.enrich import plan_add_work_resolved
 from media.service.intelligence import plan_set_semantic_fingerprint
 from media.service.interactions import plan_record_recommendation_interaction
 from media.service.mutate import apply_feedback_updates, plan_edit_viewing_feedback, plan_record_viewing_feedback, plan_set_interest, profile_targets_for
 from media.service.path_policy import verify_changed_paths
 from media.service.preferences import plan_set_inferred_preferences
 from media.service.refresh import plan_refresh_metadata
+from media.service.similarity import plan_remove_work_similarity, plan_set_work_similarity, reconcile_similarity_for_new_work
 from media.tools.build_index import write_index
 from media.tools.build_profiles import build_profile
 from media.tools.common import dump_yaml, iter_jsonl, write_jsonl
 from media.tools.validate import validate_repository
 
-MutableCommand = RecordViewingFeedbackCommand | EditViewingFeedbackCommand | SetInterestCommand | AddWorkCommand | RefreshMetadataCommand | SetSemanticFingerprintCommand | SetInferredPreferencesCommand | RecordRecommendationInteractionCommand
+MutableCommand = (
+    RecordViewingFeedbackCommand
+    | EditViewingFeedbackCommand
+    | SetInterestCommand
+    | AddWorkCommand
+    | RefreshMetadataCommand
+    | SetSemanticFingerprintCommand
+    | SetInferredPreferencesCommand
+    | RecordRecommendationInteractionCommand
+    | SetWorkSimilarityCommand
+    | RemoveWorkSimilarityCommand
+)
 
 
 def _receipt_path(repo_root: Path, operation_id: str) -> Path:
@@ -34,6 +57,33 @@ def _receipt_path(repo_root: Path, operation_id: str) -> Path:
 
 def _load_receipt(path: Path) -> OperationResult:
     data=json.loads(path.read_text(encoding="utf-8")); return OperationResult("already_applied",data["operation_id"],data["operation"],tuple(data.get("changed_entities") or ()),tuple(data.get("changed_files") or ()),data.get("details") or {})
+
+
+def _with_similarity_reconciliation(repo: YamlRepository, plan: MutationPlan, work_id: str) -> MutationPlan:
+    work_path = f"media/data/works/{work_id}.yaml"
+    work_document = plan.documents.get(work_path)
+    if not isinstance(work_document, dict):
+        return plan
+    relation_documents = reconcile_similarity_for_new_work(repo, work_id, dict(work_document))
+    if not relation_documents:
+        return plan
+    documents = dict(plan.documents)
+    documents.update(relation_documents)
+    return MutationPlan(
+        operation_id=plan.operation_id,
+        operation=plan.operation,
+        changed_entities=plan.changed_entities,
+        documents=documents,
+        rebuild_index=plan.rebuild_index,
+        rebuild_profile_targets=plan.rebuild_profile_targets,
+        details=plan.details,
+        jsonl_appends=plan.jsonl_appends,
+    )
+
+
+def _plan_add_work(repo: YamlRepository, command: AddWorkCommand, now: datetime | None, provider: Any = None) -> MutationPlan:
+    plan, work_id = plan_add_work_resolved(repo, command, provider, now=now)
+    return _with_similarity_reconciliation(repo, plan, work_id)
 
 
 def _plan_record_feedback(repo: YamlRepository, command: RecordViewingFeedbackCommand, now: datetime | None, provider: Any = None) -> MutationPlan:
@@ -46,7 +96,8 @@ def _plan_record_feedback(repo: YamlRepository, command: RecordViewingFeedbackCo
     if len(add_plan.documents)!=1: raise CommandValidationError("create-if-missing expected exactly one new work document")
     path,document=next(iter(add_plan.documents.items())); updated_document,_,touched_targets=apply_feedback_updates(repo,document,command.target_updates,now=now)
     profile_targets=tuple(sorted(set(add_plan.rebuild_profile_targets)|set(profile_targets_for(repo,touched_targets))))
-    return MutationPlan(command.operation_id,"record_viewing_feedback",(work_id,),{path:updated_document},True,profile_targets)
+    plan = MutationPlan(command.operation_id,"record_viewing_feedback",(work_id,),{path:updated_document},True,profile_targets)
+    return _with_similarity_reconciliation(repo, plan, work_id)
 
 
 def _plan(repo: YamlRepository, command: MutableCommand, now: datetime | None, provider: Any = None) -> MutationPlan:
@@ -56,7 +107,9 @@ def _plan(repo: YamlRepository, command: MutableCommand, now: datetime | None, p
     if isinstance(command,SetSemanticFingerprintCommand): return plan_set_semantic_fingerprint(repo,command,now=now)
     if isinstance(command,SetInferredPreferencesCommand): return plan_set_inferred_preferences(repo,command,now=now)
     if isinstance(command,RecordRecommendationInteractionCommand): return plan_record_recommendation_interaction(repo,command,now=now)
-    if isinstance(command,AddWorkCommand): return plan_add_work(repo,command,provider,now=now)
+    if isinstance(command,SetWorkSimilarityCommand): return plan_set_work_similarity(repo,command,now=now)
+    if isinstance(command,RemoveWorkSimilarityCommand): return plan_remove_work_similarity(repo,command,now=now)
+    if isinstance(command,AddWorkCommand): return _plan_add_work(repo,command,now,provider)
     if isinstance(command,RefreshMetadataCommand): return plan_refresh_metadata(repo,command,provider,now=now)
     raise CommandValidationError("unsupported mutable command")
 

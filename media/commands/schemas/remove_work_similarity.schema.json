@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chatgpt-lib.local/commands/remove_work_similarity.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "operation_id", "operation", "target", "left", "right"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "operation_id": {"type": "string", "minLength": 36, "maxLength": 36},
+    "operation": {"const": "remove_work_similarity"},
+    "target": {"type": "string", "minLength": 1},
+    "left": {"$ref": "https://chatgpt-lib.local/commands/common.schema.json#/$defs/persistentWorkRef"},
+    "right": {"$ref": "https://chatgpt-lib.local/commands/common.schema.json#/$defs/persistentWorkRef"}
+  }
+}
