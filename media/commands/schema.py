@@ -17,6 +17,7 @@ from media.domain.commands import (
     SetInferredPreferencesCommand,
     SetInterestCommand,
     SetSemanticFingerprintCommand,
+    TasteContextRequest,
 )
 from media.domain.errors import CommandValidationError
 from media.domain.types import TargetEdit, TargetUpdate, WorkRef
@@ -32,6 +33,7 @@ _SCHEMA_BY_OPERATION = {
     "set_semantic_fingerprint": "set_semantic_fingerprint.schema.json",
     "record_recommendation_interaction": "record_recommendation_interaction.schema.json",
     "recommend_context": "recommend_context.schema.json",
+    "taste_context": "taste_context.schema.json",
 }
 
 
@@ -55,7 +57,7 @@ def _validate_uuid(value: str) -> None:
         raise CommandValidationError("operation_id must be canonical lowercase UUID text")
 
 
-def parse_command(data: Mapping[str, Any], schema_dir: Path | None = None) -> MediaCommand | RecommendContextRequest:
+def parse_command(data: Mapping[str, Any], schema_dir: Path | None = None) -> MediaCommand | RecommendContextRequest | TasteContextRequest:
     schema_dir = schema_dir or Path(__file__).with_name("schemas")
     operation = data.get("operation")
     schema_name = _SCHEMA_BY_OPERATION.get(operation)
@@ -64,7 +66,7 @@ def parse_command(data: Mapping[str, Any], schema_dir: Path | None = None) -> Me
     errors = validate_against_schema(dict(data), schema_name, schema_dir)
     if errors:
         raise CommandValidationError("; ".join(errors))
-    if operation != "recommend_context":
+    if operation not in {"recommend_context", "taste_context"}:
         _validate_uuid(str(data["operation_id"]))
     if operation == "record_viewing_feedback":
         updates = tuple(
@@ -78,11 +80,7 @@ def parse_command(data: Mapping[str, Any], schema_dir: Path | None = None) -> Me
             for item in data["target_updates"]
         )
         return RecordViewingFeedbackCommand(
-            data["schema_version"],
-            data["operation_id"],
-            _work_ref(data["work_ref"]),
-            updates,
-            data.get("create_if_missing", False),
+            data["schema_version"], data["operation_id"], _work_ref(data["work_ref"]), updates, data.get("create_if_missing", False)
         )
     if operation == "edit_viewing_feedback":
         edits = tuple(
@@ -94,73 +92,26 @@ def parse_command(data: Mapping[str, Any], schema_dir: Path | None = None) -> Me
             )
             for item in data["target_edits"]
         )
-        return EditViewingFeedbackCommand(
-            data["schema_version"],
-            data["operation_id"],
-            _work_ref(data["work_ref"]),
-            edits,
-        )
+        return EditViewingFeedbackCommand(data["schema_version"], data["operation_id"], _work_ref(data["work_ref"]), edits)
     if operation == "set_interest":
-        return SetInterestCommand(
-            data["schema_version"],
-            data["operation_id"],
-            _work_ref(data["work_ref"]),
-            data["target"],
-            data["state"],
-            data.get("priority"),
-        )
+        return SetInterestCommand(data["schema_version"], data["operation_id"], _work_ref(data["work_ref"]), data["target"], data["state"], data.get("priority"))
     if operation == "add_work":
         return AddWorkCommand(data["schema_version"], data["operation_id"], _work_ref(data["work_ref"]))
     if operation == "refresh_metadata":
-        overrides = {
-            work_id: ProviderWorkRef(value["media_type"], value["id"])
-            for work_id, value in (data.get("tmdb_overrides") or {}).items()
-        }
-        years = dict(data.get("year_overrides") or {})
-        return RefreshMetadataCommand(
-            data["schema_version"],
-            data["operation_id"],
-            data["scope"],
-            overrides,
-            years,
-        )
+        overrides = {work_id: ProviderWorkRef(value["media_type"], value["id"]) for work_id, value in (data.get("tmdb_overrides") or {}).items()}
+        return RefreshMetadataCommand(data["schema_version"], data["operation_id"], data["scope"], overrides, dict(data.get("year_overrides") or {}))
     if operation == "set_inferred_preferences":
-        return SetInferredPreferencesCommand(
-            data["schema_version"],
-            data["operation_id"],
-            data["target"],
-            tuple(dict(item) for item in data["hypotheses"]),
-        )
+        return SetInferredPreferencesCommand(data["schema_version"], data["operation_id"], data["target"], tuple(dict(item) for item in data["hypotheses"]))
     if operation == "set_semantic_fingerprint":
-        return SetSemanticFingerprintCommand(
-            data["schema_version"],
-            data["operation_id"],
-            _work_ref(data["work_ref"]),
-            tuple(dict(item) for item in data["traits"]),
-        )
+        return SetSemanticFingerprintCommand(data["schema_version"], data["operation_id"], _work_ref(data["work_ref"]), tuple(dict(item) for item in data["traits"]))
     if operation == "record_recommendation_interaction":
-        return RecordRecommendationInteractionCommand(
-            data["schema_version"],
-            data["operation_id"],
-            data["session_id"],
-            data["target"],
-            _work_ref(data["work_ref"]),
-            data["event"],
-            data.get("note"),
-            data.get("at"),
-        )
-    return RecommendContextRequest(
-        data["schema_version"],
-        data["target"],
-        data.get("text"),
-        data.get("only_unwatched", False),
-        data.get("runtime_max"),
-        data.get("include_not_interested", False),
-        data.get("limit", 20),
-    )
+        return RecordRecommendationInteractionCommand(data["schema_version"], data["operation_id"], data["session_id"], data["target"], _work_ref(data["work_ref"]), data["event"], data.get("note"), data.get("at"))
+    if operation == "taste_context":
+        return TasteContextRequest(data["schema_version"], data["target"], data.get("recent_limit", 10), data.get("representative_limit", 10))
+    return RecommendContextRequest(data["schema_version"], data["target"], data.get("text"), data.get("only_unwatched", False), data.get("runtime_max"), data.get("include_not_interested", False), data.get("limit", 20))
 
 
-def load_command(path: Path) -> MediaCommand | RecommendContextRequest:
+def load_command(path: Path) -> MediaCommand | RecommendContextRequest | TasteContextRequest:
     with Path(path).open("r", encoding="utf-8") as handle:
         data = json.load(handle)
     if not isinstance(data, dict):

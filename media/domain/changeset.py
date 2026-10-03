@@ -13,6 +13,7 @@ class MutationPlan:
     rebuild_index: bool
     rebuild_profile_targets: tuple[str, ...]
     details: Mapping[str, Any] = field(default_factory=dict)
+    jsonl_appends: Mapping[str, tuple[Mapping[str, Any], ...]] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)

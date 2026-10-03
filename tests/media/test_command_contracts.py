@@ -156,6 +156,7 @@ def test_set_inferred_preferences_command_carries_evidence_backed_replacement():
         "hypotheses": [{
             "id": "intrigue-problem-solving",
             "statement": "Высокие оценки повторяются у фильмов с интригой и решением задач.",
+            "affinity": 0.8,
             "confidence": "medium",
             "terms": ["story.intrigue", "story.problem_solving"],
             "evidence": [
@@ -167,6 +168,7 @@ def test_set_inferred_preferences_command_carries_evidence_backed_replacement():
     command = parse_command(data)
     assert type(command).__name__ == "SetInferredPreferencesCommand"
     assert command.target == "primary"
+    assert command.hypotheses[0]["affinity"] == 0.8
     assert command.hypotheses[0]["confidence"] == "medium"
     assert command.hypotheses[0]["evidence"][0]["entity_id"] == "arrival-2016"
 

@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from media.commands.schema import load_command
-from media.domain.commands import AddWorkCommand, RecommendContextRequest, RecordViewingFeedbackCommand, RefreshMetadataCommand
+from media.domain.commands import AddWorkCommand, RecommendContextRequest, RecordViewingFeedbackCommand, RefreshMetadataCommand, TasteContextRequest
 from media.domain.errors import (
     AmbiguousIdentityError,
     CommandValidationError,
@@ -22,6 +22,7 @@ from media.domain.errors import (
 from media.providers.tmdb import TMDBProvider
 from media.service.query import search_works, show_work
 from media.service.recommend import build_recommend_context
+from media.service.taste_context import build_taste_context
 from media.service.transaction import execute_command, preview_command
 from media.service.web_export import write_web_manifest
 from media.tools.doctor import doctor
@@ -32,21 +33,18 @@ def _emit(value: Any, output_format: str = "human") -> None:
     if output_format == "json":
         print(json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")))
         return
-    if isinstance(value, str):
-        print(value)
-    else:
-        print(json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2))
+    if isinstance(value, str): print(value)
+    else: print(json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2))
 
 
 def _operation_result(result: Any) -> dict[str, Any]:
-    value = {"status": result.status, "operation_id": result.operation_id, "operation": result.operation, "changed_entities": list(result.changed_entities), "changed_files": list(result.changed_files)}
-    if result.details:
-        value["details"] = dict(result.details)
+    value={"status":result.status,"operation_id":result.operation_id,"operation":result.operation,"changed_entities":list(result.changed_entities),"changed_files":list(result.changed_files)}
+    if result.details: value["details"]=dict(result.details)
     return value
 
 
 def _doctor_result(report: Any) -> dict[str, Any]:
-    return {"status": "ok" if report.ok else "failed", "checks": [asdict(check) for check in report.checks]}
+    return {"status":"ok" if report.ok else "failed","checks":[asdict(check) for check in report.checks]}
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -54,6 +52,7 @@ def _parser() -> argparse.ArgumentParser:
     search=sub.add_parser("search"); search.add_argument("query"); search.add_argument("--limit",type=int,default=20); search.add_argument("--format",choices=("human","json"),default="human")
     show=sub.add_parser("show"); show.add_argument("work_ref"); show.add_argument("--format",choices=("human","json"),default="human")
     recommend=sub.add_parser("recommend-context"); recommend.add_argument("--request",required=True); recommend.add_argument("--format",choices=("human","json"),default="human")
+    taste=sub.add_parser("taste-context"); taste.add_argument("--request",required=True); taste.add_argument("--format",choices=("human","json"),default="human")
     apply=sub.add_parser("apply-command"); apply.add_argument("request"); apply.add_argument("--dry-run",action="store_true"); apply.add_argument("--format",choices=("human","json"),default="human")
     doctor_cmd=sub.add_parser("doctor"); doctor_cmd.add_argument("--format",choices=("human","json"),default="human")
     rebuild=sub.add_parser("rebuild"); rebuild.add_argument("--check",action="store_true")
@@ -70,9 +69,13 @@ def main(argv: list[str] | None = None) -> int:
             request=load_command(Path(args.request))
             if not isinstance(request,RecommendContextRequest): raise CommandValidationError("recommend-context request must use operation=recommend_context")
             _emit(build_recommend_context(media_root,request),output_format); return 0
+        if args.command=="taste-context":
+            request=load_command(Path(args.request))
+            if not isinstance(request,TasteContextRequest): raise CommandValidationError("taste-context request must use operation=taste_context")
+            _emit(build_taste_context(media_root,request),output_format); return 0
         if args.command=="apply-command":
             command=load_command(Path(args.request))
-            if isinstance(command,RecommendContextRequest): raise CommandValidationError("recommend_context is read-only and cannot be applied")
+            if isinstance(command,(RecommendContextRequest,TasteContextRequest)): raise CommandValidationError(f"{command.__class__.__name__} is read-only and cannot be applied")
             provider=None
             needs_provider=isinstance(command,(AddWorkCommand,RefreshMetadataCommand)) or (isinstance(command,RecordViewingFeedbackCommand) and command.create_if_missing)
             if needs_provider:
