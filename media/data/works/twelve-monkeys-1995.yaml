@@ -25,7 +25,7 @@ viewer_signals:
       signals: []
 provenance:
   created_at: '2026-10-01'
-  updated_at: '2026-10-01'
+  updated_at: '2026-10-03'
 metadata:
   external:
     genres:
@@ -119,3 +119,29 @@ metadata:
       provider: tmdb
       provider_id: 63
       fetched_at: '2026-10-01T11:51:06.833622Z'
+  semantic:
+    traits:
+    - term: tone.dark
+      source: llm_inferred
+      confidence: high
+    - term: structure.mystery
+      source: llm_inferred
+      confidence: high
+    - term: story.intrigue
+      source: llm_inferred
+      confidence: high
+    - term: story.twists
+      source: llm_inferred
+      confidence: high
+    - term: atmosphere.immersive
+      source: llm_inferred
+      confidence: high
+    - term: worldbuilding.strong
+      source: llm_inferred
+      confidence: medium
+    - term: pacing.slow
+      source: llm_inferred
+      confidence: medium
+    - term: characters.depth
+      source: llm_inferred
+      confidence: medium
