@@ -5,9 +5,10 @@ import { useState } from "react";
 import { workHref } from "../../app/router";
 import { useAppContext } from "../../app/AppShell";
 import { cardMotion, heroMotion, revealMotion } from "../../motion/transitions";
-import type { HomeCandidate } from "./selectors";
+import type { HomeCandidate, HomeTasteModel } from "./selectors";
 import { buildHomeViewModel } from "./selectors";
 import "./home.css";
+import "./intelligence.css";
 
 function formatMeta(candidate: HomeCandidate): string[] {
   const values: string[] = [];
@@ -15,6 +16,92 @@ function formatMeta(candidate: HomeCandidate): string[] {
   if (candidate.runtimeMin) values.push(`${candidate.runtimeMin} мин`);
   values.push(...candidate.genreLabels.slice(0, 2));
   return values;
+}
+
+function confidenceLabel(value: string | null): string | null {
+  const labels: Record<string, string> = {
+    exact: "точно",
+    high: "высокая уверенность",
+    medium: "средняя уверенность",
+    low: "низкая уверенность",
+  };
+  return value ? labels[value] ?? null : null;
+}
+
+function TasteSection({ taste, target }: { taste: HomeTasteModel; target: string }) {
+  const reduceMotion = useReducedMotion();
+  const title = target === "couple" ? "Наш вкус" : target === "partner" ? "Вкус партнёра" : "Мой вкус";
+  return (
+    <motion.section
+      className="taste-section"
+      aria-labelledby="taste-section-title"
+      data-testid="taste-section"
+      initial={reduceMotion ? false : revealMotion.hidden}
+      whileInView={revealMotion.visible}
+      viewport={{ once: true, amount: 0.16 }}
+      transition={reduceMotion ? { duration: 0 } : revealMotion.transition}
+    >
+      <div className="taste-section__heading">
+        <p className="eyebrow">Профиль</p>
+        <h2 id="taste-section-title">{title}</h2>
+      </div>
+      <div className="taste-section__body">
+        {taste.strongest.length ? (
+          <div className="taste-affinities" aria-label="Сильные сигналы вкуса">
+            {taste.strongest.map((item) => (
+              <div className="taste-affinity" key={item.term}>
+                <strong>{item.label}</strong>
+                <span>
+                  {item.score >= 0 ? "Скорее нравится" : "Скорее не нравится"} · {item.evidenceCount} подтвержд.
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : null}
+
+        {taste.explicit.length || taste.inferred.length ? (
+          <div className="taste-statements">
+            {taste.explicit.length ? (
+              <div>
+                <h3>Сказано явно</h3>
+                <ul>
+                  {taste.explicit.map((item) => (
+                    <li key={item.id}>
+                      <p>{item.statement}</p>
+                      {item.label ? <span className="taste-statement__meta">{item.label}</span> : null}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            {taste.inferred.length ? (
+              <div>
+                <h3>Наблюдения</h3>
+                <ul>
+                  {taste.inferred.map((item) => (
+                    <li key={item.id}>
+                      <p>{item.statement}</p>
+                      <span className="taste-statement__meta">
+                        Гипотеза{confidenceLabel(item.confidence) ? ` · ${confidenceLabel(item.confidence)}` : ""}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
+        {taste.couple ? (
+          <div className="taste-couple">
+            <h3>Для двоих</h3>
+            <p><strong>{taste.couple.agreements}</strong> совпадений</p>
+            <p><strong>{taste.couple.disagreements}</strong> расхождений</p>
+          </div>
+        ) : null}
+      </div>
+    </motion.section>
+  );
 }
 
 function CandidateThumb({
@@ -208,6 +295,7 @@ export function HomePage() {
         ) : null}
       </section>
 
+      {model.taste ? <TasteSection taste={model.taste} target={target} /> : null}
       <PosterRail title="Посмотреть следующим" items={model.next} target={target} />
       {target !== "couple" ? <PosterRail title="Для двоих" items={model.couple} target="couple" /> : null}
       <PosterRail title="Недавно смотрели" items={model.recent} target={target} />
