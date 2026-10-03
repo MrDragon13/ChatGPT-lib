@@ -2,6 +2,34 @@ schema_version: 4
 target: couple
 generated_from: canonical-v4
 affinities:
+  action.strong:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: ready-player-one-2018
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 10.0
+      rating_source: inferred
+      rating_confidence: high
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.243
+  atmosphere.immersive:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: ready-player-one-2018
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 10.0
+      rating_source: inferred
+      rating_confidence: high
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.243
   characters.charisma:
     score: 1.0
     confidence: medium
@@ -86,6 +114,20 @@ affinities:
       source: explicit
       confidence: high
       weight: 1.8
+  pacing.fast:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: ready-player-one-2018
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 10.0
+      rating_source: inferred
+      rating_confidence: high
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.243
   reaction.cringe:
     score: -1.0
     confidence: low
@@ -149,8 +191,17 @@ affinities:
   story.problem_solving:
     score: 1.0
     confidence: medium
-    evidence_count: 3
+    evidence_count: 4
     evidence:
+    - entity_id: ready-player-one-2018
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 10.0
+      rating_source: inferred
+      rating_confidence: high
+      trait_source: llm_inferred
+      trait_confidence: medium
+      weight: 0.189
     - entity_id: now-you-see-me-collection
       source_target: primary
       source_kind: feedback
@@ -175,10 +226,38 @@ affinities:
       source: inferred
       confidence: medium
       weight: 0.98
+  structure.ensemble:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: ready-player-one-2018
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 10.0
+      rating_source: inferred
+      rating_confidence: high
+      trait_source: llm_inferred
+      trait_confidence: medium
+      weight: 0.189
+  tone.light:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: ready-player-one-2018
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 10.0
+      rating_source: inferred
+      rating_confidence: high
+      trait_source: llm_inferred
+      trait_confidence: medium
+      weight: 0.189
   visuals.strong:
-    score: 0.6875
+    score: 0.70015
     confidence: high
-    evidence_count: 4
+    evidence_count: 5
     evidence:
     - entity_id: blade-runner-2049-2017
       source_target: primary
@@ -212,6 +291,29 @@ affinities:
       source: explicit
       confidence: high
       weight: 1.8
+    - entity_id: ready-player-one-2018
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 10.0
+      rating_source: inferred
+      rating_confidence: high
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.243
+  worldbuilding.strong:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: ready-player-one-2018
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 10.0
+      rating_source: inferred
+      rating_confidence: high
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.243
 explicit_preferences: []
 rules: []
 constraints: []
