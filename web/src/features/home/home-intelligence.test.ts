@@ -102,6 +102,28 @@ describe("home taste intelligence", () => {
     expect(model.taste?.couple).toEqual({ agreements: 1, disagreements: 1 });
   });
 
+  it("keeps low-confidence couple inference alongside explicit disagreement", () => {
+    const value = manifest();
+    value.taste_contexts!.couple!.profile.inferred_preferences = [{
+      id: "shared-engaging-viewing",
+      statement: "Совместно лучше работают вовлекающие фильмы.",
+      affinity: 0.7,
+      confidence: "low",
+      terms: ["story.intrigue"],
+      evidence: [
+        { entity_id: "arrival-2016", kind: "explicit_feedback", source_target: "primary" },
+        { entity_id: "arrival-2016", kind: "explicit_feedback", source_target: "partner" },
+      ],
+    }];
+
+    const model = buildHomeViewModel(value, "couple");
+    expect(model.taste?.inferred[0]).toMatchObject({
+      statement: "Совместно лучше работают вовлекающие фильмы.",
+      confidence: "low",
+    });
+    expect(model.taste?.couple).toEqual({ agreements: 1, disagreements: 1 });
+  });
+
   it("keeps the legacy v1/read-overlap state graceful when taste contexts are absent", () => {
     const value = manifest();
     value.schema_version = 1;
