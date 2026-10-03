@@ -59,6 +59,20 @@ affinities:
       source: inferred
       confidence: medium
       weight: 0.98
+  dialogue.strong:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: knives-out-2019
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 9.5
+      rating_source: inferred
+      rating_confidence: high
+      trait_source: llm_inferred
+      trait_confidence: medium
+      weight: 0.165375
   entertainment.engaging:
     score: 1.0
     confidence: medium
@@ -101,6 +115,20 @@ affinities:
       source: inferred
       confidence: high
       weight: 1.26
+  humor.witty:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: knives-out-2019
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 9.5
+      rating_source: inferred
+      rating_confidence: high
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.212625
   narrative.time_loop:
     score: 1.0
     confidence: low
@@ -128,6 +156,20 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.243
+  pacing.moderate:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: knives-out-2019
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 9.5
+      rating_source: inferred
+      rating_confidence: high
+      trait_source: llm_inferred
+      trait_confidence: medium
+      weight: 0.165375
   reaction.cringe:
     score: -1.0
     confidence: low
@@ -157,7 +199,7 @@ affinities:
   story.intrigue:
     score: 1.0
     confidence: medium
-    evidence_count: 2
+    evidence_count: 3
     evidence:
     - entity_id: knives-out-2019
       source_target: primary
@@ -167,6 +209,15 @@ affinities:
       source: inferred
       confidence: medium
       weight: 1.47
+    - entity_id: knives-out-2019
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 9.5
+      rating_source: inferred
+      rating_confidence: high
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.212625
     - entity_id: sherlock-bbc
       source_target: primary
       source_kind: feedback
@@ -176,9 +227,9 @@ affinities:
       confidence: medium
       weight: 1.47
   story.logic:
-    score: 0.0
+    score: 0.084144
     confidence: low
-    evidence_count: 1
+    evidence_count: 2
     evidence:
     - entity_id: deja-vu-2006
       source_target: primary
@@ -188,6 +239,15 @@ affinities:
       source: explicit
       confidence: high
       weight: 1.8
+    - entity_id: knives-out-2019
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 9.5
+      rating_source: inferred
+      rating_confidence: high
+      trait_source: llm_inferred
+      trait_confidence: medium
+      weight: 0.165375
   story.problem_solving:
     score: 1.0
     confidence: medium
@@ -226,11 +286,34 @@ affinities:
       source: inferred
       confidence: medium
       weight: 0.98
-  structure.ensemble:
+  story.twists:
     score: 1.0
     confidence: low
     evidence_count: 1
     evidence:
+    - entity_id: knives-out-2019
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 9.5
+      rating_source: inferred
+      rating_confidence: high
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.212625
+  structure.ensemble:
+    score: 1.0
+    confidence: low
+    evidence_count: 2
+    evidence:
+    - entity_id: knives-out-2019
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 9.5
+      rating_source: inferred
+      rating_confidence: high
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.212625
     - entity_id: ready-player-one-2018
       source_target: primary
       source_kind: rating_trait
@@ -240,6 +323,20 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: medium
       weight: 0.189
+  structure.mystery:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: knives-out-2019
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 9.5
+      rating_source: inferred
+      rating_confidence: high
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.212625
   tone.light:
     score: 1.0
     confidence: low
