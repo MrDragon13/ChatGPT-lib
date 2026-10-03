@@ -106,12 +106,12 @@ metadata:
       - term: characters.charisma
         source: llm_inferred
         confidence: medium
-      - term: reaction.pacing_dragging
+      - term: pacing.slow
         source: external_source
-        confidence: low
+        confidence: medium
 ```
 
-Fingerprint должен описывать произведение, а не утверждать, нравится ли этот trait пользователю.
+Fingerprint должен описывать произведение, а не утверждать, нравится ли этот trait пользователю. Viewer-specific reaction terms вроде `reaction.pacing_dragging` относятся к user feedback и не должны использоваться как film-level property.
 
 Дополнительно допускается derived/external consensus-контекст: common praise / common criticism. Он используется как candidate explanation для attribution, но сам по себе не является user evidence.
 
