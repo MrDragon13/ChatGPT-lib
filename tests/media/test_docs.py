@@ -69,3 +69,25 @@ def test_v5_docs_expose_intelligence_commands_and_read_only_context():
     assert 'python -m media.cli taste-context' in readme
     assert 'external discovery' in readme.lower()
     assert 'dispatch-only' in readme.lower()
+
+
+def test_v51_docs_expose_similarity_assessment_and_current_read_model():
+    readme=Path('media/README.md').read_text(encoding='utf-8')
+    status=Path('media/V5_STATUS.md').read_text(encoding='utf-8')
+    for phrase in (
+        'data/relations/similarity/',
+        'set_work_similarity',
+        'remove_work_similarity',
+        'assess_candidate',
+        'python -m media.cli assess-candidate',
+        'manifest v3',
+    ):
+        assert phrase in readme
+    assert 'similarity' in readme.lower()
+    assert 'не является preference сама по себе' in readme
+    assert 'не создаёт canonical work' in readme
+    assert 'Media Intelligence v5.1' in status
+    assert 'Task 1–4' in status
+    assert 'assess_candidate' in status
+    assert 'set_work_similarity' in status
+    assert 'manifest v3' in status
