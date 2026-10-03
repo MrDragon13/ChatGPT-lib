@@ -130,7 +130,7 @@ jobs:
             .media/operations
             "$REQUEST"
           )
-          for path in media/data/interactions media/preferences/inferred; do
+          for path in media/data/interactions media/preferences/inferred media/data/relations/similarity; do
             if [ -e "$path" ] || git ls-files -- "$path" | grep -q .; then
               STAGE_PATHS+=("$path")
             fi
