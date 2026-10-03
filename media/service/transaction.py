@@ -9,7 +9,18 @@ from pathlib import Path
 from typing import Any
 
 from media.domain.changeset import MutationPlan, OperationResult
-from media.domain.commands import AddWorkCommand, EditViewingFeedbackCommand, RecordRecommendationInteractionCommand, RecordViewingFeedbackCommand, RefreshMetadataCommand, SetInferredPreferencesCommand, SetInterestCommand, SetSemanticFingerprintCommand
+from media.domain.commands import (
+    AddWorkCommand,
+    EditViewingFeedbackCommand,
+    RecordRecommendationInteractionCommand,
+    RecordViewingFeedbackCommand,
+    RefreshMetadataCommand,
+    RemoveWorkSimilarityCommand,
+    SetInferredPreferencesCommand,
+    SetInterestCommand,
+    SetSemanticFingerprintCommand,
+    SetWorkSimilarityCommand,
+)
 from media.domain.errors import CommandValidationError, NotFoundError, TransactionValidationError
 from media.domain.types import WorkRef
 from media.repository.yaml_repo import YamlRepository
@@ -20,12 +31,24 @@ from media.service.mutate import apply_feedback_updates, plan_edit_viewing_feedb
 from media.service.path_policy import verify_changed_paths
 from media.service.preferences import plan_set_inferred_preferences
 from media.service.refresh import plan_refresh_metadata
+from media.service.similarity import plan_remove_work_similarity, plan_set_work_similarity
 from media.tools.build_index import write_index
 from media.tools.build_profiles import build_profile
 from media.tools.common import dump_yaml, iter_jsonl, write_jsonl
 from media.tools.validate import validate_repository
 
-MutableCommand = RecordViewingFeedbackCommand | EditViewingFeedbackCommand | SetInterestCommand | AddWorkCommand | RefreshMetadataCommand | SetSemanticFingerprintCommand | SetInferredPreferencesCommand | RecordRecommendationInteractionCommand
+MutableCommand = (
+    RecordViewingFeedbackCommand
+    | EditViewingFeedbackCommand
+    | SetInterestCommand
+    | AddWorkCommand
+    | RefreshMetadataCommand
+    | SetSemanticFingerprintCommand
+    | SetInferredPreferencesCommand
+    | RecordRecommendationInteractionCommand
+    | SetWorkSimilarityCommand
+    | RemoveWorkSimilarityCommand
+)
 
 
 def _receipt_path(repo_root: Path, operation_id: str) -> Path:
@@ -56,6 +79,8 @@ def _plan(repo: YamlRepository, command: MutableCommand, now: datetime | None, p
     if isinstance(command,SetSemanticFingerprintCommand): return plan_set_semantic_fingerprint(repo,command,now=now)
     if isinstance(command,SetInferredPreferencesCommand): return plan_set_inferred_preferences(repo,command,now=now)
     if isinstance(command,RecordRecommendationInteractionCommand): return plan_record_recommendation_interaction(repo,command,now=now)
+    if isinstance(command,SetWorkSimilarityCommand): return plan_set_work_similarity(repo,command,now=now)
+    if isinstance(command,RemoveWorkSimilarityCommand): return plan_remove_work_similarity(repo,command,now=now)
     if isinstance(command,AddWorkCommand): return plan_add_work(repo,command,provider,now=now)
     if isinstance(command,RefreshMetadataCommand): return plan_refresh_metadata(repo,command,provider,now=now)
     raise CommandValidationError("unsupported mutable command")
