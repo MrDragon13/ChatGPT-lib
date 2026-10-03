@@ -60,6 +60,21 @@ def _check_rating_consistency(issues: list[ValidationIssue], path: str, rating: 
         _issue(issues, path, "rating_consistency", "non-null score requires non-none source and confidence")
 
 
+def _similarity_endpoint_key(endpoint: Any) -> str | None:
+    if not isinstance(endpoint, dict):
+        return None
+    if endpoint.get("kind") == "canonical" and isinstance(endpoint.get("work_id"), str):
+        return f"work:{endpoint['work_id']}"
+    if endpoint.get("kind") != "external":
+        return None
+    provider = endpoint.get("provider")
+    if provider == "tmdb" and endpoint.get("media_type") in {"movie", "tv"} and isinstance(endpoint.get("id"), int):
+        return f"external:tmdb:{endpoint['media_type']}:{endpoint['id']}"
+    if provider == "imdb" and isinstance(endpoint.get("id"), str):
+        return f"external:imdb:{endpoint['id']}"
+    return None
+
+
 def validate_repository(repo_root: Path) -> list[ValidationIssue]:
     root = Path(repo_root)
     media = root / "media"
@@ -168,6 +183,44 @@ def validate_repository(repo_root: Path) -> list[ValidationIssue]:
             _issue(issues, path_label, "stale_ref", f"reference {ref} points to tombstone; use active redirect target")
         elif ref not in allowed:
             _issue(issues, path_label, "missing_ref", f"unknown {label} reference {ref}")
+
+    similarity_dir = media / "data" / "relations" / "similarity"
+    for path in iter_yaml_files(similarity_dir):
+        doc = _schema_check(issues, root, path, "work-similarity.schema.json", schema_dir)
+        if not isinstance(doc, dict):
+            continue
+        path_label = str(path.relative_to(root))
+        target = doc.get("target")
+        if target not in targets:
+            _issue(issues, path_label, "missing_target", f"unknown similarity target {target}")
+        if isinstance(target, str) and path.stem != target:
+            _issue(issues, path_label, "similarity_filename", f"similarity target {target} must be stored in {target}.yaml")
+        seen_pairs: set[tuple[str, str]] = set()
+        for index, relation in enumerate(doc.get("relations") or []):
+            if not isinstance(relation, dict):
+                continue
+            relation_path = f"{path_label}:relations[{index}]"
+            left = relation.get("left")
+            right = relation.get("right")
+            for endpoint in (left, right):
+                if isinstance(endpoint, dict) and endpoint.get("kind") == "canonical" and isinstance(endpoint.get("work_id"), str):
+                    check_ref(relation_path, endpoint["work_id"], work_ids)
+            for term in relation.get("terms") or []:
+                if isinstance(term, str):
+                    check_term(relation_path, term)
+            left_key = _similarity_endpoint_key(left)
+            right_key = _similarity_endpoint_key(right)
+            if left_key is None or right_key is None:
+                continue
+            if left_key == right_key:
+                _issue(issues, relation_path, "self_relation", "similarity relation points to the same endpoint")
+            pair = tuple(sorted((left_key, right_key)))
+            if pair in seen_pairs:
+                _issue(issues, relation_path, "duplicate_similarity", f"duplicate similarity pair {pair[0]} <-> {pair[1]}")
+            else:
+                seen_pairs.add(pair)
+            if left_key > right_key:
+                _issue(issues, relation_path, "similarity_order", "similarity endpoints must be stored in canonical lexical order")
 
     def check_signal_map(work_id: str, path: Path, mapping: Any, expected_targets: set[str]) -> None:
         if not isinstance(mapping, dict):
