@@ -7,22 +7,30 @@ from uuid import UUID
 
 from media.domain.commands import (
     AddWorkCommand,
+    EditViewingFeedbackCommand,
     MediaCommand,
     ProviderWorkRef,
     RecommendContextRequest,
+    RecordRecommendationInteractionCommand,
     RecordViewingFeedbackCommand,
     RefreshMetadataCommand,
+    SetInferredPreferencesCommand,
     SetInterestCommand,
+    SetSemanticFingerprintCommand,
 )
 from media.domain.errors import CommandValidationError
-from media.domain.types import TargetUpdate, WorkRef
+from media.domain.types import TargetEdit, TargetUpdate, WorkRef
 from media.tools.schema_utils import validate_against_schema
 
 _SCHEMA_BY_OPERATION = {
     "record_viewing_feedback": "record_viewing_feedback.schema.json",
+    "edit_viewing_feedback": "edit_viewing_feedback.schema.json",
     "set_interest": "set_interest.schema.json",
     "add_work": "add_work.schema.json",
     "refresh_metadata": "refresh_metadata.schema.json",
+    "set_inferred_preferences": "set_inferred_preferences.schema.json",
+    "set_semantic_fingerprint": "set_semantic_fingerprint.schema.json",
+    "record_recommendation_interaction": "record_recommendation_interaction.schema.json",
     "recommend_context": "recommend_context.schema.json",
 }
 
@@ -59,10 +67,48 @@ def parse_command(data: Mapping[str, Any], schema_dir: Path | None = None) -> Me
     if operation != "recommend_context":
         _validate_uuid(str(data["operation_id"]))
     if operation == "record_viewing_feedback":
-        updates = tuple(TargetUpdate(target=item["target"], viewing=item.get("viewing"), rating=item.get("rating"), reaction=item.get("reaction"), feedback=item.get("feedback")) for item in data["target_updates"])
-        return RecordViewingFeedbackCommand(data["schema_version"], data["operation_id"], _work_ref(data["work_ref"]), updates, data.get("create_if_missing", False))
+        updates = tuple(
+            TargetUpdate(
+                target=item["target"],
+                viewing=item.get("viewing"),
+                rating=item.get("rating"),
+                reaction=item.get("reaction"),
+                feedback=item.get("feedback"),
+            )
+            for item in data["target_updates"]
+        )
+        return RecordViewingFeedbackCommand(
+            data["schema_version"],
+            data["operation_id"],
+            _work_ref(data["work_ref"]),
+            updates,
+            data.get("create_if_missing", False),
+        )
+    if operation == "edit_viewing_feedback":
+        edits = tuple(
+            TargetEdit(
+                target=item["target"],
+                set_values=dict(item.get("set") or {}),
+                clear=tuple(item.get("clear") or ()),
+                purge=bool(item.get("purge", False)),
+            )
+            for item in data["target_edits"]
+        )
+        return EditViewingFeedbackCommand(
+            data["schema_version"],
+            data["operation_id"],
+            _work_ref(data["work_ref"]),
+            edits,
+        )
     if operation == "set_interest":
-        return SetInterestCommand(data["schema_version"], data["operation_id"], _work_ref(data["work_ref"]), data["target"], data["state"], data.get("priority"))
+        return SetInterestCommand(
+            data["schema_version"],
+            data["operation_id"],
+            _work_ref(data["work_ref"]),
+            data["target"],
+            data["state"],
+            data.get("priority"),
+        )
     if operation == "add_work":
         return AddWorkCommand(data["schema_version"], data["operation_id"], _work_ref(data["work_ref"]))
     if operation == "refresh_metadata":
@@ -71,8 +117,47 @@ def parse_command(data: Mapping[str, Any], schema_dir: Path | None = None) -> Me
             for work_id, value in (data.get("tmdb_overrides") or {}).items()
         }
         years = dict(data.get("year_overrides") or {})
-        return RefreshMetadataCommand(data["schema_version"], data["operation_id"], data["scope"], overrides, years)
-    return RecommendContextRequest(data["schema_version"], data["target"], data.get("text"), data.get("only_unwatched", False), data.get("runtime_max"), data.get("include_not_interested", False), data.get("limit", 20))
+        return RefreshMetadataCommand(
+            data["schema_version"],
+            data["operation_id"],
+            data["scope"],
+            overrides,
+            years,
+        )
+    if operation == "set_inferred_preferences":
+        return SetInferredPreferencesCommand(
+            data["schema_version"],
+            data["operation_id"],
+            data["target"],
+            tuple(dict(item) for item in data["hypotheses"]),
+        )
+    if operation == "set_semantic_fingerprint":
+        return SetSemanticFingerprintCommand(
+            data["schema_version"],
+            data["operation_id"],
+            _work_ref(data["work_ref"]),
+            tuple(dict(item) for item in data["traits"]),
+        )
+    if operation == "record_recommendation_interaction":
+        return RecordRecommendationInteractionCommand(
+            data["schema_version"],
+            data["operation_id"],
+            data["session_id"],
+            data["target"],
+            _work_ref(data["work_ref"]),
+            data["event"],
+            data.get("note"),
+            data.get("at"),
+        )
+    return RecommendContextRequest(
+        data["schema_version"],
+        data["target"],
+        data.get("text"),
+        data.get("only_unwatched", False),
+        data.get("runtime_max"),
+        data.get("include_not_interested", False),
+        data.get("limit", 20),
+    )
 
 
 def load_command(path: Path) -> MediaCommand | RecommendContextRequest:
