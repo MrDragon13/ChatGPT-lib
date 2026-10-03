@@ -14,9 +14,10 @@ def _text(path: str) -> str:
     return (ROOT / path).read_text(encoding="utf-8")
 
 
-def _local_markdown_targets(path: str) -> list[Path]:
-    source = ROOT / path
+def _local_markdown_targets(path: str | Path) -> list[Path]:
+    source = ROOT / Path(path)
     text = source.read_text(encoding="utf-8")
+    text = re.sub(r"```.*?```", "", text, flags=re.DOTALL)
     targets: list[Path] = []
     for target in re.findall(r"\[[^\]]+\]\(([^)]+)\)", text):
         if target.startswith(("http://", "https://", "#", "mailto:")):
@@ -30,12 +31,7 @@ def _local_markdown_targets(path: str) -> list[Path]:
 
 def test_root_readme_routes_to_documentation_usage_development_and_architecture():
     text = _text("README.md")
-    for target in (
-        "docs/README.md",
-        "docs/guides/media-usage.md",
-        "docs/guides/development.md",
-        "docs/architecture/overview.md",
-    ):
+    for target in ("docs/README.md", "docs/guides/media-usage.md", "docs/guides/development.md", "docs/architecture/overview.md"):
         assert f"]({target})" in text
 
 
@@ -52,10 +48,7 @@ def test_docs_index_separates_living_agent_and_historical_layers():
 def test_root_readme_does_not_publish_dated_specs_as_current_architecture():
     text = _text("README.md")
     assert "## Актуальная архитектура v5" not in text
-    assert not re.search(
-        r"(?is)(current|актуальн)[^\n]{0,80}docs/superpowers/(?:specs|plans)/20\d\d-",
-        text,
-    )
+    assert not re.search(r"(?is)(current|актуальн)[^\n]{0,80}docs/superpowers/(?:specs|plans)/20\d\d-", text)
 
 
 def test_architecture_layer_covers_current_v51_without_historical_specs():
@@ -109,14 +102,9 @@ def test_media_command_reference_matches_registered_operations():
 def test_operations_guide_uses_existing_verification_commands():
     text = _text("docs/guides/operations.md")
     for command in (
-        "python -m pytest -q",
-        "python -m media.tools.validate .",
-        "python -m media.cli rebuild --check",
-        "python -m media.cli doctor --format json",
-        "python -m media.cli web-export",
-        "npm run test:run",
-        "npm run typecheck",
-        "npm run build",
+        "python -m pytest -q", "python -m media.tools.validate .", "python -m media.cli rebuild --check",
+        "python -m media.cli doctor --format json", "python -m media.cli web-export", "npm run test:run",
+        "npm run typecheck", "npm run build",
     ):
         assert command in text
 
@@ -131,10 +119,7 @@ def test_current_status_is_durable_not_a_pr_ledger():
     text = _text("docs/status/current.md")
     for required in ("v5.1", "assess_candidate", "set_work_similarity", "manifest v3"):
         assert required in text
-    for forbidden in (
-        "Current head:", "Media Dev Check #", "Web Check #", "Task 1", "Task 2",
-        "docs/documentation-system-reorganization", "resume from branch",
-    ):
+    for forbidden in ("Current head:", "Media Dev Check #", "Web Check #", "Task 1", "Task 2", "docs/documentation-system-reorganization", "resume from branch"):
         assert forbidden not in text
 
 
@@ -147,13 +132,7 @@ def test_media_usage_covers_similarity_and_candidate_assessment():
 
 def test_media_readme_is_compact_subsystem_router():
     text = _text("media/README.md")
-    for target in (
-        "../docs/architecture/media-model.md",
-        "../docs/architecture/intelligence.md",
-        "../docs/guides/media-usage.md",
-        "../docs/reference/media-commands.md",
-        "../docs/status/current.md",
-    ):
+    for target in ("../docs/architecture/media-model.md", "../docs/architecture/intelligence.md", "../docs/guides/media-usage.md", "../docs/reference/media-commands.md", "../docs/status/current.md"):
         assert f"]({target})" in text
     assert len(text) < 7000
 
@@ -186,3 +165,19 @@ def test_agent_bootstrap_does_not_require_historical_specs_or_long_status():
     assert "docs/architecture/" in media
     assert "docs/reference/" in media
     assert "media/V5_STATUS.md" not in media
+
+
+def test_key_living_documentation_local_links_resolve():
+    paths = [
+        Path("README.md"), Path("AGENTS.md"), Path("media/README.md"), Path("media/AGENTS.md"),
+        Path("media/START_PROMPT.md"), Path("media/V5_STATUS.md"), Path("docs/README.md"),
+    ]
+    for directory in ("docs/architecture", "docs/guides", "docs/reference", "docs/status"):
+        paths.extend(path.relative_to(ROOT) for path in sorted((ROOT / directory).glob("*.md")))
+
+    for path in paths:
+        source = ROOT / path
+        assert source.exists(), str(path)
+        for target in _local_markdown_targets(path):
+            display = target.relative_to(ROOT) if target.is_relative_to(ROOT) else target
+            assert target.exists(), f"broken local Markdown link: {path} -> {display}"
