@@ -43,6 +43,11 @@ jobs:
             exit 2
           fi
           echo "request=${REQUESTS[0]}" >> "$GITHUB_OUTPUT"
+      - name: Configure bot Git identity
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
       - name: Replay branch on current main
         shell: bash
         run: |
@@ -156,8 +161,6 @@ jobs:
           BRANCH: ${{ github.head_ref }}
         run: |
           OPERATION_ID=$(python -c "import json; print(json.load(open('/tmp/media-request.json'))['operation_id'])")
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "data: apply media operation $OPERATION_ID"
           git push origin "HEAD:$BRANCH"
           echo "head_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
