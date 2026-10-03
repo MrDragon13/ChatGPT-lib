@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://chatgpt-lib.local/schemas/web-manifest.schema.json",
-  "title": "Media web manifest v1",
+  "title": "Media web manifest v2",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -10,11 +10,12 @@
     "targets",
     "vocabulary",
     "profiles",
+    "taste_contexts",
     "recommendations",
     "works"
   ],
   "properties": {
-    "schema_version": {"const": 1},
+    "schema_version": {"const": 2},
     "default_target": {"type": ["string", "null"]},
     "targets": {
       "type": "object",
@@ -52,6 +53,60 @@
       "type": "object",
       "additionalProperties": {"type": "object"}
     },
+    "taste_contexts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["schema_version", "target", "profile", "representative", "recent_feedback", "exclusions"],
+        "properties": {
+          "schema_version": {"const": 1},
+          "target": {"type": "string"},
+          "profile": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": ["explicit_preferences", "inferred_preferences", "rules", "constraints", "strongest_affinities", "summary"],
+            "properties": {
+              "explicit_preferences": {"type": "array"},
+              "inferred_preferences": {"type": "array"},
+              "rules": {"type": "array"},
+              "constraints": {"type": "array"},
+              "strongest_affinities": {"type": "array"},
+              "summary": {"type": "object"}
+            }
+          },
+          "representative": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["high", "low"],
+            "properties": {
+              "high": {"type": "array"},
+              "low": {"type": "array"}
+            }
+          },
+          "recent_feedback": {"type": "array"},
+          "exclusions": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["watched", "not_interested"],
+            "properties": {
+              "watched": {"type": "array", "items": {"type": "string"}},
+              "not_interested": {"type": "array", "items": {"type": "string"}}
+            }
+          },
+          "couple": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["members", "agreements", "disagreements"],
+            "properties": {
+              "members": {"type": "array", "items": {"type": "string"}},
+              "agreements": {"type": "array"},
+              "disagreements": {"type": "array"}
+            }
+          }
+        }
+      }
+    },
     "recommendations": {
       "type": "object",
       "additionalProperties": {
@@ -88,6 +143,7 @@
           "group_signals",
           "interest",
           "traits",
+          "semantic_fingerprint",
           "collections",
           "provenance"
         ],
@@ -108,6 +164,19 @@
           "traits": {
             "type": "array",
             "items": {"type": "string"}
+          },
+          "semantic_fingerprint": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true,
+              "required": ["term", "source", "confidence"],
+              "properties": {
+                "term": {"type": "string"},
+                "source": {"type": "string"},
+                "confidence": {"type": "string"}
+              }
+            }
           },
           "collections": {
             "type": "array",
