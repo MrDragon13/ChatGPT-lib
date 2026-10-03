@@ -184,3 +184,121 @@ def plan_remove_work_similarity(
     _, rel_path = _relation_path(repo, command.target)
     entity_id = _entity_id(command.target, left, right)
     return MutationPlan(command.operation_id, "remove_work_similarity", (entity_id,), {rel_path: output}, False, ())
+
+
+def _work_external_aliases(work_document: dict[str, Any]) -> set[str]:
+    identity = work_document.get("identity") or {}
+    external = identity.get("external_ids") or {}
+    aliases: set[str] = set()
+    tmdb = external.get("tmdb") or {}
+    if isinstance(tmdb, dict) and tmdb.get("media_type") in {"movie", "tv"} and isinstance(tmdb.get("id"), int):
+        aliases.add(f"external:tmdb:{tmdb['media_type']}:{tmdb['id']}")
+    imdb = external.get("imdb")
+    if isinstance(imdb, str) and imdb:
+        aliases.add(f"external:imdb:{imdb}")
+    return aliases
+
+
+def _parse_timestamp(value: Any) -> datetime:
+    if not isinstance(value, str):
+        return datetime.min.replace(tzinfo=timezone.utc)
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return datetime.min.replace(tzinfo=timezone.utc)
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def _assertion_signature(relation: dict[str, Any]) -> tuple[tuple[str, ...], Any]:
+    return tuple(relation.get("terms") or ()), relation.get("note")
+
+
+def _choose_collision_winner(
+    current: tuple[dict[str, Any], str, bool],
+    candidate: tuple[dict[str, Any], str, bool],
+) -> tuple[dict[str, Any], str, bool]:
+    current_relation, current_identity, current_fully_canonical = current
+    candidate_relation, candidate_identity, candidate_fully_canonical = candidate
+    current_time = _parse_timestamp(current_relation.get("updated_at"))
+    candidate_time = _parse_timestamp(candidate_relation.get("updated_at"))
+    if candidate_time > current_time:
+        return candidate
+    if candidate_time < current_time:
+        return current
+    if candidate_fully_canonical != current_fully_canonical:
+        return candidate if candidate_fully_canonical else current
+    if candidate_identity < current_identity:
+        return candidate
+    return current
+
+
+def reconcile_similarity_for_new_work(
+    repo: YamlRepository,
+    work_id: str,
+    work_document: dict[str, Any],
+) -> dict[str, dict[str, Any]]:
+    aliases = _work_external_aliases(work_document)
+    if not aliases:
+        return {}
+    canonical = {"kind": "canonical", "work_id": work_id}
+    relation_dir = repo.media_root / "data" / "relations" / "similarity"
+    if not relation_dir.exists():
+        return {}
+    updated_documents: dict[str, dict[str, Any]] = {}
+    for path in sorted(relation_dir.glob("*.yaml")):
+        original = load_yaml(path) or {}
+        if not isinstance(original, dict):
+            continue
+        winners: dict[tuple[str, str], tuple[dict[str, Any], str, bool]] = {}
+        changed = False
+        for raw_relation in original.get("relations") or []:
+            if not isinstance(raw_relation, dict):
+                continue
+            relation = dict(raw_relation)
+            raw_left = dict(relation.get("left") or {})
+            raw_right = dict(relation.get("right") or {})
+            try:
+                original_left_key = endpoint_key(raw_left)
+                original_right_key = endpoint_key(raw_right)
+            except CommandValidationError:
+                pair_identity = ""
+            else:
+                pair_identity = "|".join(sorted((original_left_key, original_right_key)))
+            fully_canonical = raw_left.get("kind") == "canonical" and raw_right.get("kind") == "canonical"
+            left = canonical if endpoint_key(raw_left) in aliases else raw_left
+            right = canonical if endpoint_key(raw_right) in aliases else raw_right
+            left_key = endpoint_key(left)
+            right_key = endpoint_key(right)
+            if left_key == right_key:
+                changed = True
+                continue
+            if left_key > right_key:
+                left, right = right, left
+                left_key, right_key = right_key, left_key
+            if left != raw_left or right != raw_right:
+                changed = True
+            relation["left"] = left
+            relation["right"] = right
+            pair = (left_key, right_key)
+            candidate = (relation, pair_identity, fully_canonical)
+            current = winners.get(pair)
+            if current is None:
+                winners[pair] = candidate
+                continue
+            changed = True
+            winner = _choose_collision_winner(current, candidate)
+            if _assertion_signature(current[0]) == _assertion_signature(candidate[0]):
+                winner = _choose_collision_winner(current, candidate)
+            winners[pair] = winner
+        relations = [item[0] for _, item in sorted(winners.items(), key=lambda row: row[0])]
+        output = {
+            "schema_version": original.get("schema_version", 1),
+            "target": original.get("target", path.stem),
+            "relations": relations,
+        }
+        if changed or output != original:
+            rel = f"media/data/relations/similarity/{path.name}"
+            updated_documents[rel] = output
+    return updated_documents
