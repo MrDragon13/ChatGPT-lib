@@ -68,13 +68,13 @@ describe("WebManifest v2 intelligence contract", () => {
             { term: "story.intrigue", source: "llm_inferred", confidence: "high" },
           ],
           collections: [],
-          provenance: {},
+          provenance: { created_at: null, updated_at: null },
         },
       ],
     };
 
     expect(manifest.schema_version).toBe(2);
-    expect(manifest.works[0].semantic_fingerprint[0].term).toBe("story.intrigue");
-    expect(manifest.taste_contexts.primary.profile.inferred_preferences[0].affinity).toBe(0.8);
+    expect(manifest.works[0].semantic_fingerprint?.[0].term).toBe("story.intrigue");
+    expect(manifest.taste_contexts?.primary.profile.inferred_preferences[0].affinity).toBe(0.8);
   });
 });
