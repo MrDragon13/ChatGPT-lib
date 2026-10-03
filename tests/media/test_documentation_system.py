@@ -61,23 +61,9 @@ def test_root_readme_does_not_publish_dated_specs_as_current_architecture():
 def test_architecture_layer_covers_current_v51_without_historical_specs():
     overview = _text("docs/architecture/overview.md")
     media_model = _text("docs/architecture/media-model.md")
-    for phrase in (
-        "canonical",
-        "derived",
-        "GitHub Actions",
-        "broker",
-        "web manifest",
-    ):
+    for phrase in ("canonical", "derived", "GitHub Actions", "broker", "web manifest"):
         assert phrase.lower() in overview.lower()
-    for phrase in (
-        "primary",
-        "partner",
-        "couple",
-        "semantic fingerprint",
-        "similarity",
-        "WorkRef",
-        "reconciliation",
-    ):
+    for phrase in ("primary", "partner", "couple", "semantic fingerprint", "similarity", "WorkRef", "reconciliation"):
         assert phrase.lower() in media_model.lower()
     assert not re.search(r"docs/superpowers/(?:specs|plans)/20\d\d-", overview)
 
@@ -108,14 +94,7 @@ def test_web_architecture_manifest_version_matches_exporter():
 
 def test_write_pipeline_separates_normal_typed_and_manual_developer_routes():
     text = _text("docs/architecture/write-pipeline.md").lower()
-    for phrase in (
-        "typed request",
-        "operation pr",
-        "deterministic transaction",
-        "exact-head",
-        "guarded merge",
-        "pages",
-    ):
+    for phrase in ("typed request", "operation pr", "deterministic transaction", "exact-head", "guarded merge", "pages"):
         assert phrase in text
     assert "manual developer" in text
     assert "refresh_metadata" in text
@@ -144,53 +123,24 @@ def test_operations_guide_uses_existing_verification_commands():
 
 def test_reference_invariants_include_cross_system_safety_rules():
     text = _text("docs/reference/invariants.md").lower()
-    for phrase in (
-        "canonical",
-        "generated",
-        "typed command",
-        "similarity",
-        "preference",
-        "target",
-        "browser",
-        "secret",
-        "unknown",
-        "vocabulary",
-    ):
+    for phrase in ("canonical", "generated", "typed command", "similarity", "preference", "target", "browser", "secret", "unknown", "vocabulary"):
         assert phrase in text
 
 
 def test_current_status_is_durable_not_a_pr_ledger():
     text = _text("docs/status/current.md")
-    for required in (
-        "v5.1",
-        "assess_candidate",
-        "set_work_similarity",
-        "manifest v3",
-    ):
+    for required in ("v5.1", "assess_candidate", "set_work_similarity", "manifest v3"):
         assert required in text
     for forbidden in (
-        "Current head:",
-        "Media Dev Check #",
-        "Web Check #",
-        "Task 1",
-        "Task 2",
-        "docs/documentation-system-reorganization",
-        "resume from branch",
+        "Current head:", "Media Dev Check #", "Web Check #", "Task 1", "Task 2",
+        "docs/documentation-system-reorganization", "resume from branch",
     ):
         assert forbidden not in text
 
 
 def test_media_usage_covers_similarity_and_candidate_assessment():
     text = _text("docs/guides/media-usage.md").lower()
-    for phrase in (
-        "assess_candidate",
-        "set_work_similarity",
-        "remove_work_similarity",
-        "external",
-        "primary",
-        "partner",
-        "couple",
-    ):
+    for phrase in ("assess_candidate", "set_work_similarity", "remove_work_similarity", "external", "primary", "partner", "couple"):
         assert phrase in text
     assert "не добав" in text and "медиатек" in text
 
@@ -223,8 +173,8 @@ def test_product_and_design_are_explicitly_scoped_to_media_web():
     design = _text("DESIGN.md")
     assert "Scope: media-web" in product
     assert "not repository/system architecture" in product.lower()
-    assert "Scope: media-web" in design
-    assert "not repository/system architecture" in design.lower()
+    assert "product: media-web" in design
+    assert "# Media Web Design System" in design
 
 
 def test_agent_bootstrap_does_not_require_historical_specs_or_long_status():
