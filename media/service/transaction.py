@@ -9,11 +9,12 @@ from pathlib import Path
 from typing import Any
 
 from media.domain.changeset import MutationPlan, OperationResult
-from media.domain.commands import AddWorkCommand, EditViewingFeedbackCommand, RecordViewingFeedbackCommand, RefreshMetadataCommand, SetInterestCommand
+from media.domain.commands import AddWorkCommand, EditViewingFeedbackCommand, RecordViewingFeedbackCommand, RefreshMetadataCommand, SetInterestCommand, SetSemanticFingerprintCommand
 from media.domain.errors import CommandValidationError, NotFoundError, TransactionValidationError
 from media.domain.types import WorkRef
 from media.repository.yaml_repo import YamlRepository
 from media.service.enrich import plan_add_work, plan_add_work_resolved
+from media.service.intelligence import plan_set_semantic_fingerprint
 from media.service.mutate import apply_feedback_updates, plan_edit_viewing_feedback, plan_record_viewing_feedback, plan_set_interest, profile_targets_for
 from media.service.path_policy import verify_changed_paths
 from media.service.refresh import plan_refresh_metadata
@@ -22,7 +23,7 @@ from media.tools.build_profiles import write_profiles
 from media.tools.common import dump_yaml
 from media.tools.validate import validate_repository
 
-MutableCommand = RecordViewingFeedbackCommand | EditViewingFeedbackCommand | SetInterestCommand | AddWorkCommand | RefreshMetadataCommand
+MutableCommand = RecordViewingFeedbackCommand | EditViewingFeedbackCommand | SetInterestCommand | AddWorkCommand | RefreshMetadataCommand | SetSemanticFingerprintCommand
 
 
 def _receipt_path(repo_root: Path, operation_id: str) -> Path:
@@ -50,6 +51,7 @@ def _plan(repo: YamlRepository, command: MutableCommand, now: datetime | None, p
     if isinstance(command,RecordViewingFeedbackCommand): return _plan_record_feedback(repo,command,now,provider)
     if isinstance(command,EditViewingFeedbackCommand): return plan_edit_viewing_feedback(repo,command,now=now)
     if isinstance(command,SetInterestCommand): return plan_set_interest(repo,command,now=now)
+    if isinstance(command,SetSemanticFingerprintCommand): return plan_set_semantic_fingerprint(repo,command,now=now)
     if isinstance(command,AddWorkCommand): return plan_add_work(repo,command,provider,now=now)
     if isinstance(command,RefreshMetadataCommand): return plan_refresh_metadata(repo,command,provider,now=now)
     raise CommandValidationError("unsupported mutable command")
