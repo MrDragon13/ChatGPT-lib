@@ -49,3 +49,53 @@ def test_starter_prompt_is_human_first_and_reuses_repository_rules():
     assert "ничего в медиатеке не записывай" in text
     assert "не проси второго подтверждения" in text
     assert "не говори, что сохранил" in text
+
+
+def test_v5_agent_contract_has_complete_intent_router():
+    text = _text("media/AGENTS.md")
+    assert "Media Intelligence v5" in text
+    assert "## Intent router" in text
+    for route in (
+        "read / lookup",
+        "record",
+        "correct",
+        "clear",
+        "purge",
+        "interest",
+        "recommend internal",
+        "recommend external",
+        "explain",
+        "reanalyze taste",
+        "semantic enrich",
+        "metadata maintenance",
+        "architecture/vocabulary maintenance",
+    ):
+        assert route in text
+
+
+def test_v5_recommendation_routes_distinguish_internal_from_external_discovery():
+    text = _text("media/AGENTS.md")
+    assert "External discovery is the default for a general recommendation request" in text
+    assert "Internal-only recommendation" in text
+    assert "local media is memory, exclusion, and evidence, not the candidate boundary" in text
+    assert "not_tonight" in text
+    assert "record_recommendation_interaction" in text
+
+
+def test_v5_agent_contract_routes_reanalysis_and_semantic_enrichment_safely():
+    text = _text("media/AGENTS.md")
+    assert "taste-context" in text
+    assert "set_inferred_preferences" in text
+    assert "set_semantic_fingerprint" in text
+    assert "Inferred output is not independent evidence for another inferred output" in text
+    assert "Film fingerprint describes the work, never the viewer reaction" in text
+
+
+def test_v5_starter_prompt_mentions_new_user_capabilities_without_becoming_manual():
+    text = _text("media/START_PROMPT.md")
+    assert "исправлять и удалять" in text
+    assert "переанализировать мой вкус" in text
+    assert "из моей медиатеки" in text
+    assert "внешний поиск" in text
+    assert "media/AGENTS.md" in text
+    assert len(text) < 8000

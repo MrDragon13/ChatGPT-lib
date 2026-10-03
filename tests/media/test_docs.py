@@ -54,3 +54,18 @@ def test_docs_define_refresh_metadata_as_manual_bulk_maintenance():
     assert 'refresh_metadata' in agents
     assert 'all_movies' in agents
     assert 'must not auto-merge' in agents.lower()
+
+
+def test_v5_docs_expose_intelligence_commands_and_read_only_context():
+    readme=Path('media/README.md').read_text(encoding='utf-8')
+    assert 'Personal Media Library v5' in readme
+    for operation in (
+        'edit_viewing_feedback',
+        'set_inferred_preferences',
+        'set_semantic_fingerprint',
+        'record_recommendation_interaction',
+    ):
+        assert operation in readme
+    assert 'python -m media.cli taste-context' in readme
+    assert 'external discovery' in readme.lower()
+    assert 'dispatch-only' in readme.lower()
