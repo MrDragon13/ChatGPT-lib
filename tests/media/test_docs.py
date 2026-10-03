@@ -88,7 +88,7 @@ def test_living_docs_expose_v51_similarity_assessment_and_current_read_model():
         assert operation in commands
     assert 'similarity' in intelligence.lower()
     assert 'не является preference' in intelligence
-    assert 'не добав' in model and 'медиатек' in model
+    assert 'не означает автоматическое добавление' in model and 'медиатек' in model
     assert 'Current manifest version: v3' in web
     assert 'Media Intelligence v5.1' in status
     assert 'assess_candidate' in status
