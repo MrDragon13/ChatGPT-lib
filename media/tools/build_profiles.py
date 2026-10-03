@@ -9,7 +9,9 @@ from .common import dump_yaml, iter_jsonl, iter_yaml_files, load_yaml
 
 CONFIDENCE_WEIGHT = {'exact':1.0,'high':0.9,'medium':0.7,'low':0.5,'none':0.25}
 SOURCE_WEIGHT = {'explicit':1.0,'inferred':0.7}
+RATING_SOURCE_WEIGHT = {'explicit':1.0,'explicit_approx':0.85,'inferred':0.6,'none':0.0}
 SENTIMENT_SIGN = {'positive':1.0,'negative':-1.0,'mixed':0.0,'neutral':0.0}
+RATING_TRAIT_MAX_WEIGHT = 0.5
 
 
 def _entities(media_root: Path) -> Iterable[dict[str, Any]]:
@@ -41,6 +43,28 @@ def _add_feedback(bucket:dict[str,list[dict[str,Any]]], entity_id:str, source_ta
         strength=int(item.get('strength') or 1); src=item.get('source','inferred'); conf=item.get('confidence','medium'); sign=SENTIMENT_SIGN.get(item.get('sentiment'),0.0)
         weight=strength*SOURCE_WEIGHT.get(src,0.7)*CONFIDENCE_WEIGHT.get(conf,0.7)
         bucket[term].append({'entity_id':entity_id,'source_target':source_target,'source_kind':source_kind,'sentiment':item.get('sentiment'),'strength':strength,'source':src,'confidence':conf,'signed':sign*weight,'weight':weight})
+
+
+def _rating_direction(score: float) -> tuple[float,float]:
+    if score > 6.0: return 1.0,min(1.0,(score-6.0)/4.0)
+    if score < 5.0: return -1.0,min(1.0,(5.0-score)/4.0)
+    return 0.0,0.0
+
+
+def _add_rating_traits(bucket:dict[str,list[dict[str,Any]]], entity:dict[str,Any], source_target:str, signal:dict[str,Any])->None:
+    rating=signal.get('rating') or {}; score=rating.get('score')
+    if score is None: return
+    sign,magnitude=_rating_direction(float(score))
+    if magnitude<=0: return
+    rating_conf=rating.get('confidence','medium'); rating_source=rating.get('source','inferred')
+    traits=(((entity.get('metadata') or {}).get('semantic') or {}).get('traits') or [])
+    for trait in traits:
+        term=trait.get('term')
+        if not term or term.startswith('reaction.'): continue
+        trait_conf=trait.get('confidence','medium')
+        weight=RATING_TRAIT_MAX_WEIGHT*magnitude*RATING_SOURCE_WEIGHT.get(rating_source,0.6)*CONFIDENCE_WEIGHT.get(rating_conf,0.7)*CONFIDENCE_WEIGHT.get(trait_conf,0.7)
+        if weight<=0: continue
+        bucket[term].append({'entity_id':entity.get('id'),'source_target':source_target,'source_kind':'rating_trait','rating_score':float(score),'rating_source':rating_source,'rating_confidence':rating_conf,'trait_source':trait.get('source'),'trait_confidence':trait_conf,'signed':sign*weight,'weight':weight})
 
 
 def _add_explicit(bucket:dict[str,list[dict[str,Any]]], prefs:list[dict[str,Any]],target:str)->None:
@@ -77,18 +101,15 @@ def build_profile(media_root: Path, target: str) -> dict[str, Any]:
         if target in viewers:
             sig=viewer_signals.get(target)
             if sig:
-                _add_feedback(evidence,eid,target,sig)
-                _add_signal_summary(summary,sig)
+                _add_feedback(evidence,eid,target,sig); _add_rating_traits(evidence,entity,target,sig); _add_signal_summary(summary,sig)
         else:
             for member in members:
                 sig=viewer_signals.get(member)
                 if sig:
-                    _add_feedback(evidence,eid,member,sig)
-                    _add_signal_summary(summary,sig)
+                    _add_feedback(evidence,eid,member,sig); _add_rating_traits(evidence,entity,member,sig); _add_signal_summary(summary,sig)
             direct=group_signals.get(target)
             if direct:
-                _add_feedback(evidence,eid,target,direct,source_kind='group_feedback')
-                _add_signal_summary(summary,direct)
+                _add_feedback(evidence,eid,target,direct,source_kind='group_feedback'); _add_rating_traits(evidence,entity,target,direct); _add_signal_summary(summary,direct)
     explicit=_explicit(media_root,target); _add_explicit(evidence,explicit['preferences'],target)
     affinities={}
     for term,items in sorted(evidence.items()):
