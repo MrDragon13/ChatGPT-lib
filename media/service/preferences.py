@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import copy
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any
 
 from media.domain.changeset import MutationPlan
@@ -10,6 +9,7 @@ from media.domain.commands import SetInferredPreferencesCommand
 from media.domain.errors import CommandValidationError
 from media.repository.yaml_repo import YamlRepository
 from media.tools.common import iter_jsonl, load_yaml
+from media.tools.schema_utils import validate_against_schema
 
 
 def _at(now: datetime | None) -> str:
@@ -41,7 +41,7 @@ def _interaction_ids(repo: YamlRepository) -> set[str]:
     return result
 
 
-def _validate_hypotheses(repo: YamlRepository, target: str, hypotheses: tuple[dict[str, Any], ...] | tuple[Any, ...]) -> None:
+def _validate_hypotheses(repo: YamlRepository, target: str, hypotheses: tuple[Any, ...]) -> None:
     viewers, groups = repo.configured_targets()
     targets = viewers | set(groups)
     if target not in targets:
@@ -90,6 +90,9 @@ def plan_set_inferred_preferences(
         "hypotheses": list(hypotheses),
         "updated_at": _at(now),
     }
+    errors = validate_against_schema(payload, "inferred-preferences.schema.json", repo.media_root / "schemas")
+    if errors:
+        raise CommandValidationError("; ".join(errors))
     rel = f"media/preferences/inferred/{command.target}.yaml"
     path = repo.media_root.parent / rel
     existing = load_yaml(path) if path.exists() else None
