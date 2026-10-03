@@ -23,7 +23,7 @@
 
 ### Historical rationale
 
-[`superpowers/specs/`](superpowers/specs/) и [`superpowers/plans/`](superpowers/plans/) — **historical rationale**: design decisions и implementation plans, объясняющие, почему проект пришёл к текущей архитектуре. Их старые status markers относятся к моменту написания документа и не описывают текущее состояние проекта.
+Repository path `docs/superpowers/` содержит historical design/implementation record. [`superpowers/specs/`](superpowers/specs/) и [`superpowers/plans/`](superpowers/plans/) — **historical rationale**: design decisions и implementation plans, объясняющие, почему проект пришёл к текущей архитектуре. Их старые status markers относятся к моменту написания документа и не описывают текущее состояние проекта.
 
 ## Структура living docs
 
