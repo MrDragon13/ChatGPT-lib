@@ -1,5 +1,5 @@
 import { tmdbImageUrl } from "../../data/assets";
-import type { TargetId, WebManifest, WebWork } from "../../data/types";
+import type { TargetId, WebManifest, WebWork, WorkSimilarity } from "../../data/types";
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -23,6 +23,17 @@ export type DetailFingerprintTrait = {
   confidence: string;
 };
 
+export type DetailSimilarity = {
+  key: string;
+  kind: "canonical" | "external";
+  title: string;
+  year: number | null;
+  href: string | null;
+  terms: string[];
+  note: string | null;
+  provider: string | null;
+};
+
 export type WorkDetailModel = {
   id: string;
   title: string;
@@ -39,6 +50,7 @@ export type WorkDetailModel = {
   activeSignal: DetailSignal | null;
   signals: Record<TargetId, DetailSignal | null>;
   fingerprint: DetailFingerprintTrait[];
+  similarities: DetailSimilarity[];
   externalRating: number | null;
   externalVotes: number | null;
 };
@@ -126,6 +138,36 @@ function fingerprintFor(work: WebWork, manifest: WebManifest): DetailFingerprint
   }));
 }
 
+function similarityFor(item: WorkSimilarity, manifest: WebManifest, activeTarget: TargetId): DetailSimilarity {
+  const other = item.other;
+  if (other.kind === "canonical") {
+    return {
+      key: `work:${other.id}`,
+      kind: "canonical",
+      title: other.title_ru ?? other.title_original ?? other.id,
+      year: other.year,
+      href: `#/work/${encodeURIComponent(other.id)}?target=${encodeURIComponent(activeTarget)}`,
+      terms: vocabularyLabels(manifest, item.terms),
+      note: item.note,
+      provider: null,
+    };
+  }
+  return {
+    key: `external:${other.provider}:${String(other.id)}`,
+    kind: "external",
+    title: other.title,
+    year: other.year,
+    href: null,
+    terms: vocabularyLabels(manifest, item.terms),
+    note: item.note,
+    provider: other.provider.toUpperCase(),
+  };
+}
+
+function similaritiesFor(work: WebWork, manifest: WebManifest, activeTarget: TargetId): DetailSimilarity[] {
+  return (work.similarities?.[activeTarget] ?? []).map((item) => similarityFor(item, manifest, activeTarget));
+}
+
 export function buildWorkDetailView(
   manifest: WebManifest,
   workId: string,
@@ -158,6 +200,7 @@ export function buildWorkDetailView(
     activeSignal: signals[activeTarget] ?? null,
     signals,
     fingerprint: fingerprintFor(work, manifest),
+    similarities: similaritiesFor(work, manifest, activeTarget),
     externalRating: numberValue(tmdbMetric?.score),
     externalVotes: numberValue(tmdbMetric?.votes),
   };
