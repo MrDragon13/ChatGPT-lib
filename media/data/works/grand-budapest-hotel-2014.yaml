@@ -41,7 +41,7 @@ viewer_signals:
         rating: *id001
 provenance:
   created_at: '2026-10-01'
-  updated_at: '2026-10-02'
+  updated_at: '2026-10-03'
 metadata:
   external:
     genres:
@@ -131,3 +131,29 @@ metadata:
       provider: tmdb
       provider_id: 120467
       fetched_at: '2026-10-01T11:51:00.342195Z'
+  semantic:
+    traits:
+    - term: visuals.strong
+      source: llm_inferred
+      confidence: high
+    - term: atmosphere.immersive
+      source: llm_inferred
+      confidence: high
+    - term: humor.witty
+      source: llm_inferred
+      confidence: high
+    - term: structure.ensemble
+      source: llm_inferred
+      confidence: high
+    - term: characters.charisma
+      source: llm_inferred
+      confidence: high
+    - term: humor.absurd
+      source: llm_inferred
+      confidence: medium
+    - term: pacing.fast
+      source: llm_inferred
+      confidence: medium
+    - term: tone.light
+      source: llm_inferred
+      confidence: medium
