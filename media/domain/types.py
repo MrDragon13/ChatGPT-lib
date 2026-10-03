@@ -21,3 +21,14 @@ class TargetUpdate:
     rating: Mapping[str, Any] | None = None
     reaction: Mapping[str, Any] | None = None
     feedback: Mapping[str, Any] | None = None
+
+
+FeedbackComponent = Literal["viewing", "rating", "reaction", "feedback"]
+
+
+@dataclass(frozen=True)
+class TargetEdit:
+    target: str
+    set_values: Mapping[str, Any]
+    clear: tuple[FeedbackComponent, ...] = ()
+    purge: bool = False
