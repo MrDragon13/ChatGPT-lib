@@ -1,10 +1,11 @@
 # Media v5 — Agent Scenario Catalog
 
 Дата: 2026-10-03  
-Статус: **companion design catalog for v5 review**  
+Статус: **current v5/v5.1 agent scenario catalog**  
 Связан с:
 - `2026-10-03-media-intelligence-recommendation-v5-design.md`
 - `2026-10-03-media-intelligence-v5-web-agent-contract-amendment.md`
+- `2026-10-03-media-candidate-assessment-work-similarity-v5-1-design.md`
 
 ## 1. Назначение
 
@@ -129,6 +130,23 @@
 | «Насколько это рискованный вариант?» | explain confidence/exploration | no fake precise percentage |
 | «Что в X похоже на мои любимые фильмы?» | semantic comparison | load relevant full work context only as needed |
 
+## 10.1 v5.1 — explicit similarity and candidate assessment
+
+| Intent | Route | Persistence / rule |
+|---|---|---|
+| «A похож на B» | `set_work_similarity` | save one target-specific undirected current assertion; endpoint order does not matter |
+| «B похож на A» after the previous assertion | `set_work_similarity` upsert | same canonical relation, never a mirrored duplicate |
+| «Я больше не считаю A похожим на B» | `remove_work_similarity` | remove the same unordered pair; do not persist a negative similarity record |
+| «Для нас A похож на B» | `set_work_similarity(target=couple)` | couple assertion is independent from primary/partner |
+| «A похож на внешний B, но B пока не добавляй» | `set_work_similarity` with stable external WorkRef | external endpoint does not create a canonical work; no viewing/interest side effect |
+| ambiguous external title | identity clarification | ask at most one short blocking question; never persist title-only identity guess |
+| «Мне понравится X?» | `assess_candidate` | read-only context; agent returns qualitative verdict/confidence, concrete evidence and risks |
+| «Насколько вероятно, что X зайдёт?» | `assess_candidate` | qualitative verdict/confidence; no fake precise percentage or opaque score |
+| similarity used in recommendation | recommendation/explanation evidence | similarity is a hint/evidence, not a preference; it may anchor or contextualize, but not manufacture affinity alone |
+| external X assessed for fit | `assess_candidate` external WorkRef | read-only; external candidate does not create a canonical work |
+
+Derived/system semantic similarity stays read-only/derived unless the user explicitly asserts it. Explicit similarity may support future recommendation explanation, candidate comparison, or correlation reasoning, but one relation alone never becomes a stable taste hypothesis.
+
 ## 11. Recommendation interaction learning
 
 | Intent/event | Route | Persistence |
@@ -207,8 +225,10 @@
 |---|---|
 | несколько фильмов с одинаковым названием | одно короткое identity clarification |
 | непонятно, чей rating | одно target clarification |
+| ambiguous external similarity endpoint | одно короткое identity clarification; no title-only persisted guess |
 | provider unavailable при создании нового work | объяснить пользовательский blocker; не сохранять partial feedback/work |
 | existing-work feedback при provider outage | должен продолжать работать без provider |
+| saved external similarity during provider outage | read from stored identity/display snapshot; provider not required for basic display |
 | concurrent operation conflict | не создавать второй противоречащий write; восстановить/принять активную operation state по утверждённой broker semantics |
 | validation failure | не заявлять success; canonical state остаётся целым |
 | Pages задерживается после merge | data считается сохранённой в main; UI publication может отдельно быть pending |
