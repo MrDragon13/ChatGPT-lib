@@ -1,7 +1,7 @@
 # Documentation System Reorganization — design
 
 Дата: 2026-10-03  
-Статус: **approved conversational design, written spec awaiting review**  
+Статус: **approved written spec**  
 База: `main@6898f208dddfbedd724e5b212c65319a02e0f61d`  
 Область: repository documentation architecture, navigation, operational contracts, historical specs/plans, drift prevention
 
