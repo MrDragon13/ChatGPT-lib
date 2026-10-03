@@ -7,6 +7,7 @@ from media.domain.commands import RecommendContextRequest
 from media.domain.errors import UnknownTargetError
 from media.repository.index_repo import IndexRepository
 from media.repository.yaml_repo import YamlRepository
+from media.service.similarity import similarity_context
 from media.tools.common import load_yaml
 
 
@@ -18,6 +19,24 @@ def _profile(media_root: Path, target: str) -> dict[str, Any]:
     return doc if isinstance(doc, dict) else {"target": target, "affinities": {}}
 
 
+def _similarities_by_canonical_work(media_root: Path, target: str) -> dict[str, list[dict[str, Any]]]:
+    result: dict[str, list[dict[str, Any]]] = {}
+    for relation in similarity_context(media_root, target):
+        left = relation["left"]
+        right = relation["right"]
+        shared = {
+            "terms": list(relation.get("terms") or []),
+            "note": relation.get("note"),
+            "updated_at": relation.get("updated_at"),
+            "provenance": dict(relation.get("provenance") or {}),
+        }
+        if left.get("kind") == "canonical":
+            result.setdefault(left["work_id"], []).append({"other": dict(right), **shared})
+        if right.get("kind") == "canonical":
+            result.setdefault(right["work_id"], []).append({"other": dict(left), **shared})
+    return result
+
+
 def build_recommend_context(media_root: Path, request: RecommendContextRequest) -> dict[str, Any]:
     media_root = Path(media_root)
     repo = YamlRepository(media_root)
@@ -26,6 +45,7 @@ def build_recommend_context(media_root: Path, request: RecommendContextRequest) 
         raise UnknownTargetError(f"unknown target: {request.target}")
     members = groups.get(request.target, [])
     affinities = (_profile(media_root, request.target).get("affinities") or {})
+    similarity_evidence = _similarities_by_canonical_work(media_root, request.target)
     candidates: list[tuple[int, int, str, dict[str, Any]]] = []
     for row in IndexRepository(media_root / "generated" / "index.jsonl").rows():
         runtime = row.get("runtime_min")
@@ -52,7 +72,11 @@ def build_recommend_context(media_root: Path, request: RecommendContextRequest) 
             score = affinity.get("score", 0)
             if score > 0: strengths.append(trait)
             elif score < 0: concerns.append(trait)
-        evidence = {"strengths": sorted(strengths), "concerns": sorted(concerns)}
+        evidence = {
+            "strengths": sorted(strengths),
+            "concerns": sorted(concerns),
+            "similarities": list(similarity_evidence.get(row["id"], [])),
+        }
         if request.target in viewers:
             evidence["viewing"] = {request.target: (viewer.get(request.target) or {}).get("viewing")}
         else:
