@@ -23,6 +23,34 @@ export type HomeCandidate = {
 
 export type RecentWork = HomeCandidate & { date: string };
 
+export type HomeTasteAffinity = {
+  term: string;
+  label: string;
+  score: number;
+  confidence: string;
+  evidenceCount: number;
+};
+
+export type HomeTasteEvidence = {
+  workId: string;
+  title: string;
+};
+
+export type HomeTasteStatement = {
+  id: string;
+  statement: string;
+  label: string | null;
+  confidence: string | null;
+  evidence: HomeTasteEvidence[];
+};
+
+export type HomeTasteModel = {
+  strongest: HomeTasteAffinity[];
+  explicit: HomeTasteStatement[];
+  inferred: HomeTasteStatement[];
+  couple: { agreements: number; disagreements: number } | null;
+};
+
 export type HomeViewModel = {
   target: TargetId;
   hero: HomeCandidate | null;
@@ -30,6 +58,7 @@ export type HomeViewModel = {
   next: HomeCandidate[];
   couple: HomeCandidate[];
   recent: RecentWork[];
+  taste: HomeTasteModel | null;
 };
 
 type UnknownRecord = Record<string, unknown>;
@@ -74,6 +103,11 @@ function signalReaction(signal: UnknownRecord | null): string | null {
 
 function vocabularyLabels(manifest: WebManifest, terms: string[]): string[] {
   return terms.map((term) => manifest.vocabulary[term]?.label_ru ?? term);
+}
+
+function vocabularyLabel(manifest: WebManifest, term: string | null): string | null {
+  if (!term) return null;
+  return manifest.vocabulary[term]?.label_ru ?? term;
 }
 
 function external(work: WebWork): UnknownRecord {
@@ -164,6 +198,70 @@ function recentViews(manifest: WebManifest, target: TargetId): RecentWork[] {
     .slice(0, 12);
 }
 
+function tasteStatement(manifest: WebManifest, value: unknown): HomeTasteStatement | null {
+  const item = record(value);
+  if (!item) return null;
+  const id = stringValue(item.id);
+  const statement = stringValue(item.statement);
+  if (!id || !statement) return null;
+  return {
+    id,
+    statement,
+    label: vocabularyLabel(manifest, stringValue(item.term)),
+    confidence: stringValue(item.confidence),
+    evidence: [],
+  };
+}
+
+function tasteEvidence(manifest: WebManifest, pointers: Array<{ entity_id?: string | null }>): HomeTasteEvidence[] {
+  const works = new Map(manifest.works.map((work) => [work.id, work]));
+  const seen = new Set<string>();
+  return pointers.flatMap((pointer) => {
+    const workId = stringValue(pointer.entity_id);
+    if (!workId || seen.has(workId)) return [];
+    const work = works.get(workId);
+    if (!work) return [];
+    seen.add(workId);
+    return [{ workId, title: titleFor(work) }];
+  });
+}
+
+function tasteView(manifest: WebManifest, target: TargetId): HomeTasteModel | null {
+  const context = manifest.taste_contexts?.[target];
+  if (!context) return null;
+
+  const strongest = context.profile.strongest_affinities.slice(0, 6).map((item) => ({
+    term: item.term,
+    label: manifest.vocabulary[item.term]?.label_ru ?? item.term,
+    score: item.score,
+    confidence: item.confidence,
+    evidenceCount: item.evidence_count,
+  }));
+
+  const explicit = context.profile.explicit_preferences
+    .map((item) => tasteStatement(manifest, item))
+    .filter((item): item is HomeTasteStatement => item !== null)
+    .slice(0, 4);
+
+  const inferred = context.profile.inferred_preferences.slice(0, 4).map((item) => ({
+    id: item.id,
+    statement: item.statement,
+    label: item.terms.length === 1 ? vocabularyLabel(manifest, item.terms[0]) : null,
+    confidence: item.confidence,
+    evidence: tasteEvidence(manifest, item.evidence),
+  }));
+
+  const couple = context.couple
+    ? {
+        agreements: context.couple.agreements.length,
+        disagreements: context.couple.disagreements.length,
+      }
+    : null;
+
+  if (!strongest.length && !explicit.length && !inferred.length && !couple) return null;
+  return { strongest, explicit, inferred, couple };
+}
+
 export function buildHomeViewModel(manifest: WebManifest, target: TargetId): HomeViewModel {
   const recommendations = recommendationViews(manifest, target);
   return {
@@ -173,5 +271,6 @@ export function buildHomeViewModel(manifest: WebManifest, target: TargetId): Hom
     next: recommendations.slice(4, 16),
     couple: recommendationViews(manifest, "couple").slice(0, 12),
     recent: recentViews(manifest, target),
+    taste: tasteView(manifest, target),
   };
 }

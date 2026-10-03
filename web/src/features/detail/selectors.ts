@@ -16,6 +16,13 @@ export type DetailPerson = {
   character: string | null;
 };
 
+export type DetailFingerprintTrait = {
+  term: string;
+  label: string;
+  source: string;
+  confidence: string;
+};
+
 export type WorkDetailModel = {
   id: string;
   title: string;
@@ -31,6 +38,7 @@ export type WorkDetailModel = {
   cast: DetailPerson[];
   activeSignal: DetailSignal | null;
   signals: Record<TargetId, DetailSignal | null>;
+  fingerprint: DetailFingerprintTrait[];
   externalRating: number | null;
   externalVotes: number | null;
 };
@@ -87,6 +95,37 @@ function vocabularyLabels(manifest: WebManifest, terms: string[]): string[] {
   return terms.map((term) => manifest.vocabulary[term]?.label_ru ?? term);
 }
 
+function fingerprintSourceLabel(source: string): string {
+  const labels: Record<string, string> = {
+    llm_inferred: "Вывод модели",
+    external_source: "Внешний источник",
+    manual: "Ручная разметка",
+    explicit: "Ручная разметка",
+    tmdb: "TMDB",
+  };
+  return labels[source] ?? "Другой источник";
+}
+
+function fingerprintConfidenceLabel(confidence: string): string {
+  const labels: Record<string, string> = {
+    exact: "Точная",
+    high: "Высокая",
+    medium: "Средняя",
+    low: "Низкая",
+    none: "Не указана",
+  };
+  return labels[confidence] ?? "Не указана";
+}
+
+function fingerprintFor(work: WebWork, manifest: WebManifest): DetailFingerprintTrait[] {
+  return (work.semantic_fingerprint ?? []).map((trait) => ({
+    term: trait.term,
+    label: manifest.vocabulary[trait.term]?.label_ru ?? trait.term,
+    source: fingerprintSourceLabel(trait.source),
+    confidence: fingerprintConfidenceLabel(trait.confidence),
+  }));
+}
+
 export function buildWorkDetailView(
   manifest: WebManifest,
   workId: string,
@@ -118,6 +157,7 @@ export function buildWorkDetailView(
     cast: people(external.main_cast),
     activeSignal: signals[activeTarget] ?? null,
     signals,
+    fingerprint: fingerprintFor(work, manifest),
     externalRating: numberValue(tmdbMetric?.score),
     externalVotes: numberValue(tmdbMetric?.votes),
   };

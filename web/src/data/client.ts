@@ -1,6 +1,6 @@
 import type { WebManifest } from "./types";
 
-const MANIFEST_SCHEMA_VERSION = 1;
+const SUPPORTED_MANIFEST_SCHEMA_VERSIONS = new Set([1, 2]);
 
 export class ManifestLoadError extends Error {
   constructor(
@@ -16,14 +16,17 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function assertManifestV1(value: unknown): asserts value is WebManifest {
+function assertSupportedManifest(value: unknown): asserts value is WebManifest {
   if (!isRecord(value)) {
     throw new ManifestLoadError("Данные медиатеки имеют неверный формат", "invalid_manifest");
   }
-  if (value.schema_version !== MANIFEST_SCHEMA_VERSION) {
+  if (typeof value.schema_version !== "number" || !SUPPORTED_MANIFEST_SCHEMA_VERSIONS.has(value.schema_version)) {
     throw new ManifestLoadError("Версия данных медиатеки не поддерживается", "unsupported_version");
   }
   if (!Array.isArray(value.works) || !isRecord(value.targets) || !isRecord(value.vocabulary)) {
+    throw new ManifestLoadError("Данные медиатеки имеют неверный формат", "invalid_manifest");
+  }
+  if (value.schema_version === 2 && !isRecord(value.taste_contexts)) {
     throw new ManifestLoadError("Данные медиатеки имеют неверный формат", "invalid_manifest");
   }
 }
@@ -52,7 +55,7 @@ export async function loadManifest(cacheBust?: string): Promise<WebManifest> {
     throw new ManifestLoadError("Данные медиатеки имеют неверный формат", "invalid_manifest");
   }
 
-  assertManifestV1(payload);
+  assertSupportedManifest(payload);
   return payload;
 }
 
