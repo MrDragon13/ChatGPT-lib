@@ -5,8 +5,17 @@ affinities:
   action.strong:
     score: 1.0
     confidence: low
-    evidence_count: 1
+    evidence_count: 2
     evidence:
+    - entity_id: batman-2022
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 7.5
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: medium
+      weight: 0.13125
     - entity_id: ready-player-one-2018
       source_target: primary
       source_kind: rating_trait
@@ -19,8 +28,17 @@ affinities:
   atmosphere.immersive:
     score: 1.0
     confidence: low
-    evidence_count: 1
+    evidence_count: 2
     evidence:
+    - entity_id: batman-2022
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 7.5
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.16875
     - entity_id: ready-player-one-2018
       source_target: primary
       source_kind: rating_trait
@@ -59,6 +77,20 @@ affinities:
       source: inferred
       confidence: medium
       weight: 0.98
+  characters.depth:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: batman-2022
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 7.5
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: medium
+      weight: 0.13125
   dialogue.strong:
     score: 1.0
     confidence: low
@@ -170,6 +202,20 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: medium
       weight: 0.165375
+  pacing.slow:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: batman-2022
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 7.5
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: medium
+      weight: 0.13125
   reaction.cringe:
     score: -1.0
     confidence: low
@@ -199,8 +245,17 @@ affinities:
   story.intrigue:
     score: 1.0
     confidence: medium
-    evidence_count: 3
+    evidence_count: 4
     evidence:
+    - entity_id: batman-2022
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 7.5
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: medium
+      weight: 0.13125
     - entity_id: knives-out-2019
       source_target: primary
       source_kind: feedback
@@ -326,8 +381,17 @@ affinities:
   structure.mystery:
     score: 1.0
     confidence: low
-    evidence_count: 1
+    evidence_count: 2
     evidence:
+    - entity_id: batman-2022
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 7.5
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.16875
     - entity_id: knives-out-2019
       source_target: primary
       source_kind: rating_trait
@@ -337,6 +401,20 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.212625
+  tone.dark:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: batman-2022
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 7.5
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.16875
   tone.light:
     score: 1.0
     confidence: low
@@ -352,10 +430,19 @@ affinities:
       trait_confidence: medium
       weight: 0.189
   visuals.strong:
-    score: 0.70015
+    score: 0.708349
     confidence: high
-    evidence_count: 5
+    evidence_count: 6
     evidence:
+    - entity_id: batman-2022
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 7.5
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.16875
     - entity_id: blade-runner-2049-2017
       source_target: primary
       source_kind: feedback
