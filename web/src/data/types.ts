@@ -109,7 +109,7 @@ export type WebWork = {
   group_signals: Record<string, unknown>;
   interest: Record<string, unknown>;
   traits: string[];
-  semantic_fingerprint: SemanticTrait[];
+  semantic_fingerprint?: SemanticTrait[];
   collections: string[];
   provenance: {
     created_at: string | null;
@@ -118,7 +118,8 @@ export type WebWork = {
 };
 
 export type WebManifest = {
-  schema_version: 2;
+  // The exporter always emits v2. v1 remains readable during a staged static deploy/cache overlap.
+  schema_version: 1 | 2;
   default_target: TargetId | null;
   targets: {
     viewers: TargetId[];
@@ -126,7 +127,7 @@ export type WebManifest = {
   };
   vocabulary: Record<string, VocabularyEntry>;
   profiles: Record<string, Record<string, unknown>>;
-  taste_contexts: Record<TargetId, TasteContext>;
+  taste_contexts?: Record<TargetId, TasteContext>;
   recommendations: Record<TargetId, RecommendationContext>;
   works: WebWork[];
 };
