@@ -27,7 +27,8 @@
 - `media/README.md`;
 - command schemas / command registry;
 - website manifest contract и UI routes;
-- тесты, фиксирующие ключевые routing invariants.
+- тесты, фиксирующие ключевые routing invariants;
+- development-continuity protocol из `2026-10-03-media-intelligence-v5-development-continuity-contract.md` для всех implementation PR.
 
 `AGENTS.md` должен описывать актуальную v5-архитектуру, а не оставаться контрактом v4.
 
@@ -78,408 +79,224 @@
 - впервые поставить rating;
 - изменить rating, если пользователь формулирует это как новую актуальную оценку;
 - записать просмотр;
-- добавить/обновить reaction;
-- записать новый feedback summary и semantic signals;
-- одновременно создать отсутствующий work через `create_if_missing`.
+- добавить/заменить reaction;
+- сохранить summary + semantic signals;
+- атомарно записать несколько target updates для одного просмотра.
+
+Если пользователь говорит «поставь теперь 8 вместо 7», операция считается correction текущего значения, а history фиксирует замену по существующим правилам data model.
 
 ### 4.2 `edit_viewing_feedback` (новая typed operation)
 
-Используется, когда intent явно исправляющий или удаляющий.
+Нужна для явных исправлений и удаления отдельных сигналов.
 
-Должна поддерживать schema-controlled действия по target:
+Концептуально команда должна уметь по target/work:
 
-- `set_rating`;
-- `clear_rating`;
-- `set_reaction`;
-- `clear_reaction`;
-- `set_feedback`;
-- `clear_feedback`;
-- `set_viewing`;
-- `clear_viewing` там, где отсутствие viewing signal семантически допустимо.
+- `set` — установить/заменить конкретные поля;
+- `clear` — убрать текущий `rating`, `reaction`, `feedback`, `viewing`, `rewatch` или выбранные semantic feedback signals;
+- сохранить audit/history, если это correction, а не privacy purge.
 
-Операция работает только с существующим work; она не должна неявно создавать произведение.
+Удаление не должно требовать ручной правки YAML.
 
-При обычной correction/clear active state обновляется/удаляется, а audit/history может сохранять факт изменения. Это позволяет отличить «я передумал» от «этого никогда не было».
+### 4.3 Purge semantics
 
-### 4.3 Полный purge
+Фраза «удали мой отзыв» неоднозначна и должна трактоваться по минимальному intent:
 
-Запрос уровня «удали мой отзыв полностью, включая историю» — отдельный сильный intent. Он не должен автоматически следовать из фразы «убери мой отзыв».
+- «убери текст отзыва, оценку оставь» → clear feedback only;
+- «убери оценку» → clear rating only;
+- «удали всё моё мнение об этом фильме» → clear rating/reaction/feedback/relations, но viewing может остаться, если пользователь не сказал удалить факт просмотра;
+- «удали вообще всю мою историю по этому фильму, включая то, что я его смотрел» → explicit purge operation/policy.
 
-Если v5 реализует purge, это отдельная строго ограниченная typed operation, которая:
+Полный privacy-style purge должен быть отдельной операцией с более строгим подтверждением/guardrails, потому что он разрушает evidence/history, в отличие от обычной correction.
 
-- требует явного указания, что удаляется history/evidence;
-- удаляет только пользовательские сигналы указанного target/work;
-- не удаляет сам work или сигналы другого viewer;
-- вызывает rebuild profiles/context;
-- не может быть сгенерирована моделью из неоднозначной формулировки.
+## 5. Recommendation intent routes
 
-## 5. Семантическое обогащение при отзыве
+### 5.1 «Что посмотреть из моей медиатеки?»
 
-При новом отзыве LLM должна рассматривать два независимых объекта:
+Маршрут: internal recommendation. Только local index, viewing/interest/profile/history.
 
-1. **что пользователь сказал о своём впечатлении**;
-2. **что система знает о самом произведении**.
+### 5.2 «Посоветуй фильм» / «что нам посмотреть?»
 
-Если fingerprint произведения отсутствует или явно недостаточен, LLM может предложить work-level semantic enrichment в рамках утверждённого typed protocol.
+Маршрут по умолчанию: external discovery. Local media — память/exclusion/evidence, а не граница каталога.
 
-Предпочтительный v5 путь — разрешить `record_viewing_feedback` v2 нести опциональный ограниченный `work_semantic_context`, содержащий только существующие vocabulary terms с provenance/confidence. Deterministic service валидирует и атомарно применяет его вместе с feedback, если это безопасно.
+### 5.3 «Похожее на X»
 
-Это позволяет сценарию:
+LLM использует X как concrete semantic anchor + taste context. Если X не в базе, допускается внешний factual/semantic lookup без обязательного добавления work.
 
-> «8/10»
+### 5.4 Mood / constraints
 
-не выдумывать explicit причины пользователя, но одновременно гарантировать, что для будущего rating-correlation у фильма есть качественный semantic fingerprint.
+«Сегодня лёгкое», «до 100 минут», «без ужасов», «хочу прям мрачное» относятся к текущему request context и не становятся permanent preferences без явного устойчивого заявления.
 
-Если агент не уверен в semantic trait фильма или требуется свежая внешняя проверка, он не должен заполнять trait догадкой. Допустим отдельный read/enrichment route через LLM/web/provider.
+### 5.5 «Удиви меня»
 
-## 6. Реальные пользовательские сценарии и правильные маршруты
+Включает exploration mode: агент может сознательно выбрать вариант вне самых очевидных priors, но обязан объяснить связь с более глубокими сигналами вкуса.
 
-Ниже не исчерпывающий список фраз, а нормативные примеры для intent router.
+### 5.6 Couple
 
-### 6.1 Обычный отзыв
+«Нам с женой» / «для двоих» → `couple`, но reasoning не сводится к среднему. Нужно учитывать зоны совпадения и расхождения и, где полезно, пояснять asymmetric fit.
 
-**Пользователь:** «Посмотрели X. Мне 8.5, партнёру понравилось. Интрига классная, финал слабоват».
+## 6. Recommendation interaction routes
 
-**Route:** `record_viewing_feedback` → existing/new work resolution → explicit semantic extraction → optional film fingerprint enrichment → deterministic apply → rebuild profiles/context.
+Когда пользователь реагирует на совет, агент должен различать:
 
-Не спрашивать второй раз «сохранять?».
+- «давай этот» → recommendation selection interaction;
+- «это уже смотрели» → corrected viewing/history route, если контекст однозначен;
+- «не сегодня» → ephemeral rejection, не persistent `not_interested`;
+- «вообще не хочу такое» → возможно persistent interest/preferences signal, но только если формулировка действительно устойчива;
+- «почему ты это предложил?» → explain route, без записи вкуса;
+- «больше такое не советуй» → explicit stable constraint/preference route, а не просто interaction.
 
-### 6.2 Только оценка
+## 7. Profile routes
 
-**Пользователь:** «X — 9/10».
+### 7.1 «Что ты понял о моём вкусе?»
 
-**Route:** `record_viewing_feedback` с rating. Не придумывать explicit feedback. Rating участвует в weak correlation evidence через fingerprint.
+Read/explain. Показывает explicit + inferred с evidence/confidence, ничего не меняет.
 
-### 6.3 Переоценка
+### 7.2 «Переосмысли мой вкус»
 
-**Пользователь:** «Я передумал, X теперь 7 вместо 9».
+`reanalyze_preferences` по утверждённому v5 flow. Новая LLM-гипотеза сохраняется только через schema-validated canonical inferred preferences.
 
-**Route:** correction (`edit_viewing_feedback` или явно correction-mode текущей операции). Новая оценка становится active, история изменения сохраняется. Profile rebuild обязателен.
+### 7.3 «Ты неправильно понял, я не люблю X»
 
-### 6.4 Добавить мнение к старой оценке
+Если это явное устойчивое утверждение пользователя, оно становится explicit preference/correction. Нельзя просто удалить inferred hypothesis и оставить contradiction unresolved.
 
-**Пользователь:** «К моей восьмёрке за X добавь: очень понравились диалоги».
+### 7.4 «Удали этот вывод обо мне»
 
-**Route:** обновить feedback, не менять rating; explicit semantic signal добавляется/пересобирается из актуального feedback state.
+Нужно различить:
 
-### 6.5 Исправить текст/смысл отзыва
+- пользователь оспаривает вывод → correction/explicit counter-evidence;
+- пользователь просит скрыть/удалить inferred hypothesis → clear inferred preference;
+- пользователь требует удалить исходные отзывы/ratings → это отдельные feedback clear/purge операции.
 
-**Пользователь:** «Я не говорил, что мне не понравился медленный темп. Убери это».
+## 8. Semantic film knowledge routes
 
-**Route:** correction только конкретного ошибочного semantic evidence; пересчитать profile. Не оставлять неверный active inferred/explicit signal.
+### 8.1 Отзыв о новом фильме
 
-### 6.6 Удалить оценку, оставить отзыв
+Если work создаётся через `record_viewing_feedback(create_if_missing=true)`, factual metadata приходит от provider. LLM explicit feedback записывается сразу.
 
-**Пользователь:** «Убери мою оценку X, отзыв оставь».
+Semantic fingerprint enrichment может быть выполнен в той же user journey только если typed contract делает provenance separation однозначным; иначе это отдельная безопасная enrichment operation.
 
-**Route:** `clear_rating` только для нужного target. Feedback/reaction/viewing остаются.
+### 8.2 «Обнови понимание этого фильма»
 
-### 6.7 Удалить отзыв, оставить оценку
+Маршрут semantic enrich: обновляет film-level knowledge/fingerprint, не user preferences напрямую.
 
-**Пользователь:** «Удали мой текстовый отзыв и теги по X, оценку 8 оставь».
+### 8.3 Новое понятие, которого нет в vocabulary
 
-**Route:** `clear_feedback`; rating не изменяется.
+Агент не добавляет term скрыто. Он либо использует существующий canonical/alias, либо оставляет концепт вне structured term и поднимает vocabulary proposal как отдельную developer задачу.
 
-### 6.8 Исправить статус просмотра
+## 9. Website parity
 
-**Пользователь:** «Я ошибся, X я не смотрел».
+Website обязан использовать те же intent semantics.
 
-**Route:** correction viewing state. Rating/reaction/feedback не должны автоматически уничтожаться без явного запроса; если возникает логическое противоречие, агент задаёт одно минимальное уточнение или применяет schema-defined consistency rule.
+### 9.1 Read/Explain UI — обязательная часть v5
 
-### 6.9 Отзыв партнёра, переданный пользователем
-
-**Пользователь:** «Жене X понравился, где-то на 8».
-
-**Route:** `partner` signal с корректным source/confidence (`explicit_approx` для approximate rating), если контекст ясно показывает, что пользователь передаёт мнение партнёра.
-
-### 6.10 Совместное мнение
-
-**Пользователь:** «Нам обоим очень зашло».
-
-**Route:** не превращать автоматически в одинаковые числовые ratings. Сохранить только те group/viewer signals, которые действительно следуют из фразы по утверждённой semantics.
-
-### 6.11 Добавить фильм без просмотра
-
-**Пользователь:** «Добавь X в медиатеку, хочу потом посмотреть».
-
-**Route:** `add_work` + `set_interest(candidate|shortlist)` по ясному intent; не создавать watched/rating/reaction.
-
-### 6.12 «Не хочу это смотреть»
-
-**Пользователь:** «X мне вообще неинтересен».
-
-**Route:** `set_interest(not_interested)`. Не считать это negative review фильма и не обучать taste как dislike качества произведения.
-
-### 6.13 Временное «не сегодня»
-
-**Пользователь:** «Не хочу сегодня ничего мрачного».
-
-**Route:** ephemeral recommendation constraint; не сохранять как persistent preference.
-
-### 6.14 Рекомендация без уточнения источника
-
-**Пользователь:** «Посоветуй нам фильм на вечер».
-
-**Route:** external discovery по умолчанию: compact taste context + concrete anchors + current intent + external candidates + factual verification + watched/not-interested exclusion + explainable shortlist.
-
-### 6.15 Только из локальной базы
-
-**Пользователь:** «Что посмотреть из моей медиатеки?».
-
-**Route:** internal recommendation only; никаких внешних кандидатов.
-
-### 6.16 Похожее на конкретный фильм
-
-**Пользователь:** «Хочу что-то вроде X».
-
-**Route:** использовать X как semantic anchor, но учитывать current taste/history; не ограничивать поиск жанром X.
-
-### 6.17 Совет по настроению
-
-**Пользователь:** «Сегодня хочется лёгкого, умного и до двух часов».
-
-**Route:** hard constraint для runtime, soft/current-intent constraints для tone/complexity; долгосрочный профиль — prior, а не фильтр.
-
-### 6.18 Неожиданная рекомендация
-
-**Пользователь:** «Удиви меня».
-
-**Route:** exploration mode с повышенной дистанцией от привычных жанров, но с объяснимой глубинной связью с taste evidence.
-
-### 6.19 Сравнить несколько вариантов
-
-**Пользователь:** «Что нам лучше — A, B или C?».
-
-**Route:** candidate comparison against couple context/current intent. Не требуется добавлять все три фильма в canonical library только ради сравнения.
-
-### 6.20 Объяснить рекомендацию
-
-**Пользователь:** «Почему ты думаешь, что мне это зайдёт?».
-
-**Route:** read-only explanation с evidence pointers: concrete liked/disliked works, explicit/inferred preferences, current request. Не придумывать новые stored preferences как побочный эффект ответа.
-
-### 6.21 Пересобрать понимание вкуса
-
-**Пользователь:** «Переосмысли мой вкус по всей истории».
-
-**Route:** `reanalyze_preferences(target)` → raw evidence + fingerprints + ratings + explicit preferences → candidate inferred preferences → validated canonical inferred layer → generated profile/context rebuild.
-
-### 6.22 Исправить inferred preference
-
-**Пользователь:** «Нет, мне не важен сильный визуал — это неправильный вывод».
-
-**Route:** пользовательское утверждение имеет более высокий приоритет. Удалить/ослабить соответствующую inferred hypothesis и при необходимости записать explicit rule/preference, чтобы следующий reanalysis не восстанавливал ту же ошибку без нового сильного evidence.
-
-### 6.23 Объяснить профиль
-
-**Пользователь:** «Что ты сейчас понял о моём вкусе?».
-
-**Route:** read compact taste context + evidence. Разделять explicit facts, inferred hypotheses и uncertainty.
-
-### 6.24 Переанализировать один фильм
-
-**Пользователь:** «Разбери X глубже, чтобы рекомендации были точнее».
-
-**Route:** semantic enrichment work-level knowledge only. Не менять пользовательский rating/reaction/preferences.
-
-### 6.25 Обновить factual metadata
-
-**Пользователь:** «Обнови данные по фильмам».
-
-**Route:** существующий provider maintenance (`refresh_metadata`) и его review policy; не смешивать factual refresh с taste reanalysis.
-
-### 6.26 «Забудь, что я это смотрел»
-
-Это неоднозначный intent между correction, clear и purge. Агент должен задать одно короткое уточнение только если последствия различаются materially: убрать только active viewing state или полностью удалить связанные пользовательские сигналы/history.
-
-## 7. Recommendation modes, которые должны понимать агенты
-
-AGENTS.md должен явно перечислять не одну команду «recommend», а набор пользовательских режимов:
-
-- external default discovery;
-- internal-library-only;
-- couple / individual target;
-- mood/current-context;
-- strict runtime/content constraints;
-- similar-to anchor;
-- avoid-something;
-- high-confidence safe picks;
-- exploration / «удиви меня»;
-- compare supplied candidates;
-- continue franchise / related works;
-- rewatch suggestion;
-- short watch / long watch;
-- series vs movie intent;
-- recent/new releases when freshness is requested;
-- «почему это?» explain mode;
-- «что из предложенного мы уже видели?» history check.
-
-Жанровые affinities всегда soft priors, если пользователь не сформулировал жанр как hard constraint.
-
-## 8. Website integration — обязательная часть v5
-
-Сайт не должен оставаться v4-витриной после изменения canonical intelligence model.
-
-### 8.1 Manifest v2 / intelligence read model
-
-Web exporter должен получить versioned manifest contract, способный безопасно отдавать:
+Manifest/read model должен уметь доставлять сайту:
 
 - explicit preferences;
-- inferred preferences;
-- generated affinities;
-- evidence summaries/pointers;
+- inferred preferences + confidence;
+- evidence pointers;
 - film semantic fingerprints;
-- representative liked/disliked works;
-- couple agreement/disagreement hints;
-- recommendation interactions/inbox, если они реализованы;
-- сохранённые external recommendation candidates, если они предназначены для UI.
+- cross-work correlations;
+- couple overlap/disagreement hints;
+- recommendation explanations;
+- external recommendation candidates/interactions, если они сохранены canonical/derived способом.
 
-Frontend не вычисляет собственный taste profile и не создаёт скрытый score.
+Сайт может показывать:
 
-### 8.2 Новые read-only возможности сайта
+- «Мой вкус»;
+- «Почему система так думает?»;
+- evidence films;
+- «что изменилось после последних просмотров»;
+- contradiction/uncertain areas;
+- semantic traits фильма;
+- «почему это может подойти»;
+- couple fit;
+- recommendation inbox/history.
 
-Минимально полезные v5-функции:
+### 9.2 Website write actions
 
-- раздел «Мой вкус»;
-- разделы `Я / Партнёр / Вместе`;
-- explicit vs inferred preferences визуально различаются;
-- confidence и uncertainty отображаются без ложной точности;
-- «Почему система так думает?» раскрывает supporting works/evidence;
-- semantic fingerprint на work detail;
-- «Почему может подойти»;
-- зоны совпадения/расхождения пары;
-- список внешних рекомендаций/inbox, если candidate ещё не добавлен в медиатеку;
-- история/эволюция понимания вкуса, если canonical audit data это позволяет.
+Существующий write-broker путь расширяется только typed operations. UI affordances должны маппиться на те же операции, что LLM/CLI:
 
-### 8.3 Website write routes
+- поставить/изменить rating;
+- изменить viewing/reaction/feedback;
+- clear отдельного сигнала;
+- interest;
+- recommendation interaction.
 
-Существующий authenticated broker остаётся единственным write boundary для обычных web-правок. UI actions должны маппиться на те же typed operations, что LLM:
+Никакого отдельного browser-only data model.
 
-- поставить/изменить оценку;
-- удалить оценку;
-- записать/исправить/удалить feedback;
-- поменять viewing state;
-- изменить interest;
-- исправить ошибочный target signal.
+### 9.3 Live AI — отдельная boundary
 
-Сайт не создаёт собственные REST semantics, которые невозможно выразить через media command model.
+Статический Pages не содержит model/provider secrets.
 
-### 8.4 Intelligence Broker / Live AI
+Для будущих действий:
 
-Для функций, требующих модели или внешнего discovery, нужен отдельный authenticated intelligence boundary (может быть расширением существующего broker deployment, но логически отдельный capability):
-
-- «Что посмотреть сегодня?»;
-- «Удиви меня»;
+- «Посоветуй прямо сейчас»;
+- «Переосмысли мой вкус»;
+- свободный AI-разбор отзыва;
 - external discovery;
-- natural-language feedback parsing;
-- deep profile reanalysis;
-- semantic work enrichment;
-- explain/compare, если нужен live reasoning.
 
-LLM/provider credentials никогда не попадают в browser bundle.
+нужен authenticated Intelligence Broker / server-side boundary. Browser отправляет typed/high-level request, сервер вызывает LLM/providers и возвращает structured result.
 
-Статический сайт должен оставаться полезным при недоступности live intelligence service.
+Недоступность Live AI не должна ломать обычную read-only медиатеку и уже опубликованные intelligence artifacts.
 
-## 9. Возможности сайта, которые открываются поверх v5
+## 10. Real-life scenario catalog
 
-После появления evidence-rich intelligence layer становятся возможны без отдельной альтернативной модели данных:
+Отдельный нормативный каталог сценариев хранится в `2026-10-03-media-intelligence-v5-agent-scenario-catalog.md` и является обязательным источником при обновлении `AGENTS.md`, command schemas, CLI и website routes.
 
-- **Taste Explorer** — интерактивно смотреть устойчивые и неуверенные области вкуса;
-- **Evidence Drill-down** — открыть preference и увидеть фильмы/отзывы, которые его поддерживают или опровергают;
-- **Taste Contradictions** — показать противоречивые сигналы («медленный темп иногда раздражает, но несколько медленных фильмов оценены очень высоко»);
-- **Couple Match** — не средняя оценка, а объяснение, почему фильм может сработать для обоих и где риск расхождения;
-- **Discovery Slider** — UI-параметр от «надёжное попадание» к «неожиданное» как текущий recommendation intent, а не persistent preference;
-- **Recommendation Inbox** — внешние кандидаты из LLM-чата/сайта с действиями `Хочу посмотреть / Неинтересно / Уже смотрел`;
-- **Taste Evolution** — какие гипотезы усилились/ослабли после новых просмотров;
-- **Review Interpretation Preview** — перед сохранением сложного свободного текста можно показать, что именно модель поняла, если пользователь явно просит preview или если ambiguity materially affects stored meaning;
-- **Profile Reanalysis Control** — ручной запуск deep reanalysis с понятным пользовательским статусом;
-- **Why this movie** — explainability на detail/recommendation card;
-- **Similar for deeper reasons** — искать не только по жанру, а по смысловой структуре/атмосфере/персонажам.
+Каталог должен охватывать как минимум:
 
-Ни одна из этих функций не должна требовать хранить opaque recommendation score как source of truth.
+- read/show/search;
+- first rating;
+- re-rating;
+- add/replace feedback;
+- correction неправильного target/work;
+- clear rating/reaction/feedback/viewing;
+- privacy purge;
+- undo/revert последней операции;
+- add work without feedback;
+- remove/merge duplicate work;
+- watched/partial/dropped/forgotten/rewatch;
+- set/unset interest;
+- internal/external/couple/exploration recommendations;
+- recommendation accepted/rejected/not-tonight/already-watched;
+- explicit stable preference/constraint;
+- explain profile/correlation/recommendation;
+- reanalyze profile;
+- correct inferred preference;
+- semantic fingerprint enrichment;
+- metadata refresh;
+- unknown vocabulary concept;
+- ambiguous film identity;
+- provider outage;
+- partial failure/transaction rollback;
+- website equivalent actions;
+- preview/no-save request;
+- bulk maintenance requiring manual review.
 
-## 10. START_PROMPT v5 — продуктовый контракт
+## 11. GitHub workflow documentation must reflect reality
 
-Новый `START_PROMPT.md` должен оставаться коротким и человеческим. Его задача — не обучить модель всем JSON schema, а заставить её:
+При миграции `AGENTS.md`/`README.md` на v5 нужно удалить устаревшее описание автоматического `pull_request` Media Check. После PR #40 authoritative `media-check.yml` является dispatch-only и запускается `Media Command` на exact resulting head SHA.
 
-1. прочитать актуальный `AGENTS.md`;
-2. использовать репозиторий как долговременную память;
-3. знать, что пользователь может свободно просить записывать, исправлять и удалять данные;
-4. понимать, что обычный совет ищет новое кино вне базы, если пользователь не ограничил поиск своей медиатекой;
-5. учитывать concrete history + taste profile + current request;
-6. уметь по запросу объяснить свои выводы и переосмыслить профиль;
-7. не превращать жанры/preferences в жёсткие клетки;
-8. не задавать повторные подтверждения и лишние анкеты;
-9. не скрывать неопределённость;
-10. никогда не заявлять об успешной записи до появления результата в актуальном `main`.
+Agent docs должны описывать фактический текущий route, иначе новая модель будет получать противоречивые инструкции.
 
-## 11. AGENTS.md v5 — структура
+## 12. Development continuity
 
-Рекомендуемая структура обновлённого контракта:
+Все implementation PR, создаваемые для реализации v5, обязаны следовать `2026-10-03-media-intelligence-v5-development-continuity-contract.md`.
 
-1. User experience contract.
-2. Source-of-truth and intelligence-layer model.
-3. Read paths.
-4. Intent routing rules.
-5. Feedback CRUD routes.
-6. Semantic enrichment rules.
-7. Rating-derived evidence rules.
-8. Preference reanalysis and correction.
-9. Internal/external recommendation modes.
-10. Couple semantics.
-11. Website/broker parity rules.
-12. Hard guardrails.
-13. Typed write protocol.
-14. Maintenance routes.
-15. Error/ambiguity policy.
-16. Verification/completion semantics.
-17. Natural-language examples.
+PR body является актуальным handoff snapshot с текущей фазой, head SHA, completed work, свежим verification evidence, blockers, deviations и следующими шагами. Значимые phase boundaries и остановки дополнительно фиксируются append-only checkpoint comments.
 
-## 12. Ambiguity policy
+Новая сессия/агент обязаны восстановить контекст из spec + implementation plan + PR status + latest checkpoint + фактического PR head/CI до продолжения product-code изменений.
 
-Агент задаёт уточнение только когда разные трактовки ведут к materially разным canonical изменениям или recommendation result.
+## 13. Definition of done для v5 agent/web integration
 
-Можно не уточнять:
+Фаза считается завершённой только когда:
 
-- «X — 8» в контексте обсуждения фильма и target уже известен;
-- «добавь, хочу посмотреть»;
-- «посоветуй что-нибудь» при достаточном taste context.
-
-Нужно уточнить:
-
-- одно название соответствует нескольким works и identity нельзя разрешить надёжно;
-- непонятно, чья именно оценка сообщается;
-- «удали всё» может означать active signal vs full purge;
-- пользовательское высказывание можно разумно трактовать как противоположные sentiments.
-
-После одного blocking clarification агент продолжает исходную уже авторизованную операцию без второго подтверждения.
-
-## 13. Completion semantics
-
-Для write intent агент различает:
-
-- interpreted;
-- submitted;
-- applied;
-- checked;
-- merged;
-- published/read-visible.
-
-Пользовательское «сохранено» допустимо только после merge в актуальный `main`; если конкретный UX зависит от Pages/read model, интерфейс отдельно может показывать pending publication до появления новой версии manifest.
-
-Для read-only recommendation/explanation никакой фиктивной write operation не создаётся.
-
-## 14. Acceptance criteria amendment
-
-v5 implementation не считается законченной, пока:
-
-1. `AGENTS.md` описывает v5 intent router и все реализованные typed operations;
-2. `START_PROMPT.md` соответствует v5 UX и recommendation semantics;
-3. rating/change/delete/clear сценарии имеют явные schema semantics и тесты;
-4. external vs internal recommendation routes невозможно случайно перепутать;
-5. website manifest поддерживает новый intelligence read model;
-6. website write actions используют те же typed operations, что LLM;
-7. live-AI web features не раскрывают credentials браузеру;
-8. explicit / inferred / film knowledge остаются раздельными во всех surfaces;
-9. profile reanalysis не может self-reinforce старые inferred conclusions;
-10. documentation содержит end-to-end examples как минимум для: add, rate, re-rate, feedback correction, partial clear, full purge policy, profile reanalysis, internal recommendation, external recommendation, couple recommendation, semantic enrichment и metadata refresh.
+1. typed operations покрывают необходимые intents;
+2. `AGENTS.md` документирует routes и guardrails;
+3. `START_PROMPT.md` кратко активирует этот operating contract;
+4. `README.md` описывает актуальную архитектуру;
+5. site manifest/types/UI не отстают от canonical model;
+6. website writes используют тот же typed-command boundary;
+7. tests покрывают routing/data invariants;
+8. legacy workflow docs не противоречат dispatch-only Media Check;
+9. implementation PR поддерживает актуальный continuity snapshot и checkpoints.
