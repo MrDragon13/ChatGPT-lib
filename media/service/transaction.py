@@ -9,22 +9,23 @@ from pathlib import Path
 from typing import Any
 
 from media.domain.changeset import MutationPlan, OperationResult
-from media.domain.commands import AddWorkCommand, EditViewingFeedbackCommand, RecordViewingFeedbackCommand, RefreshMetadataCommand, SetInferredPreferencesCommand, SetInterestCommand, SetSemanticFingerprintCommand
+from media.domain.commands import AddWorkCommand, EditViewingFeedbackCommand, RecordRecommendationInteractionCommand, RecordViewingFeedbackCommand, RefreshMetadataCommand, SetInferredPreferencesCommand, SetInterestCommand, SetSemanticFingerprintCommand
 from media.domain.errors import CommandValidationError, NotFoundError, TransactionValidationError
 from media.domain.types import WorkRef
 from media.repository.yaml_repo import YamlRepository
 from media.service.enrich import plan_add_work, plan_add_work_resolved
 from media.service.intelligence import plan_set_semantic_fingerprint
+from media.service.interactions import plan_record_recommendation_interaction
 from media.service.mutate import apply_feedback_updates, plan_edit_viewing_feedback, plan_record_viewing_feedback, plan_set_interest, profile_targets_for
 from media.service.path_policy import verify_changed_paths
 from media.service.preferences import plan_set_inferred_preferences
 from media.service.refresh import plan_refresh_metadata
 from media.tools.build_index import write_index
 from media.tools.build_profiles import write_profiles
-from media.tools.common import dump_yaml
+from media.tools.common import dump_yaml, iter_jsonl, write_jsonl
 from media.tools.validate import validate_repository
 
-MutableCommand = RecordViewingFeedbackCommand | EditViewingFeedbackCommand | SetInterestCommand | AddWorkCommand | RefreshMetadataCommand | SetSemanticFingerprintCommand | SetInferredPreferencesCommand
+MutableCommand = RecordViewingFeedbackCommand | EditViewingFeedbackCommand | SetInterestCommand | AddWorkCommand | RefreshMetadataCommand | SetSemanticFingerprintCommand | SetInferredPreferencesCommand | RecordRecommendationInteractionCommand
 
 
 def _receipt_path(repo_root: Path, operation_id: str) -> Path:
@@ -54,6 +55,7 @@ def _plan(repo: YamlRepository, command: MutableCommand, now: datetime | None, p
     if isinstance(command,SetInterestCommand): return plan_set_interest(repo,command,now=now)
     if isinstance(command,SetSemanticFingerprintCommand): return plan_set_semantic_fingerprint(repo,command,now=now)
     if isinstance(command,SetInferredPreferencesCommand): return plan_set_inferred_preferences(repo,command,now=now)
+    if isinstance(command,RecordRecommendationInteractionCommand): return plan_record_recommendation_interaction(repo,command,now=now)
     if isinstance(command,AddWorkCommand): return plan_add_work(repo,command,provider,now=now)
     if isinstance(command,RefreshMetadataCommand): return plan_refresh_metadata(repo,command,provider,now=now)
     raise CommandValidationError("unsupported mutable command")
@@ -63,7 +65,8 @@ def preview_command(repo_root: Path, command: MutableCommand, *, now: datetime |
     repo_root=Path(repo_root); receipt=_receipt_path(repo_root,command.operation_id)
     if receipt.exists(): return _load_receipt(receipt)
     plan=_plan(YamlRepository(repo_root/"media"),command,now,provider)
-    return OperationResult("planned" if plan.changed_entities else "no_change",plan.operation_id,plan.operation,plan.changed_entities,tuple(sorted(plan.documents)),plan.details)
+    paths=tuple(sorted(set(plan.documents)|set(plan.jsonl_appends)))
+    return OperationResult("planned" if plan.changed_entities else "no_change",plan.operation_id,plan.operation,plan.changed_entities,paths,plan.details)
 
 
 def _file_map(root: Path) -> dict[str, bytes]:
@@ -101,6 +104,8 @@ def execute_command(repo_root: Path, command: MutableCommand, *, now: datetime |
         temp_root=Path(tmpdir)/"repo"; temp_root.mkdir(parents=True); shutil.copytree(repo_root/"media",temp_root/"media")
         plan=_plan(YamlRepository(temp_root/"media"),command,now,provider)
         for rel,document in plan.documents.items(): dump_yaml(temp_root/rel,document)
+        for rel,appends in plan.jsonl_appends.items():
+            path=temp_root/rel; rows=[row for _,row in iter_jsonl(path)] if path.exists() else []; rows.extend(dict(item) for item in appends); write_jsonl(path,rows)
         if plan.changed_entities:
             issues=validate_repository(temp_root)
             if issues: raise TransactionValidationError("; ".join(f"{issue.code}: {issue.message}" for issue in issues[:10]))
