@@ -5,6 +5,7 @@ import importlib.util
 from pathlib import Path
 from typing import Any
 
+from media.tools.common import dump_yaml, load_yaml
 from tests.media.fixture_repo import copy_fixture_repo, prepare_derived
 
 
@@ -42,7 +43,7 @@ def test_manifest_uses_configured_targets_vocabulary_and_canonical_signals(tmp_p
 
     manifest = module.build_web_manifest(root / "media")
 
-    assert manifest["schema_version"] == 1
+    assert manifest["schema_version"] == 2
     assert manifest["default_target"] == "primary"
     assert manifest["targets"] == {
         "viewers": ["partner", "primary"],
@@ -55,9 +56,59 @@ def test_manifest_uses_configured_targets_vocabulary_and_canonical_signals(tmp_p
     assert arrival["identity"]["title_ru"] == "Прибытие"
     assert arrival["viewer_signals"]["primary"]["viewing"]["status"] == "watched"
     assert arrival["viewer_signals"]["partner"]["viewing"]["status"] == "watched"
+    assert set(manifest["taste_contexts"]) == {"primary", "partner", "couple"}
 
 
-def test_manifest_handles_work_with_missing_optional_metadata(tmp_path):
+def test_manifest_exports_structured_semantic_fingerprint_and_keeps_compact_traits(tmp_path):
+    root = copy_fixture_repo(tmp_path)
+    work_path = root / "media/data/works/arrival-2016.yaml"
+    work = load_yaml(work_path)
+    work.setdefault("metadata", {}).setdefault("semantic", {})["traits"] = [
+        {"term":"story.intrigue","source":"llm_inferred","confidence":"high"},
+    ]
+    dump_yaml(work_path, work)
+    prepare_derived(root)
+    module = _web_export_module()
+
+    manifest = module.build_web_manifest(root / "media")
+    arrival = {work["id"]: work for work in manifest["works"]}["arrival-2016"]
+
+    assert arrival["traits"] == ["story.intrigue"]
+    assert arrival["semantic_fingerprint"] == [
+        {"term":"story.intrigue","source":"llm_inferred","confidence":"high"},
+    ]
+
+
+def test_manifest_exports_inferred_preferences_and_explainable_taste_context(tmp_path):
+    root = copy_fixture_repo(tmp_path)
+    inferred = root / "media/preferences/inferred"
+    inferred.mkdir(parents=True, exist_ok=True)
+    dump_yaml(inferred / "primary.yaml", {
+        "schema_version":1,
+        "target":"primary",
+        "updated_at":"2026-10-03T00:00:00Z",
+        "hypotheses":[{
+            "id":"intrigue-pattern",
+            "statement":"Повторяется любовь к интриге.",
+            "affinity":0.8,
+            "confidence":"medium",
+            "terms":["story.intrigue"],
+            "evidence":[{"entity_id":"arrival-2016","kind":"rating_correlation"}],
+        }],
+    })
+    prepare_derived(root)
+    module = _web_export_module()
+
+    manifest = module.build_web_manifest(root / "media")
+    primary = manifest["taste_contexts"]["primary"]
+
+    assert primary["target"] == "primary"
+    assert primary["profile"]["inferred_preferences"][0]["id"] == "intrigue-pattern"
+    assert primary["profile"]["strongest_affinities"]
+    assert "evidence" in primary["profile"]["strongest_affinities"][0]
+
+
+def test_manifest_missing_intelligence_layers_are_explicitly_empty(tmp_path):
     root = copy_fixture_repo(tmp_path)
     prepare_derived(root)
     module = _web_export_module()
@@ -70,6 +121,21 @@ def test_manifest_handles_work_with_missing_optional_metadata(tmp_path):
     assert sparse["metadata"]["external"] == {}
     assert sparse["viewer_signals"] == {}
     assert sparse["group_signals"] == {}
+    assert sparse["semantic_fingerprint"] == []
+    assert manifest["taste_contexts"]["partner"]["profile"]["inferred_preferences"] == []
+
+
+def test_manifest_couple_context_preserves_agreement_disagreement_shape(tmp_path):
+    root = copy_fixture_repo(tmp_path)
+    prepare_derived(root)
+    module = _web_export_module()
+
+    manifest = module.build_web_manifest(root / "media")
+    couple = manifest["taste_contexts"]["couple"]
+
+    assert couple["couple"]["members"] == ["primary", "partner"]
+    assert isinstance(couple["couple"]["agreements"], list)
+    assert isinstance(couple["couple"]["disagreements"], list)
 
 
 def test_recommendations_reuse_read_context_without_candidate_score(tmp_path):
