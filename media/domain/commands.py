@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Literal, Mapping, TypeAlias
+from typing import Any, Literal, Mapping, TypeAlias
 
-from .types import TargetUpdate, WorkRef
+from .types import TargetEdit, TargetUpdate, WorkRef
 
 
 @dataclass(frozen=True)
@@ -13,6 +13,14 @@ class RecordViewingFeedbackCommand:
     work_ref: WorkRef
     target_updates: tuple[TargetUpdate, ...]
     create_if_missing: bool = False
+
+
+@dataclass(frozen=True)
+class EditViewingFeedbackCommand:
+    schema_version: int
+    operation_id: str
+    work_ref: WorkRef
+    target_edits: tuple[TargetEdit, ...]
 
 
 @dataclass(frozen=True)
@@ -48,6 +56,34 @@ class RefreshMetadataCommand:
 
 
 @dataclass(frozen=True)
+class SetInferredPreferencesCommand:
+    schema_version: int
+    operation_id: str
+    target: str
+    hypotheses: tuple[Mapping[str, Any], ...]
+
+
+@dataclass(frozen=True)
+class SetSemanticFingerprintCommand:
+    schema_version: int
+    operation_id: str
+    work_ref: WorkRef
+    traits: tuple[Mapping[str, Any], ...]
+
+
+@dataclass(frozen=True)
+class RecordRecommendationInteractionCommand:
+    schema_version: int
+    operation_id: str
+    session_id: str
+    target: str
+    work_ref: WorkRef
+    event: Literal["recommended", "selected", "already_watched", "not_tonight", "not_interested"]
+    note: str | None = None
+    at: str | None = None
+
+
+@dataclass(frozen=True)
 class RecommendContextRequest:
     schema_version: int
     target: str
@@ -58,4 +94,13 @@ class RecommendContextRequest:
     limit: int
 
 
-MediaCommand: TypeAlias = RecordViewingFeedbackCommand | SetInterestCommand | AddWorkCommand | RefreshMetadataCommand
+MediaCommand: TypeAlias = (
+    RecordViewingFeedbackCommand
+    | EditViewingFeedbackCommand
+    | SetInterestCommand
+    | AddWorkCommand
+    | RefreshMetadataCommand
+    | SetInferredPreferencesCommand
+    | SetSemanticFingerprintCommand
+    | RecordRecommendationInteractionCommand
+)
