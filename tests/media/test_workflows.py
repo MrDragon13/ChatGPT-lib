@@ -28,6 +28,10 @@ def test_refresh_metadata_is_provider_dependent_in_command_workflow():
     assert "steps.operation.outputs.needs_provider == 'true'" in text
 def test_media_command_replays_on_current_main_and_controls_paths():
     text=_text("media-command.yml"); assert "git fetch origin main" in text; assert "git merge --no-edit origin/main" in text; assert "exactly one pending" in text.lower(); assert 'rm -- "$REQUEST"' in text; assert "verify_changed_paths" in text; assert "git diff --cached --name-only" in text; assert "media/schemas" in text; assert "media/vocabulary.yaml" in text; assert "media/service" in text; assert "media/domain" in text
+def test_media_command_stages_all_v5_canonical_outputs():
+    text=_text("media-command.yml")
+    assert "media/preferences/inferred" in text
+    assert "media/data/interactions" in text
 def test_media_command_configures_bot_identity_before_replay_merge():
     text=_text("media-command.yml")
     merge_index=text.index("git merge --no-edit origin/main")
