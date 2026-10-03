@@ -1,0 +1,131 @@
+.taste-section {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.42fr) minmax(0, 1fr);
+  gap: clamp(28px, 5vw, 72px);
+  padding: 34px 0 42px;
+  border-top: 1px solid rgb(243 240 232 / 0.12);
+  border-bottom: 1px solid rgb(243 240 232 / 0.12);
+}
+
+.taste-section__heading h2 {
+  margin: 8px 0 0;
+  font-size: clamp(2rem, 4vw, 3.6rem);
+  font-weight: 580;
+  letter-spacing: -0.045em;
+}
+
+.taste-section__body {
+  display: grid;
+  gap: 28px;
+}
+
+.taste-affinities {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  background: rgb(243 240 232 / 0.12);
+}
+
+.taste-affinity {
+  min-height: 92px;
+  padding: 18px 20px;
+  background: var(--color-surface);
+}
+
+.taste-affinity strong {
+  display: block;
+  font-size: 1.02rem;
+  font-weight: 620;
+}
+
+.taste-affinity span {
+  display: block;
+  margin-top: 8px;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+}
+
+.taste-statements {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+}
+
+.taste-statements h3,
+.taste-couple h3 {
+  margin: 0 0 12px;
+  color: var(--color-text-muted);
+  font-size: 0.74rem;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.taste-statements ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.taste-statements li {
+  padding: 12px 0;
+  border-top: 1px solid rgb(243 240 232 / 0.1);
+}
+
+.taste-statements li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.taste-statements p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.taste-statement__meta {
+  display: block;
+  margin-top: 5px;
+  color: var(--color-text-muted);
+  font-size: 0.76rem;
+}
+
+.taste-couple {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 24px;
+  align-items: baseline;
+  padding-top: 18px;
+  border-top: 1px solid rgb(243 240 232 / 0.12);
+}
+
+.taste-couple h3 {
+  width: 100%;
+  margin-bottom: 0;
+}
+
+.taste-couple p {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.taste-couple strong {
+  color: var(--color-text);
+  font-weight: 620;
+}
+
+@media (max-width: 760px) {
+  .taste-section {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 28px 0 34px;
+  }
+
+  .taste-affinities,
+  .taste-statements {
+    grid-template-columns: 1fr;
+  }
+
+  .taste-statements {
+    gap: 20px;
+  }
+}
