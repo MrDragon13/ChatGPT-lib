@@ -3,11 +3,11 @@
 Дата: 2026-10-03  
 Статус: **approved conversational design, written spec awaiting review**  
 База: `main@6898f208dddfbedd724e5b212c65319a02e0f61d`  
-Область: repository documentation architecture, navigation, operational contracts, historical specs/plans, documentation drift prevention
+Область: repository documentation architecture, navigation, operational contracts, historical specs/plans, drift prevention
 
 ## 1. Цель
 
-Превратить документацию ChatGPT-lib из набора исторически наслоившихся README, status, agent contracts, product/design notes и implementation specs в цельную систему, где читатель быстро понимает:
+Превратить документацию ChatGPT-lib из набора исторически наслоившихся README, status, agent contracts, product/design notes и implementation specs в цельную систему, где человек или агент быстро понимает:
 
 1. что проект делает сейчас;
 2. как им пользоваться;
@@ -15,42 +15,38 @@
 4. как безопасно его менять и обслуживать;
 5. какие документы являются текущим контрактом, а какие — историей решений.
 
-Документация должна быть удобна одновременно для владельца проекта, нового разработчика и LLM/agent workflow. Основной критерий успеха — для понимания текущего состояния не требуется читать цепочку старых design specs и handoff-файлов.
+Критерий успеха: для понимания текущей системы не требуется читать цепочку dated design specs и development handoff-файлов.
 
-## 2. Проблема текущей структуры
+## 2. Текущая проблема
 
-После v5/v5.1 в репозитории есть несколько полезных, но пересекающихся слоёв документации:
+После v5/v5.1 полезная информация распределена по нескольким пересекающимся слоям:
 
-- root `README.md` одновременно является landing page и вручную перечисляет несколько «актуальных» specs;
-- `media/README.md` одновременно выполняет роли overview, architecture reference, command reference, operational runbook и agent guide;
-- `media/AGENTS.md` содержит нормативные правила, но из-за объёма частично дублирует объяснительную документацию;
-- `media/V5_STATUS.md` сочетает текущее состояние, историю пилота, development checkpoints и resume instructions;
-- `PRODUCT.md` и `DESIGN.md` описывают главным образом web surface, но из расположения в корне это неочевидно;
-- `docs/superpowers/specs/` и `docs/superpowers/plans/` содержат ценную историю проектирования, однако не имеют ясной границы между historical decision record и current documentation;
-- списки операций, manifest versions, validation commands и архитектурные правила повторяются в нескольких местах и могут расходиться после следующих релизов.
+- root `README.md` одновременно landing page и ручной список «актуальных» specs;
+- `media/README.md` одновременно overview, architecture reference, command reference, runbook и agent guide;
+- `media/AGENTS.md` нормативен, но частично дублирует объяснительную документацию;
+- `media/V5_STATUS.md` сочетает current state, pilot history, development checkpoints и resume notes;
+- `PRODUCT.md` и `DESIGN.md` в основном относятся к media web, но из root location это неочевидно;
+- `docs/superpowers/specs/` и `plans/` содержат ценную историю, но рядом с current docs выглядят как возможный source of truth;
+- command lists, manifest version, verification commands и архитектурные правила повторяются в нескольких местах и могут расходиться.
 
-Проблема не в количестве Markdown-файлов само по себе, а в отсутствии явных ролей и ownership каждого документа.
+Проблема — не количество файлов само по себе, а отсутствие однозначных ролей, ownership и update policy.
 
 ## 3. Выбранный подход
 
 Используем **living documentation layer + historical design archive**.
 
-Не переносим и не переписываем массово существующие `docs/superpowers/specs/` и `docs/superpowers/plans/`. Они остаются immutable-ish историческими артефактами: объясняют, почему решения были приняты, но не определяют текущее поведение системы.
-
-Текущее устройство и эксплуатация описываются в небольшой иерархии living docs под `docs/`.
-
-Это предпочтительнее двух альтернатив:
-
-- только подчистить README — слишком быстро снова создаст дубли и drift;
-- физически архивировать/переименовать все старые specs — создаст большой churn, сломанные ссылки и мало практической пользы.
+- Текущее устройство, usage и operations описываются в небольшом наборе living docs под `docs/`.
+- `docs/superpowers/specs/` и `docs/superpowers/plans/` остаются по текущим путям и сохраняют historical rationale.
+- Мы не делаем массовое переименование/архивирование старых specs: это создаст churn и сломанные ссылки без достаточной пользы.
+- Root/media entry files становятся короткими routers/landing pages вместо монолитов.
 
 ## 4. Целевая структура
 
 ```text
 README.md                     # короткая landing page проекта
-AGENTS.md                     # компактный repository-level agent router
-PRODUCT.md                    # web-product reference; scope явно обозначен
-DESIGN.md                     # web visual/design-system reference; scope явно обозначен
+AGENTS.md                     # repository-level agent router
+PRODUCT.md                    # media-web product reference
+DESIGN.md                     # media-web visual/design-system reference
 
 docs/
   README.md                   # карта всей документации
@@ -64,35 +60,35 @@ docs/
 
   guides/
     media-usage.md            # пользовательские сценарии
-    development.md            # как менять code/schema/architecture
+    development.md            # developer workflow и evolution rules
     operations.md             # validate/rebuild/doctor/deploy/recovery
 
   reference/
-    media-commands.md         # read/write/maintenance operation catalog
-    repository-layout.md      # назначение основных директорий
-    invariants.md             # короткий MUST / MUST NOT contract
+    media-commands.md         # operation catalog
+    repository-layout.md      # назначение директорий
+    invariants.md             # MUST / MUST NOT
     terminology.md            # canonical/derived/target/evidence/etc.
 
   status/
-    current.md                # короткое текущее состояние и known limitations
+    current.md                # короткий current state + known limitations
 
   superpowers/
     specs/                    # historical design decisions
     plans/                    # historical implementation plans
 ```
 
-Точный объём каждого living-doc файла определяется при реализации, но ответственность файлов из этой структуры фиксирована этим design.
+Роли файлов являются частью design contract; конкретная длина разделов — implementation detail.
 
 ## 5. Модель источников истины
 
-Линейная «один файл главнее всех» модель здесь недостаточна, поэтому authority разделяется по типу знания.
+Один линейный priority list недостаточен, поэтому authority разделяется по типу знания.
 
-### 5.1 Implemented behavior
+### 5.1 Реализованное поведение
 
-Для фактически реализованного поведения приоритет имеют:
+Для того, **что система реально делает**, приоритет:
 
 1. runtime code;
-2. JSON schemas / controlled vocabulary / workflow configuration;
+2. JSON schemas, vocabulary, workflow configuration;
 3. tests как executable contracts;
 4. living architecture/reference docs.
 
@@ -100,348 +96,357 @@ docs/
 
 ### 5.2 Agent operating policy
 
-Для того, **как агент обязан работать с репозиторием**, нормативны:
+Для того, **как агент обязан действовать**, нормативны:
 
 1. root `AGENTS.md` как router;
-2. subsystem `media/AGENTS.md` как operating contract;
+2. `media/AGENTS.md` как subsystem operating contract;
 3. typed command schemas и path/workflow policies.
 
-Living docs объясняют эти правила, но не должны дублировать все imperative instructions слово в слово.
+Living docs объясняют эти правила, но не должны копировать imperative guardrails слово в слово без необходимости.
 
 ### 5.3 Historical rationale
 
-`docs/superpowers/specs/` и `plans/` отвечают на вопрос «почему и как мы пришли к текущему решению». Они не переопределяют код, schemas, AGENTS или living docs после завершения соответствующего изменения.
-
-Каждый docs index должен явно показывать эту границу.
+`docs/superpowers/specs/` и `plans/` отвечают на вопрос «почему мы пришли к этому решению». После реализации они не переопределяют code/schemas/AGENTS/living docs.
 
 ## 6. Навигационный UX
 
-### 6.1 Для человека
+### Для человека
 
-Root `README.md` должен читаться за 2–3 минуты и вести по четырём основным маршрутам:
+Root `README.md` читается за 2–3 минуты и ведёт по четырём маршрутам:
 
 ```text
 README
-  -> понять проект         -> docs/README.md
-  -> пользоваться media   -> docs/guides/media-usage.md
-  -> разрабатывать        -> docs/guides/development.md
-  -> понять архитектуру   -> docs/architecture/overview.md
+  -> понять проект       -> docs/README.md
+  -> пользоваться media -> docs/guides/media-usage.md
+  -> разрабатывать      -> docs/guides/development.md
+  -> понять архитектуру -> docs/architecture/overview.md
 ```
 
-Landing page не перечисляет вручную каждый актуальный spec и не становится changelog.
+README не является changelog и не перечисляет вручную каждый dated spec.
 
-### 6.2 Для агента
+### Для агента
 
 ```text
 AGENTS.md
   -> media/AGENTS.md
-  -> только релевантный living reference
+  -> только нужный living reference
   -> schema/code по выбранному route
 ```
 
-Agent bootstrap не должен требовать чтения длинного исторического status или нескольких design specs перед обычной media operation.
+Обычная media operation не должна требовать предварительного чтения длинного historical status и нескольких design specs.
 
-## 7. Роли существующих документов
+## 7. Роли существующих entry documents
 
-### 7.1 Root `README.md`
+### `README.md`
 
-Становится кратким проектным landing page:
+Короткий project landing page:
 
 - purpose;
-- основные capabilities текущей системы;
-- 8–10 строк architecture summary;
-- основные entry points;
-- link на `docs/README.md`.
+- основные current capabilities;
+- compact architecture summary;
+- entry links;
+- ссылка на `docs/README.md`.
 
-Из него удаляются ручные списки «актуальных» и «исторических» design specs.
+Ручные списки current/historical specs удаляются.
 
-### 7.2 Root `AGENTS.md`
+### `AGENTS.md`
 
-Остаётся коротким router и не разрастается в subsystem manual. Он указывает на `media/AGENTS.md`, relevant living docs и правило чтения historical specs только при необходимости.
+Остаётся коротким router. Не дублирует subsystem manual.
 
-### 7.3 `media/README.md`
+### `media/README.md`
 
-Сильно сокращается. Его роль — локальный subsystem landing page:
+Становится media subsystem landing page:
 
-- что находится под `media/`;
-- основные canonical/derived boundaries;
-- ссылки на guides/reference/architecture;
+- что хранится под `media/`;
+- canonical/derived boundary;
+- links на guides/reference/architecture;
 - минимальный CLI quickstart.
 
-Подробный command catalog, recommendation semantics, pipeline internals и web architecture уходят в тематические living docs.
+Подробные recommendation semantics, operation catalog, pipeline internals и web architecture уходят в тематические living docs.
 
-### 7.4 `media/AGENTS.md`
+### `media/AGENTS.md`
 
-Сохраняет нормативный operating contract:
+Сохраняет нормативные вещи:
 
 - intent routing;
 - mutation/read boundaries;
 - evidence hygiene;
 - hard guardrails;
-- required validation/merge discipline.
+- verification/merge discipline.
 
-Объяснительные длинные sections, которые можно безопасно заменить ссылками на living docs без потери imperative semantics, сокращаются. При сомнении правило остаётся в `AGENTS.md`: correctness важнее краткости.
+Объяснительное дублирование сокращается только там, где ссылка на living doc не ослабляет imperative semantics. При сомнении правило остаётся в `AGENTS.md`.
 
-### 7.5 `media/V5_STATUS.md`
+### `media/V5_STATUS.md`
 
-Перестаёт быть накопительным development diary.
+Остаётся как compatibility path, но становится маленьким router:
 
-Для обратной совместимости файл сохраняется, но становится маленьким compatibility/router document:
-
-- текущая release line;
+- current release line;
 - ссылка на `docs/status/current.md`;
-- указание, что historical v5 pilot details находятся в specs/PR history;
-- safe resume instruction: сначала current `main` + active PR, затем current status.
+- указание, что подробная v5/v5.1 development history находится в specs/PR history;
+- resume rule: проверить current `main` + active PR, затем current status.
 
-Новый authoritative human-readable current status — `docs/status/current.md`.
+Durable current status живёт в `docs/status/current.md`.
 
-### 7.6 `PRODUCT.md` и `DESIGN.md`
+### `PRODUCT.md` и `DESIGN.md`
 
-Не перемещаются в первой итерации, чтобы не создавать лишний churn и не ломать tooling/reference paths.
+Не перемещаются в первой итерации. Их scope явно маркируется:
 
-В них и в docs index явно фиксируется scope:
+- `PRODUCT.md` — media-web product brief;
+- `DESIGN.md` — media-web visual/design-system contract.
 
-- `PRODUCT.md` — current media-web product brief;
-- `DESIGN.md` — current media-web visual/design-system contract.
+Они не считаются architecture overview всего repository.
 
-Они не считаются описанием architecture всего repository.
+### `docs/superpowers/*`
 
-### 7.7 `docs/superpowers/*`
+Пути сохраняются. `docs/README.md` объясняет, что это historical design/implementation record. Старые markers вроде `awaiting review` трактуются как историческое состояние документа, а не current project status.
 
-Остаются по текущим путям.
-
-Добавляется индекс/объяснение их роли через `docs/README.md`; массовое редактирование исторических design docs не выполняется. Старые status markers вроде `awaiting review` сохраняются как historical state и не должны интерпретироваться как current project status.
-
-## 8. Living architecture docs
+## 8. Living architecture layer
 
 ### `architecture/overview.md`
 
-Должен отвечать на вопросы:
-
-- какие крупные компоненты есть;
-- где canonical source of truth;
-- что derived;
-- как media, web, broker и GitHub Actions связаны;
-- где проходят security/write boundaries.
-
-Это основной документ для понимания системы без чтения implementation history.
+Объясняет крупные компоненты, canonical source of truth, derived layers, media/web/broker/GitHub Actions связи и security/write boundaries.
 
 ### `architecture/media-model.md`
 
-Содержит current domain model:
+Фиксирует current domain model:
 
 - works/collections/lists/interactions/relations;
 - targets `primary`, `partner`, `couple`;
 - explicit vs inferred evidence;
 - semantic fingerprints;
-- explicit similarity + external WorkRef + reconciliation;
+- explicit work similarity;
+- external WorkRef + reconciliation;
 - canonical vs generated data.
 
 ### `architecture/intelligence.md`
 
-Описывает reasoning model без fake scoring:
+Описывает:
 
 - taste context;
 - evidence hierarchy;
 - internal/external recommendation routing;
-- explicit similarity as hint/evidence, not preference;
+- explicit similarity как hint/evidence, но не preference;
 - candidate assessment;
 - provenance/explainability;
-- couple disagreement semantics.
+- couple disagreement semantics;
+- отсутствие fake precise probability/opaque match score.
 
 ### `architecture/write-pipeline.md`
 
-Описывает end-to-end deterministic mutation lifecycle:
+End-to-end lifecycle:
 
-natural language -> strict typed request -> operation branch/PR -> deterministic transaction -> validation/rebuild -> exact-head check -> guarded merge -> exact-merge Pages publish.
+```text
+natural language
+-> strict typed request
+-> operation branch / PR
+-> deterministic transaction
+-> validation + scoped rebuild
+-> exact-head gate
+-> guarded merge
+-> exact-merge Pages publish
+```
 
-Отдельно показывает manual/developer route и maintenance exceptions.
+Также описывает manual/developer route и maintenance exceptions.
 
 ### `architecture/web-and-broker.md`
 
-Описывает:
-
-- static Pages/read-model boundary;
-- manifest versioning;
-- broker responsibility;
-- browser credential restrictions;
-- typed write reuse;
-- product/design links.
+Фиксирует static Pages/read-model boundary, manifest versioning, broker responsibility, credential restrictions и reuse typed writes.
 
 ## 9. Guides
 
 ### `guides/media-usage.md`
 
-User-oriented, без GitHub implementation noise. Сценарии:
+User-facing scenarios без GitHub implementation noise:
 
-- добавить просмотр/feedback;
-- исправить оценку/feedback;
-- отметить интерес;
-- спросить рекомендацию;
-- спросить «понравится ли мне X?»;
-- записать/remove similarity;
+- просмотр + feedback;
+- исправление rating/reaction/feedback;
+- interest;
+- recommendations;
+- «понравится ли мне X?»;
+- set/remove similarity;
 - partner/couple context.
 
 ### `guides/development.md`
 
-Developer-oriented:
+Developer workflow:
 
-- старт с current main;
-- ветки/PR;
-- когда typed operation path, а когда manual developer change;
+- current main first;
+- branch/PR flow;
+- typed operation vs manual developer route;
 - TDD/validation expectations;
 - schema/vocabulary evolution;
-- docs update requirement.
+- обязательное обновление соответствующих living docs.
 
 ### `guides/operations.md`
 
 Runbook:
 
-- install/validate/test/rebuild/doctor;
+- install/test/validate/rebuild/doctor;
 - web checks;
-- provider maintenance;
+- metadata maintenance;
 - Pages verification;
-- recovery from stale generated artifacts / interrupted work;
+- stale generated artifacts;
+- interrupted work recovery;
 - authoritative CI gates.
 
 ## 10. Reference layer
 
 ### `reference/media-commands.md`
 
-Единый compact catalog operations с категорией, mutation/read-only status, canonical side effects и auto-merge eligibility.
-
-Он не копирует полные JSON schemas — вместо этого ссылается на `media/commands/schemas/`.
+Compact catalog operations: category, read/write status, side effects и auto-merge eligibility. Полные payload contracts не копируются — источник полей остаётся `media/commands/schemas/`.
 
 ### `reference/repository-layout.md`
 
-Карта корневых директорий и ключевых media/web/broker paths. Должна помогать быстро найти ownership кода/данных/docs.
+Карта repository ownership: root/media/web/broker/docs/workflows/generated/canonical paths.
 
 ### `reference/invariants.md`
 
-Короткий checklist из наиболее важных cross-system правил, например:
+Короткий cross-system MUST/MUST NOT list, включая:
 
 - Git/YAML canonical;
 - generated data never hand-edited;
 - normal mutations via typed commands;
-- external recommendation/similarity mention does not implicitly create work;
+- external mention/recommendation/similarity does not implicitly create a work;
 - inferred output is not independent evidence;
 - similarity is not preference;
 - target never silently changes;
-- browser never receives write/provider/model secrets;
-- unknown semantic terms are not invented.
+- browser never receives repository/provider/model secrets;
+- unknown vocabulary terms are not invented.
 
 ### `reference/terminology.md`
 
-Стабильные определения терминов, чтобы README/specs/code reviews использовали одинаковый язык.
+Единые определения терминов, используемых в docs, code review и agent reasoning.
 
 ## 11. Current status policy
 
-`docs/status/current.md` должен быть коротким и обновляемым.
+`docs/status/current.md` короткий и durable.
 
 Разрешено:
 
-- текущая release/capability line;
+- current release/capability line;
 - implemented capabilities;
 - known limitations;
 - active architectural follow-ups;
-- последняя подтверждённая verification baseline в человекочитаемой форме, если полезно.
+- полезная стабильная verification baseline.
 
-Запрещено превращать его в вечный development ledger:
+Не допускается превращение status в development ledger:
 
-- временные task checklists;
+- temporary task checklist;
 - длинная история RED/GREEN run numbers;
 - stale feature-branch head SHA;
-- подробные narrative pilot logs.
+- narrative pilot diary.
 
-Транзитный development progress живёт в active PR body/comments. После merge в current status переносится только устойчивый результат и known limitations.
+Транзитный progress живёт в active PR body/comments. После merge в current status переносится только устойчивый результат.
 
-## 12. Drift prevention
+## 12. Language policy
 
-Реорганизация должна добавить executable documentation contracts.
+Чтобы документация была последовательной, но не ломала существующий agent workflow:
 
-Минимальный набор автоматических проверок:
+- human-facing living docs и root/media README — преимущественно на русском;
+- code identifiers, operation names, schema fields и canonical terms сохраняются в исходном English spelling;
+- `AGENTS.md` может оставаться на английском как machine/agent-oriented operating contract;
+- `PRODUCT.md`/`DESIGN.md` сохраняют текущий язык в этой итерации;
+- один документ не должен бессистемно переключаться между русским и английским в обычном prose, кроме технических идентификаторов и коротких established terms.
 
-1. ключевые relative Markdown links из root/living docs разрешаются в существующие repository paths;
-2. root README/media README не объявляют historical dated specs «current architecture»;
-3. documented media operation names синхронизированы с command parser/registry либо генерируются/проверяются из одного source;
-4. documented current web manifest version совпадает с exporter/schema constant;
-5. key verification commands в operations guide соответствуют реально существующим CLI commands;
-6. compatibility routers (`media/V5_STATUS.md`, root `AGENTS.md`) указывают на существующие living docs;
-7. current status не содержит явно запрещённых transient markers (`Task N in progress`, feature-branch head SHA и аналогичные handoff leftovers).
+## 13. Documentation ownership / update matrix
 
-Тесты должны проверять контракт, а не exact prose, чтобы документацию можно было улучшать без brittle string snapshots.
+Каждый тип изменения обязан обновлять только релевантные living docs, а не весь набор.
 
-## 13. Migration strategy
+| Изменение | Обязательные docs-кандидаты |
+| --- | --- |
+| новый/изменённый typed operation | `reference/media-commands.md`; при semantic impact — соответствующий architecture guide |
+| schema/domain invariant | `architecture/media-model.md` и/или `reference/invariants.md` |
+| recommendation/taste/assessment semantics | `architecture/intelligence.md`; user-visible behavior — `guides/media-usage.md` |
+| write/CI/auto-merge pipeline | `architecture/write-pipeline.md`, `guides/operations.md` |
+| manifest/broker/security boundary | `architecture/web-and-broker.md`; при product impact — `PRODUCT.md` |
+| repository path/layout change | `reference/repository-layout.md` |
+| visual web design rule | `DESIGN.md` |
+| current limitation/release capability | `status/current.md` |
+| architectural rationale | новый dated `docs/superpowers/specs/...`; после реализации current behavior также отражается в living docs |
 
-Реорганизация выполняется инкрементально в одном documentation PR.
+PR review должен рассматривать missing required docs update как обычный regression, а не optional polish.
 
-Рекомендуемый порядок:
+## 14. Drift prevention
 
-1. добавить docs index и living skeleton/content;
-2. добавить contract tests;
+Добавляются executable documentation contracts. Минимум:
+
+1. ключевые relative links из root/living docs разрешаются в существующие repository paths;
+2. root/media README не объявляют historical dated specs «current architecture»;
+3. documented media operation names синхронизированы с parser/registry;
+4. documented current manifest version совпадает с exporter/schema constant;
+5. operations guide содержит реально существующие CLI commands;
+6. compatibility routers указывают на существующие living docs;
+7. `status/current.md` не содержит запрещённые transient handoff markers.
+
+Тесты проверяют contracts/structure, а не exact prose snapshots.
+
+## 15. Migration strategy
+
+Один documentation PR, инкрементально:
+
+1. добавить docs index + living docs;
+2. добавить docs contract tests;
 3. обновить root README/AGENTS routes;
 4. сократить и перенаправить `media/README.md`;
-5. аккуратно сократить `media/AGENTS.md`, сохраняя normative guardrails;
-6. заменить `media/V5_STATUS.md` compatibility router-ом и перенести устойчивое current состояние в `docs/status/current.md`;
+5. аккуратно сократить `media/AGENTS.md`, сохранив нормативные guardrails;
+6. превратить `media/V5_STATUS.md` в compatibility router и создать `docs/status/current.md`;
 7. обозначить scope `PRODUCT.md`/`DESIGN.md`;
-8. выполнить link/reference audit;
+8. link/reference audit;
 9. полный project + web verification.
 
-Старые specs/plans не перемещаются и не переписываются массово.
+Historical specs/plans не перемещаются и не переписываются массово.
 
-## 14. Совместимость
+## 16. Совместимость и non-goals
 
-Изменение не должно менять runtime media behavior, schemas, canonical data, recommendation semantics или website behavior.
+Сохраняются существующие entry paths:
 
-Сохраняются существующие известные entry paths:
-
-- root `README.md`;
-- root `AGENTS.md`;
+- `README.md`;
+- `AGENTS.md`;
 - `media/README.md`;
 - `media/AGENTS.md`;
 - `media/START_PROMPT.md`;
 - `media/V5_STATUS.md`.
 
-Таким образом bookmarks/agent bootstrap не ломаются; старые paths становятся routers в новую систему там, где это необходимо.
+Реорганизация не должна менять runtime media behavior, schemas, canonical data, recommendation semantics или website behavior.
 
-Любая обнаруженная при docs-аудите реальная runtime проблема выходит за scope и оформляется отдельно, если только она не блокирует правдивость документации.
+Не входят в scope:
 
-## 15. Non-goals
-
-В эту работу не входят:
-
-- изменение media schemas/domain behavior;
 - новый recommendation/taste algorithm;
-- изменение website UX;
+- schema/domain changes;
+- website UX redesign;
 - перенос `PRODUCT.md`/`DESIGN.md`;
 - массовое переименование historical specs/plans;
-- создание внешнего docs-сайта или MkDocs/Docusaurus;
+- MkDocs/Docusaurus/внешний docs-сайт;
 - auto-generation всей документации из кода;
-- переписывание commit/PR history.
+- переписывание Git/PR history.
 
-## 16. Acceptance criteria
+Если audit обнаруживает реальную runtime проблему, она оформляется отдельно, если только не блокирует правдивость документации.
 
-Работа считается завершённой, когда:
+## 17. Acceptance criteria
 
-1. новый читатель через root README за один переход находит нужный learning/usage/development/architecture route;
-2. `docs/README.md` объясняет роли living docs, AGENTS contracts и historical specs/plans;
-3. current architecture v5.1 описана без необходимости читать dated specs;
-4. `media/README.md` и `media/V5_STATUS.md` больше не являются накопительными монолитами;
-5. `media/AGENTS.md` остаётся достаточным normative contract, но ссылается на living explanation вместо безопасно удаляемого дублирования;
-6. PRODUCT/DESIGN scope однозначно обозначен как media-web;
-7. explicit similarity и candidate assessment отражены в current architecture/reference docs;
-8. docs contract tests предотвращают наиболее вероятный drift;
-9. полный existing project verification остаётся GREEN;
-10. historical specs/plans сохранены и ясно маркированы как historical rationale, а не current truth.
+Работа завершена, когда:
 
-## 17. Review focus
+1. новый читатель через root README за один переход находит learning/usage/development/architecture route;
+2. `docs/README.md` однозначно объясняет living docs, AGENTS contracts и historical specs/plans;
+3. current v5.1 architecture можно понять без dated specs;
+4. `media/README.md` и `media/V5_STATUS.md` перестают быть накопительными монолитами;
+5. `media/AGENTS.md` остаётся достаточным normative contract после сокращения дублирующего explanation;
+6. `PRODUCT.md`/`DESIGN.md` однозначно scoped как media-web;
+7. similarity и candidate assessment отражены в current architecture/reference docs;
+8. update matrix делает ownership будущих docs очевидным;
+9. docs contract tests защищают от наиболее вероятного drift;
+10. existing project verification остаётся GREEN;
+11. historical specs/plans сохранены и ясно маркированы как historical rationale.
+
+## 18. Review focus
 
 При review особенно проверить:
 
-- не потерялись ли imperative guardrails при сокращении `media/AGENTS.md`;
+- не потерялись ли imperative guardrails из `media/AGENTS.md`;
 - не возник ли новый duplication между architecture/reference/guides;
 - можно ли понять current v5.1 без historical specs;
 - не делают ли docs tests prose слишком жёстким;
 - не сломаны ли старые entry paths;
 - отражена ли similarity как recommendation evidence/hint, но не preference;
-- остаётся ли PR/status ledger отдельным от durable current documentation.
+- отделён ли PR progress ledger от durable current status;
+- достаточно ли update matrix для будущего сопровождения документации.
