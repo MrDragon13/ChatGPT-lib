@@ -7,16 +7,20 @@ from uuid import UUID
 
 from media.domain.commands import (
     AddWorkCommand,
+    AssessCandidateRequest,
     EditViewingFeedbackCommand,
     MediaCommand,
     ProviderWorkRef,
+    ReadRequest,
     RecommendContextRequest,
     RecordRecommendationInteractionCommand,
     RecordViewingFeedbackCommand,
     RefreshMetadataCommand,
+    RemoveWorkSimilarityCommand,
     SetInferredPreferencesCommand,
     SetInterestCommand,
     SetSemanticFingerprintCommand,
+    SetWorkSimilarityCommand,
     TasteContextRequest,
 )
 from media.domain.errors import CommandValidationError
@@ -32,9 +36,14 @@ _SCHEMA_BY_OPERATION = {
     "set_inferred_preferences": "set_inferred_preferences.schema.json",
     "set_semantic_fingerprint": "set_semantic_fingerprint.schema.json",
     "record_recommendation_interaction": "record_recommendation_interaction.schema.json",
+    "set_work_similarity": "set_work_similarity.schema.json",
+    "remove_work_similarity": "remove_work_similarity.schema.json",
     "recommend_context": "recommend_context.schema.json",
     "taste_context": "taste_context.schema.json",
+    "assess_candidate": "assess_candidate.schema.json",
 }
+
+_READ_ONLY_OPERATIONS = {"recommend_context", "taste_context", "assess_candidate"}
 
 
 def _work_ref(data: Mapping[str, Any]) -> WorkRef:
@@ -57,7 +66,7 @@ def _validate_uuid(value: str) -> None:
         raise CommandValidationError("operation_id must be canonical lowercase UUID text")
 
 
-def parse_command(data: Mapping[str, Any], schema_dir: Path | None = None) -> MediaCommand | RecommendContextRequest | TasteContextRequest:
+def parse_command(data: Mapping[str, Any], schema_dir: Path | None = None) -> MediaCommand | ReadRequest:
     schema_dir = schema_dir or Path(__file__).with_name("schemas")
     operation = data.get("operation")
     schema_name = _SCHEMA_BY_OPERATION.get(operation)
@@ -66,7 +75,7 @@ def parse_command(data: Mapping[str, Any], schema_dir: Path | None = None) -> Me
     errors = validate_against_schema(dict(data), schema_name, schema_dir)
     if errors:
         raise CommandValidationError("; ".join(errors))
-    if operation not in {"recommend_context", "taste_context"}:
+    if operation not in _READ_ONLY_OPERATIONS:
         _validate_uuid(str(data["operation_id"]))
     if operation == "record_viewing_feedback":
         updates = tuple(
@@ -106,12 +115,32 @@ def parse_command(data: Mapping[str, Any], schema_dir: Path | None = None) -> Me
         return SetSemanticFingerprintCommand(data["schema_version"], data["operation_id"], _work_ref(data["work_ref"]), tuple(dict(item) for item in data["traits"]))
     if operation == "record_recommendation_interaction":
         return RecordRecommendationInteractionCommand(data["schema_version"], data["operation_id"], data["session_id"], data["target"], _work_ref(data["work_ref"]), data["event"], data.get("note"), data.get("at"))
+    if operation == "set_work_similarity":
+        return SetWorkSimilarityCommand(
+            data["schema_version"],
+            data["operation_id"],
+            data["target"],
+            _work_ref(data["left"]),
+            _work_ref(data["right"]),
+            tuple(data.get("terms") or ()),
+            data.get("note"),
+        )
+    if operation == "remove_work_similarity":
+        return RemoveWorkSimilarityCommand(
+            data["schema_version"],
+            data["operation_id"],
+            data["target"],
+            _work_ref(data["left"]),
+            _work_ref(data["right"]),
+        )
     if operation == "taste_context":
         return TasteContextRequest(data["schema_version"], data["target"], data.get("recent_limit", 10), data.get("representative_limit", 10))
+    if operation == "assess_candidate":
+        return AssessCandidateRequest(data["schema_version"], data["target"], _work_ref(data["candidate"]), data.get("text"))
     return RecommendContextRequest(data["schema_version"], data["target"], data.get("text"), data.get("only_unwatched", False), data.get("runtime_max"), data.get("include_not_interested", False), data.get("limit", 20))
 
 
-def load_command(path: Path) -> MediaCommand | RecommendContextRequest | TasteContextRequest:
+def load_command(path: Path) -> MediaCommand | ReadRequest:
     with Path(path).open("r", encoding="utf-8") as handle:
         data = json.load(handle)
     if not isinstance(data, dict):
