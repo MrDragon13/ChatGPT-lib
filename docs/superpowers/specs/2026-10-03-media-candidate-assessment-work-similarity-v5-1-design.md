@@ -87,9 +87,12 @@ terms:
   - narrative.time_loop
 note: >-
   Оба строятся вокруг повторного переживания события и расследования причины катастрофы.
+updated_at: 2026-10-03T18:00:00Z
 provenance:
   source: explicit
 ```
+
+`updated_at` является частью current-assertion semantics и обновляется при каждом explicit upsert. Он используется только для определения актуального assertion при reconciliation collision, а не как дополнительный taste signal.
 
 Точный file layout и schema naming являются implementation detail, но canonical invariants из этого документа обязательны.
 
@@ -171,11 +174,9 @@ WorkRef
 
 ### 5.3 Identity external work
 
-Если доступен устойчивый provider ID, canonical identity external endpoint строится по `(provider, provider_id)`.
+Persistent external endpoint обязан иметь устойчивый `(provider, provider_id)`. `title` и `year` являются display snapshot, а не identity key.
 
-`title` и `year` являются display snapshot, а не единственным identity key.
-
-Если пользователь назвал неоднозначный фильм и система не может надёжно выбрать identity, она не должна сохранять догадку. Допустим один короткий blocking clarification, например: «Source Code 2011 года?».
+Если пользователь назвал неоднозначный фильм и система не может надёжно разрешить provider identity, она не должна сохранять догадку. Допустим один короткий blocking clarification, например: «Source Code 2011 года?». Если после уточнения provider identity всё ещё нельзя установить надёжно, similarity остаётся несохранённой, а не записывается по одному title.
 
 После сохранения relation доступность внешнего provider не требуется для чтения уже сохранённой связи: snapshot должен быть достаточен для базового отображения.
 
@@ -231,8 +232,9 @@ note?: string | null
 4. validate vocabulary terms;
 5. create or replace current relation for this `(target, pair)`;
 6. replace `terms` and `note` as the current assertion rather than silently accumulating historical reasons;
-7. rebuild dependent read models;
-8. validate transaction atomically.
+7. set canonical `updated_at` from the accepted operation timestamp;
+8. rebuild dependent read models;
+9. validate transaction atomically.
 
 ### 7.2 `remove_work_similarity`
 
@@ -256,18 +258,31 @@ external:tmdb:45612
 work:source-code-2011
 ```
 
+Reconciliation является deterministic domain step при создании work или изменении его stable external identity. Она выполняется в той же atomic media transaction до rebuild, поэтому successful `add_work` не оставляет stale external refs на уже известный canonical work.
+
 Предпочтительный результат — физическая нормализация canonical relation endpoint на `work_id`, а не вечный provider lookup при каждом чтении.
 
-Reconciliation должна быть deterministic и учитывать:
+Reconciliation учитывает:
 
 - совпадение stable provider identity;
 - self-link после замены endpoint;
 - duplicate relations, которые могут схлопнуться после canonicalization;
-- сохранение `target`, `terms`, `note`, provenance.
+- сохранение `target`, `terms`, `note`, `updated_at`, provenance.
 
 После reconciliation не должно существовать двух эквивалентных relation records для одного target и одной unordered canonical pair.
 
-Если reconciliation создаёт collision между двумя существующими assertions, implementation plan должен определить deterministic conflict policy и покрыть её тестом. При отсутствии более свежего explicit assertion нельзя молча смешивать несовместимые notes/terms.
+### 8.1 Collision policy
+
+Если external→canonical normalization приводит две relation records к одной `(target, pair)`, применяется deterministic current-assertion policy:
+
+1. если `terms` и `note` совпадают, записи схлопываются; сохраняется более поздний `updated_at`;
+2. если assertions различаются, запись с более поздним `updated_at` считается текущим явным мнением и заменяет более старую;
+3. при одинаковом `updated_at` предпочтение получает запись, которая уже использовала canonical endpoint до reconciliation; если обе были одинакового endpoint-kind, применяется стабильный lexical tie-break по relation identity;
+4. `terms` и `note` никогда не объединяются автоматически из конфликтующих assertions.
+
+Эта политика согласуется с upsert semantics v5.1: canonical слой хранит текущее мнение, а не историю всех прошлых формулировок.
+
+Если reconciliation превращает пару в self-link, такая stale relation удаляется как логически бессмысленная после identity merge; это должно быть явно отражено в deterministic operation result и покрыто тестом.
 
 ## 9. Similarity как evidence для taste reasoning
 
@@ -428,14 +443,16 @@ Derived similarity должна быть визуально и семантич�
 
 Обязательные ошибки/валидации:
 
-- self-relation запрещена;
+- self-relation запрещена при обычной записи;
 - unknown canonical `work_id` запрещён;
+- external reference без stable provider identity запрещена для persistent similarity;
 - malformed/unsupported external identity запрещена;
 - reversed duplicate нормализуется в существующую relation;
 - unknown vocabulary term не записывается;
 - provider outage не делает уже сохранённую relation нечитаемой;
 - ambiguous unresolved title не сохраняется как guessed external identity;
 - canonicalization external → work не создаёт duplicate silently;
+- reconciliation collision следует правилам §8.1;
 - relation write transaction не оставляет partially modified canonical/generated state при validation failure.
 
 ## 14. Agent/user scenarios
@@ -480,15 +497,18 @@ Derived similarity должна быть визуально и семантич�
 - remove similarity;
 - A/B и B/A дают один canonical result;
 - unknown work/external identity fails atomically;
-- terms/note replacement semantics.
+- terms/note replacement semantics;
+- accepted operation updates `updated_at` deterministically.
 
 ### 15.3 Reconciliation
 
 - external → canonical by stable provider ID;
 - relation remains visible after reconciliation;
 - no duplicate after canonicalization;
-- self-link after reconciliation is detected;
-- collision policy is deterministic and tested.
+- self-link after reconciliation is removed deterministically;
+- identical collisions deduplicate;
+- conflicting collisions select the latest assertion without merging terms/notes;
+- equal-timestamp tie-break is deterministic.
 
 ### 15.4 Taste/read context
 
@@ -525,7 +545,9 @@ Generated/read-model schema changes потребуют rebuild и web-manifest v
 
 Existing recommendation behavior остаётся совместимым: similarity добавляет новый evidence source, но не заменяет taste context, semantic fingerprint или concrete anchors.
 
-Normal media command auto-merge allowlist не должна автоматически расширяться только потому, что появились новые command names. Eligibility для `set_work_similarity`/`remove_work_similarity` должна быть добавлена осознанно вместе с path policy и exact-head tests. Architecture/schema/service/web изменения остаются developer/manual route.
+После реализации `set_work_similarity` и `remove_work_similarity` становятся normal auto-merge-eligible media operations при условии отдельного path-policy allowlist только для relation canonical paths и ожидаемых generated outputs, плюс прохождения exact-head Media Check. Сам rollout architecture/schema/service/web/tests/workflow изменений остаётся developer/manual route.
+
+Поскольку `add_work` может запускать reconciliation, его path policy после v5.1 должен разрешать только детерминированные relation-file изменения, вызванные external→canonical identity normalization в той же transaction. Это расширение покрывается отдельными path-policy и regression tests.
 
 ## 17. Implementation boundaries
 
@@ -554,13 +576,15 @@ v5.1 считается архитектурно реализованным, к�
 3. optional structured terms и note сохраняют причины similarity;
 4. external endpoint поддерживается без добавления фильма в library;
 5. последующее добавление external work корректно reconciles relation на canonical work;
-6. explicit и derived similarity остаются различимыми;
-7. similarity может участвовать в explanation/reasoning, но сама не создаёт stable preference;
-8. `assess_candidate` работает для canonical и external candidates и ничего не мутирует;
-9. assessment объясняет verdict через provenance-aware evidence без fake percentage;
-10. web показывает explicit similarity с обеих сторон и корректно обрабатывает external endpoint;
-11. validation/rebuild/doctor и relevant web checks проходят на изменённой архитектуре;
-12. существующие v5 invariants — source-of-truth, typed write path, target separation, provenance и no-self-reinforcement — остаются сохранены.
+6. reconciliation collision разрешается детерминированно по current-assertion policy без смешивания conflicting reasons;
+7. explicit и derived similarity остаются различимыми;
+8. similarity может участвовать в explanation/reasoning, но сама не создаёт stable preference;
+9. `assess_candidate` работает для canonical и external candidates и ничего не мутирует;
+10. assessment объясняет verdict через provenance-aware evidence без fake percentage;
+11. web показывает explicit similarity с обеих сторон и корректно обрабатывает external endpoint;
+12. новые similarity writes и reconciliation проходят через существующие typed transaction/path-policy safety boundaries;
+13. validation/rebuild/doctor и relevant web checks проходят на изменённой архитектуре;
+14. существующие v5 invariants — source-of-truth, typed write path, target separation, provenance и no-self-reinforcement — остаются сохранены.
 
 ## 19. Итоговое архитектурное решение
 
