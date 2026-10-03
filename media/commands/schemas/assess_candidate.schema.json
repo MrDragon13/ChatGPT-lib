@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chatgpt-lib.local/commands/assess_candidate.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "operation", "target", "candidate"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "operation": {"const": "assess_candidate"},
+    "target": {"type": "string", "minLength": 1},
+    "candidate": {"$ref": "https://chatgpt-lib.local/commands/common.schema.json#/$defs/workRef"},
+    "text": {"type": ["string", "null"]}
+  }
+}
