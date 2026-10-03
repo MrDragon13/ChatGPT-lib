@@ -4,15 +4,16 @@ import json
 from pathlib import Path
 from typing import Any
 
-from media.domain.commands import RecommendContextRequest
+from media.domain.commands import RecommendContextRequest, TasteContextRequest
 from media.repository.index_repo import IndexRepository
 from media.repository.yaml_repo import YamlRepository
 from media.service.recommend import build_recommend_context
+from media.service.taste_context import build_taste_context
 from media.tools.common import load_yaml
 from media.tools.schema_utils import validate_against_schema
 
 
-WEB_MANIFEST_SCHEMA_VERSION = 1
+WEB_MANIFEST_SCHEMA_VERSION = 2
 
 
 def _load_profile(media_root: Path, target: str) -> dict[str, Any]:
@@ -36,6 +37,21 @@ def _web_vocabulary(media_root: Path) -> dict[str, dict[str, str]]:
     return result
 
 
+def _semantic_fingerprint(data: dict[str, Any]) -> list[dict[str, Any]]:
+    metadata = data.get("metadata") or {}
+    semantic = metadata.get("semantic") or {}
+    result: list[dict[str, Any]] = []
+    for trait in semantic.get("traits") or []:
+        if not isinstance(trait, dict):
+            continue
+        term = trait.get("term")
+        source = trait.get("source")
+        confidence = trait.get("confidence")
+        if isinstance(term, str) and isinstance(source, str) and isinstance(confidence, str):
+            result.append(dict(trait))
+    return result
+
+
 def _work_view(data: dict[str, Any], index_row: dict[str, Any]) -> dict[str, Any]:
     metadata = data.get("metadata") or {}
     provenance = data.get("provenance") or {}
@@ -47,6 +63,7 @@ def _work_view(data: dict[str, Any], index_row: dict[str, Any]) -> dict[str, Any
         "group_signals": dict(data.get("group_signals") or {}),
         "interest": dict(index_row.get("interest") or {}),
         "traits": list(index_row.get("traits") or []),
+        "semantic_fingerprint": _semantic_fingerprint(data),
         "collections": list(index_row.get("collections") or []),
         "provenance": {
             "created_at": provenance.get("created_at"),
@@ -79,8 +96,9 @@ def build_web_manifest(media_root: Path) -> dict[str, Any]:
     ]
 
     recommendations: dict[str, dict[str, Any]] = {}
+    taste_contexts: dict[str, dict[str, Any]] = {}
     for target in targets:
-        request = RecommendContextRequest(
+        recommendation_request = RecommendContextRequest(
             schema_version=1,
             target=target,
             text=None,
@@ -89,7 +107,14 @@ def build_web_manifest(media_root: Path) -> dict[str, Any]:
             include_not_interested=False,
             limit=24,
         )
-        recommendations[target] = build_recommend_context(media_root, request)
+        recommendations[target] = build_recommend_context(media_root, recommendation_request)
+        taste_request = TasteContextRequest(
+            schema_version=1,
+            target=target,
+            recent_limit=12,
+            representative_limit=8,
+        )
+        taste_contexts[target] = build_taste_context(media_root, taste_request)
 
     manifest: dict[str, Any] = {
         "schema_version": WEB_MANIFEST_SCHEMA_VERSION,
@@ -97,6 +122,7 @@ def build_web_manifest(media_root: Path) -> dict[str, Any]:
         "targets": {"viewers": sorted_viewers, "groups": sorted_groups},
         "vocabulary": _web_vocabulary(media_root),
         "profiles": {target: _load_profile(media_root, target) for target in targets},
+        "taste_contexts": taste_contexts,
         "recommendations": recommendations,
         "works": works,
     }
