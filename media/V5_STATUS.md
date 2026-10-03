@@ -4,9 +4,11 @@ Status date: 2026-10-03
 
 ## Current state
 
-Media Intelligence v5 completed its planned implementation phases and Phase E pilot. Media Intelligence v5.1 is now being implemented in draft PR #68 for two additions: read-only candidate assessment and explicit target-specific work similarity.
+Media Intelligence v5 completed its planned implementation phases and Phase E pilot. Media Intelligence v5.1 is implemented in draft PR #68 for two additions: read-only candidate assessment and explicit target-specific work similarity.
 
 The canonical source of truth remains Git/YAML; generated profiles, index, database, taste contexts, recommendation contexts, and the web manifest remain derived read models. The normal user write path remains one strict typed command on a same-repository `media/op-*` branch, processed by deterministic Python, followed by an exact-head dispatch-only `Media Check`, guarded auto-merge when eligible, and exact-merge-SHA Pages publication.
+
+Tasks 1–5 are complete. Task 6 whole-branch review found no Critical or Important findings. This status commit is the final implementation candidate and must pass fresh exact-head Media Dev Check and Web Check before PR #68 is marked ready for review. Do not merge from this handoff without that fresh evidence.
 
 ## v5.1 implementation — Task 1–4
 
@@ -25,7 +27,7 @@ Task 1–4 are complete and GREEN in PR #68.
 - Canonical↔canonical, canonical↔external and external↔external endpoint normalization is supported.
 - Repeated assertion is an upsert of the current relation; removal is idempotent and independent of endpoint order.
 - Adding a canonical work reconciles matching stable external endpoints in the same transaction; self-links collapse and collisions resolve deterministically.
-- Media Command stages relation outputs. Guarded auto-merge has explicit similarity-only set/remove arms, while work-creation routes allow only deterministic similarity reconciliation paths.
+- Media Command stages relation outputs. Guarded auto-merge has explicit similarity-only set/remove arms, while work-creation routes allow deterministic similarity reconciliation paths.
 
 ### Task 3 — read models and candidate assessment
 
@@ -37,7 +39,7 @@ Task 1–4 are complete and GREEN in PR #68.
 
 ### Task 4 — manifest v3 and web projection
 
-- The exporter now emits manifest v3.
+- The exporter emits manifest v3.
 - Each web work receives target-keyed explicit similarities as a derived projection.
 - One canonical undirected relation is projected symmetrically onto both canonical work pages.
 - canonical↔external similarity is shown only on the canonical page as a lightweight external card; it does not fabricate a local route or canonical work.
@@ -50,9 +52,9 @@ A browser regression found during Task 4 was fixed by RED → GREEN: the exporte
 
 ## Task 5 — agent/docs contract synchronization
 
-Current work is synchronizing `media/AGENTS.md`, `media/START_PROMPT.md`, `media/README.md`, this status file, and the scenario catalog with the implemented v5.1 routes.
+Task 5 is complete and GREEN.
 
-Required agent semantics:
+Current contracts now state that:
 
 - `set_work_similarity` records one explicit target-specific undirected relation;
 - `remove_work_similarity` removes the same unordered pair rather than creating a negative relation;
@@ -61,7 +63,29 @@ Required agent semantics:
 - an external similarity/assessment endpoint does not create a canonical work;
 - at most one short blocking identity clarification is allowed when a stable external identity cannot be resolved safely.
 
-After Task 5 is GREEN, Task 6 is exact-head integration verification, whole-branch review, PR handoff, and only then marking PR #68 ready for review.
+Task 5 TDD evidence:
+
+- RED head `7edb3a56fc5e924dea8d63971e1de288d17da0c7`: Media Dev Check #93 — `4 failed, 272 passed`, all failures were the newly introduced docs/agent assertions.
+- GREEN head `700e781229e5b0614c8b4b299bf201cd2cb9edee`: Media Dev Check #98 — `276 passed`, validation/rebuild/web-export/doctor successful; Web Check #222 — success including browser checks and review screenshots.
+
+## Task 6 — whole-branch review and final verification
+
+Whole-branch review covered command/schema boundaries, canonical validation, similarity normalization/reconciliation, transaction/path-policy rules, workflow auto-merge arms, read-only assessment routing, taste/recommend evidence separation, manifest/web projection, frontend routing, and secret boundaries.
+
+No Critical or Important findings were found. The review confirmed:
+
+- one unordered similarity identity per target; no mirrored canonical duplicates;
+- stable external identity plus display snapshot for persisted external endpoints;
+- deterministic external→canonical reconciliation, self-link removal, and collision policy;
+- similarity appears as separate evidence and does not alter affinities/preferences or candidate rank;
+- `assess_candidate` is excluded from mutable command execution and performs no filesystem mutation;
+- similarity-only auto-merge paths cannot touch works/service/schema/web files;
+- canonical↔external web projection never invents a local route;
+- browser static credential scan remains part of Web Check.
+
+One Minor documentation drift remains intentionally non-blocking: the approved design document header still says `written spec awaiting user review`. Current implementation status is authoritative in this file and PR #68 checkpoints; the design body is left unchanged as approved design history.
+
+Final completion gate for Task 6: both Media Dev Check and Web Check must pass on the exact head produced by this status commit. PR metadata/comments should then record that exact SHA and check numbers. No product-code changes are expected unless final verification finds a regression.
 
 ## Phase E / Task 11 — semantic and taste pilot
 
@@ -150,7 +174,7 @@ A fresh Task 12 verification-only PR #61 was created from the post-pilot `main` 
 
 ## Safe resume point
 
-For the active v5.1 implementation, resume from PR #68 and verify its current exact head before changing anything. Task 1–4 are complete; do not redo them. Finish Task 5 docs/contracts, then execute Task 6 exact-head verification and whole-branch review.
+For the active v5.1 implementation, resume from PR #68 and verify its current exact head before changing anything. Tasks 1–5 are complete; do not redo them. Task 6 review is complete. The only remaining implementation step is fresh exact-head Media Dev Check + Web Check on this final status commit, followed by PR handoff/ready-for-review metadata if both are GREEN.
 
 For normal media use after v5.1 is merged, start from current `main`, read `media/AGENTS.md`, then prefer the shortest route matching intent:
 
