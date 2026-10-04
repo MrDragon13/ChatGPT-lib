@@ -44,19 +44,24 @@ Explicit similarity используется как recommendation/explanation e
 
 Taste reasoning сохраняет provenance между explicit evidence, inferred hypotheses и semantic work knowledge. Inferred output не является independent evidence для последующего вывода. Generated profile хранит inferred hypotheses отдельно и не включает их в численные affinity `score`, `confidence` или `evidence_count`.
 
-Internal recommendation request ограничивает candidate set локальной библиотекой. General recommendation request допускает external discovery; library при этом служит памятью о вкусах, exclusions и evidence anchors.
+Internal recommendation request ограничивает candidate set локальной библиотекой. Его Stage A ranking сначала отделяет candidates с personalized semantic basis от fallback: `trait_overlap` всегда идёт раньше `none`. Personalized candidates сортируются по directional balance (`strengths - concerns`), затем по меньшему числу concerns, `interest.priority` и стабильному ID; fallback — только по priority и ID. Confidence и magnitude affinity пока не являются ranking weights, публичного numeric match score нет.
+
+`recommend_context` сохраняет legacy strengths/concerns и добавляет structured evidence details, `ranking_basis`/`fallback_reason`, top-level pool-vs-returned `coverage` и top-level deterministic `limitations`. Эта policy является correctness/observability baseline, а не доказанной quality-optimal моделью.
+
+General recommendation request допускает external discovery; library при этом служит памятью о вкусах, exclusions и evidence anchors.
 
 ### Web
 
 Текущий exporter выдаёт **manifest v3**. Static GitHub Pages читает versioned derived manifest, а не canonical YAML.
 
-Manifest v3 включает target-aware taste/recommendation data, semantic fingerprints и explicit similarity projection. Canonical↔canonical similarity проецируется на обе локальные work pages; canonical↔external отображается как lightweight external endpoint без выдуманного local route.
+Manifest v3 включает target-aware taste/recommendation data, semantic fingerprints и explicit similarity projection. Additive recommendation observability (`coverage`, `limitations`, candidate basis/reason) остаётся в manifest v3, поскольку не меняет meaning существующих полей. Canonical↔canonical similarity проецируется на обе локальные work pages; canonical↔external отображается как lightweight external endpoint без выдуманного local route.
 
 Поддерживаемые browser edits идут через protected broker и тот же typed-command boundary. GitHub/provider/model secrets не попадают в browser bundle.
 
 ## Известные ограничения
 
 - Evidence для `partner` заметно менее насыщен, чем для `primary`; confidence reasoning должен отражать эту разницу.
+- Current Stage A ranking исправляет directional correctness, но ещё не benchmarked как оптимальная модель качества; fingerprint length и alternative ordering policy остаются предметом будущего evaluation.
 - Derived semantic similarity не сохраняется как explicit user assertion и не показывается как пользовательское мнение без подтверждения.
 - External discovery/live model reasoning находится на agent/server boundary; static Pages остаётся работоспособным без live model.
 - Candidate assessment сознательно не имеет opaque deterministic match score или псевдо-точной вероятности.
