@@ -23,6 +23,8 @@ Media intelligence разделяет четыре слоя:
 
 Inferred output **не является independent evidence** для другого inferred output. Гипотеза может быть пересчитана из raw/explicit evidence, но не должна усиливаться только потому, что предыдущая версия уже существовала.
 
+Generated profile хранит hypotheses отдельно в `inferred_preferences`. Они доступны explanation/reasoning layer, но **не участвуют в численном расчёте `affinities`** и не увеличивают их `score`, `confidence` или `evidence_count`. Численные affinities строятся только из первичного evidence, которое профиль агрегирует напрямую.
+
 ## Taste context
 
 `taste_context` — компактный read model для reasoning. Он может включать:
