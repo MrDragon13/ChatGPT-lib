@@ -7,6 +7,7 @@ from media.domain.commands import RecommendContextRequest
 from media.domain.errors import UnknownTargetError
 from media.repository.yaml_repo import YamlRepository
 from media.service.recommendation_pool import eligible_local_candidates
+from media.service.semantic_evidence import classify_candidate_traits
 from media.service.similarity import similarity_context
 from media.tools.common import load_yaml
 
@@ -37,6 +38,46 @@ def _similarities_by_canonical_work(media_root: Path, target: str) -> dict[str, 
     return result
 
 
+def _ranking_key(classification: dict[str, Any], priority: int, candidate_id: str) -> tuple[int, int, int, int, str]:
+    if classification["ranking_basis"] == "trait_overlap":
+        return (
+            0,
+            -int(classification["net_directional_count"]),
+            int(classification["concerns_count"]),
+            -priority,
+            candidate_id,
+        )
+    return (1, 0, 0, -priority, candidate_id)
+
+
+def _coverage(rows: list[dict[str, Any]], returned: list[dict[str, Any]]) -> dict[str, int]:
+    pool_with_fingerprint = sum(1 for item in rows if item["fingerprint_trait_count"] > 0)
+    pool_with_personalized_basis = sum(1 for item in rows if item["ranking_basis"] == "trait_overlap")
+    returned_with_fingerprint = sum(1 for item in returned if item["fingerprint_trait_count"] > 0)
+    returned_with_personalized_basis = sum(1 for item in returned if item["ranking_basis"] == "trait_overlap")
+    return {
+        "pool_total": len(rows),
+        "pool_with_fingerprint": pool_with_fingerprint,
+        "pool_with_personalized_basis": pool_with_personalized_basis,
+        "pool_fallback": len(rows) - pool_with_personalized_basis,
+        "returned_total": len(returned),
+        "returned_with_fingerprint": returned_with_fingerprint,
+        "returned_with_personalized_basis": returned_with_personalized_basis,
+        "returned_fallback": len(returned) - returned_with_personalized_basis,
+    }
+
+
+def _limitations(coverage: dict[str, int]) -> list[str]:
+    result: list[str] = []
+    if coverage["pool_total"] > 0 and coverage["pool_with_fingerprint"] < coverage["pool_total"]:
+        result.append("partial_semantic_coverage")
+    if coverage["returned_fallback"] > 0:
+        result.append("fallback_candidates_present")
+    if coverage["pool_total"] > 0 and coverage["pool_with_personalized_basis"] == 0:
+        result.append("no_personalized_candidates")
+    return result
+
+
 def build_recommend_context(media_root: Path, request: RecommendContextRequest) -> dict[str, Any]:
     media_root = Path(media_root)
     repo = YamlRepository(media_root)
@@ -46,7 +87,7 @@ def build_recommend_context(media_root: Path, request: RecommendContextRequest) 
     members = groups.get(request.target, [])
     affinities = (_profile(media_root, request.target).get("affinities") or {})
     similarity_evidence = _similarities_by_canonical_work(media_root, request.target)
-    candidates: list[tuple[int, int, str, dict[str, Any]]] = []
+    ranked: list[tuple[tuple[int, int, int, int, str], dict[str, Any], dict[str, Any]]] = []
     rows = eligible_local_candidates(
         media_root,
         target=request.target,
@@ -54,26 +95,21 @@ def build_recommend_context(media_root: Path, request: RecommendContextRequest) 
         include_not_interested=request.include_not_interested,
         runtime_max=request.runtime_max,
     )
+    classified_pool: list[dict[str, Any]] = []
     for row in rows:
         runtime = row.get("runtime_min")
         interest = (row.get("interest") or {}).get(request.target) or {}
         viewer = row.get("viewer") or {}
-        strengths = []
-        concerns = []
-        matched = 0
-        for trait in row.get("traits") or []:
-            affinity = affinities.get(trait)
-            if not affinity:
-                continue
-            matched += 1
-            score = affinity.get("score", 0)
-            if score > 0:
-                strengths.append(trait)
-            elif score < 0:
-                concerns.append(trait)
+        classification = classify_candidate_traits(row.get("traits") or [], affinities)
+        pool_item = {
+            "fingerprint_trait_count": classification["fingerprint_trait_count"],
+            "ranking_basis": classification["ranking_basis"],
+        }
+        classified_pool.append(pool_item)
         evidence = {
-            "strengths": sorted(strengths),
-            "concerns": sorted(concerns),
+            "strengths": sorted(classification["strengths"]),
+            "concerns": sorted(classification["concerns"]),
+            "evidence_details": classification["evidence_details"],
             "similarities": list(similarity_evidence.get(row["id"], [])),
         }
         if request.target in viewers:
@@ -91,11 +127,16 @@ def build_recommend_context(media_root: Path, request: RecommendContextRequest) 
             "genres": row.get("genres") or [],
             "traits": row.get("traits") or [],
             "interest": interest,
+            "ranking_basis": classification["ranking_basis"],
+            "fallback_reason": classification["fallback_reason"],
             "evidence": evidence,
         }
         priority = int(interest.get("priority") or 0)
-        candidates.append((-matched, -priority, row["id"], public))
-    candidates.sort(key=lambda item: item[:3])
+        ranked.append((_ranking_key(classification, priority, row["id"]), public, pool_item))
+    ranked.sort(key=lambda item: item[0])
+    returned_ranked = ranked[: request.limit]
+    returned_internal = [item[2] for item in returned_ranked]
+    coverage = _coverage(classified_pool, returned_internal)
     return {
         "target": request.target,
         "request": {
@@ -104,5 +145,7 @@ def build_recommend_context(media_root: Path, request: RecommendContextRequest) 
             "runtime_max": request.runtime_max,
             "include_not_interested": request.include_not_interested,
         },
-        "candidates": [item[3] for item in candidates[: request.limit]],
+        "coverage": coverage,
+        "limitations": _limitations(coverage),
+        "candidates": [item[1] for item in returned_ranked],
     }
