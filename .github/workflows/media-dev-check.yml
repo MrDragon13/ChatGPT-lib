@@ -6,6 +6,7 @@ on:
       - 'media/**/*.py'
       - 'media/schemas/**'
       - 'media/commands/schemas/**'
+      - 'media/baselines/**'
       - 'tests/media/**'
       - '.github/workflows/media-*.yml'
 
@@ -30,6 +31,8 @@ jobs:
         run: python -m media.tools.validate .
       - name: Check generated artifacts
         run: python -m media.cli rebuild --check
+      - name: Audit media intelligence
+        run: python -m media.tools.audit_intelligence . --format json
       - name: Export web manifest
         run: python -m media.cli web-export --output /tmp/media-web-manifest.json --format json
       - name: Run media doctor
