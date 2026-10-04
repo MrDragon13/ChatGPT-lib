@@ -74,98 +74,67 @@ jobs:
 
           OP_MARKERS=()
           for path in "${FILES[@]}"; do
-            case "$path" in
-              media/data/works/*.yaml|media/preferences/inferred/*.yaml|media/data/interactions/*.jsonl|media/data/relations/similarity/*.yaml|media/generated/index.jsonl|media/generated/profiles/*.yaml)
-                ;;
-              .media/operations/*.json)
-                OP_MARKERS+=("$path")
-                ;;
-              *)
-                echo "::error::Path is not eligible for normal data auto-merge: $path"
-                exit 3
-                ;;
-            esac
+            if [[ "$path" == .media/operations/*.json ]]; then
+              OP_MARKERS+=("$path")
+            fi
           done
-
           if [ "${#OP_MARKERS[@]}" -ne 1 ]; then
             echo "::error::Expected exactly one applied operation marker"
             exit 3
           fi
 
           OP_JSON=$(gh api "repos/$REPO/contents/${OP_MARKERS[0]}?ref=$PR_HEAD_SHA" --jq '.content' | tr -d '\n' | base64 --decode)
-          OP_STATUS=$(printf '%s' "$OP_JSON" | jq -r '.status // empty')
-          OP_KIND=$(printf '%s' "$OP_JSON" | jq -r '.operation // empty')
+          if ! OP_STATUS=$(printf '%s' "$OP_JSON" | jq -er '.status'); then
+            echo "::error::Operation marker has no valid status"
+            exit 3
+          fi
+          if ! OP_KIND=$(printf '%s' "$OP_JSON" | jq -er '.operation'); then
+            echo "::error::Operation marker has no valid operation kind"
+            exit 3
+          fi
           if [ "$OP_STATUS" != "applied" ]; then
             echo "::error::Operation marker is not applied"
             exit 3
           fi
 
-          case "$OP_KIND" in
-            add_work|record_viewing_feedback)
-              for path in "${FILES[@]}"; do
-                case "$path" in
-                  media/data/works/*.yaml|media/data/relations/similarity/*.yaml|media/generated/index.jsonl|media/generated/profiles/*.yaml|.media/operations/*.json)
-                    ;;
-                  *)
-                    echo "::error::$OP_KIND may not auto-merge path: $path"
-                    exit 3
-                    ;;
-                esac
-              done
-              ;;
-            edit_viewing_feedback|set_interest|set_semantic_fingerprint)
-              for path in "${FILES[@]}"; do
-                case "$path" in
-                  media/data/works/*.yaml|media/generated/index.jsonl|media/generated/profiles/*.yaml|.media/operations/*.json)
-                    ;;
-                  *)
-                    echo "::error::$OP_KIND may not auto-merge path: $path"
-                    exit 3
-                    ;;
-                esac
-              done
-              ;;
-            set_work_similarity|remove_work_similarity)
-              for path in "${FILES[@]}"; do
-                case "$path" in
-                  media/data/relations/similarity/*.yaml|.media/operations/*.json)
-                    ;;
-                  *)
-                    echo "::error::$OP_KIND may not auto-merge path: $path"
-                    exit 3
-                    ;;
-                esac
-              done
-              ;;
-            set_inferred_preferences)
-              for path in "${FILES[@]}"; do
-                case "$path" in
-                  media/preferences/inferred/*.yaml|media/generated/profiles/*.yaml|.media/operations/*.json)
-                    ;;
-                  *)
-                    echo "::error::$OP_KIND may not auto-merge path: $path"
-                    exit 3
-                    ;;
-                esac
-              done
-              ;;
-            record_recommendation_interaction)
-              for path in "${FILES[@]}"; do
-                case "$path" in
-                  media/data/interactions/*.jsonl|media/generated/profiles/*.yaml|.media/operations/*.json)
-                    ;;
-                  *)
-                    echo "::error::$OP_KIND may not auto-merge path: $path"
-                    exit 3
-                    ;;
-                esac
-              done
-              ;;
-            *)
-              echo "::error::Operation kind is not eligible for v5 auto-merge: $OP_KIND"
+          POLICY_JSON=$(gh api "repos/$REPO/contents/media/config/operation_path_policy.json?ref=main" --jq '.content' | tr -d '\n' | base64 --decode)
+          if ! printf '%s' "$POLICY_JSON" | jq -e '
+            .schema_version == 1 and
+            (.operations | type == "object") and
+            (.operations | length > 0)
+          ' >/dev/null; then
+            echo "::error::Trusted main operation path policy is invalid"
+            exit 3
+          fi
+
+          if ! OP_POLICY=$(printf '%s' "$POLICY_JSON" | jq -ce --arg op "$OP_KIND" '.operations[$op] // empty'); then
+            echo "::error::Operation kind is absent from trusted main policy: $OP_KIND"
+            exit 3
+          fi
+          if ! printf '%s' "$OP_POLICY" | jq -e '
+            .auto_merge == true and
+            (.allowed_paths | type == "array") and
+            (.allowed_paths | length > 0) and
+            ([.allowed_paths[] | select(type != "string" or length == 0)] | length == 0)
+          ' >/dev/null; then
+            echo "::error::Operation is not eligible under trusted main policy: $OP_KIND"
+            exit 3
+          fi
+
+          mapfile -t ALLOWED_PATHS < <(printf '%s' "$OP_POLICY" | jq -r '.allowed_paths[]')
+          for path in "${FILES[@]}"; do
+            matched=false
+            for pattern in "${ALLOWED_PATHS[@]}"; do
+              if [[ "$path" == $pattern ]]; then
+                matched=true
+                break
+              fi
+            done
+            if [ "$matched" != true ]; then
+              echo "::error::$OP_KIND may not auto-merge path under trusted main policy: $path"
               exit 3
-              ;;
-          esac
+            fi
+          done
 
           echo "eligible=true" >> "$GITHUB_OUTPUT"
           echo "number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
