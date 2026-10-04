@@ -21,7 +21,10 @@ KNOWN_RATING_SOURCES = {"explicit", "explicit_approx", "inferred", "none"}
 def _existing_files(directory: Path, pattern: str) -> list[Path]:
     if not directory.exists():
         return []
-    return sorted((path for path in directory.glob(pattern) if path.is_file()), key=lambda path: path.as_posix())
+    return sorted(
+        (path for path in directory.glob(pattern) if path.is_file()),
+        key=lambda path: path.as_posix(),
+    )
 
 
 def audit_input_paths(repo_root: Path) -> tuple[Path, ...]:
@@ -49,7 +52,9 @@ def audit_input_paths(repo_root: Path) -> tuple[Path, ...]:
     ):
         paths.extend(_existing_files(media / relative, pattern))
 
-    return tuple(sorted(set(paths), key=lambda path: path.relative_to(root).as_posix()))
+    return tuple(
+        sorted(set(paths), key=lambda path: path.relative_to(root).as_posix())
+    )
 
 
 def _normalized_bytes(path: Path) -> bytes:
@@ -59,7 +64,9 @@ def _normalized_bytes(path: Path) -> bytes:
 def canonical_input_digest(repo_root: Path) -> str:
     root = Path(repo_root)
     digest = sha256()
-    for path in sorted(audit_input_paths(root), key=lambda item: item.relative_to(root).as_posix()):
+    for path in sorted(
+        audit_input_paths(root), key=lambda item: item.relative_to(root).as_posix()
+    ):
         relative = path.relative_to(root).as_posix().encode("utf-8")
         payload = _normalized_bytes(path)
         digest.update(len(relative).to_bytes(8, "big"))
@@ -102,7 +109,29 @@ def _target_signals(
 
 
 def _has_viewing(signals: Iterable[dict[str, Any]]) -> bool:
-    return any((signal.get("viewing") or {}).get("status") is not None for signal in signals)
+    return any(
+        (signal.get("viewing") or {}).get("status") is not None for signal in signals
+    )
+
+
+def _is_watched_for_target(
+    entity: dict[str, Any],
+    target: str,
+    viewers: set[str],
+    groups: dict[str, list[str]],
+) -> bool:
+    viewer_signals = entity.get("viewer_signals") or {}
+    if target in viewers:
+        return (
+            (viewer_signals.get(target) or {}).get("viewing") or {}
+        ).get("status") == "watched"
+
+    members = groups.get(target, [])
+    return bool(members) and all(
+        ((viewer_signals.get(member) or {}).get("viewing") or {}).get("status")
+        == "watched"
+        for member in members
+    )
 
 
 def _ratings(signals: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -114,12 +143,8 @@ def _ratings(signals: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
     return result
 
 
-def _has_feedback(signals: Iterable[dict[str, Any]]) -> bool:
-    for signal in signals:
-        feedback = signal.get("feedback") or {}
-        if feedback.get("summary") not in {None, ""} or feedback.get("signals"):
-            return True
-    return False
+def _has_structured_feedback(signals: Iterable[dict[str, Any]]) -> bool:
+    return any(bool((signal.get("feedback") or {}).get("signals")) for signal in signals)
 
 
 def _coverage(numerator: int, denominator: int) -> dict[str, int]:
@@ -131,35 +156,108 @@ def _signal_metrics(
     target: str,
     viewers: set[str],
     groups: dict[str, list[str]],
-) -> tuple[int, int, Counter[str], int, int]:
+) -> dict[str, Any]:
     viewing_count = 0
+    watched_count = 0
     rated_count = 0
-    feedback_count = 0
+    structured_feedback_count = 0
+    rated_structured_feedback_count = 0
     rating_sources: Counter[str] = Counter()
     unclassified = 0
+    rating_scores: list[float] = []
 
     for entity in entities:
         signals = _target_signals(entity, target, viewers, groups)
         if _has_viewing(signals):
             viewing_count += 1
+        if _is_watched_for_target(entity, target, viewers, groups):
+            watched_count += 1
+
         entity_ratings = _ratings(signals)
-        if entity_ratings:
+        has_rating = bool(entity_ratings)
+        if has_rating:
             rated_count += 1
         for rating in entity_ratings:
+            score = rating.get("score")
+            if score is not None:
+                rating_scores.append(float(score))
             source = rating.get("source")
             if isinstance(source, str) and source in KNOWN_RATING_SOURCES:
                 rating_sources[source] += 1
             else:
                 unclassified += 1
-        if _has_feedback(signals):
-            feedback_count += 1
 
-    return viewing_count, rated_count, rating_sources, feedback_count, unclassified
+        has_structured_feedback = _has_structured_feedback(signals)
+        if has_structured_feedback:
+            structured_feedback_count += 1
+            if has_rating:
+                rated_structured_feedback_count += 1
+
+    mean_score = (
+        round(sum(rating_scores) / len(rating_scores), 3) if rating_scores else None
+    )
+    return {
+        "viewing_count": viewing_count,
+        "watched_count": watched_count,
+        "rated_count": rated_count,
+        "rating_sources": rating_sources,
+        "unclassified_source": unclassified,
+        "rating_scores": rating_scores,
+        "mean_score": mean_score,
+        "structured_feedback_count": structured_feedback_count,
+        "rated_structured_feedback_count": rated_structured_feedback_count,
+    }
+
+
+def _combine_signal_metrics(left: dict[str, Any], right: dict[str, Any]) -> dict[str, Any]:
+    scores = [*left["rating_scores"], *right["rating_scores"]]
+    return {
+        "viewing_count": left["viewing_count"] + right["viewing_count"],
+        "watched_count": left["watched_count"] + right["watched_count"],
+        "rated_count": left["rated_count"] + right["rated_count"],
+        "rating_sources": left["rating_sources"] + right["rating_sources"],
+        "unclassified_source": left["unclassified_source"]
+        + right["unclassified_source"],
+        "rating_scores": scores,
+        "mean_score": round(sum(scores) / len(scores), 3) if scores else None,
+        "structured_feedback_count": left["structured_feedback_count"]
+        + right["structured_feedback_count"],
+        "rated_structured_feedback_count": left["rated_structured_feedback_count"]
+        + right["rated_structured_feedback_count"],
+    }
+
+
+def _viewing_metric(metrics: dict[str, Any], denominator: int) -> dict[str, Any]:
+    result: dict[str, Any] = _coverage(metrics["viewing_count"], denominator)
+    result["watched"] = _coverage(metrics["watched_count"], denominator)
+    return result
+
+
+def _rating_metric(metrics: dict[str, Any], denominator: int) -> dict[str, Any]:
+    result: dict[str, Any] = _coverage(metrics["rated_count"], denominator)
+    result["by_source"] = dict(sorted(metrics["rating_sources"].items()))
+    result["unclassified_source"] = metrics["unclassified_source"]
+    result["mean_score"] = metrics["mean_score"]
+    return result
+
+
+def _feedback_metric(metrics: dict[str, Any], denominator: int) -> dict[str, Any]:
+    result: dict[str, Any] = _coverage(
+        metrics["structured_feedback_count"], denominator
+    )
+    result["rated"] = _coverage(
+        metrics["rated_structured_feedback_count"], metrics["rated_count"]
+    )
+    return result
 
 
 def _semantic_trait_count(work: dict[str, Any]) -> int:
     semantic = ((work.get("metadata") or {}).get("semantic") or {})
-    return sum(1 for trait in semantic.get("traits") or [] if isinstance(trait, dict) and trait.get("term"))
+    return sum(
+        1
+        for trait in semantic.get("traits") or []
+        if isinstance(trait, dict) and trait.get("term")
+    )
 
 
 def _similarity_metrics(media_root: Path) -> dict[str, Any]:
@@ -262,34 +360,37 @@ def collect_intelligence_audit(repo_root: Path) -> dict[str, Any]:
     ratings: dict[str, Any] = {}
     feedback: dict[str, Any] = {}
     for target in targets:
-        work_viewing, work_rated, work_sources, work_feedback, work_unclassified = _signal_metrics(
-            works, target, viewers, groups
-        )
-        collection_viewing, collection_rated, collection_sources, collection_feedback, collection_unclassified = _signal_metrics(
-            collections, target, viewers, groups
-        )
-        combined_sources = work_sources + collection_sources
+        work_metrics = _signal_metrics(works, target, viewers, groups)
+        collection_metrics = _signal_metrics(collections, target, viewers, groups)
+        entity_metrics = _combine_signal_metrics(work_metrics, collection_metrics)
+
         viewing[target] = {
-            "works": _coverage(work_viewing, len(works)),
-            "collections": _coverage(collection_viewing, len(collections)),
-            "entities": _coverage(work_viewing + collection_viewing, len(works) + len(collections)),
+            "works": _viewing_metric(work_metrics, len(works)),
+            "collections": _viewing_metric(collection_metrics, len(collections)),
+            "entities": _viewing_metric(
+                entity_metrics, len(works) + len(collections)
+            ),
         }
         ratings[target] = {
-            "works": _coverage(work_rated, len(works)),
-            "collections": _coverage(collection_rated, len(collections)),
-            "entities": _coverage(work_rated + collection_rated, len(works) + len(collections)),
-            "by_source": dict(sorted(combined_sources.items())),
-            "unclassified_source": work_unclassified + collection_unclassified,
+            "works": _rating_metric(work_metrics, len(works)),
+            "collections": _rating_metric(collection_metrics, len(collections)),
+            "entities": _rating_metric(
+                entity_metrics, len(works) + len(collections)
+            ),
         }
         feedback[target] = {
-            "works": _coverage(work_feedback, len(works)),
-            "collections": _coverage(collection_feedback, len(collections)),
-            "entities": _coverage(work_feedback + collection_feedback, len(works) + len(collections)),
+            "works": _feedback_metric(work_metrics, len(works)),
+            "collections": _feedback_metric(collection_metrics, len(collections)),
+            "entities": _feedback_metric(
+                entity_metrics, len(works) + len(collections)
+            ),
         }
 
     vocabulary = load_yaml(media_root / "vocabulary.yaml") or {}
     terms = vocabulary.get("terms") or {} if isinstance(vocabulary, dict) else {}
-    works_with_fingerprint = sum(1 for work in works if _semantic_trait_count(work) > 0)
+    works_with_fingerprint = sum(
+        1 for work in works if _semantic_trait_count(work) > 0
+    )
 
     return {
         "schema_version": 1,
@@ -314,7 +415,10 @@ def collect_intelligence_audit(repo_root: Path) -> dict[str, Any]:
 
 
 def _json_line(value: dict[str, Any]) -> str:
-    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
+    return (
+        json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+        + "\n"
+    )
 
 
 def _write_baseline(
@@ -340,7 +444,9 @@ def _write_baseline(
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Audit Media Intelligence coverage and evidence state")
+    parser = argparse.ArgumentParser(
+        description="Audit Media Intelligence coverage and evidence state"
+    )
     parser.add_argument("repo_root", nargs="?", default=".")
     parser.add_argument("--format", choices=["json"], default="json")
     parser.add_argument("--write-baseline")
