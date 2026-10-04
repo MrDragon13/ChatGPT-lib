@@ -97,9 +97,17 @@ EXPECTED_POLICY = {
     },
 }
 
+CASES_PATH = Path(__file__).parent / "fixtures" / "operation_path_policy_cases.json"
+
 
 def _policy_path() -> Path:
     return Path(path_policy.__file__).resolve().parents[1] / "config" / "operation_path_policy.json"
+
+
+def _cases() -> list[dict]:
+    document=json.loads(CASES_PATH.read_text(encoding="utf-8"))
+    assert document["schema_version"]==1
+    return document["cases"]
 
 
 def test_declarative_policy_document_is_the_complete_operation_contract():
@@ -107,6 +115,65 @@ def test_declarative_policy_document_is_the_complete_operation_contract():
     assert policy=={"schema_version":1,"operations":EXPECTED_POLICY}
     for operation, entry in EXPECTED_POLICY.items():
         assert allowed_paths_for_operation(operation)==tuple(entry["allowed_paths"])
+
+
+def test_shared_parity_corpus_matches_python_policy_matcher():
+    for case in _cases():
+        assert path_policy.matches_policy_path(case["path"],case["pattern"]) is case["expected"], case
+
+
+def test_parity_corpus_covers_every_auto_merge_operation_pattern_and_protected_classes():
+    positive={(case["operation"],case["pattern"]) for case in _cases() if case["expected"]}
+    for operation,entry in EXPECTED_POLICY.items():
+        if not entry["auto_merge"]:
+            continue
+        for pattern in entry["allowed_paths"]:
+            assert (operation,pattern) in positive
+
+    negatives={case["path"] for case in _cases() if not case["expected"]}
+    for path in (
+        "evil/media/data/works/x.yaml",
+        "media/data/works/sub/x.yaml",
+        "media/data/works/x.yaml.bak",
+        "media/config/operation_path_policy.json",
+        ".github/workflows/media-auto-merge.yml",
+        "media/service/path_policy.py",
+        "media/tools/rebuild.py",
+        "tests/media/test_path_policy.py",
+    ):
+        assert path in negatives
+
+
+@pytest.mark.parametrize("pattern",[
+    "media/data/works/**.yaml",
+    "media/data/works/*/*.yaml",
+    "media/data/works/?.yaml",
+    "media/data/works/[ab].yaml",
+    "media/data/works/{a,b}.yaml",
+])
+def test_unsupported_pattern_grammar_fails_closed_in_python_matcher(pattern):
+    with pytest.raises(PathPolicyError):
+        path_policy.matches_policy_path("media/data/works/a.yaml",pattern)
+
+
+@pytest.mark.parametrize("path",[
+    "/media/data/works/a.yaml",
+    "../media/data/works/a.yaml",
+    "media/data/works/../a.yaml",
+    "media//data/works/a.yaml",
+])
+def test_non_repository_relative_or_non_normalized_paths_fail_closed(path):
+    with pytest.raises(PathPolicyError):
+        path_policy.matches_policy_path(path,"media/data/works/*.yaml")
+
+
+def test_policy_loader_rejects_unsupported_pattern_grammar(tmp_path,monkeypatch):
+    document={"schema_version":1,"operations":{"set_interest":{"auto_merge":True,"allowed_paths":["media/data/works/**.yaml"]}}}
+    policy=tmp_path/"policy.json"
+    policy.write_text(json.dumps(document),encoding="utf-8")
+    monkeypatch.setattr(path_policy,"_POLICY_PATH",policy,raising=False)
+    with pytest.raises(PathPolicyError):
+        allowed_paths_for_operation("set_interest")
 
 
 def test_set_inferred_preferences_runtime_scope_excludes_generated_index():
