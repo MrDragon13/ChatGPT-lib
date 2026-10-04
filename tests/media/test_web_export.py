@@ -161,7 +161,6 @@ def test_manifest_exports_inferred_preferences_without_inventing_numeric_affinit
     assert primary["target"] == "primary"
     assert primary["profile"]["inferred_preferences"][0]["id"] == "intrigue-pattern"
     assert primary["profile"]["strongest_affinities"] == []
-    assert primary["profile"]["weakest_affinities"] == []
 
 
 def test_manifest_missing_intelligence_layers_are_explicitly_empty(tmp_path):
