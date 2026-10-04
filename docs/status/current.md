@@ -42,7 +42,7 @@ Explicit similarity используется как recommendation/explanation e
 
 ### Taste и recommendations
 
-Taste reasoning сохраняет provenance между explicit evidence, inferred hypotheses и semantic work knowledge. Inferred output не является independent evidence для последующего вывода.
+Taste reasoning сохраняет provenance между explicit evidence, inferred hypotheses и semantic work knowledge. Inferred output не является independent evidence для последующего вывода. Generated profile хранит inferred hypotheses отдельно и не включает их в численные affinity `score`, `confidence` или `evidence_count`.
 
 Internal recommendation request ограничивает candidate set локальной библиотекой. General recommendation request допускает external discovery; library при этом служит памятью о вкусах, exclusions и evidence anchors.
 
