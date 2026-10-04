@@ -61,7 +61,11 @@ Auto-merge разрешён только allowlisted normal data operations и �
 
 Canonical policy — declarative `media/config/operation_path_policy.json`. Runtime transaction проверяет локальную копию policy, а privileged auto-merge **не доверяет PR checkout**: он получает policy из trusted `main` через GitHub Contents API и список changed filenames через GitHub PR files API. PR-head operation marker читается только как JSON data. Privileged workflow не должен импортировать или исполнять PR-head Python.
 
-Любая ошибка fetch/decode/JSON parsing, неизвестная operation, `auto_merge: false`, пустой/invalid allowlist или path вне trusted policy приводит к fail closed.
+Path patterns используют один и тот же узкий grammar в Python и privileged workflow: repository-relative POSIX path; exact match либо ровно один `*`; wildcard не пересекает `/`; matching anchored ко всему path. `**`, второй `*`, `?`, character classes, brace expansion и ненормализованные paths invalid и приводят к fail closed.
+
+Текущая trust-модель privileged workflow опирается также на trigger `workflow_run`: исполняемое определение `media-auto-merge.yml` существует на default branch, а GitHub формирует для `workflow_run` event ref/SHA от default branch. Поэтому mutable PR не подменяет definition privileged workflow, который получает write-capable token. Это допущение относится именно к текущему trigger model. Переход на `pull_request_target`, checkout/eval PR-head executable code или другой механизм требует **separate security review**; текущий trust argument автоматически на него не переносится.
+
+Любая ошибка fetch/decode/JSON parsing, неизвестная operation, `auto_merge: false`, unsupported matcher grammar, пустой/invalid allowlist или path вне trusted policy приводит к fail closed.
 
 ### 8. Pages publish
 
