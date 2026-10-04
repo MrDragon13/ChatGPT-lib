@@ -17,7 +17,7 @@ def test_audit_cli_json_is_deterministic(tmp_path, capsys):
 
     assert first == second
     payload = json.loads(first)
-    assert payload["schema_version"] == 1
+    assert payload["schema_version"] == 2
     assert "generated_at" not in payload
     assert "source_revision" not in payload
 
