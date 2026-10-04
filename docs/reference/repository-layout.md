@@ -52,7 +52,7 @@ Historical paths сохраняются ради provenance и ссылок; о�
 - `media/service/` — deterministic application/read-model logic;
 - `media/repository/` — canonical/index persistence access;
 - `media/providers/` — external metadata provider integration;
-- `media/tools/` — validation/build utilities;
+- `media/tools/` — validation/build/audit utilities, включая `audit_intelligence.py`;
 - `media/cli.py` — CLI entry point.
 
 ## `media/generated/`
@@ -60,6 +60,10 @@ Historical paths сохраняются ради provenance и ссылок; о�
 Derived, rebuildable output. Сюда относятся retrieval index, profiles и другие generated artifacts. Runtime SQLite тоже derived.
 
 Правило ownership: generated state не редактируется вручную для изменения canonical meaning.
+
+## `media/baselines/`
+
+Versioned historical measurement snapshots. `intelligence-stage-a.json` хранит детерминированный audit payload, а соседний `.meta.json` — provenance (`source_revision`, `generated_at`, input digest). Baseline не является canonical user data и не обязан совпадать с текущими counts после последующих легитимных изменений.
 
 ## `web/`
 
