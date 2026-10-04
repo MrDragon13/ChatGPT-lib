@@ -123,7 +123,7 @@ def test_audit_reports_explicit_coverage_numerators_and_denominators(tmp_path):
     assert result["semantic_coverage"]["works"]["denominator"] == works_total
     assert result["ratings"]["primary"]["works"]["denominator"] == works_total
     assert result["ratings"]["primary"]["works"]["numerator"] >= 1
-    assert result["ratings"]["primary"]["by_source"]["explicit"] >= 1
+    assert result["ratings"]["primary"]["works"]["by_source"]["explicit"] >= 1
     assert result["feedback"]["primary"]["works"]["denominator"] == works_total
     assert result["feedback"]["primary"]["works"]["numerator"] >= 1
     assert result["viewing"]["primary"]["works"]["denominator"] == works_total
