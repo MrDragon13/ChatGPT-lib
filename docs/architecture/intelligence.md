@@ -118,3 +118,13 @@ Similarity может быть дополнительным мостом меж�
 - показывает risks, а не только supports;
 - учитывает текущий request context отдельно от stable taste;
 - не изображает derived inference как факт, сообщённый пользователем.
+
+## Measurement foundation
+
+`python -m media.tools.audit_intelligence . --format json` — canonical read-only аудит текущего intelligence state. Он измеряет inventory, semantic coverage, viewing/rating/feedback coverage, derived profile affinity coverage, similarity/interactions и canonical internal recommendation pool.
+
+Audit сначала валидирует canonical state и затем считает метрики из canonical/config inputs. Generated profiles не считаются источником истины: profile metrics строятся через `build_profile()` в памяти. Recommendation pool строится из canonical works через `build_index_rows()` и ту же eligibility policy, что runtime, поэтому stale `media/generated/index.jsonl` не меняет аудит.
+
+`canonical_input_digest` — детерминированный SHA-256 content digest входов, способных изменить audit result. В него входят viewer/group config, vocabulary, canonical works/collections/lists/tombstones, similarity/interactions и explicit/inferred preferences. Schema/code revision хранится через git provenance, а не смешивается с data-content digest.
+
+Baseline под `media/baselines/` — **historical baseline**, то есть фиксированная точка сравнения, а не lockfile текущих пользовательских данных. Детерминированный payload не содержит wall-clock timestamp или git SHA; `source_revision` и `generated_at` лежат в отдельном `.meta.json` provenance-файле.
