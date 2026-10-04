@@ -24,6 +24,8 @@ Normal media writes проходят через strict typed operations, determi
 
 Поддерживаются viewing feedback, corrections, interest, inferred preferences, semantic fingerprints, recommendation interactions и explicit work similarity. Bulk `refresh_metadata` остаётся manual-review maintenance operation.
 
+Guarded auto-merge теперь использует единый declarative `media/config/operation_path_policy.json`. Runtime проверяет локальный policy, а privileged workflow получает policy только из trusted `main`, changed-file inventory — через GitHub PR files API, и не исполняет PR-head Python для принятия решения о разрешениях. Policy/workflow/guard/executable-semantics changes поэтому остаются normal human-review developer PR.
+
 Read-only context routes включают `recommend_context`, `taste_context` и `assess_candidate`.
 
 ### Candidate assessment
