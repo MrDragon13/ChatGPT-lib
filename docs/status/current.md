@@ -50,13 +50,15 @@ Internal recommendation request ограничивает candidate set лока�
 
 `recommend_context` сохраняет legacy strengths/concerns и добавляет structured evidence details, `ranking_basis`/`fallback_reason`, top-level pool-vs-returned `coverage` и top-level deterministic `limitations`. Эта policy является correctness/observability baseline, а не доказанной quality-optimal моделью.
 
+Для group target `taste_context.couple.term_signals` отдельно показывает signed semantic direction каждого member по term и status `agreement`/`disagreement`/`insufficient`. Projection строится из индивидуальных member profiles, confidence не влияет на status, существующие rating-based couple agreements/disagreements сохраняются. Semantic disagreement не меняет couple aggregate; он только добавляет top-level limitation `couple_term_disagreement`.
+
 General recommendation request допускает external discovery; library при этом служит памятью о вкусах, exclusions и evidence anchors.
 
 ### Web
 
 Текущий exporter выдаёт **manifest v3**. Static GitHub Pages читает versioned derived manifest, а не canonical YAML.
 
-Manifest v3 включает target-aware taste/recommendation data, semantic fingerprints и explicit similarity projection. Additive recommendation observability (`coverage`, `limitations`, candidate basis/reason) остаётся в manifest v3, поскольку не меняет meaning существующих полей. Canonical↔canonical similarity проецируется на обе локальные work pages; canonical↔external отображается как lightweight external endpoint без выдуманного local route.
+Manifest v3 включает target-aware taste/recommendation data, semantic fingerprints и explicit similarity projection. Additive recommendation observability (`coverage`, `limitations`, candidate basis/reason) и couple term observability (`term_signals`) остаются в manifest v3, поскольку не меняют meaning существующих полей. Canonical↔canonical similarity проецируется на обе локальные work pages; canonical↔external отображается как lightweight external endpoint без выдуманного local route.
 
 Поддерживаемые browser edits идут через protected broker и тот же typed-command boundary. GitHub/provider/model secrets не попадают в browser bundle.
 
@@ -65,6 +67,7 @@ Manifest v3 включает target-aware taste/recommendation data, semantic fi
 - Evidence для `partner` заметно менее насыщен, чем для `primary`; confidence reasoning должен отражать эту разницу.
 - Current Stage A ranking исправляет directional correctness, но ещё не benchmarked как оптимальная модель качества; fingerprint length и alternative ordering policy остаются предметом будущего evaluation.
 - Assessment coverage наблюдаема, но Stage A по-прежнему не вычисляет deterministic `likely/mixed/unlikely`, probability или opaque score; qualitative вывод остаётся agent responsibility с обязательным учётом active limitations.
+- Couple term disagreement наблюдаем, но Stage A не меняет формулу couple aggregation и не вводит confidence threshold для direction/status.
 - Derived semantic similarity не сохраняется как explicit user assertion и не показывается как пользовательское мнение без подтверждения.
 - External discovery/live model reasoning находится на agent/server boundary; static Pages остаётся работоспособным без live model.
 - Bulk provider metadata refresh требует manual review и не относится к normal auto-merge path.
