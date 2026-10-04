@@ -46,6 +46,12 @@ Taste context — память/контекст, а не готовая форм
 
 Если пользователь явно просит «что посмотреть из моей медиатеки?», candidate boundary — локальная библиотека/index.
 
+Stage A использует временную детерминированную ranking policy, которая исправляет directional correctness, но **не считается доказанной моделью качества**. Для каждого кандидата semantic traits сопоставляются со signed target affinities: `score > 0` даёт strength, `score < 0` — concern, zero/missing affinity не считается направленным совпадением. Confidence и magnitude affinity доступны для explanation, но не используются как скрытые ranking weights.
+
+Кандидаты с `ranking_basis: trait_overlap` всегда идут раньше fallback-кандидатов с `ranking_basis: none`. В personalized-группе порядок определяется последовательно: больше `strengths - concerns`, затем меньше concerns, затем выше `interest.priority`, затем стабильный `id`. В fallback-группе используются только `interest.priority` и `id`. Внешний numeric match/ranking score не публикуется.
+
+`recommend_context` сохраняет legacy `evidence.strengths`/`evidence.concerns`, добавляет structured `evidence_details`, а также явные `ranking_basis` и `fallback_reason`. Top-level `coverage` отдельно описывает весь отфильтрованный candidate pool до `limit` и фактически возвращённый набор после `limit`. Top-level `limitations` содержит только детерминированные fact codes, например partial semantic coverage, наличие fallback results или полное отсутствие personalized candidates; эти ограничения не вложены в `coverage`.
+
 ### External
 
 Обычная просьба «посоветуй фильм» использует external discovery по умолчанию. Локальная media library служит памятью о вкусах, evidence, exclusions и semantic anchors, но не ограничивает каталог кандидатов.
