@@ -115,6 +115,10 @@ Fact-only limitation codes различают отсутствие candidate fin
 - disagreement — один сигнал поддерживает, другой создаёт риск;
 - sparse evidence — для одного участника данных недостаточно.
 
+Stage A дополнительно проецирует `couple.term_signals` из **индивидуальных member profiles**, не из уже агрегированного couple score. Для каждого semantic term показываются direction (`positive`/`negative`/`null`), confidence и evidence count каждого member. `agreement` означает одинаковый non-zero sign у всех members, `disagreement` — разные non-zero signs при наличии directed evidence у всех, `insufficient` — отсутствие directed evidence хотя бы у одного member. Confidence не меняет status.
+
+Эта projection read-only и не изменяет couple aggregation или generated profile. Старые rating-based `couple.agreements`/`couple.disagreements` сохраняются отдельно. Если существует хотя бы один semantic-term disagreement, top-level `limitations` получает fact code `couple_term_disagreement`, чтобы agent не скрывал конфликт усреднённым объяснением.
+
 Explanation должно показывать конфликт, если он влияет на выбор.
 
 ## Reanalysis
