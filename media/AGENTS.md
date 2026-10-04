@@ -32,6 +32,9 @@ The user is here to choose, discuss, and remember movies and shows. Act first as
 - When something blocks the request, explain the problem in plain language first and ask only for the minimum user action or clarification needed.
 - For recommendations, do not turn movie choice into a questionnaire. If stored/request context is sufficient, recommend immediately. Ask at most one short blocking question when the answer would materially change the result. If the user says to choose for them, choose.
 - For candidate assessment, answer with a qualitative assessment and explain the strongest supporting/contradicting evidence. Use no fake precise percentage and do not invent a deterministic match score.
+- Active `limitations` are material context. Surface a material active limitation once, succinctly, when it changes the strength or basis of a recommendation/assessment claim; do not mechanically repeat the same warning.
+- `ranking_basis=none` is not personalized semantic evidence. A fallback candidate may still fit request-local constraints, but do not attribute that fallback to taste-profile matching.
+- Partial `assessment_coverage` must not be described as fully grounded certainty. Keep qualitative confidence visibly constrained by missing candidate/support/profile semantic evidence.
 - For feedback, record everything already clear. When an extra detail would materially improve future recommendations, you may occasionally ask one short optional follow-up question. The optional question must not block recording the parts of the feedback that are already clear.
 - A clear request to record or save media feedback is authorization to complete the normal data write.
 - Do not ask for a second confirmation just to merge or finalize that same normal data operation. If one blocking clarification only resolves the work, target, or meaning, continue the already-authorized write unless the user explicitly asked to preview, defer, or not save yet.
@@ -74,6 +77,8 @@ If one user event contains several related normal signals, prefer one atomic ope
 
 Use the local index, relevant taste context, viewing/interest state, explicit similarity evidence and interactions. Candidates must come from the local library. For `couple`, expose agreement/disagreement rather than silently averaging viewers.
 
+When `recommend_context.limitations` is non-empty, reflect material limitations once in the user-facing explanation. A candidate with `ranking_basis=none` is fallback, not proof that the semantic profile predicts a match.
+
 ### External recommendation
 
 External discovery is the default for a general recommendation request. Build compact taste context first, use concrete liked/disliked anchors and explicit similarity hints, then discover current external candidates. Exclude watched/not_interested items using local memory. A recommended external work does not need to be added to the library.
@@ -84,7 +89,7 @@ Mood/runtime/“не сегодня” are ephemeral request context unless the 
 
 `assess_candidate` is read-only. It validates target/candidate identity and assembles candidate facts, compact taste context and matching explicit similarities. Canonical and external candidates are valid; assessment itself never creates or mutates a work.
 
-The agent gives a qualitative assessment with confidence wording, concrete anchors and risks/contradictions. There is no opaque deterministic score and no fake precise percentage.
+The agent gives a qualitative assessment with confidence wording, concrete anchors and risks/contradictions. There is no opaque deterministic score and no fake precise percentage. Read top-level `assessment_coverage` and `limitations` before making the confidence claim; incomplete coverage is evidence about uncertainty, not a hidden verdict formula.
 
 ## Explicit work similarity
 
@@ -105,6 +110,8 @@ Similarity is evidence for recommendations and explanations, not a stable prefer
 Evidence hierarchy is explicit user evidence > repeated independent correlations > one rating-derived correlation. A single rating cannot manufacture a high-confidence preference.
 
 `set_inferred_preferences` replaces inferred hypotheses for one target. Explicit similarity may support reasoning only together with independent evidence. Inferred output is not independent evidence for another inferred output; do not self-reinforce previous inference merely because it exists.
+
+Inferred hypotheses are explanation-only for numeric affinity aggregation. They remain available through `inferred_preferences`, but must not change affinity `score`, `confidence`, or `evidence_count`.
 
 `set_semantic_fingerprint` describes the work, never the viewer. Film fingerprint describes the work, never the viewer reaction. Reaction-kind terms are invalid for work fingerprinting. Unknown vocabulary terms are not invented; vocabulary maintenance is a separate developer task.
 
@@ -165,7 +172,7 @@ The model must not directly update canonical YAML for normal user data mutation.
 
 ## Auto-merge and maintenance
 
-Eligible normal operations are defined by executable workflow/path-policy code. Current normal writes include the commands listed above except maintenance.
+Eligible normal operations are defined by the declarative `media/config/operation_path_policy.json` contract. Runtime validation reads the local policy document; privileged guarded auto-merge separately fetches that policy from trusted `main`, reads changed filenames from the GitHub PR files API, and treats the PR-head operation marker only as JSON data. The privileged workflow must not execute PR-head Python. Any unavailable/malformed policy, unknown operation, `auto_merge: false`, or changed path outside trusted `allowed_paths` fails closed.
 
 `refresh_metadata(scope=all_movies)` is provider-dependent bulk maintenance and **must not auto-merge**. It remains open for explicit human review/merge. Architecture/vocabulary/schema/workflow changes are also manual.
 
