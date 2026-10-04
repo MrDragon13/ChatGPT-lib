@@ -30,7 +30,9 @@ Read-only context routes включают `recommend_context`, `taste_context` �
 
 `assess_candidate` поддерживает qualitative ответ на вопрос «понравится ли мне X?» для canonical или external candidate. Он использует target taste context, concrete evidence works, semantic information и explicit similarity, но не сохраняет prediction и не создаёт fake precise match probability.
 
-External candidate может быть оценён без добавления в canonical library.
+Assessment теперь возвращает top-level `assessment_coverage`: наличие candidate fingerprint, число directional candidate matches, request-local supporting-work fingerprint coverage и отдельный stable denominator по всем rated canonical works target. Для group target rated set учитывает member ratings и direct group rating как fallback, если member rating для work отсутствует. Top-level `limitations` остаётся fact-only (`no_candidate_semantic_fingerprint`, `no_candidate_personalized_basis`, `partial_semantic_coverage`) и не является deterministic verdict.
+
+External candidate может быть оценён без добавления в canonical library; отсутствие его semantic fingerprint и personalized basis сообщается явно через limitations.
 
 ### Explicit work similarity
 
@@ -62,9 +64,9 @@ Manifest v3 включает target-aware taste/recommendation data, semantic fi
 
 - Evidence для `partner` заметно менее насыщен, чем для `primary`; confidence reasoning должен отражать эту разницу.
 - Current Stage A ranking исправляет directional correctness, но ещё не benchmarked как оптимальная модель качества; fingerprint length и alternative ordering policy остаются предметом будущего evaluation.
+- Assessment coverage наблюдаема, но Stage A по-прежнему не вычисляет deterministic `likely/mixed/unlikely`, probability или opaque score; qualitative вывод остаётся agent responsibility с обязательным учётом active limitations.
 - Derived semantic similarity не сохраняется как explicit user assertion и не показывается как пользовательское мнение без подтверждения.
 - External discovery/live model reasoning находится на agent/server boundary; static Pages остаётся работоспособным без live model.
-- Candidate assessment сознательно не имеет opaque deterministic match score или псевдо-точной вероятности.
 - Bulk provider metadata refresh требует manual review и не относится к normal auto-merge path.
 - Controlled vocabulary расширяется только отдельным developer/architecture change, а не автоматически из обычного feedback.
 
