@@ -135,7 +135,7 @@ def test_manifest_exports_structured_semantic_fingerprint_and_keeps_compact_trai
     ]
 
 
-def test_manifest_exports_inferred_preferences_and_explainable_taste_context(tmp_path):
+def test_manifest_exports_inferred_preferences_without_inventing_numeric_affinity(tmp_path):
     root = copy_fixture_repo(tmp_path)
     inferred = root / "media/preferences/inferred"
     inferred.mkdir(parents=True, exist_ok=True)
@@ -160,8 +160,8 @@ def test_manifest_exports_inferred_preferences_and_explainable_taste_context(tmp
 
     assert primary["target"] == "primary"
     assert primary["profile"]["inferred_preferences"][0]["id"] == "intrigue-pattern"
-    assert primary["profile"]["strongest_affinities"]
-    assert "evidence" in primary["profile"]["strongest_affinities"][0]
+    assert primary["profile"]["strongest_affinities"] == []
+    assert primary["profile"]["weakest_affinities"] == []
 
 
 def test_manifest_missing_intelligence_layers_are_explicitly_empty(tmp_path):
