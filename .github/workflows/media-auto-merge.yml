@@ -33,6 +33,68 @@ jobs:
         run: |
           set -euo pipefail
 
+          match_policy_path() {
+            local path="$1"
+            local pattern="$2"
+            local stripped star_count prefix suffix middle_length middle
+            local segment
+            local -a segments
+
+            if [ -z "$path" ] || [ -z "$pattern" ]; then
+              return 2
+            fi
+            if [[ "$path" == /* || "$pattern" == /* || "$path" == */ || "$pattern" == */ ]]; then
+              return 2
+            fi
+            if [[ "$path" == *'\\'* || "$pattern" == *'\\'* || "$path" == *'//'* || "$pattern" == *'//'* ]]; then
+              return 2
+            fi
+            case "$pattern" in
+              *'?'*|*'['*|*']'*|*'{'*|*'}'*) return 2 ;;
+            esac
+
+            IFS='/' read -r -a segments <<< "$path"
+            for segment in "${segments[@]}"; do
+              if [ -z "$segment" ] || [ "$segment" = "." ] || [ "$segment" = ".." ]; then
+                return 2
+              fi
+            done
+            IFS='/' read -r -a segments <<< "$pattern"
+            for segment in "${segments[@]}"; do
+              if [ -z "$segment" ] || [ "$segment" = "." ] || [ "$segment" = ".." ]; then
+                return 2
+              fi
+            done
+
+            stripped="${pattern//\*/}"
+            star_count=$(( ${#pattern} - ${#stripped} ))
+            if [ "$star_count" -gt 1 ]; then
+              return 2
+            fi
+            if [ "$star_count" -eq 0 ]; then
+              [ "$path" = "$pattern" ]
+              return
+            fi
+
+            prefix="${pattern%%\**}"
+            suffix="${pattern#*\*}"
+            if [[ "$path" != "$prefix"* ]]; then
+              return 1
+            fi
+            if [ -n "$suffix" ] && [[ "$path" != *"$suffix" ]]; then
+              return 1
+            fi
+            if [ "${#path}" -lt $(( ${#prefix} + ${#suffix} )) ]; then
+              return 1
+            fi
+            middle_length=$(( ${#path} - ${#prefix} - ${#suffix} ))
+            middle="${path:${#prefix}:$middle_length}"
+            if [[ "$middle" == */* ]]; then
+              return 1
+            fi
+            return 0
+          }
+
           OWNER="${REPO%%/*}"
           mapfile -t PR_ROWS < <(
             gh api --method GET "repos/$REPO/pulls" \
@@ -74,8 +136,14 @@ jobs:
 
           OP_MARKERS=()
           for path in "${FILES[@]}"; do
-            if [[ "$path" == .media/operations/*.json ]]; then
+            if match_policy_path "$path" ".media/operations/*.json"; then
               OP_MARKERS+=("$path")
+            else
+              rc=$?
+              if [ "$rc" -eq 2 ]; then
+                echo "::error::Invalid repository path in PR metadata: $path"
+                exit 3
+              fi
             fi
           done
           if [ "${#OP_MARKERS[@]}" -ne 1 ]; then
@@ -122,12 +190,30 @@ jobs:
           fi
 
           mapfile -t ALLOWED_PATHS < <(printf '%s' "$OP_POLICY" | jq -r '.allowed_paths[]')
+          for pattern in "${ALLOWED_PATHS[@]}"; do
+            if match_policy_path "__policy_validation_probe__" "$pattern"; then
+              :
+            else
+              rc=$?
+              if [ "$rc" -eq 2 ]; then
+                echo "::error::Trusted main policy contains unsupported path pattern: $pattern"
+                exit 3
+              fi
+            fi
+          done
+
           for path in "${FILES[@]}"; do
             matched=false
             for pattern in "${ALLOWED_PATHS[@]}"; do
-              if [[ "$path" == $pattern ]]; then
+              if match_policy_path "$path" "$pattern"; then
                 matched=true
                 break
+              else
+                rc=$?
+                if [ "$rc" -eq 2 ]; then
+                  echo "::error::Invalid repository path or trusted policy pattern: $path / $pattern"
+                  exit 3
+                fi
               fi
             done
             if [ "$matched" != true ]; then
