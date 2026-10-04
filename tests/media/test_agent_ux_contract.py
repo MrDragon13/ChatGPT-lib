@@ -122,6 +122,12 @@ def test_stage_a_agent_contract_requires_honest_limitations_and_basis_language()
         assert phrase in text
 
 
+def test_stage_a_agent_contract_discloses_limitations_once_and_concisely():
+    text = _text("media/AGENTS.md")
+    assert "once, succinctly" in text
+    assert "do not mechanically repeat the same warning" in text
+
+
 def test_stage_a_agent_contract_names_trusted_auto_merge_boundary():
     text = _text("media/AGENTS.md")
     for phrase in (
