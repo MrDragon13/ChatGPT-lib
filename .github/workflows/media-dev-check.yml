@@ -31,8 +31,12 @@ jobs:
         run: python -m media.tools.validate .
       - name: Check generated artifacts
         run: python -m media.cli rebuild --check
-      - name: Audit media intelligence
-        run: python -m media.tools.audit_intelligence . --format json
+      - name: Audit media intelligence reproducibly
+        run: |
+          python -m media.tools.audit_intelligence . --format json > /tmp/intelligence-audit-1.json
+          python -m media.tools.audit_intelligence . --format json > /tmp/intelligence-audit-2.json
+          cmp /tmp/intelligence-audit-1.json /tmp/intelligence-audit-2.json
+          cat /tmp/intelligence-audit-1.json
       - name: Export web manifest
         run: python -m media.cli web-export --output /tmp/media-web-manifest.json --format json
       - name: Run media doctor
