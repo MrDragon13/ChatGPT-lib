@@ -145,11 +145,36 @@
           "couple": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["members", "agreements", "disagreements"],
+            "required": ["members", "agreements", "disagreements", "term_signals"],
             "properties": {
               "members": {"type": "array", "items": {"type": "string"}},
               "agreements": {"type": "array"},
-              "disagreements": {"type": "array"}
+              "disagreements": {"type": "array"},
+              "term_signals": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["term", "members", "status"],
+                  "properties": {
+                    "term": {"type": "string", "minLength": 1},
+                    "members": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": ["direction", "confidence", "evidence_count"],
+                        "properties": {
+                          "direction": {"enum": ["positive", "negative", null]},
+                          "confidence": {"type": ["string", "null"]},
+                          "evidence_count": {"type": "integer", "minimum": 0}
+                        }
+                      }
+                    },
+                    "status": {"enum": ["agreement", "disagreement", "insufficient"]}
+                  }
+                }
+              }
             }
           }
         }
