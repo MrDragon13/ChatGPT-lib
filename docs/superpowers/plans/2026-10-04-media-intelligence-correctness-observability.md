@@ -83,10 +83,12 @@ Existing files remain owners of their current responsibilities: `recommend.py` a
 - Regression: `tests/media/test_recommend_context.py`
 
 **Interfaces:**
-- Produces:
+- Produces pure helper:
+  `filter_eligible_candidate_rows(rows: Iterable[dict[str, Any]], *, target: str, viewers: set[str], groups: Mapping[str, list[str]], only_unwatched: bool, include_not_interested: bool, runtime_max: int | None) -> list[dict[str, Any]]`.
+- Produces runtime wrapper:
   `eligible_local_candidates(media_root: Path, *, target: str, only_unwatched: bool, include_not_interested: bool, runtime_max: int | None) -> list[dict[str, Any]]`.
-- The helper reads `generated/index.jsonl`, validates target through current configured viewers/groups, applies the exact current runtime, interest, and viewer/group watched semantics, preserves index order, and does **not** rank or apply `limit`.
-- PR0 canonical pool calls this with `only_unwatched=True`, `include_not_interested=False`, `runtime_max=None`.
+- The runtime wrapper reads `generated/index.jsonl`, resolves configured viewers/groups, and delegates to the pure helper. The helper applies the exact current runtime, interest, and viewer/group watched semantics, preserves input order, and does **not** rank or apply `limit`.
+- PR0 canonical audit builds index rows **in memory from canonical works** with `build_index_rows(media_root)` and passes those rows to `filter_eligible_candidate_rows(...)` with `only_unwatched=True`, `include_not_interested=False`, `runtime_max=None`. The audit therefore does not depend on a stale committed/generated index while still exercising the same eligibility policy as runtime.
 
 - [ ] **Step 1: Write failing parity tests**
 
@@ -94,6 +96,7 @@ Existing files remain owners of their current responsibilities: `recommend.py` a
 def test_eligible_local_candidates_matches_current_primary_filters(tmp_path): ...
 def test_eligible_local_candidates_group_excludes_only_when_all_members_watched(tmp_path): ...
 def test_eligible_local_candidates_preserves_runtime_and_interest_filters(tmp_path): ...
+def test_pure_filter_matches_runtime_wrapper_for_same_rows(tmp_path): ...
 ```
 
 Assert exact IDs against the existing fixture and assert repeated calls preserve order.
@@ -104,7 +107,7 @@ Run: `python -m pytest tests/media/test_recommendation_pool.py -q`
 
 Expected: FAIL because `media.service.recommendation_pool` does not exist.
 
-- [ ] **Step 3: Implement the helper and replace only the filtering loop in `build_recommend_context()`**
+- [ ] **Step 3: Implement the pure helper + runtime wrapper and replace only the filtering loop in `build_recommend_context()`**
 
 Keep all current ranking/evidence code unchanged in PR0. `build_recommend_context()` must still apply its existing `limit` after existing ordering.
 
@@ -127,7 +130,7 @@ git commit -m "refactor: share media recommendation eligibility"
 - Create: `media/tools/audit_intelligence.py`
 - Create/Test: `tests/media/test_intelligence_audit.py`
 - Reuse: `tests/media/fixture_repo.py`
-- Reuse: `media/tools/validate.py`, `media/tools/build_profiles.py`, Task 1 pool helper
+- Reuse: `media/tools/validate.py`, `media/tools/build_profiles.py`, `media/tools/build_index.py`, Task 1 pure pool helper
 
 **Interfaces:**
 - Produces:
@@ -147,7 +150,8 @@ git commit -m "refactor: share media recommendation eligibility"
   - `media/preferences/inferred/*.yaml`
 - JSON schemas/tool source code are not part of this **data-content** digest; schema/code revision is captured by external git provenance. If implementation makes the collector read any additional config/canonical path, add that path to this inventory in the same commit.
 - `collect_intelligence_audit()` calls `validate_repository(repo_root)` first and fails closed if validation returns issues.
-- Generated profiles are not metric source-of-truth: derive profile statistics by calling `build_profile(media_root, target)` in memory. Generated index is allowed only for canonical-pool eligibility because that is the runtime derived boundary; its canonical source inputs, not the generated file bytes, are hashed.
+- Generated profiles are not metric source-of-truth: derive profile statistics by calling `build_profile(media_root, target)` in memory.
+- Canonical recommendation-pool rows are built in memory with `build_index_rows(media_root)` and filtered through Task 1's pure eligibility helper. Audit metrics therefore do not read `media/generated/index.jsonl`; generated output freshness is still checked independently by the normal `rebuild --check` gate.
 - Payload schema version is `1` and includes at minimum:
   - `canonical_input_digest`
   - inventory: works, collections, entities separately
@@ -166,6 +170,7 @@ git commit -m "refactor: share media recommendation eligibility"
 def test_audit_separates_works_collections_and_entities(tmp_path): ...
 def test_audit_reports_explicit_coverage_numerators_and_denominators(tmp_path): ...
 def test_audit_canonical_pool_is_unwatched_unlimited_and_runtime_unfiltered(tmp_path): ...
+def test_audit_pool_ignores_stale_generated_index_and_uses_canonical_rows(tmp_path): ...
 def test_digest_changes_when_viewers_groups_vocabulary_or_canonical_data_changes(tmp_path): ...
 def test_digest_is_stable_under_path_iteration_order_and_unrelated_file_changes(tmp_path): ...
 def test_invalid_canonical_state_fails_closed(tmp_path): ...
@@ -179,7 +184,7 @@ Run: `python -m pytest tests/media/test_intelligence_audit.py -q`
 
 - [ ] **Step 3: Implement input inventory/digest first** and make only digest tests GREEN.
 
-- [ ] **Step 4: Implement metric collection** using canonical YAML/read helpers, `build_profile()` in memory, and Task 1 eligibility.
+- [ ] **Step 4: Implement metric collection** using canonical YAML/read helpers, `build_profile()` in memory, `build_index_rows()` in memory, and Task 1 eligibility policy.
 
 - [ ] **Step 5: Run GREEN**
 
@@ -207,33 +212,21 @@ git commit -m "feat: add deterministic media intelligence audit"
 
 **Interfaces:**
 - CLI: `python -m media.tools.audit_intelligence . --format json` prints only deterministic payload with sorted JSON keys.
-- Add `--write-baseline <payload-path> --source-revision <sha> --generated-at <iso8601>`; it writes deterministic payload to the requested file and a sibling `.meta.json` provenance object.
+- Add `--write-baseline <payload-path> --source-revision <sha> --generated-at <iso8601>`; it writes deterministic payload to the requested file and provenance to a filename formed by replacing the payload `.json` suffix with `.meta.json` (so `intelligence-stage-a.json` produces `intelligence-stage-a.meta.json`).
 - `intelligence-stage-a.json` contains no wall-clock timestamp or git SHA.
 - `intelligence-stage-a.meta.json` contains baseline filename, payload schema version, `canonical_input_digest`, `source_revision`, and `generated_at`.
 - The baseline is historical; CI validates format/reproducibility logic but never requires future current counts to equal this snapshot.
+- `source_revision` must refer to a **clean committed repository state containing the audit implementation/config/docs used to generate the payload**. It is intentionally the parent of the later baseline-only commit; the baseline files themselves are not audit inputs, so this avoids self-reference while preserving truthful code/data provenance.
 - Add `media/baselines/**` to Media Dev Check path triggers so baseline-only maintenance still runs checks.
 
-- [ ] **Step 1: Write failing CLI/baseline tests** asserting byte-identical JSON for identical state and separation of provenance metadata.
+- [ ] **Step 1: Write failing CLI/baseline tests** asserting byte-identical JSON for identical state, exact `.meta.json` naming, and separation of provenance metadata.
 - [ ] **Step 2: Run RED**
 
 Run: `python -m pytest tests/media/test_intelligence_audit.py -q`
 
 - [ ] **Step 3: Implement CLI/writer and run GREEN.**
 
-- [ ] **Step 4: Generate the real baseline twice and compare**
-
-```bash
-python -m media.tools.audit_intelligence . --format json > /tmp/intelligence-audit-1.json
-python -m media.tools.audit_intelligence . --format json > /tmp/intelligence-audit-2.json
-cmp /tmp/intelligence-audit-1.json /tmp/intelligence-audit-2.json
-python -m media.tools.audit_intelligence . --write-baseline media/baselines/intelligence-stage-a.json --source-revision "$(git rev-parse HEAD)" --generated-at "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-```
-
-Expected: `cmp` succeeds; baseline payload digest matches meta digest.
-
-- [ ] **Step 5: Update living docs** to describe canonical audit/baseline as measurement, not current lockfile.
-
-- [ ] **Step 6: Run full PR0 gate**
+- [ ] **Step 4: Update living docs and Media Dev Check paths**, then run the full PR0 implementation gate **before creating the real baseline**:
 
 ```bash
 python -m pytest -q
@@ -245,14 +238,39 @@ python -m media.cli doctor --format json
 
 Expected: all PASS/exit 0; `git diff -- media/generated` is empty.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 5: Commit all PR0 implementation/docs changes except baseline files**
 
 ```bash
-git add media/baselines media/tools/audit_intelligence.py .github/workflows/media-dev-check.yml docs/architecture/intelligence.md docs/reference/repository-layout.md docs/status/current.md tests/media
-git commit -m "docs: establish media intelligence baseline"
+git add media/service/recommendation_pool.py media/tools/audit_intelligence.py .github/workflows/media-dev-check.yml docs/architecture/intelligence.md docs/reference/repository-layout.md docs/status/current.md tests/media
+git commit -m "feat: add media intelligence measurement foundation"
 ```
 
-- [ ] **Step 8: Open PR0, obtain review/CI, merge exact green head, and only then create PR1 from updated `main`.**
+Require `git status --short` to be empty before baseline generation.
+
+- [ ] **Step 6: Generate the real baseline twice from the clean committed state and compare**
+
+```bash
+SOURCE_REVISION="$(git rev-parse HEAD)"
+python -m media.tools.audit_intelligence . --format json > /tmp/intelligence-audit-1.json
+python -m media.tools.audit_intelligence . --format json > /tmp/intelligence-audit-2.json
+cmp /tmp/intelligence-audit-1.json /tmp/intelligence-audit-2.json
+python -m media.tools.audit_intelligence . --write-baseline media/baselines/intelligence-stage-a.json --source-revision "$SOURCE_REVISION" --generated-at "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+```
+
+Expected: `cmp` succeeds; baseline payload equals the deterministic CLI payload; meta digest matches payload digest; meta `source_revision` equals the current clean HEAD.
+
+- [ ] **Step 7: Commit only the historical baseline/provenance files**
+
+```bash
+git add media/baselines/intelligence-stage-a.json media/baselines/intelligence-stage-a.meta.json
+git commit -m "data: snapshot media intelligence stage a baseline"
+```
+
+The recorded `source_revision` intentionally points to this commit's parent, which is the exact clean state measured before adding non-input baseline files.
+
+- [ ] **Step 8: Run the full PR0 gate again on final head** using the same five commands from Step 4.
+
+- [ ] **Step 9: Open PR0, obtain review/CI, merge exact green head, and only then create PR1 from updated `main`.**
 
 ---
 
@@ -524,8 +542,8 @@ git commit -m "docs: document media intelligence observability"
 
 Do not claim Stage A complete until the merged PR1 proves all of the following:
 
-- PR0 baseline exists with deterministic payload and separate provenance metadata.
-- Audit can reproduce inventory/coverage metrics without reading generated profiles as truth.
+- PR0 baseline exists with deterministic payload and separate provenance metadata tied to the clean measured commit.
+- Audit can reproduce inventory/coverage metrics without reading generated profiles or stale generated index as truth.
 - Negative affinity cannot improve recommendation rank; positive affinity cannot worsen it.
 - Personalized candidates precede fallback; fallback is explicitly labeled.
 - Recommendation context has separate pre-limit pool and post-limit returned coverage.
