@@ -1,13 +1,11 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 ROOT=Path(__file__).parents[2]; WORKFLOWS=ROOT/".github"/"workflows"
 def _text(name:str)->str: return (WORKFLOWS/name).read_text(encoding="utf-8")
-def _op_kind_case(text:str)->str:
-    start=text.index('case "$OP_KIND" in')
-    end=text.index('echo "eligible=true"',start)
-    return text[start:end]
+def _policy()->dict: return json.loads((ROOT/"media/config/operation_path_policy.json").read_text(encoding="utf-8"))
 def test_media_check_is_read_only_and_runs_full_gate():
     text=_text("media-check.yml"); assert "contents: read" in text; assert "contents: write" not in text; assert "python -m pytest -q" in text; assert "python -m media.tools.validate ." in text; assert "python -m media.cli rebuild --check" in text; assert "python -m media.cli doctor --format json" in text; assert "expected_sha" in text; assert "actions/checkout@v7" in text; assert "actions/setup-python@v7" in text
 def test_media_check_is_dispatch_only_to_avoid_non_authoritative_pull_request_runs():
@@ -51,10 +49,10 @@ def test_media_command_configures_bot_identity_before_replay_merge():
     assert text.index('git config user.email "41898282+github-actions[bot]@users.noreply.github.com"') < merge_index
 def test_media_command_dispatches_read_only_check_for_new_head_and_has_no_auto_merge():
     text=_text("media-command.yml"); assert "media-check.yml" in text; assert "expected_sha" in text; assert "gh workflow run" in text; assert "auto-merge" not in text.lower(); assert "merge_pull_request" not in text
+
 def test_refresh_metadata_is_explicitly_not_auto_merge_eligible():
-    text=_text("media-auto-merge.yml")
-    case_block=_op_kind_case(text)
-    assert "refresh_metadata" not in case_block
+    assert _policy()["operations"]["refresh_metadata"]["auto_merge"] is False
+
 def test_maintenance_is_manual_and_read_only():
     text=_text("media-maintenance.yml"); assert "workflow_dispatch:" in text; assert "contents: read" in text; assert "contents: write" not in text; assert "doctor" in text; assert "rebuild --check" in text
 
@@ -65,58 +63,61 @@ def test_web_feedback_broker_can_rely_on_one_request_operation_contract():
     assert "find .media/requests -maxdepth 1 -type f -name '*.json'" in text
 
 def test_record_viewing_feedback_remains_normal_data_auto_merge_eligible():
-    text=_text("media-auto-merge.yml")
-    case_block=_op_kind_case(text)
-    assert "record_viewing_feedback" in case_block
+    assert _policy()["operations"]["record_viewing_feedback"]["auto_merge"] is True
 
 def test_v5_normal_data_operations_are_guarded_auto_merge_eligible():
-    text=_text("media-auto-merge.yml")
-    case_block=_op_kind_case(text)
+    operations=_policy()["operations"]
     for operation in (
         "edit_viewing_feedback",
         "set_inferred_preferences",
         "set_semantic_fingerprint",
         "record_recommendation_interaction",
     ):
-        assert operation in case_block
-    assert "refresh_metadata" not in case_block
+        assert operations[operation]["auto_merge"] is True
+    assert operations["refresh_metadata"]["auto_merge"] is False
 
 
 def test_similarity_operations_are_guarded_auto_merge_eligible_on_relation_paths_only():
+    operations=_policy()["operations"]
+    for operation in ("set_work_similarity","remove_work_similarity"):
+        entry=operations[operation]
+        assert entry["auto_merge"] is True
+        assert entry["allowed_paths"]==[
+            "media/data/relations/similarity/*.yaml",
+            ".media/operations/*.json",
+        ]
+
+
+def test_work_creation_policy_allows_similarity_reconciliation_without_broadening_edits():
+    operations=_policy()["operations"]
+    relation="media/data/relations/similarity/*.yaml"
+    assert relation in operations["add_work"]["allowed_paths"]
+    assert relation in operations["record_viewing_feedback"]["allowed_paths"]
+    for operation in ("edit_viewing_feedback","set_interest","set_semantic_fingerprint"):
+        assert relation not in operations[operation]["allowed_paths"]
+
+
+def test_auto_merge_consumes_trusted_main_policy_instead_of_embedded_operation_cases():
     text=_text("media-auto-merge.yml")
-    case_block=_op_kind_case(text)
-    assert "set_work_similarity" in case_block
-    assert "remove_work_similarity" in case_block
-    assert "media/data/relations/similarity/*.yaml" in text
-    similarity_arm=case_block.split("set_work_similarity|remove_work_similarity)",1)[1].split(";;",1)[0]
-    assert "media/data/relations/similarity/*.yaml" in similarity_arm
-    assert "media/data/works/*.yaml" not in similarity_arm
-    assert "media/preferences/inferred/*.yaml" not in similarity_arm
-
-
-def test_work_creation_auto_merge_allows_similarity_reconciliation_without_broadening_edits():
-    text=_text("media-auto-merge.yml")
-    case_block=_op_kind_case(text)
-    create_arm=case_block.split("add_work|record_viewing_feedback)",1)[1].split(";;",1)[0]
-    assert "media/data/relations/similarity/*.yaml" in create_arm
-    edit_arm=case_block.split("edit_viewing_feedback|set_interest|set_semantic_fingerprint)",1)[1].split(";;",1)[0]
-    assert "media/data/relations/similarity/*.yaml" not in edit_arm
-
-
-def test_v5_auto_merge_path_allowlist_covers_only_new_canonical_data_outputs():
-    text=_text("media-auto-merge.yml")
-    assert "media/preferences/inferred/*.yaml" in text
-    assert "media/data/interactions/*.jsonl" in text
-    assert "media/data/works/*.yaml" in text
-    assert "media/data/relations/similarity/*.yaml" in text
-    for forbidden in (
-        "media/schemas/*.json",
-        "media/commands/schemas/*.json",
-        "media/vocabulary.yaml)",
-        "media/service/*.py",
-        "media/domain/*.py",
+    assert "media/config/operation_path_policy.json?ref=main" in text
+    assert 'pulls/$PR_NUMBER/files?per_page=100' in text
+    assert "auto_merge" in text
+    assert "allowed_paths" in text
+    assert 'case "$OP_KIND" in' not in text
+    for legacy in (
+        "add_work|record_viewing_feedback)",
+        "edit_viewing_feedback|set_interest|set_semantic_fingerprint)",
+        "set_work_similarity|remove_work_similarity)",
     ):
-        assert forbidden not in text
+        assert legacy not in text
+
+
+def test_media_dev_check_triggers_when_trusted_path_policy_changes():
+    text=_text("media-dev-check.yml")
+    trigger_block=text.split("on:",1)[1].split("permissions:",1)[0]
+    assert "media/config/operation_path_policy.json" in trigger_block
+
+
 def test_broker_check_is_read_only_and_secret_free():
     text=_text("broker-check.yml")
     assert "contents: read" in text
