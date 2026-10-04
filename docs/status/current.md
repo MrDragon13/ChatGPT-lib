@@ -12,6 +12,12 @@
 - Retrieval index, profiles, taste contexts, runtime database и web manifest являются derived и rebuildable.
 - `primary`, `partner` и `couple` остаются независимыми subjective contexts; couple disagreement не скрывается автоматическим усреднением.
 
+### Measurement foundation
+
+Media Intelligence имеет read-only deterministic audit: `python -m media.tools.audit_intelligence . --format json`. Он отделяет works от collections, считает explicit coverage denominators, semantic/profile/similarity/interaction/recommendation-pool coverage и маркирует входное состояние через `canonical_input_digest`.
+
+Audit считает runtime-relevant pool из canonical works в памяти и не использует generated profile/index bytes как источник истины. Historical snapshots хранятся под `media/baselines/`: deterministic payload отдельно от git/time provenance metadata. Snapshot является точкой сравнения, а не lockfile текущих данных.
+
 ### Typed operations
 
 Normal media writes проходят через strict typed operations, deterministic transaction, validation/rebuild и operation-scoped GitHub workflow policy.
