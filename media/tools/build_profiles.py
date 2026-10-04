@@ -12,7 +12,6 @@ SOURCE_WEIGHT = {'explicit':1.0,'inferred':0.7}
 RATING_SOURCE_WEIGHT = {'explicit':1.0,'explicit_approx':0.85,'inferred':0.6,'none':0.0}
 SENTIMENT_SIGN = {'positive':1.0,'negative':-1.0,'mixed':0.0,'neutral':0.0}
 RATING_TRAIT_MAX_WEIGHT = 0.5
-INFERRED_PREFERENCE_MAX_WEIGHT = 0.75
 
 
 def _entities(media_root: Path) -> Iterable[dict[str, Any]]:
@@ -83,15 +82,6 @@ def _add_explicit(bucket:dict[str,list[dict[str,Any]]], prefs:list[dict[str,Any]
         bucket[term].append({'entity_id':None,'source_target':target,'source_kind':'explicit_preference','sentiment':None,'strength':3,'source':'explicit','confidence':conf,'signed':affinity*weight,'weight':weight,'preference_id':item.get('id')})
 
 
-def _add_inferred(bucket:dict[str,list[dict[str,Any]]], hypotheses:list[dict[str,Any]], target:str)->None:
-    for item in hypotheses:
-        affinity=float(item.get('affinity') or 0.0)
-        if affinity==0.0: continue
-        conf=item.get('confidence','low'); weight=INFERRED_PREFERENCE_MAX_WEIGHT*CONFIDENCE_WEIGHT.get(conf,0.5)
-        for term in item.get('terms') or []:
-            bucket[term].append({'entity_id':None,'source_target':target,'source_kind':'inferred_preference','hypothesis_id':item.get('id'),'statement':item.get('statement'),'affinity':affinity,'confidence':conf,'supporting_evidence':list(item.get('evidence') or []),'signed':affinity*weight,'weight':weight})
-
-
 def _add_signal_summary(summary:dict[str,int], signal:dict[str,Any])->None:
     if (signal.get('rating') or {}).get('score') is not None: summary['ratings_count']+=1
     if (signal.get('reaction') or {}).get('value') is not None: summary['reactions_count']+=1
@@ -129,7 +119,6 @@ def build_profile(media_root: Path, target: str) -> dict[str, Any]:
                 _add_feedback(evidence,eid,target,direct,source_kind='group_feedback'); _add_rating_traits(evidence,entity,target,direct); _add_signal_summary(summary,direct)
     explicit=_explicit(media_root,target); _add_explicit(evidence,explicit['preferences'],target)
     inferred=_inferred(media_root,target)
-    if inferred is not None: _add_inferred(evidence,list(inferred.get('hypotheses') or []),target)
     affinities={}
     for term,items in sorted(evidence.items()):
         total=sum(x['weight'] for x in items); signed=sum(x['signed'] for x in items); score=0.0 if total==0 else signed/total
