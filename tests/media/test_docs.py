@@ -94,3 +94,26 @@ def test_living_docs_expose_v51_similarity_assessment_and_current_read_model():
     assert 'assess_candidate' in status
     assert 'set_work_similarity' in status
     assert 'manifest v3' in status
+
+
+def test_stage_a_living_docs_define_observability_and_trusted_merge_boundary():
+    intelligence=Path('docs/architecture/intelligence.md').read_text(encoding='utf-8')
+    pipeline=Path('docs/architecture/write-pipeline.md').read_text(encoding='utf-8')
+    invariants=Path('docs/reference/invariants.md').read_text(encoding='utf-8')
+    layout=Path('docs/reference/repository-layout.md').read_text(encoding='utf-8')
+    status=Path('docs/status/current.md').read_text(encoding='utf-8')
+
+    assert 'top-level `limitations`' in intelligence
+    assert '`assessment_coverage`' in intelligence
+    assert 'explanation' in intelligence.lower() and 'numeric' in intelligence.lower()
+
+    assert 'media/config/operation_path_policy.json' in pipeline
+    assert 'trusted `main`' in pipeline
+    assert 'GitHub PR files API' in pipeline
+    assert 'PR-head Python' in pipeline
+
+    assert 'trusted policy' in invariants.lower()
+    assert 'PR metadata' in invariants
+    assert 'media/config/operation_path_policy.json' in layout
+    assert 'historical measurement snapshots' in layout
+    assert 'trusted `main`' in status
