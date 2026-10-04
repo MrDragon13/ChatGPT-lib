@@ -3,7 +3,7 @@
 Дата: 2026-10-04  
 Статус: **written spec awaiting final user review**  
 База: `2026-10-03-media-intelligence-recommendation-v5-design.md`, `2026-10-03-media-candidate-assessment-work-similarity-v5-1-design.md`  
-Область: measurement foundation, recommendation correctness, uncertainty/coverage observability, couple disagreement visibility, path-policy trust boundary
+Область: measurement foundation, recommendation/assessment correctness and observability, couple disagreement visibility, path-policy trust boundary
 
 ## 1. Цель
 
@@ -11,7 +11,7 @@
 
 - логически корректной в доказанных местах;
 - измеряемой до изменения формул;
-- наблюдаемой по основаниям рекомендаций и отсутствующим данным;
+- наблюдаемой по основаниям рекомендаций, candidate assessment и отсутствующим данным;
 - честной относительно fallback и uncertainty;
 - безопасной на границе privileged GitHub automation;
 - готовой к последующему evaluation-driven выбору scoring, weighting и enrichment решений.
@@ -22,38 +22,49 @@
 
 ## 2. Контекст и подтверждённые проблемы
 
-Текущая реализация уже имеет deterministic Python core, generated profiles, recommendation context, semantic fingerprints, couple profiles и guarded auto-merge. При этом аудит текущего состояния выявил несколько проблем, которые можно исправить без выбора новой predictive/scoring модели:
+Текущая реализация уже имеет deterministic Python core, generated profiles, recommendation context, candidate assessment context, semantic fingerprints, couple profiles и guarded auto-merge. При этом аудит текущего состояния выявил несколько проблем, которые можно исправить без выбора новой predictive/scoring модели:
 
 1. Recommendation ranking учитывает количество matched traits без учёта знака affinity, поэтому отрицательное совпадение может улучшать позицию кандидата.
 2. Inferred preference hypotheses участвуют в численной агрегации профиля и могут повторно усиливать evidence, из которого сами были выведены.
-3. При низком semantic coverage система не всегда явно сообщает, что часть порядка является fallback, а не персонализированным выводом.
+3. При низком semantic coverage recommendation и assessment flows не всегда явно сообщают, насколько вывод опирается на semantic evidence, а часть recommendation order может быть fallback, а не персонализированным выводом.
 4. Couple profile агрегирует evidence, но потребитель не видит по каждому term направление сигналов отдельных участников.
 5. Operation/path policy существует более чем в одном представлении; privileged workflow нельзя упрощать ценой исполнения изменяемого PR-head кода с write credentials.
 6. До изменения formula/weights нет единого canonical audit и reproducible baseline, позволяющих сравнивать состояние до и после.
 
-Этот design ограничен исправлением этих классов проблем. Он не утверждает, что текущие affinity magnitude, confidence rules или couple aggregation являются оптимальными.
+Этот design ограничен исправлением этих классов проблем. Он не утверждает, что текущие affinity magnitude, confidence rules, assessment verdict logic или couple aggregation являются оптимальными.
 
 ## 3. Архитектурная граница этапа
 
 Работа делится на два последовательных PR.
 
-### PR0 — Measurement foundation
+### Stage A / PR0 — Measurement foundation
 
-PR0 не меняет recommendation behavior. Он вводит canonical read-only audit и baseline snapshot.
+PR0 не меняет recommendation или assessment behavior. Он вводит canonical read-only audit и baseline snapshot.
 
-Цель PR0 — получить воспроизводимый ответ на вопросы о составе canonical media state, качестве покрытия и фактическом candidate pool до любых behavior changes.
+Цель PR0 — получить воспроизводимый ответ на вопросы о составе canonical media state, качестве покрытия и каноническом recommendation candidate pool до любых behavior changes.
 
-### PR1 — Intelligence correctness & observability
+### Stage A / PR1 — Intelligence correctness & observability
 
-PR1 исправляет доказанные logical defects и расширяет read-only context, но не вводит новую численную recommendation formula.
+PR1 исправляет доказанные logical defects и расширяет read-only context, но не вводит новую predictive formula или deterministic assessment verdict.
 
-PR1 включает пять компонентов:
+PR1 включает шесть компонентов:
 
-1. sign-aware deterministic ranking policy;
+1. sign-aware deterministic recommendation ranking policy;
 2. explanation-only treatment inferred hypotheses;
 3. recommendation coverage/limitations observability;
-4. per-term couple disagreement observability без изменения couple score;
-5. trust-safe single-source path-policy integration.
+4. минимальную semantic coverage observability для `assess_candidate`;
+5. per-term couple disagreement observability без изменения couple score;
+6. trust-safe single-source path-policy integration.
+
+### Соответствие roadmap revision 3
+
+В этой spec используется локальная нумерация Stage A:
+
+- **PR0** соответствует measurement foundation из roadmap P0;
+- **PR1** объединяет correctness + observability work, который в roadmap распределён между ранними PR/P1-пунктами;
+- assessment core, semantic provenance/versioning и evaluation harness остаются следующими отдельными этапами, а не скрытой частью Stage A.
+
+Эта нумерация задаёт delivery sequence этой spec и не переименовывает roadmap целиком.
 
 ### Что сознательно не входит
 
@@ -63,14 +74,16 @@ PR1 включает пять компонентов:
 - подбор weights для affinity/confidence;
 - pseudocount calibration;
 - rating normalization/calibration;
+- deterministic `assess_candidate` verdict/scoring core;
 - новая couple aggregation formula;
 - arbitrary coverage confidence thresholds;
 - массовое semantic enrichment;
+- semantic enrichment versioning (`vocab_version`, `enriched_at`, `enriched_by`);
 - MMR/exploration;
 - numeric rating prediction;
 - optimization по MAE без отдельной predictor model и ground truth.
 
-Эти решения должны приниматься после отдельного evaluation harness и explicit/confirmed decision benchmark.
+Эти решения должны приниматься после отдельного evaluation harness и explicit/confirmed decision benchmark либо в специально выделенном semantic-provenance этапе.
 
 ## 4. PR0: canonical audit
 
@@ -80,7 +93,7 @@ Audit читает canonical data и deterministic derived state только т
 
 Canonical YAML остаётся source of truth для inventory, ratings, viewing, feedback, semantic metadata и preferences. Generated profiles не должны использоваться как shortcut для метрик, которые можно напрямую восстановить из canonical state.
 
-Если измеряется фактический recommendation candidate pool, допускается использование той же deterministic selection logic, которую использует runtime.
+Если измеряется recommendation candidate pool, audit должен использовать ту же deterministic eligibility logic, что и runtime, но с каноническими параметрами, определёнными ниже.
 
 ### 4.2 Стабильный versioned result contract
 
@@ -88,7 +101,7 @@ Audit result имеет явную версию формата и структу
 
 ```yaml
 schema_version: 1
-source_revision: <git-sha-or-explicit-source-id>
+canonical_input_digest: <content-digest>
 inventory: ...
 ratings: ...
 feedback: ...
@@ -106,18 +119,35 @@ recommendation_pool: ...
 - `works_total` не смешивается с `entities_total`;
 - ratings по works и collections не смешиваются неявно;
 - explicit, explicit_approx и inferred rating/source категории считаются отдельно, если такие категории существуют в canonical data;
-- semantic coverage считается как минимум для всей work library и отдельно для фактического candidate pool;
+- semantic coverage считается как минимум для всей work library и отдельно для canonical recommendation pool;
 - feedback/similarity/partner coverage получают явный denominator.
 
-### 4.3 Determinism и provenance
+### 4.3 Determinism, input digest и provenance
 
-Сравниваемый audit payload должен быть детерминированным для одного и того же repository state.
+Сравниваемый audit payload должен быть детерминированным для одного и того же набора canonical inputs.
 
-Wall-clock `generated_at` не входит в детерминированное содержимое baseline. Если timestamp нужен для human-facing metadata, он хранится вне сравниваемого metric payload либо нормализуется/инъецируется в тестах.
+`canonical_input_digest` вычисляется из нормализованного набора canonical файлов, реально использованных audit. Конкретный hash algorithm и canonicalization format фиксируются implementation plan/tests; порядок файлов не должен влиять на digest.
 
-Baseline обязан содержать provenance, достаточный для восстановления контекста: как минимум format/schema version и source revision.
+Git commit SHA не является частью сравниваемого metric payload, потому что baseline commit не может содержать собственный окончательный SHA без самоссылки. Git revision, human-facing timestamp и прочая execution metadata могут храниться рядом с payload как несравниваемая provenance-обёртка.
 
-### 4.4 Ошибки аудита
+Wall-clock `generated_at` не входит в deterministic payload. Если timestamp нужен для human-facing metadata, он хранится только в provenance metadata либо нормализуется/инъецируется в тестах.
+
+### 4.4 Канонический recommendation pool
+
+Чтобы coverage не зависел от произвольного runtime query, PR0 определяет канонический pool отдельно для каждого supported target:
+
+- только локальные canonical works;
+- `only_unwatched=true`;
+- без `limit`;
+- без runtime/duration filter;
+- без query-specific filters;
+- без external discovery candidates.
+
+Если runtime eligibility имеет дополнительные обязательные invariant-фильтры, audit использует их же; implementation plan должен перечислить их явно.
+
+Audit хранит coverage канонического pool. Runtime context отдельно может считать coverage конкретного запроса.
+
+### 4.5 Ошибки аудита
 
 Audit различает два состояния:
 
@@ -126,23 +156,25 @@ Audit различает два состояния:
 
 Audit не должен молча пропускать записи ради красивой метрики.
 
-### 4.5 Baseline snapshot
+### 4.6 Baseline snapshot
 
 Snapshot является исторической точкой отсчёта, а не вторым source of truth и не lockfile пользовательских данных.
 
 CI не должен ломать обычные media updates только потому, что текущие counts отличаются от исторического baseline. Вместо этого тестируется:
 
 - reproducibility audit logic на fixtures;
-- валидность baseline format/provenance;
+- валидность baseline format/input digest/provenance;
 - возможность сознательно пересоздать новый baseline при отдельном решении.
 
-## 5. PR1: ranking correctness
+## 5. PR1: recommendation ranking correctness
 
 ### 5.1 Никакого нового public ranking score
 
 PR1 не вводит public или pseudo-precise numeric `ranking_score`.
 
 Существующие affinity `score` и `confidence` могут показываться как evidence metadata, но не становятся новой скрытой weighted formula для ordering.
+
+Внутренний integer `strengths_count - concerns_count` используется только как первый элемент deterministic ordering key. Он не публикуется как probability, preference score или самостоятельная model output.
 
 ### 5.2 Evidence classification
 
@@ -182,12 +214,12 @@ Candidates сначала делятся на две группы:
 1. personalized (`ranking_basis=trait_overlap`);
 2. fallback (`ranking_basis=none`).
 
-Personalized group всегда идёт раньше fallback group. Это не позволяет отсутствию данных выглядеть лучше, чем реальный negative evidence.
+Personalized group всегда идёт раньше fallback group. Это не позволяет отсутствию данных выглядеть лучше, чем реальный evidence.
 
-Внутри personalized group используется только следующий transparent lexicographic key:
+Внутри personalized group используется следующий transparent lexicographic key:
 
-1. меньше `concerns`;
-2. больше `strengths`;
+1. больше `strengths_count - concerns_count`;
+2. при равном net count — меньше `concerns`;
 3. выше существующий `interest.priority`;
 4. стабильный `id` tie-break.
 
@@ -199,15 +231,29 @@ Personalized group всегда идёт раньше fallback group. Это н�
 Следствия contract:
 
 - добавление negative match никогда не улучшает позицию при прочих равных;
+- добавление positive match никогда не ухудшает позицию при прочих равных;
 - отсутствие fingerprint не является ranking advantage;
-- magnitude/confidence не скрыто кодируют новую формулу;
+- один concern не является абсолютным veto против любого clean candidate;
+- magnitude/confidence не скрыто кодируют новую weighted formula;
 - ordering воспроизводим.
+
+### 5.5 Временный policy, а не доказанная model
+
+Этот ordering — осознанно минимальная Stage A policy, выбранная для исправления sign bug без confidence/weight tuning.
+
+Следующий evaluation stage должен сравнить как минимум:
+
+- текущий Stage A key: `net directional matches -> fewer concerns`;
+- более осторожный вариант: `fewer concerns -> more strengths`;
+- другие простые baselines, определённые evaluation design.
+
+Stage A не утверждает, что выбранный lexicographic key оптимален по recommendation quality.
 
 ## 6. Recommendation observability contract
 
 ### 6.1 Backward-compatible fields
 
-Существующие consumer-facing `strengths` и `concerns` сохраняются как `list[str]`, если текущие consumers зависят от этого shape.
+Существующие consumer-facing `strengths` и `concerns` сохраняются как `list[str]`, если current consumers зависят от этого shape.
 
 PR1 расширяет contract additive metadata, например:
 
@@ -236,19 +282,30 @@ evidence_details:
 
 Если inspection всех consumers докажет, что legacy string fields не нужны, их удаление остаётся отдельной migration задачей, а не частью этого PR.
 
-### 6.2 Global coverage
+### 6.2 Global coverage: pool vs returned results
 
-`recommend_context` получает агрегированный coverage block, концептуально:
+`recommend_context` получает агрегированный coverage block с явным различием между eligible pool до `limit` и фактически возвращённым списком после `limit`.
+
+Концептуально:
 
 ```yaml
 coverage:
-  candidates_total: 12
-  candidates_with_fingerprint: 5
-  candidates_with_personalized_basis: 3
-  candidates_fallback: 9
+  pool_total: 42
+  pool_with_fingerprint: 8
+  pool_with_personalized_basis: 5
+  pool_fallback: 37
+
+  returned_total: 12
+  returned_with_fingerprint: 5
+  returned_with_personalized_basis: 3
+  returned_fallback: 9
 ```
 
-Названия могут быть уточнены implementation plan, но смысл каждого denominator должен быть однозначным.
+`pool_*` относится к eligible candidate set после request filters (`target`, `only_unwatched`, runtime и другие runtime filters), но до `limit`.
+
+`returned_*` относится к фактически возвращённым candidates после ordering и `limit`.
+
+Так смена ranking не маскируется как изменение denominator coverage.
 
 ### 6.3 Limitations reason codes
 
@@ -276,9 +333,49 @@ Living documentation/`media/AGENTS.md` должна зафиксировать:
 
 Python не должен генерировать обязательную готовую пользовательскую фразу.
 
-## 7. Inferred hypotheses: explanation-only
+## 7. Candidate assessment observability
 
-### 7.1 Новая граница
+### 7.1 Scope
+
+Stage A не вводит deterministic verdict для `assess_candidate`, но assessment flow должен перестать быть слепым к semantic coverage.
+
+Assessment переиспользует тот же read-only semantic evidence classification primitive, что recommendation, насколько это применимо к одному кандидату.
+
+### 7.2 Минимальный coverage contract
+
+Assessment context должен позволять consumer определить как минимум:
+
+- есть ли semantic fingerprint у оцениваемого candidate;
+- сколько candidate traits имеют известное target affinity и направленный сигнал;
+- сколько relevant/supporting local works использовано assessment context;
+- сколько из этих supporting works имеют semantic fingerprint;
+- какие coverage limitations активны.
+
+Концептуально:
+
+```yaml
+assessment_coverage:
+  candidate_has_fingerprint: true
+  candidate_directional_matches: 3
+  supporting_works_total: 6
+  supporting_works_with_fingerprint: 2
+limitations:
+  - partial_semantic_coverage
+```
+
+Точные имена полей уточняются implementation plan после проверки current `assess_candidate` consumer shape, но смысл denominator должен остаться однозначным.
+
+### 7.3 Что Stage A не делает
+
+Stage A не превращает coverage в `likely/unlikely` формулу и не задаёт confidence threshold для verdict.
+
+Если agent формулирует qualitative assessment, активные limitations должны быть отражены по тому же принципу, что и recommendation: недостаток semantic evidence нельзя маскировать под уверенное основание.
+
+Deterministic assessment core остаётся следующим этапом.
+
+## 8. Inferred hypotheses: explanation-only
+
+### 8.1 Новая граница
 
 Inferred preference hypotheses остаются полезными как reasoning/explanation memory, но перестают участвовать в численной aggregation affinity.
 
@@ -289,23 +386,27 @@ Profile affinities строятся только из primary evidence, опре
 - увеличивать numeric `evidence_count` affinity;
 - становиться вторым экземпляром supporting evidence, из которого сама была выведена.
 
-### 7.2 Почему не heuristic dedup
+### 8.2 Почему не heuristic dedup
 
 PR1 не пытается сопоставлять hypothesis с исходным evidence через brittle identity matching. Это оставило бы возможность double-count при изменении provenance shape.
 
 Вместо этого граница архитектурная: hypotheses хранятся/показываются отдельным explanation layer и физически не входят в numeric aggregator.
 
-### 7.3 Совместимость
+### 8.3 Совместимость и ожидаемый generated diff
 
 Если generated profile сегодня содержит hypotheses рядом с affinities, schema/serialization может сохранить их как отдельный раздел. Изменяется именно aggregation semantics, а не необходимость хранить объяснение.
 
-## 8. Couple observability
+После реализации и rebuild ожидается содержательный diff generated profiles, потому что hypothesis evidence больше не участвует в aggregation. Review пересчёт указывает, что эффект, вероятно, небольшой, но `couple` profile может изменить confidence как минимум для одного affinity. Точные значения не фиксируются этой spec и должны подтверждаться реальным rebuild/tests в PR.
 
-### 8.1 Цель
+PR description должен явно отметить такой generated diff как ожидаемое следствие semantic change, а не как случайный churn.
+
+## 9. Couple observability
+
+### 9.1 Цель
 
 PR1 делает видимым различие между индивидуальными сигналами пары, но не меняет текущую couple aggregation или couple score.
 
-### 8.2 Per-term projection
+### 9.2 Per-term projection
 
 Для релевантного term context возвращает структуру уровня:
 
@@ -323,53 +424,78 @@ members:
 status: disagreement
 ```
 
-`status` имеет как минимум:
+`direction` существует, если у участника по term есть non-zero directed evidence.
 
-- `agreement` — оба участника имеют направленный сигнал одного знака;
-- `disagreement` — направленные сигналы противоположны;
-- `insufficient` — для одного или обоих участников нет достаточного направленного evidence.
+`status` определяется без confidence threshold:
 
-### 8.3 Инвариант
+- `agreement` — у обоих участников есть directed evidence одного знака;
+- `disagreement` — у обоих участников есть directed evidence противоположного знака;
+- `insufficient` — хотя бы у одного участника нет directed evidence по этому term.
+
+`evidence_count` и `confidence` возвращаются как observability metadata, чтобы consumer мог видеть тонкое/слабое disagreement, но не меняют status в Stage A.
+
+### 9.3 Инвариант
 
 Добавление couple disagreement projection не должно менять существующий couple affinity/score. Это observability-only change.
 
-## 9. Path policy и trust boundary
+## 10. Path policy и trust boundary
 
-### 9.1 Требование
+### 10.1 Требование
 
 Operation-to-path policy должна иметь одно canonical machine-readable представление, но privileged workflow не должен для этого исполнять mutable PR-head Python с `contents: write` / `pull-requests: write` credentials.
 
-### 9.2 Recommended boundary
+### 10.2 Canonical format
 
-Design использует следующие роли:
+Canonical operation/path policy хранится в declarative, non-executable machine-readable формате, например YAML или JSON.
 
-- canonical declarative operation/path policy хранится в trusted repository state;
-- Python runtime validation читает эту policy;
-- privileged auto-merge workflow использует policy только из trusted `main`/trusted revision;
-- proposed changes policy проверяются отдельным unprivileged CI contract;
-- workflow integration проверяет format/coverage policy, но не исполняет untrusted implementation с privileged token.
+Python runtime validation читает этот declarative contract. Workflow не импортирует и не исполняет policy implementation из PR head.
 
-Если новая operation требует расширения policy, такое расширение должно сначала пройти normal review/CI и стать trusted state; только затем privileged automation может применять новую operation автоматически.
+Конкретный формат выбирается implementation plan с учётом текущих consumers, но файл должен разбираться как data без исполнения PR-controlled code.
 
-### 9.3 Security invariant
+### 10.3 Trusted policy lookup
 
-Ни один PR не получает возможность изменить исполняемую policy logic и в том же privileged execution запустить её до merge.
+Privileged auto-merge workflow получает policy из trusted `main` либо другой заранее доверенной revision.
 
-## 10. Data flow
+Недостаточно просто checkout PR и открыть «тот же путь»: рабочая копия PR является untrusted.
 
-### 10.1 PR0
+Способ чтения trusted policy должен быть явным в implementation plan/tests, например отдельный trusted checkout/ref/API read.
+
+Proposed policy changes проверяются отдельным unprivileged CI contract. После normal review/merge новая policy становится trusted state для последующих PR.
+
+### 10.4 Что не автомерджится
+
+Guarded auto-merge должен fail closed для PR, которые меняют trust-defining или executable automation surface, включая как минимум:
+
+- canonical operation/path policy file;
+- privileged workflow definitions;
+- executable media command/service/tooling code, способный изменить semantics применения operation;
+- CI/guard code, от которого зависит auto-merge eligibility.
+
+Точный path set фиксируется после inspection текущего repository layout в implementation plan и покрывается contract tests.
+
+Такие PR проходят normal human review/merge. Только уже доверенное состояние может автоматически разрешить последующие data-only operation PR.
+
+### 10.5 Security invariant
+
+Ни один PR не получает возможность изменить policy/guard/executable semantics и в том же privileged execution запустить изменённую логику до merge.
+
+## 11. Data flow
+
+### 11.1 PR0
 
 ```text
 canonical YAML
+  -> canonical input inventory + digest
   -> audit collector
   -> normalized metrics
-  -> deterministic JSON/text representation
+  -> deterministic metric payload
+  -> provenance wrapper
   -> reviewed baseline snapshot
 ```
 
 Audit read-only. Никаких writes в canonical data.
 
-### 10.2 PR1 recommendation
+### 11.2 PR1 recommendation
 
 ```text
 candidate traits + target affinities
@@ -377,41 +503,53 @@ candidate traits + target affinities
   -> determine ranking_basis/fallback_reason
   -> partition personalized vs fallback
   -> deterministic ordering
-  -> coverage + limitations
+  -> pool/returned coverage + limitations
   -> agent explanation
 ```
 
 Classification кандидата не зависит от положения других candidates. Cross-candidate logic начинается только на этапе partition/order.
 
-## 11. Error handling
+### 11.3 PR1 assessment
+
+```text
+candidate + target context + supporting works
+  -> semantic evidence/coverage classification
+  -> assessment_coverage + limitations
+  -> agent qualitative assessment
+```
+
+Stage A не добавляет deterministic verdict calculation.
+
+## 12. Error handling
 
 Система различает три класса состояний.
 
-### 11.1 Invariant violation
+### 12.1 Invariant violation
 
 Broken schema/canonical state — fail closed. Audit/rebuild/command сообщает ошибку.
 
-### 11.2 Insufficient evidence
+### 12.2 Insufficient evidence
 
 Данные валидны, но personalized basis отсутствует. Это нормальный result:
 
-- `ranking_basis=none`;
-- explicit `fallback_reason`;
-- соответствующая limitation/coverage metadata.
+- recommendation: `ranking_basis=none` + explicit `fallback_reason`;
+- assessment: coverage fields показывают отсутствие/недостаток semantic evidence;
+- соответствующая limitation metadata доступна consumer.
 
-### 11.3 Partial evidence
+### 12.3 Partial evidence
 
-Часть candidate pool personalized, часть fallback. Это также нормальное состояние:
+Часть candidate pool personalized, часть fallback либо assessment опирается только на часть semantic context. Это также нормальное состояние:
 
-- personalized group ранжируется sign-aware;
+- personalized recommendation group ранжируется sign-aware;
 - fallback group остаётся доступной;
-- coverage показывает границу качества данных.
+- coverage показывает границу качества данных;
+- qualitative assessment не маскирует partial coverage.
 
 Отсутствие данных не превращается ни в exception, ни в implicit positive signal.
 
-## 12. Testing strategy
+## 13. Testing strategy
 
-### 12.1 PR0 audit fixtures
+### 13.1 PR0 audit fixtures
 
 Нужны small fixture repositories с заранее известными counts.
 
@@ -421,30 +559,35 @@ Broken schema/canonical state — fail closed. Audit/rebuild/command сообщ�
 - watched/rated denominators;
 - source categories ratings;
 - library semantic coverage;
-- candidate-pool semantic coverage;
+- canonical candidate-pool semantic coverage;
+- canonical pool параметры не зависят от runtime `limit`;
 - feedback/similarity/partner numerator + denominator;
-- deterministic payload для одного canonical state;
+- deterministic payload для одного canonical input set;
+- одинаковый content set даёт одинаковый `canonical_input_digest` независимо от iteration order;
+- git revision/timestamp не меняют deterministic metric payload;
 - malformed invariant fail closed;
 - valid unclassified state отображается явно.
 
 Отдельный regression test должен не позволить снова представить `103 works + 4 collections` как неясные `107 works`.
 
-### 12.2 Ranking RED -> GREEN cases
+### 13.2 Ranking RED -> GREEN cases
 
 Ключевые tests:
 
-- candidate A: `2 strengths, 0 concerns` выше candidate B: `2 strengths, 1 concern`;
-- при одинаковом числе concerns больше strengths выше;
+- `2 strengths / 0 concerns` выше `2 strengths / 1 concern`;
+- `5 strengths / 1 concern` выше `1 strength / 0 concerns`, потому что net directional evidence больше;
+- при равном `strengths - concerns` меньше concerns выше;
+- добавление concern не может улучшить rank при прочих равных;
+- добавление strength не может ухудшить rank при прочих равных;
 - затем применяется `interest.priority`;
 - затем стабильный `id`;
 - personalized candidate выше fallback candidate;
 - fallback candidates сортируются только `priority -> id`;
-- repeated call возвращает одинаковый order;
-- добавление concern не может улучшить rank при прочих равных.
+- repeated call возвращает одинаковый order.
 
-Тесты фиксируют invariants, а не будущую scoring formula.
+Тесты фиксируют Stage A policy и correctness invariants, а не утверждают, что эта policy оптимальна. Evaluation stage обязан сравнить её с альтернативным `concerns-first` baseline.
 
-### 12.3 Hypothesis isolation tests
+### 13.3 Hypothesis isolation tests
 
 Добавление inferred hypothesis при неизменном primary evidence не меняет:
 
@@ -454,136 +597,184 @@ Broken schema/canonical state — fail closed. Audit/rebuild/command сообщ�
 
 При этом hypothesis остаётся доступной explanation consumer.
 
-### 12.4 Observability tests
+Rebuild test должен позволять ожидаемый generated profile diff, вызванный удалением hypothesis evidence из aggregation, и не классифицировать его как случайный nondeterminism.
+
+### 13.4 Recommendation observability tests
 
 Проверяются:
 
 - fingerprint + known affinity match => `trait_overlap`;
 - fingerprint без known affinity => `none` + `no_matching_affinities`;
 - no fingerprint => `none` + `no_semantic_fingerprint`;
-- coverage соответствует candidate states;
+- `pool_*` coverage относится к pre-limit eligible set;
+- `returned_*` coverage относится к фактически возвращённым results;
+- изменение `limit` не меняет `pool_*`;
 - limitations выводятся детерминированно;
 - `evidence_details` сохраняет term/direction/confidence/evidence_count;
 - legacy strengths/concerns shape сохраняется на migration этапе.
 
-### 12.5 Couple tests
+### 13.5 Assessment observability tests
 
 Проверяются:
 
-- same direction => agreement;
-- opposite directions => disagreement;
-- missing member signal => insufficient;
+- candidate fingerprint presence отражается явно;
+- directional match count вычисляется тем же sign rule, что recommendation classification;
+- supporting works total и supporting works with fingerprint имеют однозначный denominator;
+- partial/missing coverage создаёт соответствующую limitation metadata;
+- Stage A не добавляет deterministic numeric verdict/scoring side effect.
+
+### 13.6 Couple tests
+
+Проверяются:
+
+- directed evidence у обоих одного знака => `agreement`;
+- directed evidence у обоих разных знаков => `disagreement`;
+- отсутствие directed evidence хотя бы у одного => `insufficient`;
+- low confidence сам по себе не превращает directed signal в `insufficient`;
 - disagreement projection не меняет existing couple score.
 
-### 12.6 Security tests
+### 13.7 Security tests
 
 Нужны regression/contract tests, доказывающие:
 
 - privileged workflow не исполняет PR-head policy implementation до merge;
-- trusted revision является источником privileged policy;
+- trusted `main`/trusted revision является источником privileged policy;
+- trusted policy разбирается как declarative data, без исполнения PR-controlled code;
 - proposed policy change валидируется в unprivileged CI;
-- новая operation без trusted policy coverage не получает auto-merge path.
+- новая operation без trusted policy coverage не получает auto-merge path;
+- PR, меняющий policy file, не получает auto-merge path;
+- PR, меняющий privileged workflow/guard surface, не получает auto-merge path;
+- PR, меняющий executable operation semantics, не получает auto-merge path.
 
-### 12.7 Agent contract tests
+### 13.8 Agent contract tests
 
 Не проверяется точная русская/английская фраза. Проверяется нормативная documentation contract:
 
 - active limitation должна учитываться;
 - fallback не маскируется под personalized semantic result;
+- assessment с partial semantic coverage не маскируется под fully grounded certainty;
 - uncertainty не маскируется под certainty.
 
-## 13. Backward compatibility и rollout
+## 14. Backward compatibility и rollout
 
-### 13.1 Additive first
+### 14.1 Additive first
 
 PR1 предпочитает additive context fields вместо изменения shape существующих consumer-facing полей.
 
-Перед merge проверяются current consumers:
+Перед merge выполняется consumer checklist:
 
 - CLI;
 - agent instructions;
 - web manifest/export;
-- broker boundary, если recommendation context проходит через него;
+- broker boundary, если recommendation/assessment context проходит через него;
 - relevant documentation/tests.
+
+Поскольку исходный audit/review не инспектировал `web/` и `broker/`, этот checklist является обязательной implementation-time проверкой, а не предположением о совместимости.
 
 Если поле меняет meaning, а не только получает additive metadata, нужен явный version/migration decision.
 
-### 13.2 Никакого semantic backfill как prerequisite
+### 14.2 Никакого semantic backfill как prerequisite
 
 PR1 не требует сначала увеличить число fingerprints.
 
-При текущем низком coverage корректный результат — явно показать большую fallback долю. Targeted enrichment следует только после measurement/evaluation и не является условием correctness fix.
+При текущем низком coverage корректный результат — явно показать большую fallback/partial-coverage долю. Targeted enrichment следует только после measurement/evaluation и не является условием correctness fix.
 
-### 13.3 Baseline не блокирует обычные data changes
+### 14.3 Baseline не блокирует обычные data changes
 
-Historical baseline фиксирует состояние перед stage A. Он не обязан равняться текущим counts после каждого легитимного media update.
+Historical baseline фиксирует состояние перед Stage A. Он не обязан равняться текущим counts после каждого легитимного media update.
 
-## 14. Acceptance criteria
+### 14.4 Expected generated profile changes
+
+После hypothesis isolation generated profiles должны быть rebuild-нуты обычным deterministic путём.
+
+Изменения, вызванные исключением hypothesis evidence из numeric aggregation, считаются ожидаемым semantic diff и перечисляются в PR description. Exact values принимаются только из фактического rebuild и tests; spec не закрепляет приблизительный review-пересчёт как golden output.
+
+## 15. Acceptance criteria
 
 ### Measurement
 
 - один canonical audit воспроизводимо объясняет roadmap metrics;
 - works/collections и их denominators не смешиваются;
-- можно однозначно определить semantic coverage фактического candidate pool;
-- baseline имеет format version и source provenance.
+- можно однозначно определить semantic coverage canonical candidate pool;
+- runtime recommendation context различает `pool_*` и `returned_*`;
+- baseline имеет format version, canonical input digest и внешнюю provenance metadata.
 
 ### Correctness
 
 - negative affinity не может улучшить ranking при прочих равных;
+- positive affinity не может ухудшить ranking при прочих равных;
 - отсутствие fingerprint/basis не является ranking advantage;
 - personalized candidates идут перед fallback;
 - inferred hypothesis не меняет numeric affinity/confidence/evidence_count;
 - ordering deterministic.
 
-### Observability
+### Recommendation observability
 
 Для любого recommendation result можно определить:
 
 - personalized он или fallback;
 - strengths и concerns;
 - confidence/evidence count relevant matches;
-- coverage candidate pool;
+- coverage eligible pool и returned result;
 - активные limitations.
+
+### Assessment observability
+
+Для `assess_candidate` можно определить:
+
+- есть ли candidate fingerprint;
+- сколько directional personalized matches доступно;
+- насколько semantic fingerprint покрывает supporting local works;
+- какие coverage limitations активны.
+
+Stage A не обязан выдавать deterministic assessment verdict.
 
 ### Couple
 
-- per-term disagreement доступен consumer;
+- per-term agreement/disagreement/insufficient доступен consumer;
+- `insufficient` не зависит от непроверенного confidence threshold;
 - existing couple aggregation не меняется.
 
 ### Agent UX
 
-- следование contract не позволяет представить fallback как уверенную персональную semantic рекомендацию.
+- следование contract не позволяет представить fallback или partial assessment coverage как уверенную персональную semantic рекомендацию/оценку.
 
 ### Security
 
 - privileged auto-merge не исполняет mutable PR-head policy code;
-- operation/path policy имеет один trusted semantic source;
+- operation/path policy имеет один trusted declarative semantic source;
+- policy/workflow/executable semantic changes исключены из auto-merge;
 - drift и missing operation coverage ловятся CI.
 
-## 15. Что остаётся после stage A
+## 16. Что остаётся после Stage A
 
 Stage A сознательно оставляет открытыми:
 
 - optimal affinity/confidence weights;
 - pseudocount/source weights;
 - rating calibration;
+- deterministic `assess_candidate` verdict/scoring core;
+- assessment confidence calibration;
 - couple aggregation alternatives;
 - confidence thresholds;
 - semantic enrichment target;
+- semantic enrichment provenance/versioning (`vocab_version`, `enriched_at`, `enriched_by`);
 - temporary external candidate fingerprinting;
 - exploration/MMR;
 - predictive rating model.
 
 Следующий architecture cycle должен начать с evaluation/ground-truth design, а не с выбора формулы. Для model selection следует разделять diagnostic benchmark на всей доступной истории и decision benchmark на небольшом explicit/confirmed stratified set, чтобы не оптимизировать новую модель против старых inferred labels.
 
-## 16. Recommended implementation sequence
+Semantic provenance/versioning и deterministic assessment core должны быть явно включены в план следующих этапов, даже если они будут реализовываться до или параллельно evaluation harness.
+
+## 17. Recommended implementation sequence
 
 После финального review этой spec:
 
 1. написать отдельный implementation plan через `writing-plans`;
 2. реализовать PR0 полностью и зафиксировать baseline до behavior changes;
 3. реализовать PR1 как единый correctness + observability change;
-4. проверить consumers и trust boundary;
-5. только после stage A проектировать evaluation harness / ground-truth benchmark.
+4. проверить current consumers, generated profile diff и trust boundary;
+5. только после Stage A проектировать evaluation harness / ground-truth benchmark и следующие assessment/semantic-provenance этапы.
 
-Implementation plan должен назвать точные файлы, tests и команды проверки. Эта design spec намеренно фиксирует behavioral contracts и trust boundaries, а не преждевременно привязывает каждое решение к конкретной функции.
+Implementation plan должен назвать точные файлы, tests, canonical pool eligibility rules, trusted-policy lookup mechanism и команды проверки. Эта design spec намеренно фиксирует behavioral contracts и trust boundaries, а не преждевременно привязывает каждое решение к конкретной функции.
