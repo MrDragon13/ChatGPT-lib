@@ -99,7 +99,9 @@ def test_canonical_candidate_context_contains_fingerprint_similarity_and_taste(t
 
 
 def test_assessment_exposes_top_level_coverage_and_fact_only_limitations(tmp_path):
-    root=copy_fixture_repo(tmp_path); rebuild_generated(root/"media")
+    root=copy_fixture_repo(tmp_path)
+    _write_rated_work(root,"assessment-affinity-source",primary_rating=9.0,fingerprint=True)
+    rebuild_generated(root/"media")
     from media.service.assessment import build_candidate_assessment_context
 
     result=build_candidate_assessment_context(root/"media",request())
