@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import argparse
+import json
 from collections import Counter
 from hashlib import sha256
 from pathlib import Path
@@ -129,7 +131,7 @@ def _signal_metrics(
     target: str,
     viewers: set[str],
     groups: dict[str, list[str]],
-) -> tuple[int, int, Counter[str], int]:
+) -> tuple[int, int, Counter[str], int, int]:
     viewing_count = 0
     rated_count = 0
     feedback_count = 0
@@ -309,3 +311,58 @@ def collect_intelligence_audit(repo_root: Path) -> dict[str, Any]:
         "interactions": _interaction_metrics(media_root),
         "recommendation_pool": _pool_metrics(media_root, targets, viewers, groups),
     }
+
+
+def _json_line(value: dict[str, Any]) -> str:
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
+
+
+def _write_baseline(
+    payload: dict[str, Any],
+    output: Path,
+    *,
+    source_revision: str,
+    generated_at: str,
+) -> tuple[Path, Path]:
+    output = Path(output)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(_json_line(payload), encoding="utf-8", newline="\n")
+    meta_path = output.with_suffix(".meta.json")
+    meta = {
+        "baseline": output.name,
+        "canonical_input_digest": payload["canonical_input_digest"],
+        "generated_at": generated_at,
+        "payload_schema_version": payload["schema_version"],
+        "source_revision": source_revision,
+    }
+    meta_path.write_text(_json_line(meta), encoding="utf-8", newline="\n")
+    return output, meta_path
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Audit Media Intelligence coverage and evidence state")
+    parser.add_argument("repo_root", nargs="?", default=".")
+    parser.add_argument("--format", choices=["json"], default="json")
+    parser.add_argument("--write-baseline")
+    parser.add_argument("--source-revision")
+    parser.add_argument("--generated-at")
+    args = parser.parse_args(argv)
+
+    payload = collect_intelligence_audit(Path(args.repo_root))
+    if args.write_baseline:
+        if not args.source_revision or not args.generated_at:
+            parser.error("--write-baseline requires --source-revision and --generated-at")
+        output, _ = _write_baseline(
+            payload,
+            Path(args.write_baseline),
+            source_revision=args.source_revision,
+            generated_at=args.generated_at,
+        )
+        print(output)
+    else:
+        print(_json_line(payload), end="")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
