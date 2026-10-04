@@ -160,12 +160,47 @@
       "additionalProperties": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["target", "request", "candidates"],
+        "required": ["target", "request", "coverage", "limitations", "candidates"],
         "properties": {
           "target": {"type": "string"},
           "request": {
             "type": "object",
             "additionalProperties": true
+          },
+          "coverage": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "pool_total",
+              "pool_with_fingerprint",
+              "pool_with_personalized_basis",
+              "pool_fallback",
+              "returned_total",
+              "returned_with_fingerprint",
+              "returned_with_personalized_basis",
+              "returned_fallback"
+            ],
+            "properties": {
+              "pool_total": {"type": "integer", "minimum": 0},
+              "pool_with_fingerprint": {"type": "integer", "minimum": 0},
+              "pool_with_personalized_basis": {"type": "integer", "minimum": 0},
+              "pool_fallback": {"type": "integer", "minimum": 0},
+              "returned_total": {"type": "integer", "minimum": 0},
+              "returned_with_fingerprint": {"type": "integer", "minimum": 0},
+              "returned_with_personalized_basis": {"type": "integer", "minimum": 0},
+              "returned_fallback": {"type": "integer", "minimum": 0}
+            }
+          },
+          "limitations": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "partial_semantic_coverage",
+                "fallback_candidates_present",
+                "no_personalized_candidates"
+              ]
+            },
+            "uniqueItems": true
           },
           "candidates": {
             "type": "array",
