@@ -68,7 +68,6 @@ Manifest v3 включает target-aware taste/recommendation data, semantic fi
 - Current Stage A ranking исправляет directional correctness, но ещё не benchmarked как оптимальная модель качества; fingerprint length и alternative ordering policy остаются предметом будущего evaluation.
 - Assessment coverage наблюдаема, но Stage A по-прежнему не вычисляет deterministic `likely/mixed/unlikely`, probability или opaque score; qualitative вывод остаётся agent responsibility с обязательным учётом active limitations.
 - Couple term disagreement наблюдаем, но Stage A не меняет формулу couple aggregation и не вводит confidence threshold для direction/status.
-- Declarative path-policy/trusted-main auto-merge migration находится в active PR; до её завершения privileged workflow всё ещё использует текущую duplicated shell policy и не считается обновлённым trust boundary.
 - Derived semantic similarity не сохраняется как explicit user assertion и не показывается как пользовательское мнение без подтверждения.
 - External discovery/live model reasoning находится на agent/server boundary; static Pages остаётся работоспособным без live model.
 - Bulk provider metadata refresh требует manual review и не относится к normal auto-merge path.
