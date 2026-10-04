@@ -1,31 +1,33 @@
 # ChatGPT-lib
 
-Личная библиотека структурированных данных и профилей, собранных в диалогах с ChatGPT.
+Личная библиотека структурированных данных и профилей, собранных в диалогах с ChatGPT. Основной живой subsystem — персональная media intelligence system: фильмы, сериалы и анимация, multi-viewer сигналы, semantic fingerprints, taste context, рекомендации, candidate assessment и explicit similarity между произведениями.
 
-## Разделы
+## Что умеет проект сейчас
 
-### 🎬 Media
+- хранит canonical media data в Git/YAML;
+- ведёт независимые сигналы для `primary`, `partner` и `couple`;
+- строит derived profiles, retrieval index, taste context и web manifest;
+- поддерживает internal и external recommendations с provenance-aware explanations;
+- отвечает на «понравится ли мне X?» через read-only `assess_candidate` без fake precise score;
+- хранит explicit work similarity как target-specific evidence/hint, но не превращает её автоматически в preference;
+- принимает normal media mutations только через strict typed operations и deterministic validation pipeline;
+- публикует русскоязычную GitHub Pages-витрину поверх derived manifest;
+- отправляет поддерживаемые browser edits через защищённый typed-command broker без выдачи браузеру GitHub/provider/model secrets.
 
-- [Personal Media Library v5](media/README.md) — фильмы, сериалы, анимация, multi-viewer сигналы, semantic fingerprints, taste profiles, external/internal recommendations, typed tooling и GitHub-native write flow.
-- `web/` — русскоязычная GitHub Pages-витрина поверх той же медиатеки. Она получает deterministic read-only manifest из canonical/derived media layer, показывает v5 intelligence context и не является вторым источником истины.
+## Архитектура в одном абзаце
 
-Основной путь пополнения медиатеки остаётся разговором с LLM. Веб-интерфейс умеет отправлять поддерживаемые правки через защищённый typed-command broker; браузер не меняет YAML напрямую и не получает GitHub write credentials, provider tokens или LLM secrets.
+`media/data/` и другие canonical YAML/config источники — source of truth. Python domain/service/repository слой применяет typed operations, валидирует данные и пересобирает derived artifacts. `web/` не читает canonical YAML напрямую: он получает versioned manifest и остаётся read-model surface. Записи из LLM/CLI/web используют один и тот же command contract; normal data operations идут через operation PR + exact-head checks, а architecture/schema/vocabulary/workflow changes остаются manual developer work. Historical design specs объясняют решения, но текущее поведение описывается living docs и проверяется code/schemas/tests.
 
-Для нового агента точка входа — [`AGENTS.md`](AGENTS.md). Для обычного киноассистента — [`media/START_PROMPT.md`](media/START_PROMPT.md).
+## Куда идти дальше
 
-## Актуальная архитектура v5
+- [Карта всей документации](docs/README.md) — что является living docs, operating contract и historical rationale.
+- [Как пользоваться медиатекой](docs/guides/media-usage.md) — пользовательские сценарии.
+- [Как разрабатывать](docs/guides/development.md) — developer workflow, TDD и ownership документации.
+- [Архитектура системы](docs/architecture/overview.md) — компоненты, data flow и security boundaries.
+- [Personal Media Library v5](media/README.md) — локальная точка входа в `media/` и compatibility entry path для subsystem docs.
+- [Старт нового киноассистента](media/START_PROMPT.md) — human-facing launcher.
+- [`AGENTS.md`](AGENTS.md) — router для LLM/agent workflows.
 
-- `docs/superpowers/specs/2026-10-03-media-intelligence-recommendation-v5-design.md`
-- `docs/superpowers/specs/2026-10-03-media-intelligence-v5-web-agent-contract-amendment.md`
-- `docs/superpowers/specs/2026-10-03-media-v5-agent-scenario-catalog.md`
-- `docs/superpowers/specs/2026-10-03-media-intelligence-v5-development-continuity-contract.md`
-- `media/V5_STATUS.md` — текущий handoff/status после завершения v5 pilot.
+## Web product/design references
 
-## Исторические архитектурные документы
-
-- `docs/superpowers/specs/2026-10-01-personal-media-recommendation-v4-design.md`
-- `docs/superpowers/plans/2026-10-01-personal-media-recommendation-v4.md`
-- `docs/superpowers/specs/2026-10-01-media-tooling-orchestration-design.md`
-- `docs/superpowers/plans/2026-10-01-media-tooling-orchestration.md`
-- `docs/superpowers/specs/2026-10-01-media-web-experience-design.md`
-- `docs/superpowers/plans/2026-10-01-media-web-experience.md`
+`PRODUCT.md` и `DESIGN.md` относятся к media web surface: product brief и visual/design-system contract соответственно. Они не заменяют system architecture documentation.

@@ -1,191 +1,30 @@
-# Media Intelligence v5.1 — continuity handoff
+# Media Intelligence v5.1 — compatibility status
 
-Status date: 2026-10-03
+Media Intelligence v5.1 is the current implemented capability line.
 
-## Current state
+The durable current state now lives in [`../docs/status/current.md`](../docs/status/current.md). Read that file for implemented capabilities, known limitations and the verification model.
 
-Media Intelligence v5 completed its planned implementation phases and Phase E pilot. Media Intelligence v5.1 is implemented in draft PR #68 for two additions: read-only candidate assessment and explicit target-specific work similarity.
+## Why this file remains
 
-The canonical source of truth remains Git/YAML; generated profiles, index, database, taste contexts, recommendation contexts, and the web manifest remain derived read models. The normal user write path remains one strict typed command on a same-repository `media/op-*` branch, processed by deterministic Python, followed by an exact-head dispatch-only `Media Check`, guarded auto-merge when eligible, and exact-merge-SHA Pages publication.
+`media/V5_STATUS.md` is kept as a compatibility path for older agent/bootstrap instructions and links. It is no longer a development diary or the authoritative place for feature-task progress.
 
-Tasks 1–5 are complete. Task 6 whole-branch review found no Critical or Important findings. This status commit is the final implementation candidate and must pass fresh exact-head Media Dev Check and Web Check before PR #68 is marked ready for review. Do not merge from this handoff without that fresh evidence.
+Historical v5/v5.1 design decisions, pilot notes and implementation plans remain available under `../docs/superpowers/specs/` and `../docs/superpowers/plans/`, plus merged PR history. Those documents are historical rationale, not current project status.
 
-## v5.1 implementation — Task 1–4
+## Safe resume rule
 
-Task 1–4 are complete and GREEN in PR #68.
+When resuming interrupted development:
 
-### Task 1 — contracts and canonical validation
+1. verify current `main`;
+2. inspect the active PR and its latest checkpoint, if one exists;
+3. read [`../docs/status/current.md`](../docs/status/current.md) for durable system state;
+4. then load only the architecture/reference docs relevant to the unfinished task.
 
-- Added strict typed operations `set_work_similarity` and `remove_work_similarity`.
-- Added read-only `assess_candidate` request contract.
-- Persistent external similarity refs require stable TMDB/IMDb identity; title-only persistent guesses are rejected.
-- Added canonical `work-similarity` schema and validation for target/work/vocabulary identity, self-links, duplicate/reversed pairs, and deterministic ordering.
+For ordinary media use, start with [`AGENTS.md`](AGENTS.md) and follow the shortest route matching the user intent. This compatibility file does not need to be read before every normal media operation.
 
-### Task 2 — persistence, reconciliation, workflow policy
+## Current v5.1 anchors
 
-- Explicit similarity is stored under `media/data/relations/similarity/` as one target-specific unordered pair.
-- Canonical↔canonical, canonical↔external and external↔external endpoint normalization is supported.
-- Repeated assertion is an upsert of the current relation; removal is idempotent and independent of endpoint order.
-- Adding a canonical work reconciles matching stable external endpoints in the same transaction; self-links collapse and collisions resolve deterministically.
-- Media Command stages relation outputs. Guarded auto-merge has explicit similarity-only set/remove arms, while work-creation routes allow deterministic similarity reconciliation paths.
-
-### Task 3 — read models and candidate assessment
-
-- Taste context exposes explicit similarity evidence separately from affinities/preferences.
-- Recommendation context can attach candidate-level similarity evidence without changing candidate rank or inventing a score.
-- `assess_candidate` assembles target taste context, candidate identity/fingerprint when available, and matching explicit similarities.
-- Assessment is read-only. The Python layer assembles evidence; the cinema assistant produces the qualitative fit/confidence explanation. No opaque deterministic match score or fake precise probability is persisted.
-- External assessment can remain external and does not create a canonical work.
-
-### Task 4 — manifest v3 and web projection
-
-- The exporter emits manifest v3.
-- Each web work receives target-keyed explicit similarities as a derived projection.
-- One canonical undirected relation is projected symmetrically onto both canonical work pages.
-- canonical↔external similarity is shown only on the canonical page as a lightweight external card; it does not fabricate a local route or canonical work.
-- Work detail renders `Похожие фильмы` → `По твоему мнению` for the active target.
-- Frontend accepts manifest v1/v2/v3 during staged static deployment overlap.
-
-Task 4 exact-head evidence: Media Dev Check #91 and Web Check #215 both passed on the same head. Web Check included real manifest export, unit tests, TypeScript typecheck, production build, broker URL assertion, static credential scan, responsive/motion/accessibility/edit-feedback browser checks, review screenshots, and artifact upload.
-
-A browser regression found during Task 4 was fixed by RED → GREEN: the exporter had moved to v3 while the manifest loader still accepted only v1/v2. A dedicated v3 loader regression test now protects that boundary.
-
-## Task 5 — agent/docs contract synchronization
-
-Task 5 is complete and GREEN.
-
-Current contracts now state that:
-
-- `set_work_similarity` records one explicit target-specific undirected relation;
-- `remove_work_similarity` removes the same unordered pair rather than creating a negative relation;
-- `assess_candidate` is read-only and returns evidence for a qualitative answer;
-- explicit similarity is useful evidence/hint for recommendations and explanations, but is not a stable preference by itself;
-- an external similarity/assessment endpoint does not create a canonical work;
-- at most one short blocking identity clarification is allowed when a stable external identity cannot be resolved safely.
-
-Task 5 TDD evidence:
-
-- RED head `7edb3a56fc5e924dea8d63971e1de288d17da0c7`: Media Dev Check #93 — `4 failed, 272 passed`, all failures were the newly introduced docs/agent assertions.
-- GREEN head `700e781229e5b0614c8b4b299bf201cd2cb9edee`: Media Dev Check #98 — `276 passed`, validation/rebuild/web-export/doctor successful; Web Check #222 — success including browser checks and review screenshots.
-
-## Task 6 — whole-branch review and final verification
-
-Whole-branch review covered command/schema boundaries, canonical validation, similarity normalization/reconciliation, transaction/path-policy rules, workflow auto-merge arms, read-only assessment routing, taste/recommend evidence separation, manifest/web projection, frontend routing, and secret boundaries.
-
-No Critical or Important findings were found. The review confirmed:
-
-- one unordered similarity identity per target; no mirrored canonical duplicates;
-- stable external identity plus display snapshot for persisted external endpoints;
-- deterministic external→canonical reconciliation, self-link removal, and collision policy;
-- similarity appears as separate evidence and does not alter affinities/preferences or candidate rank;
-- `assess_candidate` is excluded from mutable command execution and performs no filesystem mutation;
-- similarity-only auto-merge paths cannot touch works/service/schema/web files;
-- canonical↔external web projection never invents a local route;
-- browser static credential scan remains part of Web Check.
-
-One Minor documentation drift remains intentionally non-blocking: the approved design document header still says `written spec awaiting user review`. Current implementation status is authoritative in this file and PR #68 checkpoints; the design body is left unchanged as approved design history.
-
-Final completion gate for Task 6: both Media Dev Check and Web Check must pass on the exact head produced by this status commit. PR metadata/comments should then record that exact SHA and check numbers. No product-code changes are expected unless final verification finds a regression.
-
-## Phase E / Task 11 — semantic and taste pilot
-
-Representative semantic fingerprints were enriched first, then inferred preferences were reanalysed from raw/explicit evidence rather than from previous inferred output.
-
-### primary
-
-- Published through PR #57.
-- Inferred hypotheses intentionally remain medium-confidence:
-  - intrigue + active problem solving;
-  - engaging execution.
-- Evidence includes concrete works such as `knives-out-2019`, `sherlock-bbc`, `ready-player-one-2018`, `deja-vu-2006`, and `game-night-2018`.
-- Previous inferred hypotheses were not used as independent evidence for replacement hypotheses.
-
-### partner
-
-- Published through PR #59.
-- Kept deliberately sparse because raw partner evidence is sparse.
-- One low-confidence hypothesis only: `visuals.strong`.
-- Do not expand partner taste merely to make the profile look complete.
-
-### couple
-
-- Published through PR #60.
-- One low-confidence shared hypothesis only: `entertainment.engaging`.
-- Evidence combines real signals from both targets on `deja-vu-2006` and a second joint signal on `game-night-2018`.
-- `visuals.strong` was intentionally not promoted to a couple hypothesis because the raw evidence contains a real disagreement. Couple reasoning must expose such disagreement rather than average it away.
-
-## Pipeline regressions found by the pilot
-
-The production pilot exposed two workflow defects and both were fixed with RED → GREEN regression coverage before the pilot continued:
-
-1. PR #56 — canonical v5 outputs such as `media/preferences/inferred/**` were not staged with generated profiles, which could make exact-head `rebuild --check` detect stale generated output.
-2. PR #58 — optional output directories such as `media/data/interactions` could make `git add` fail when the directory did not yet exist. Optional canonical paths are now staged conditionally while newly created outputs are still captured.
-
-The successful primary retry after those fixes served as the production regression test of the corrected staging path.
-
-## Phase E / Task 12 — recommendation smoke
-
-### Internal-only route
-
-Read-only smoke for `primary` used the local library as the candidate boundary. `accountant-2016` (`The Accountant` / `Расплата`) is locally stored and explicitly `unwatched` for primary, so it is a valid internal candidate. Its crime/thriller premise is compatible with the current medium-confidence inferred pattern around intrigue/problem solving.
-
-Important wording rule: that fit is an inferred pattern, not an explicit statement by the user.
-
-### External discovery route
-
-External discovery was exercised with current provider/web facts and candidates outside the local catalog. `Black Bag` and `Relay` were used as representative discovery candidates. The local library acted as memory, evidence, and exclusion state rather than the candidate boundary.
-
-External recommendations do not need to be added to the canonical library merely because they were suggested.
-
-### Explainability
-
-Recommendation explanations should separate:
-
-- explicit user evidence;
-- inferred taste hypotheses and their confidence;
-- factual/semantic traits of the candidate;
-- explicit similarity evidence when relevant;
-- ephemeral request constraints.
-
-Never phrase an inferred hypothesis as something the user explicitly said. Similarity does not imply liking. For `couple`, surface agreement/disagreement from the underlying member evidence instead of presenting a hidden averaged preference.
-
-No recommendation interaction was persisted during this engineering smoke because no real user selected, rejected, deferred, or marked a candidate as already watched/not interested.
-
-## Historical verification evidence
-
-Task 11 media operations completed through their authoritative exact-head gates and successful Pages publications:
-
-- primary — Media Check #296, Pages #40;
-- partner — Media Check #297, Pages #41;
-- couple — Media Check #298, Pages #42.
-
-A fresh Task 12 verification-only PR #61 was created from the post-pilot `main` solely to run `Web Check` and was closed without merge. Web Check #201 completed successfully for real manifest export, web unit tests, TypeScript typecheck, production build, broker URL embedding assertion, static artifact scan, Chromium responsive/motion/accessibility/edit-feedback checks, and review screenshots.
-
-## Known limitations / next-version candidates
-
-- Partner evidence is still sparse; confidence should remain conservative until real observations accumulate.
-- Semantic fingerprint coverage is representative rather than exhaustive. Enrich more works when recommendation quality needs it, not as filler.
-- Recommendation interaction history is effectively empty until real recommendation lifecycle events occur. Persist only meaningful `recommended`, `selected`, `already_watched`, `not_tonight`, or `not_interested` events.
-- External discovery/current external facts still rely on the agent/server-side intelligence boundary. Static Pages must remain useful without live model/provider access.
-- Explicit similarity currently has current-assertion semantics, not append-only opinion history.
-- Derived/system similarity is intentionally not persisted as canonical explicit similarity and is not shown as a separate web section until a real derived source exists.
-- Candidate assessment intentionally has no deterministic prediction score; the agent must preserve provenance and uncertainty in the explanation.
-- Do not turn temporary mood/runtime constraints, `not_tonight`, or one similarity assertion into stable taste.
-
-## Safe resume point
-
-For the active v5.1 implementation, resume from PR #68 and verify its current exact head before changing anything. Tasks 1–5 are complete; do not redo them. Task 6 review is complete. The only remaining implementation step is fresh exact-head Media Dev Check + Web Check on this final status commit, followed by PR handoff/ready-for-review metadata if both are GREEN.
-
-For normal media use after v5.1 is merged, start from current `main`, read `media/AGENTS.md`, then prefer the shortest route matching intent:
-
-- read/lookup → local derived read models;
-- candidate assessment → read-only `assess_candidate`, qualitative evidence-based answer;
-- explicit similarity write/remove → `set_work_similarity` / `remove_work_similarity`;
-- internal recommendation → local candidates only;
-- general recommendation → external discovery by default, local data for taste/exclusions/similarity anchors;
-- normal data write → one typed media operation;
-- taste reanalysis → replacement inferred hypotheses from raw/explicit evidence only;
-- semantic enrichment → film traits only, never implicit viewer preference;
-- architecture/vocabulary/maintenance → explicit developer/manual path.
-
-Before claiming a new release or workflow change complete, run the full relevant validation again and verify the post-merge Pages result.
+- read-only `assess_candidate` for qualitative candidate assessment;
+- explicit `set_work_similarity` / `remove_work_similarity` relations, including stable external endpoints and deterministic reconciliation;
+- similarity as recommendation/explanation evidence, not preference by itself;
+- manifest v3 explicit similarity projection on the static web surface;
+- strict typed mutation pipeline with exact-revision validation and guarded operation-specific merge policy.

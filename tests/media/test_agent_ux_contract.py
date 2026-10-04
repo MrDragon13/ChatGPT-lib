@@ -143,31 +143,38 @@ def test_v51_starter_prompt_mentions_similarity_and_candidate_assessment_concise
     assert len(text) < 5500
 
 
-def test_repository_root_has_compact_agent_router():
+def test_repository_root_has_compact_agent_router_to_living_docs():
     text = _text("AGENTS.md")
     assert "media/AGENTS.md" in text
-    assert "media/V5_STATUS.md" in text
+    assert "docs/README.md" in text
+    assert "docs/status/current.md" in text
     assert "media/START_PROMPT.md" in text
     assert "source of truth" in text.lower()
+    assert "historical" in text.lower()
     assert len(text) < 4000
 
 
-def test_starter_prompt_has_deterministic_bootstrap_and_no_stale_privacy_claim():
+def test_starter_prompt_has_deterministic_bootstrap_without_mandatory_legacy_status():
     text = _text("media/START_PROMPT.md")
+    assert "media/AGENTS.md" in text
+    assert "docs/status/current.md" in text
     agents_pos = text.index("media/AGENTS.md")
-    status_pos = text.index("media/V5_STATUS.md")
+    status_pos = text.index("docs/status/current.md")
     assert agents_pos < status_pos
+    assert "media/V5_STATUS.md" not in text
     assert "связанные с ними файлы" not in text
     assert "приватный GitHub-репозиторий" not in text
     assert len(text) < 5500
 
 
-def test_media_agent_contract_declares_read_order_and_conditional_scenario_catalog():
+def test_media_agent_contract_declares_living_docs_and_conditional_scenario_catalog():
     text = _text("media/AGENTS.md")
     assert "## Operating model" in text
-    assert "media/V5_STATUS.md" in text
+    assert "docs/architecture/" in text
+    assert "docs/reference/" in text
     assert SCENARIO_CATALOG in text
     assert "only when" in text.lower()
+    assert "media/V5_STATUS.md" not in text
 
 
 def test_root_readme_points_to_v5_and_current_web_write_path():
