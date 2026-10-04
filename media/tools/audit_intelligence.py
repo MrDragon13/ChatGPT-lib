@@ -393,7 +393,7 @@ def collect_intelligence_audit(repo_root: Path) -> dict[str, Any]:
     )
 
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "canonical_input_digest": canonical_input_digest(root),
         "inventory": {
             "works_total": len(works),
