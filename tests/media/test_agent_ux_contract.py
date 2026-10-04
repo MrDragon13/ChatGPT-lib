@@ -111,6 +111,28 @@ def test_v51_agent_contract_routes_candidate_assessment_and_similarity_safely():
         assert phrase in text
 
 
+def test_stage_a_agent_contract_requires_honest_limitations_and_basis_language():
+    text = _text("media/AGENTS.md")
+    for phrase in (
+        "Active `limitations` are material context",
+        "`ranking_basis=none` is not personalized semantic evidence",
+        "Partial `assessment_coverage` must not be described as fully grounded certainty",
+        "Inferred hypotheses are explanation-only for numeric affinity aggregation",
+    ):
+        assert phrase in text
+
+
+def test_stage_a_agent_contract_names_trusted_auto_merge_boundary():
+    text = _text("media/AGENTS.md")
+    for phrase in (
+        "media/config/operation_path_policy.json",
+        "trusted `main`",
+        "GitHub PR files API",
+        "must not execute PR-head Python",
+    ):
+        assert phrase in text
+
+
 def test_v51_scenario_catalog_covers_similarity_and_candidate_assessment():
     text = _text(SCENARIO_CATALOG)
     for phrase in (
