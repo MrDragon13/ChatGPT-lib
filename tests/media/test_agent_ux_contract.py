@@ -36,7 +36,8 @@ def test_normal_data_write_has_guarded_auto_merge_workflow():
     assert "event=workflow_dispatch" in text
     assert "head_sha" in text
     assert "base.ref" in text
-    assert "media/data/works/" in text
+    assert "media/config/operation_path_policy.json?ref=main" in text
+    assert 'pulls/$PR_NUMBER/files?per_page=100' in text
     assert ".media/operations/" in text
     assert "merge" in text
 
