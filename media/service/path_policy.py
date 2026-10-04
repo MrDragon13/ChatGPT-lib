@@ -1,12 +1,52 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 from typing import Any, Iterable
 
 from media.domain.errors import PathPolicyError
 
 _POLICY_PATH = Path(__file__).resolve().parents[1] / "config" / "operation_path_policy.json"
+_UNSUPPORTED_PATTERN_CHARS = "?[]{}"
+
+
+def _validate_repository_path(value: str, *, label: str) -> None:
+    if not isinstance(value, str) or not value:
+        raise PathPolicyError(f"invalid {label}: empty path")
+    if value.startswith("/") or "\\" in value or "//" in value:
+        raise PathPolicyError(f"invalid {label}: {value}")
+    segments=value.split("/")
+    if any(segment in {"", ".", ".."} for segment in segments):
+        raise PathPolicyError(f"invalid {label}: {value}")
+
+
+def _validate_pattern(pattern: str) -> None:
+    _validate_repository_path(pattern,label="policy pattern")
+    if any(char in pattern for char in _UNSUPPORTED_PATTERN_CHARS):
+        raise PathPolicyError(f"unsupported policy pattern syntax: {pattern}")
+    if pattern.count("*") > 1:
+        raise PathPolicyError(f"unsupported policy pattern syntax: {pattern}")
+
+
+def matches_policy_path(path: str, pattern: str) -> bool:
+    """Match the Stage A declarative path grammar, anchored to the whole path.
+
+    A pattern is either exact or contains one `*`. The wildcard may match
+    zero or more characters inside one path segment, but never `/`.
+    """
+
+    _validate_repository_path(path,label="repository path")
+    _validate_pattern(pattern)
+    if "*" not in pattern:
+        return path == pattern
+
+    prefix,suffix=pattern.split("*",1)
+    if not path.startswith(prefix) or not path.endswith(suffix):
+        return False
+    if len(path) < len(prefix)+len(suffix):
+        return False
+    middle=path[len(prefix): len(path)-len(suffix) if suffix else None]
+    return "/" not in middle
 
 
 def _load_policy() -> dict[str, dict[str, Any]]:
@@ -35,6 +75,8 @@ def _load_policy() -> dict[str, dict[str, Any]]:
             or any(not isinstance(path, str) or not path for path in allowed_paths)
         ):
             raise PathPolicyError(f"invalid allowed_paths policy for operation: {operation}")
+        for pattern in allowed_paths:
+            _validate_pattern(pattern)
         normalized[operation] = {
             "auto_merge": auto_merge,
             "allowed_paths": tuple(allowed_paths),
@@ -49,14 +91,8 @@ def allowed_paths_for_operation(operation: str) -> tuple[str, ...]:
     return entry["allowed_paths"]
 
 
-def _matches(path: str, pattern: str) -> bool:
-    value=PurePosixPath(path); expected=PurePosixPath(pattern)
-    if "*" not in pattern: return value == expected
-    return value.match(pattern)
-
-
 def verify_changed_paths(operation: str, paths: Iterable[str]) -> None:
     allowed=allowed_paths_for_operation(operation)
     if not allowed: raise PathPolicyError(f"no write policy for operation: {operation}")
-    rejected=[path for path in paths if not any(_matches(path,pattern) for pattern in allowed)]
+    rejected=[path for path in paths if not any(matches_policy_path(path,pattern) for pattern in allowed)]
     if rejected: raise PathPolicyError(f"operation {operation} may not modify: {', '.join(sorted(rejected))}")
