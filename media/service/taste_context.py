@@ -72,6 +72,51 @@ def _feedback_rows(repo: YamlRepository, target: str, members: list[str], limit:
     return rows[:limit]
 
 
+def _direction(affinity: dict[str, Any] | None) -> str | None:
+    score = (affinity or {}).get("score")
+    if not isinstance(score, (int, float)) or isinstance(score, bool):
+        return None
+    if score > 0:
+        return "positive"
+    if score < 0:
+        return "negative"
+    return None
+
+
+def _couple_term_signals(media_root: Path, members: list[str]) -> list[dict[str, Any]]:
+    profiles = {member: build_profile(media_root, member) for member in members}
+    affinities_by_member = {
+        member: (profiles[member].get("affinities") or {})
+        for member in members
+    }
+    terms = sorted({
+        term
+        for affinities in affinities_by_member.values()
+        for term in affinities
+    })
+    rows: list[dict[str, Any]] = []
+    for term in terms:
+        member_rows: dict[str, dict[str, Any]] = {}
+        directions: list[str | None] = []
+        for member in members:
+            affinity = affinities_by_member[member].get(term)
+            direction = _direction(affinity)
+            directions.append(direction)
+            member_rows[member] = {
+                "direction": direction,
+                "confidence": affinity.get("confidence") if isinstance(affinity, dict) else None,
+                "evidence_count": affinity.get("evidence_count", 0) if isinstance(affinity, dict) else 0,
+            }
+        if any(direction is None for direction in directions):
+            status = "insufficient"
+        elif len(set(directions)) == 1:
+            status = "agreement"
+        else:
+            status = "disagreement"
+        rows.append({"term": term, "members": member_rows, "status": status})
+    return rows
+
+
 def build_taste_context(media_root: Path, request: TasteContextRequest) -> dict[str, Any]:
     media_root=Path(media_root); repo=YamlRepository(media_root); viewers,groups=repo.configured_targets()
     if request.target not in viewers and request.target not in groups:
@@ -131,8 +176,17 @@ def build_taste_context(media_root: Path, request: TasteContextRequest) -> dict[
         "recent_feedback":_feedback_rows(repo,request.target,members,request.recent_limit),
         "similarities":similarity_context(media_root,request.target),
         "exclusions":{"watched":sorted(watched),"not_interested":sorted(not_interested)},
+        "limitations":[],
     }
     if members:
         agreements.sort(key=lambda item:item["id"]); disagreements.sort(key=lambda item:item["id"])
-        result["couple"]={"members":members,"agreements":agreements[:20],"disagreements":disagreements[:20]}
+        term_signals = _couple_term_signals(media_root, members)
+        result["couple"]={
+            "members":members,
+            "agreements":agreements[:20],
+            "disagreements":disagreements[:20],
+            "term_signals":term_signals,
+        }
+        if any(item["status"] == "disagreement" for item in term_signals):
+            result["limitations"].append("couple_term_disagreement")
     return result
