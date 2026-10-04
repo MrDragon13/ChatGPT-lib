@@ -30,6 +30,27 @@ def test_auto_merge_starts_after_command_and_waits_for_authoritative_check():
     assert "github.event.workflow_run.head_branch" in text
 
 
+def test_auto_merge_trust_boundary_uses_main_policy_and_pr_file_metadata():
+    text = _text("media-auto-merge.yml")
+    assert 'media/config/operation_path_policy.json?ref=main' in text
+    assert 'gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/files?per_page=100" --jq \' .[].filename\'' not in text
+    assert 'gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/files?per_page=100" --jq \'.[].filename\'' in text
+    assert '?ref=$PR_HEAD_SHA' in text
+    assert "base64 --decode" in text
+    assert "jq -e" in text
+    assert "auto_merge" in text
+    assert "allowed_paths" in text
+    assert 'case "$OP_KIND" in' not in text
+    for old_arm in (
+        "add_work|record_viewing_feedback)",
+        "edit_viewing_feedback|set_interest|set_semantic_fingerprint)",
+        "set_work_similarity|remove_work_similarity)",
+        "set_inferred_preferences)",
+        "record_recommendation_interaction)",
+    ):
+        assert old_arm not in text
+
+
 def test_auto_merge_dispatches_pages_for_exact_merge_sha_in_media_mode():
     auto_merge = _text("media-auto-merge.yml")
     pages = _text("media-pages.yml")
