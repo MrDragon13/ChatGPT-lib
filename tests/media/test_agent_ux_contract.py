@@ -36,7 +36,8 @@ def test_normal_data_write_has_guarded_auto_merge_workflow():
     assert "event=workflow_dispatch" in text
     assert "head_sha" in text
     assert "base.ref" in text
-    assert "media/data/works/" in text
+    assert "media/config/operation_path_policy.json?ref=main" in text
+    assert 'pulls/$PR_NUMBER/files?per_page=100' in text
     assert ".media/operations/" in text
     assert "merge" in text
 
@@ -106,6 +107,34 @@ def test_v51_agent_contract_routes_candidate_assessment_and_similarity_safely():
         "Similarity is evidence for recommendations and explanations, not a stable preference by itself",
         "qualitative assessment",
         "no fake precise percentage",
+    ):
+        assert phrase in text
+
+
+def test_stage_a_agent_contract_requires_honest_limitations_and_basis_language():
+    text = _text("media/AGENTS.md")
+    for phrase in (
+        "Active `limitations` are material context",
+        "`ranking_basis=none` is not personalized semantic evidence",
+        "Partial `assessment_coverage` must not be described as fully grounded certainty",
+        "Inferred hypotheses are explanation-only for numeric affinity aggregation",
+    ):
+        assert phrase in text
+
+
+def test_stage_a_agent_contract_discloses_limitations_once_and_concisely():
+    text = _text("media/AGENTS.md")
+    assert "once, succinctly" in text
+    assert "do not mechanically repeat the same warning" in text
+
+
+def test_stage_a_agent_contract_names_trusted_auto_merge_boundary():
+    text = _text("media/AGENTS.md")
+    for phrase in (
+        "media/config/operation_path_policy.json",
+        "trusted `main`",
+        "GitHub PR files API",
+        "must not execute PR-head Python",
     ):
         assert phrase in text
 

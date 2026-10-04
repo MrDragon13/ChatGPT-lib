@@ -98,5 +98,50 @@ def test_repeated_independent_high_ratings_can_raise_confidence_but_single_canno
     assert repeated['confidence'] in {'medium','high'}
 
 
+def _add_inferred_hypothesis(media: Path, target: str) -> dict[str, object]:
+    directory=media/'preferences/inferred'
+    directory.mkdir(parents=True, exist_ok=True)
+    hypothesis={
+        'id':f'{target}-intrigue-hypothesis',
+        'statement':'Интрига вероятно важна',
+        'terms':['story.intrigue'],
+        'affinity':1.0,
+        'confidence':'low',
+        'evidence':['a'],
+    }
+    dump_yaml(directory/f'{target}.yaml', {'schema_version':4,'target':target,'hypotheses':[hypothesis]})
+    return hypothesis
+
+
+def test_inferred_hypothesis_does_not_change_numeric_affinity(tmp_path: Path):
+    media=seed(tmp_path)
+    before=build_profile(media,'primary')['affinities']['story.intrigue']
+    hypothesis=_add_inferred_hypothesis(media,'primary')
+
+    after_profile=build_profile(media,'primary')
+    after=after_profile['affinities']['story.intrigue']
+
+    assert after['score']==before['score']
+    assert after['confidence']==before['confidence']
+    assert after['evidence_count']==before['evidence_count']
+    assert after_profile['inferred_preferences']==[hypothesis]
+    assert all(item['source_kind']!='inferred_preference' for item in after['evidence'])
+
+
+def test_couple_inferred_hypothesis_does_not_change_numeric_affinity(tmp_path: Path):
+    media=seed(tmp_path)
+    before=build_profile(media,'couple')['affinities']['story.intrigue']
+    hypothesis=_add_inferred_hypothesis(media,'couple')
+
+    after_profile=build_profile(media,'couple')
+    after=after_profile['affinities']['story.intrigue']
+
+    assert after['score']==before['score']
+    assert after['confidence']==before['confidence']
+    assert after['evidence_count']==before['evidence_count']
+    assert after_profile['inferred_preferences']==[hypothesis]
+    assert all(item['source_kind']!='inferred_preference' for item in after['evidence'])
+
+
 def test_write_profiles_outputs_all_configured_targets_deterministically(tmp_path: Path):
     media=seed(tmp_path); paths=write_profiles(media); assert sorted(p.stem for p in paths)==['couple','partner','primary']; before={p.name:p.read_bytes() for p in paths}; paths2=write_profiles(media); assert {p.name:p.read_bytes() for p in paths2}==before; assert load_yaml(media/'generated/profiles/couple.yaml')['target']=='couple'

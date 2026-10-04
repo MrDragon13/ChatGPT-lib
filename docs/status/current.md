@@ -24,13 +24,17 @@ Normal media writes проходят через strict typed operations, determi
 
 Поддерживаются viewing feedback, corrections, interest, inferred preferences, semantic fingerprints, recommendation interactions и explicit work similarity. Bulk `refresh_metadata` остаётся manual-review maintenance operation.
 
+Guarded auto-merge теперь использует единый declarative `media/config/operation_path_policy.json`. Runtime проверяет локальный policy, а privileged workflow получает policy только из trusted `main`, changed-file inventory — через GitHub PR files API, и не исполняет PR-head Python для принятия решения о разрешениях. Policy/workflow/guard/executable-semantics changes поэтому остаются normal human-review developer PR.
+
 Read-only context routes включают `recommend_context`, `taste_context` и `assess_candidate`.
 
 ### Candidate assessment
 
 `assess_candidate` поддерживает qualitative ответ на вопрос «понравится ли мне X?» для canonical или external candidate. Он использует target taste context, concrete evidence works, semantic information и explicit similarity, но не сохраняет prediction и не создаёт fake precise match probability.
 
-External candidate может быть оценён без добавления в canonical library.
+Assessment теперь возвращает top-level `assessment_coverage`: наличие candidate fingerprint, число directional candidate matches, request-local supporting-work fingerprint coverage и отдельный stable denominator по всем rated canonical works target. Для group target rated set учитывает member ratings и direct group rating как fallback, если member rating для work отсутствует. Top-level `limitations` остаётся fact-only (`no_candidate_semantic_fingerprint`, `no_candidate_personalized_basis`, `partial_semantic_coverage`) и не является deterministic verdict.
+
+External candidate может быть оценён без добавления в canonical library; отсутствие его semantic fingerprint и personalized basis сообщается явно через limitations.
 
 ### Explicit work similarity
 
@@ -42,24 +46,32 @@ Explicit similarity используется как recommendation/explanation e
 
 ### Taste и recommendations
 
-Taste reasoning сохраняет provenance между explicit evidence, inferred hypotheses и semantic work knowledge. Inferred output не является independent evidence для последующего вывода.
+Taste reasoning сохраняет provenance между explicit evidence, inferred hypotheses и semantic work knowledge. Inferred output не является independent evidence для последующего вывода. Generated profile хранит inferred hypotheses отдельно и не включает их в численные affinity `score`, `confidence` или `evidence_count`.
 
-Internal recommendation request ограничивает candidate set локальной библиотекой. General recommendation request допускает external discovery; library при этом служит памятью о вкусах, exclusions и evidence anchors.
+Internal recommendation request ограничивает candidate set локальной библиотекой. Его Stage A ranking сначала отделяет candidates с personalized semantic basis от fallback: `trait_overlap` всегда идёт раньше `none`. Personalized candidates сортируются по directional balance (`strengths - concerns`), затем по меньшему числу concerns, `interest.priority` и стабильному ID; fallback — только по priority и ID. Confidence и magnitude affinity пока не являются ranking weights, публичного numeric match score нет.
+
+`recommend_context` сохраняет legacy strengths/concerns и добавляет structured evidence details, `ranking_basis`/`fallback_reason`, top-level pool-vs-returned `coverage` и top-level deterministic `limitations`. Эта policy является correctness/observability baseline, а не доказанной quality-optimal моделью.
+
+Для group target `taste_context.couple.term_signals` отдельно показывает signed semantic direction каждого member по term и status `agreement`/`disagreement`/`insufficient`. Projection строится из индивидуальных member profiles, confidence не влияет на status, существующие rating-based couple agreements/disagreements сохраняются. Semantic disagreement не меняет couple aggregate; он только добавляет top-level limitation `couple_term_disagreement`.
+
+General recommendation request допускает external discovery; library при этом служит памятью о вкусах, exclusions и evidence anchors.
 
 ### Web
 
 Текущий exporter выдаёт **manifest v3**. Static GitHub Pages читает versioned derived manifest, а не canonical YAML.
 
-Manifest v3 включает target-aware taste/recommendation data, semantic fingerprints и explicit similarity projection. Canonical↔canonical similarity проецируется на обе локальные work pages; canonical↔external отображается как lightweight external endpoint без выдуманного local route.
+Manifest v3 включает target-aware taste/recommendation data, semantic fingerprints и explicit similarity projection. Additive recommendation observability (`coverage`, `limitations`, candidate basis/reason) и couple term observability (`term_signals`) остаются в manifest v3, поскольку не меняют meaning существующих полей. Canonical↔canonical similarity проецируется на обе локальные work pages; canonical↔external отображается как lightweight external endpoint без выдуманного local route.
 
 Поддерживаемые browser edits идут через protected broker и тот же typed-command boundary. GitHub/provider/model secrets не попадают в browser bundle.
 
 ## Известные ограничения
 
 - Evidence для `partner` заметно менее насыщен, чем для `primary`; confidence reasoning должен отражать эту разницу.
+- Current Stage A ranking исправляет directional correctness, но ещё не benchmarked как оптимальная модель качества; fingerprint length и alternative ordering policy остаются предметом будущего evaluation.
+- Assessment coverage наблюдаема, но Stage A по-прежнему не вычисляет deterministic `likely/mixed/unlikely`, probability или opaque score; qualitative вывод остаётся agent responsibility с обязательным учётом active limitations.
+- Couple term disagreement наблюдаем, но Stage A не меняет формулу couple aggregation и не вводит confidence threshold для direction/status.
 - Derived semantic similarity не сохраняется как explicit user assertion и не показывается как пользовательское мнение без подтверждения.
 - External discovery/live model reasoning находится на agent/server boundary; static Pages остаётся работоспособным без live model.
-- Candidate assessment сознательно не имеет opaque deterministic match score или псевдо-точной вероятности.
 - Bulk provider metadata refresh требует manual review и не относится к normal auto-merge path.
 - Controlled vocabulary расширяется только отдельным developer/architecture change, а не автоматически из обычного feedback.
 

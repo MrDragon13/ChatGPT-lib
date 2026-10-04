@@ -6,6 +6,7 @@ on:
       - 'media/**/*.py'
       - 'media/schemas/**'
       - 'media/commands/schemas/**'
+      - 'media/config/operation_path_policy.json'
       - 'media/baselines/**'
       - 'tests/media/**'
       - '.github/workflows/media-*.yml'

@@ -40,7 +40,8 @@ Historical paths сохраняются ради provenance и ссылок; о�
 - `media/data/tombstones/` — redirects/merged IDs;
 - `media/preferences/explicit/` — explicit stable preferences;
 - `media/preferences/inferred/` — evidence-backed inferred hypotheses;
-- `media/config/` — viewer/group target configuration;
+- `media/config/viewers.yaml` / `media/config/groups.yaml` — target configuration;
+- `media/config/operation_path_policy.json` — declarative operation→allowed-path/auto-merge policy; runtime reads the local copy, privileged auto-merge fetches the trusted `main` copy;
 - `media/vocabulary.yaml` — controlled semantic vocabulary;
 - `media/schemas/` — canonical/read-model JSON schemas;
 - `media/commands/schemas/` — strict typed operation payload schemas.
@@ -88,7 +89,7 @@ Server-side boundary для разрешённых browser writes. Broker не �
 - maintenance;
 - exact-revision Pages build/deploy.
 
-Executable workflow YAML — authority для конкретных triggers/path policies.
+Privileged guarded merge не исполняет PR-head service/tooling code для определения разрешений: changed filenames приходят из GitHub PR metadata/files API, а declarative path policy читается из trusted `main`.
 
 ## `.media/`
 

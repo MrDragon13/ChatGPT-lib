@@ -39,6 +39,36 @@ def _write_similarity(root: Path, target="primary") -> None:
     })
 
 
+def _write_trait_rating_work(
+    root: Path,
+    work_id: str,
+    *,
+    term: str,
+    primary_rating: float | None,
+    partner_rating: float | None,
+    trait_confidence: str = "high",
+) -> None:
+    work = {
+        "schema_version":4,
+        "entity_type":"work",
+        "id":work_id,
+        "identity":{"format":"movie","title_original":work_id,"title_ru":work_id,"year":2026},
+        "metadata":{
+            "external":{"runtime_min":100},
+            "semantic":{"traits":[{"term":term,"source":"llm_inferred","confidence":trait_confidence}]},
+        },
+        "viewer_signals":{},
+    }
+    for target, rating in (("primary", primary_rating), ("partner", partner_rating)):
+        if rating is None:
+            continue
+        work["viewer_signals"][target] = {
+            "viewing":{"status":"watched"},
+            "rating":{"score":rating,"source":"explicit","confidence":"exact"},
+        }
+    dump_yaml(root/f"media/data/works/{work_id}.yaml", work)
+
+
 def test_taste_context_is_read_only_and_compact_for_primary(tmp_path):
     root = copy_fixture_repo(tmp_path)
     rebuild_generated(root / "media")
@@ -97,6 +127,7 @@ def test_couple_context_exposes_disagreement_without_hidden_average(tmp_path):
     assert row["ratings"] == {"partner":4.0,"primary":9.0}
     assert "score" not in row
     assert "arrival-2016" in result["exclusions"]["watched"]
+    assert "term_signals" in result["couple"]
 
 
 def test_taste_context_respects_representative_and_recent_limits(tmp_path):
@@ -128,4 +159,46 @@ def test_explicit_similarity_is_separate_taste_evidence_not_affinity(tmp_path):
         "provenance":{"source":"explicit"},
     }]
     assert (build_profile(root/"media","primary").get("affinities") or {})==before_affinities
+    assert _file_map(root)==before_files
+
+
+def test_couple_term_signals_expose_member_directions_without_changing_aggregation(tmp_path):
+    root=copy_fixture_repo(tmp_path)
+    _write_trait_rating_work(root,"term-agreement",term="story.intrigue",primary_rating=9.0,partner_rating=8.0)
+    _write_trait_rating_work(root,"term-disagreement",term="pacing.slow",primary_rating=9.0,partner_rating=2.0)
+    _write_trait_rating_work(root,"term-insufficient",term="visuals.strong",primary_rating=9.0,partner_rating=None)
+    _write_trait_rating_work(root,"term-low-confidence",term="tone.dark",primary_rating=9.0,partner_rating=8.0,trait_confidence="low")
+    rebuild_generated(root/"media")
+    before_profile=build_profile(root/"media","couple")
+    before_files=_file_map(root)
+
+    from media.service.taste_context import build_taste_context
+    result=build_taste_context(root/"media",request(target="couple",representative_limit=20))
+
+    rows=result["couple"]["term_signals"]
+    assert [row["term"] for row in rows]==sorted(row["term"] for row in rows)
+    by_term={row["term"]:row for row in rows}
+
+    agreement=by_term["story.intrigue"]
+    assert agreement["status"]=="agreement"
+    assert agreement["members"]["primary"]["direction"]=="positive"
+    assert agreement["members"]["partner"]["direction"]=="positive"
+
+    disagreement=by_term["pacing.slow"]
+    assert disagreement["status"]=="disagreement"
+    assert disagreement["members"]["primary"]["direction"]=="positive"
+    assert disagreement["members"]["partner"]["direction"]=="negative"
+
+    insufficient=by_term["visuals.strong"]
+    assert insufficient["status"]=="insufficient"
+    assert insufficient["members"]["primary"]["direction"]=="positive"
+    assert insufficient["members"]["partner"]["direction"] is None
+
+    low_confidence=by_term["tone.dark"]
+    assert low_confidence["status"]=="agreement"
+    assert low_confidence["members"]["primary"]["direction"]=="positive"
+    assert low_confidence["members"]["primary"]["confidence"]=="low"
+
+    assert result["limitations"]==["couple_term_disagreement"]
+    assert build_profile(root/"media","couple")==before_profile
     assert _file_map(root)==before_files

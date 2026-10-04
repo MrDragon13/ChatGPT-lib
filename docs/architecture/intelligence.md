@@ -23,6 +23,8 @@ Media intelligence разделяет четыре слоя:
 
 Inferred output **не является independent evidence** для другого inferred output. Гипотеза может быть пересчитана из raw/explicit evidence, но не должна усиливаться только потому, что предыдущая версия уже существовала.
 
+Generated profile хранит hypotheses отдельно в `inferred_preferences`. Они доступны explanation/reasoning layer, но **не участвуют в численном расчёте `affinities`** и не увеличивают их `score`, `confidence` или `evidence_count`. Численные affinities строятся только из первичного evidence, которое профиль агрегирует напрямую.
+
 ## Taste context
 
 `taste_context` — компактный read model для reasoning. Он может включать:
@@ -43,6 +45,12 @@ Taste context — память/контекст, а не готовая форм
 ### Internal
 
 Если пользователь явно просит «что посмотреть из моей медиатеки?», candidate boundary — локальная библиотека/index.
+
+Stage A использует временную детерминированную ranking policy, которая исправляет directional correctness, но **не считается доказанной моделью качества**. Для каждого кандидата semantic traits сопоставляются со signed target affinities: `score > 0` даёт strength, `score < 0` — concern, zero/missing affinity не считается направленным совпадением. Confidence и magnitude affinity доступны для explanation, но не используются как скрытые ranking weights.
+
+Кандидаты с `ranking_basis: trait_overlap` всегда идут раньше fallback-кандидатов с `ranking_basis: none`. В personalized-группе порядок определяется последовательно: больше `strengths - concerns`, затем меньше concerns, затем выше `interest.priority`, затем стабильный `id`. В fallback-группе используются только `interest.priority` и `id`. Внешний numeric match/ranking score не публикуется.
+
+`recommend_context` сохраняет legacy `evidence.strengths`/`evidence.concerns`, добавляет structured `evidence_details`, а также явные `ranking_basis` и `fallback_reason`. Top-level `coverage` отдельно описывает весь отфильтрованный candidate pool до `limit` и фактически возвращённый набор после `limit`. Top-level `limitations` содержит только детерминированные fact codes, например partial semantic coverage, наличие fallback results или полное отсутствие personalized candidates; эти ограничения не вложены в `coverage`.
 
 ### External
 
@@ -76,6 +84,12 @@ LLM-derived semantic similarity остаётся derived knowledge и не вы�
 
 Сам assessment не записывает prediction в canonical taste state.
 
+Stage A делает uncertainty assessment наблюдаемой через top-level `assessment_coverage` и `limitations`, но не вычисляет verdict. `candidate_has_fingerprint` и `candidate_directional_matches` описывают, существует ли semantic basis для самого кандидата. Request-local supporting coverage считается по deduplicated canonical works, реально попавшим в `taste_context.recent_feedback` и `taste_context.representative.high/low`.
+
+Отдельно считается stable profile coverage по **всем canonical rated works**, релевантным target, чтобы изменение `recent_limit`/`representative_limit` не меняло базовый знаменатель уверенности. Для viewer target учитывается его numeric rating; для group target достаточно numeric rating любого member, а direct group rating используется как fallback, если member ratings для work отсутствуют. `partial_semantic_coverage` означает только неполное fingerprint coverage одного из этих ненулевых знаменателей.
+
+Fact-only limitation codes различают отсутствие candidate fingerprint (`no_candidate_semantic_fingerprint`) и отсутствие directional personalized basis (`no_candidate_personalized_basis`). Второй код ставится whenever directional matches равны нулю, независимо от того, вызвано это отсутствующим fingerprint или отсутствием известных signed affinities. Это не probability и не скрытый assessment score.
+
 ## Формат вывода assessment
 
 Финальный user-facing вывод остаётся **qualitative**:
@@ -89,7 +103,7 @@ LLM-derived semantic similarity остаётся derived knowledge и не вы�
 
 Запрещена fake precise probability вроде «82%». Также нет обязательного **opaque match score**, который скрывает, почему модель пришла к выводу.
 
-Если candidate identity/fingerprint или пользовательского evidence мало, правильный результат — lower confidence, а не выдуманная точность.
+Если candidate identity/fingerprint или пользовательского evidence мало, правильный результат — lower confidence, а не выдуманная точность. Agent обязан учитывать active `limitations` и не описывать partial coverage как полностью grounded certainty.
 
 ## Couple reasoning
 
@@ -100,6 +114,10 @@ LLM-derived semantic similarity остаётся derived knowledge и не вы�
 - agreement — оба сигнала поддерживают candidate;
 - disagreement — один сигнал поддерживает, другой создаёт риск;
 - sparse evidence — для одного участника данных недостаточно.
+
+Stage A дополнительно проецирует `couple.term_signals` из **индивидуальных member profiles**, не из уже агрегированного couple score. Для каждого semantic term показываются direction (`positive`/`negative`/`null`), confidence и evidence count каждого member. `agreement` означает одинаковый non-zero sign у всех members, `disagreement` — разные non-zero signs при наличии directed evidence у всех, `insufficient` — отсутствие directed evidence хотя бы у одного member. Confidence не меняет status.
+
+Эта projection read-only и не изменяет couple aggregation или generated profile. Старые rating-based `couple.agreements`/`couple.disagreements` сохраняются отдельно. Если существует хотя бы один semantic-term disagreement, top-level `limitations` получает fact code `couple_term_disagreement`, чтобы agent не скрывал конфликт усреднённым объяснением.
 
 Explanation должно показывать конфликт, если он влияет на выбор.
 

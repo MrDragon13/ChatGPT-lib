@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "operations": {
+    "add_work": {
+      "auto_merge": true,
+      "allowed_paths": [
+        "media/data/works/*.yaml",
+        "media/generated/index.jsonl",
+        "media/generated/profiles/*.yaml",
+        ".media/operations/*.json",
+        "media/data/relations/similarity/*.yaml"
+      ]
+    },
+    "record_viewing_feedback": {
+      "auto_merge": true,
+      "allowed_paths": [
+        "media/data/works/*.yaml",
+        "media/generated/index.jsonl",
+        "media/generated/profiles/*.yaml",
+        ".media/operations/*.json",
+        "media/data/relations/similarity/*.yaml"
+      ]
+    },
+    "edit_viewing_feedback": {
+      "auto_merge": true,
+      "allowed_paths": [
+        "media/data/works/*.yaml",
+        "media/generated/index.jsonl",
+        "media/generated/profiles/*.yaml",
+        ".media/operations/*.json"
+      ]
+    },
+    "set_interest": {
+      "auto_merge": true,
+      "allowed_paths": [
+        "media/data/works/*.yaml",
+        "media/generated/index.jsonl",
+        "media/generated/profiles/*.yaml",
+        ".media/operations/*.json"
+      ]
+    },
+    "refresh_metadata": {
+      "auto_merge": false,
+      "allowed_paths": [
+        "media/data/works/*.yaml",
+        "media/generated/index.jsonl",
+        "media/generated/profiles/*.yaml",
+        ".media/operations/*.json"
+      ]
+    },
+    "set_semantic_fingerprint": {
+      "auto_merge": true,
+      "allowed_paths": [
+        "media/data/works/*.yaml",
+        "media/generated/index.jsonl",
+        "media/generated/profiles/*.yaml",
+        ".media/operations/*.json"
+      ]
+    },
+    "set_inferred_preferences": {
+      "auto_merge": true,
+      "allowed_paths": [
+        "media/preferences/inferred/*.yaml",
+        "media/generated/profiles/*.yaml",
+        ".media/operations/*.json"
+      ]
+    },
+    "record_recommendation_interaction": {
+      "auto_merge": true,
+      "allowed_paths": [
+        "media/data/interactions/*.jsonl",
+        "media/generated/profiles/*.yaml",
+        ".media/operations/*.json"
+      ]
+    },
+    "set_work_similarity": {
+      "auto_merge": true,
+      "allowed_paths": [
+        "media/data/relations/similarity/*.yaml",
+        ".media/operations/*.json"
+      ]
+    },
+    "remove_work_similarity": {
+      "auto_merge": true,
+      "allowed_paths": [
+        "media/data/relations/similarity/*.yaml",
+        ".media/operations/*.json"
+      ]
+    }
+  }
+}

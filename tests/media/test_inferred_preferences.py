@@ -50,8 +50,9 @@ def test_inferred_command_requires_numeric_affinity():
         parse_command(data)
 
 
-def test_set_inferred_preferences_writes_canonical_file_and_aggregates_profile(tmp_path):
+def test_set_inferred_preferences_writes_canonical_file_and_exposes_explanation_only_profile(tmp_path):
     root = copy_fixture_repo(tmp_path)
+    before = build_profile(root / "media", "primary")
     result = execute_command(root, command(), now=datetime(2026,10,3,tzinfo=timezone.utc))
     path = root / "media/preferences/inferred/primary.yaml"
     doc = load_yaml(path)
@@ -60,7 +61,7 @@ def test_set_inferred_preferences_writes_canonical_file_and_aggregates_profile(t
     assert doc["updated_at"] == "2026-10-03T00:00:00Z"
     profile = build_profile(root / "media", "primary")
     assert profile["inferred_preferences"][0]["id"] == "intrigue-problem-solving"
-    assert any(e["source_kind"] == "inferred_preference" for e in profile["affinities"]["story.intrigue"]["evidence"])
+    assert profile["affinities"] == before["affinities"]
     assert result.status == "applied"
 
 

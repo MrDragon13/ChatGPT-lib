@@ -57,7 +57,15 @@ Authoritative `Media Check` запускается для точного resulti
 
 ### 7. Guarded merge
 
-Auto-merge разрешён только allowlisted normal data operations и только для operation-specific path set. **guarded merge** не распространяется на architecture/schema/vocabulary/workflow changes.
+Auto-merge разрешён только allowlisted normal data operations и только для operation-specific path set. **Guarded merge** не распространяется на architecture/schema/vocabulary/workflow changes.
+
+Canonical policy — declarative `media/config/operation_path_policy.json`. Runtime transaction проверяет локальную копию policy, а privileged auto-merge **не доверяет PR checkout**: он получает policy из trusted `main` через GitHub Contents API и список changed filenames через GitHub PR files API. PR-head operation marker читается только как JSON data. Privileged workflow не должен импортировать или исполнять PR-head Python.
+
+Path patterns используют один и тот же узкий grammar в Python и privileged workflow: repository-relative POSIX path; exact match либо ровно один `*`; wildcard не пересекает `/`; matching anchored ко всему path. `**`, второй `*`, `?`, character classes, brace expansion и ненормализованные paths invalid и приводят к fail closed.
+
+Текущая trust-модель privileged workflow опирается также на trigger `workflow_run`: исполняемое определение `media-auto-merge.yml` существует на default branch, а GitHub формирует для `workflow_run` event ref/SHA от default branch. Поэтому mutable PR не подменяет definition privileged workflow, который получает write-capable token. Это допущение относится именно к текущему trigger model. Переход на `pull_request_target`, checkout/eval PR-head executable code или другой механизм требует **separate security review**; текущий trust argument автоматически на него не переносится.
+
+Любая ошибка fetch/decode/JSON parsing, неизвестная operation, `auto_merge: false`, unsupported matcher grammar, пустой/invalid allowlist или path вне trusted policy приводит к fail closed.
 
 ### 8. Pages publish
 
@@ -65,9 +73,9 @@ Auto-merge разрешён только allowlisted normal data operations и �
 
 ## Auto-merge eligible normal operations
 
-Точный список определяется workflow/policy code, а не этим prose-файлом. Типовые normal routes включают viewing feedback, interest, inferred preferences, semantic fingerprint, recommendation interaction и explicit similarity writes.
+Точный список определяется `media/config/operation_path_policy.json`, а не prose-файлом и не дублированным shell `case`. Типовые normal routes включают viewing feedback, interest, inferred preferences, semantic fingerprint, recommendation interaction и explicit similarity writes.
 
-Если operation меняет больше разрешённых paths, guarded merge должен остановиться, а не расширять права молча.
+Изменение самого policy, privileged workflows, guard tests или executable media service/tooling code не может быть разрешено тем же untrusted PR: такие PR идут только через обычный developer review/merge. Если operation меняет больше разрешённых paths, guarded merge должен остановиться, а не расширять права молча.
 
 ## Work creation + feedback
 
@@ -106,6 +114,8 @@ Auto-merge разрешён только allowlisted normal data operations и �
 ## Security properties
 
 GitHub Actions media pipeline не должен требовать live LLM credentials. Provider tokens выдаются только provider-dependent server/CI операциям. Browser никогда не получает repository write credentials или provider/model secrets.
+
+Privileged guarded merge использует только два доверенных источника policy decisions: policy bytes из trusted `main` и changed-file inventory из GitHub PR files API / PR metadata. Mutable PR code не определяет собственные права и PR-head Python не исполняется с write-capable credentials.
 
 ## Проверка developer change
 
