@@ -84,6 +84,12 @@ LLM-derived semantic similarity остаётся derived knowledge и не вы�
 
 Сам assessment не записывает prediction в canonical taste state.
 
+Stage A делает uncertainty assessment наблюдаемой через top-level `assessment_coverage` и `limitations`, но не вычисляет verdict. `candidate_has_fingerprint` и `candidate_directional_matches` описывают, существует ли semantic basis для самого кандидата. Request-local supporting coverage считается по deduplicated canonical works, реально попавшим в `taste_context.recent_feedback` и `taste_context.representative.high/low`.
+
+Отдельно считается stable profile coverage по **всем canonical rated works**, релевантным target, чтобы изменение `recent_limit`/`representative_limit` не меняло базовый знаменатель уверенности. Для viewer target учитывается его numeric rating; для group target достаточно numeric rating любого member, а direct group rating используется как fallback, если member ratings для work отсутствуют. `partial_semantic_coverage` означает только неполное fingerprint coverage одного из этих ненулевых знаменателей.
+
+Fact-only limitation codes различают отсутствие candidate fingerprint (`no_candidate_semantic_fingerprint`) и отсутствие directional personalized basis (`no_candidate_personalized_basis`). Второй код ставится whenever directional matches равны нулю, независимо от того, вызвано это отсутствующим fingerprint или отсутствием известных signed affinities. Это не probability и не скрытый assessment score.
+
 ## Формат вывода assessment
 
 Финальный user-facing вывод остаётся **qualitative**:
@@ -97,7 +103,7 @@ LLM-derived semantic similarity остаётся derived knowledge и не вы�
 
 Запрещена fake precise probability вроде «82%». Также нет обязательного **opaque match score**, который скрывает, почему модель пришла к выводу.
 
-Если candidate identity/fingerprint или пользовательского evidence мало, правильный результат — lower confidence, а не выдуманная точность.
+Если candidate identity/fingerprint или пользовательского evidence мало, правильный результат — lower confidence, а не выдуманная точность. Agent обязан учитывать active `limitations` и не описывать partial coverage как полностью grounded certainty.
 
 ## Couple reasoning
 
