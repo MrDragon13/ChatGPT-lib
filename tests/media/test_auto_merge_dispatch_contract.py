@@ -1,13 +1,43 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
+import subprocess
+import textwrap
 
 ROOT = Path(__file__).parents[2]
 WORKFLOWS = ROOT / ".github" / "workflows"
+POLICY_CASES = ROOT / "tests" / "media" / "fixtures" / "operation_path_policy_cases.json"
 
 
 def _text(name: str) -> str:
     return (WORKFLOWS / name).read_text(encoding="utf-8")
+
+
+def _cases() -> list[dict]:
+    document=json.loads(POLICY_CASES.read_text(encoding="utf-8"))
+    assert document["schema_version"]==1
+    return document["cases"]
+
+
+def _workflow_match_function() -> str:
+    text=_text("media-auto-merge.yml")
+    start_marker="          match_policy_path() {"
+    start=text.index(start_marker)
+    end=text.index("\n          }\n",start)+len("\n          }")
+    return textwrap.dedent(text[start:end])
+
+
+def _workflow_match(path: str, pattern: str) -> int:
+    script=f"set -u\n{_workflow_match_function()}\nmatch_policy_path \"$1\" \"$2\""
+    result=subprocess.run(
+        ["bash","-c",script,"policy-matcher",path,pattern],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    return result.returncode
 
 
 def test_media_command_only_dispatches_read_only_check_for_exact_applied_head():
@@ -49,6 +79,22 @@ def test_auto_merge_trust_boundary_uses_main_policy_and_pr_file_metadata():
         "record_recommendation_interaction)",
     ):
         assert old_arm not in text
+
+
+def test_privileged_workflow_matcher_matches_shared_policy_corpus():
+    for case in _cases():
+        assert (_workflow_match(case["path"],case["pattern"])==0) is case["expected"], case
+
+
+def test_privileged_workflow_matcher_rejects_unsupported_pattern_grammar():
+    for pattern in (
+        "media/data/works/**.yaml",
+        "media/data/works/*/*.yaml",
+        "media/data/works/?.yaml",
+        "media/data/works/[ab].yaml",
+        "media/data/works/{a,b}.yaml",
+    ):
+        assert _workflow_match("media/data/works/a.yaml",pattern) != 0
 
 
 def test_auto_merge_dispatches_pages_for_exact_merge_sha_in_media_mode():
