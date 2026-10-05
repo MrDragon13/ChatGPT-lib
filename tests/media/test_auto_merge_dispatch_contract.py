@@ -40,6 +40,15 @@ def _workflow_match(path: str, pattern: str) -> int:
     return result.returncode
 
 
+def _reservation_receipt_jq_filter() -> str:
+    text = _text("media-auto-merge.yml")
+    reserve_start = text.index('            if [ "$OP_KIND" = "reserve_reassessment_session" ]; then')
+    filter_marker = "              if ! printf '%s' \"$OP_JSON\" | jq -e '\n"
+    filter_start = text.index(filter_marker, reserve_start) + len(filter_marker)
+    filter_end = text.index("\n              ' >/dev/null; then", filter_start)
+    return textwrap.dedent(text[filter_start:filter_end])
+
+
 def test_media_command_only_dispatches_read_only_check_for_exact_applied_head():
     text = _text("media-command.yml")
     assert 'gh workflow run media-check.yml --ref "$BRANCH" -f expected_sha="$HEAD_SHA"' in text
@@ -95,6 +104,27 @@ def test_privileged_workflow_matcher_rejects_unsupported_pattern_grammar():
         "media/data/works/{a,b}.yaml",
     ):
         assert _workflow_match("media/data/works/a.yaml",pattern) != 0
+
+
+def test_reassessment_reservation_receipt_validator_accepts_valid_reserved_item_digests():
+    payload = {
+        "details": {
+            "reserved_items": {
+                "gattaca-1997": {
+                    "pre_review_work_file_digest": "sha256:" + ("a" * 64),
+                }
+            }
+        }
+    }
+    result = subprocess.run(
+        ["jq", "-e", _reservation_receipt_jq_filter()],
+        cwd=ROOT,
+        input=json.dumps(payload),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
 
 
 def test_auto_merge_dispatches_pages_for_exact_merge_sha_in_media_mode():
