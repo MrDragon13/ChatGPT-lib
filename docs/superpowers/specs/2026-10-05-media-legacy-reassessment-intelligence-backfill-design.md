@@ -1,451 +1,563 @@
-# Media Legacy Reassessment & Intelligence Backfill — Design
+# Media Legacy Review Reassessment & Explicit Evidence Backfill — Design
 
 **Date:** 2026-10-05  
-**Status:** proposed for implementation planning after user review  
-**Base revision:** `35afaca898eae6937066f230906b41af0e1f6690`
+**Status:** proposed for implementation planning after written-spec review  
+**Base revision:** `35afaca898eae6937066f230906b41af0e1f6690`  
+**Stage A baseline:** `media/baselines/intelligence-stage-a.json`  
+**Stage A canonical input digest:** `sha256:98e9dc4521e69ee5273e302fc40cc1e5fc3d53b119e2c7637475ac45cce43fbf`
 
 ## 1. Context
 
-Media Intelligence Stage A fixed directional correctness and observability, but a material part of the personal media history predates the current structured review pipeline. Many older `primary` records were created when the product behaved closer to a review page: they may have free-form `feedback.summary`, missing structured feedback signals, inferred/approximate ratings or reactions, and no semantic fingerprint.
+Media Intelligence Stage A made recommendation directionality and observability safer, but a large part of the `primary` history predates the modern structured review flow. Many records were created when the product behaved closer to a review page: old ratings may be inferred, feedback may be free-form, and explicit structured signals are sparse.
 
-Those historical records are useful evidence, but they did not pass through the same intake/enrichment/reanalysis flow as modern reviews. Blindly converting old text into new explicit signals would manufacture ground truth. Conversely, simply editing the text would leave those works structurally second-class and would miss the opportunity to improve semantic coverage and taste evidence.
+The pilot exists to recover **fresh, current, explicit human evidence** from those historical records without contaminating it with old values, without manufacturing semantics from user reaction, and without allowing the same work to loop back into reassessment automatically.
 
-This design adds a finite, resumable **Legacy Reassessment / Intelligence Backfill pilot** for `primary` only. The user revisits each work once, with a short memory aid. Fresh user input becomes current explicit evidence; historical values remain in standard feedback history. Work semantics are handled separately from user reaction. Taste hypotheses are reanalyzed in batches rather than after every film.
+This revision deliberately separates human reassessment from semantic enrichment. Semantic fingerprints are not updated during this pilot; vocabulary/provenance work is a separate later cycle.
 
 ## 2. Goals
 
 The pilot must:
 
-1. let the user systematically revisit the full initial `primary` review/viewing cohort without losing place;
-2. present enough spoiler-free context to remember each film before asking for a reassessment;
-3. preserve old v1-era feedback through existing `history` semantics rather than duplicating it into a new legacy field;
-4. turn only newly confirmed user statements into explicit rating/reaction/feedback signals;
-5. catch up missing work-level semantic fingerprints without confusing subjective reaction with work traits;
-6. reanalyze `primary` taste hypotheses once per short session from current raw/explicit evidence;
-7. prevent the same work from being automatically reassessed repeatedly;
-8. remain compatible with the existing typed media write pipeline and guarded merge boundaries;
-9. produce documentation and operational guidance sufficient to resume the pilot in a later conversation;
-10. create high-quality confirmed evidence that Stage B can later sample for evaluation/ground-truth design.
+1. revisit the historical `primary` viewed cohort exactly once per pilot epoch;
+2. collect fresh user evidence without anchoring on the old rating/review by default;
+3. preserve historical feedback through existing `history` behavior when a mutation occurs;
+4. support `confirmed_unchanged` as a first-class outcome when the user independently confirms already-current explicit data;
+5. persist progress safely enough that an interrupted session does not make the user repeat completed human work;
+6. prevent automatic reassessment loops;
+7. prioritize early pilot coverage across contrasting evidence strata rather than letting the large cluster of `8/10` ratings dominate the first sessions;
+8. keep semantic enrichment out of scope until vocabulary/provenance work is ready;
+9. measure pilot progress against the frozen Stage A baseline after every session;
+10. preserve the existing typed-operation / deterministic-transaction / guarded-merge trust model;
+11. produce enough documentation that the pilot can be resumed correctly in a later conversation;
+12. leave a durable pilot ledger that Stage B can use to relate reassessed works back to their pre-pilot state.
 
 ## 3. Non-goals
 
 This pilot does **not**:
 
-- redesign recommendation ranking or affinity weights;
-- choose Stage B benchmark metrics or model formulas;
-- introduce deterministic assessment scoring/probabilities;
-- reassess `partner` or `couple` data;
-- mass-expand the controlled vocabulary;
-- infer explicit preferences from old text without current confirmation;
-- treat explicit similarity as equivalent to liking;
-- perform bulk provider metadata maintenance;
-- add a composite `reassess_legacy_work` mutation that bypasses existing typed operations;
-- automatically reopen a completed reassessment when later media data changes.
+- redesign recommendation ranking, affinity weighting or assessment scoring;
+- define Stage B benchmark metrics or leakage policy;
+- update work semantic fingerprints;
+- revise or expand the 42-term controlled vocabulary;
+- add semantic provenance fields such as `vocab_version`, `enriched_at` or `enriched_by`;
+- reassess `partner` or `couple` evidence;
+- infer explicit preference from historical text without fresh confirmation;
+- bulk-refresh provider metadata;
+- treat similarity as preference;
+- include collection reassessment in v1;
+- automatically reopen an already reviewed work because later data changes.
 
-## 4. Existing contracts preserved
+## 4. Core evidence separation
 
-The design keeps the current four-layer separation:
+The existing four-layer model remains authoritative:
 
 1. factual work metadata;
 2. work semantic fingerprint;
-3. user evidence such as rating/reaction/feedback;
+3. user evidence — viewing/rating/reaction/feedback;
 4. inferred taste hypotheses.
 
-The existing write pipeline remains authoritative for canonical media changes. Reassessment orchestration may decide which existing operation to invoke, but canonical media mutations still use typed operations, deterministic transaction, validation/rebuild, exact-head check and guarded merge.
+This pilot changes only layer 3 and, at milestone boundaries, may regenerate layer 4 through the existing inferred-preference route.
 
-Relevant existing operations remain:
+Layer 2 is explicitly deferred.
 
-- `edit_viewing_feedback` for current `primary` rating/reaction/feedback correction;
-- `set_semantic_fingerprint` for work-level controlled-vocabulary traits;
-- `set_inferred_preferences` for a target-wide replacement of inferred taste hypotheses.
+## 5. Why semantic enrichment is separated
 
-No free-form canonical YAML patch is introduced.
+Current semantic coverage is still sparse and the semantic contract is not yet versioned for enrichment provenance. Therefore writing fingerprints during human sessions would couple confirmed human evidence to a semantic layer that is expected to change.
 
-## 5. High-level architecture
+The sequence becomes:
 
-The pilot has three distinct pieces.
+1. **Legacy Review Reassessment / Explicit Evidence Backfill** — this pilot;
+2. semantic vocabulary/provenance work;
+3. targeted semantic enrichment batch;
+4. Stage B evaluation/ground-truth design and implementation.
 
-### 5.1 Deterministic reassessment queue helper
+The reassessment pilot must not call `set_semantic_fingerprint`.
 
-A new read-oriented helper/CLI builds reassessment cards from canonical state plus pilot ledger state. It is responsible for cohort membership, ordering, memory-jog data, current review state and semantic-coverage flags. It does not mutate canonical works and does not create taste hypotheses.
+## 6. Pilot identity and ledger location
 
-### 5.2 Separate pilot ledger
-
-Pilot lifecycle state is stored outside canonical works at the normative path:
+The pilot ledger path is fixed:
 
 `media/pilots/legacy-reassessment-primary.json`
 
-Pilot status does not become a field in every canonical work. The ledger stores operational state only; it does not duplicate rating, reaction, feedback summary/signals or semantic fingerprint content.
+The initial pilot identity is:
 
-Ledger maintenance is pilot/developer state, not a canonical media mutation. The initial implementation uses deterministic ledger tooling and a separate pilot-state commit/PR boundary; ledger writes are not normal media auto-merge operations. A future dedicated typed pilot-state operation is out of scope.
+`primary-legacy-v1`
 
-### 5.3 Agent-orchestrated session
+The ledger is operational pilot state, not canonical taste/media truth. Ratings, reactions, feedback summaries/signals and semantic fingerprints are never duplicated into it.
 
-The agent runs the user interaction:
+The ledger is versioned and retained after completion. It is archived only later, as a separate developer change, after Stage B no longer needs it as an active pilot artifact.
 
-- selects the next ledger item;
-- presents a compact memory card;
-- interprets only the user’s fresh response as new explicit evidence;
-- uses existing typed media operations for media mutations;
-- performs semantic catch-up only when warranted;
-- advances pilot lifecycle state;
-- runs one `primary` taste reanalysis at session end.
+## 7. Frozen cohort
 
-## 6. Finite cohort and queue membership
+The cohort is frozen from canonical state at pilot initialization against base revision `35afaca898eae6937066f230906b41af0e1f6690`.
 
-The pilot is finite. At initialization the helper freezes `cohort_revision` and ordered `cohort_work_ids`.
+Membership is defined by **viewing status**, not by presence of feedback text.
 
-The initial cohort is intentionally broad because historical provenance is not precise enough to identify every v1 record safely. It includes canonical works present at the cohort revision that have meaningful `primary` viewing/review evidence, including watched works even when structured feedback is sparse. Explicitly `unwatched` records with no meaningful review evidence are excluded.
+Included statuses:
 
-A frozen cohort is preferred over a fuzzy legacy detector because the user intends to go through the set comprehensively. Diagnostic flags may explain why a work looks sparse, but they never determine whether a reviewed work can re-enter the same pilot epoch.
+- `watched`;
+- `partial`;
+- `dropped`;
+- `forgotten`.
 
-A later **explicit** cohort refresh may append newly discovered historical candidates. It may not remove completion history or automatically re-add a reviewed work.
+Excluded status:
 
-## 7. Ledger contract
+- `unwatched`, regardless of whether a legacy summary such as “Не смотрел.” is present.
 
-The ledger is versioned and target-specific. Initial schema:
+Only canonical works are in v1. Collections are excluded even though collection ratings contribute to profile aggregates today.
+
+### 7.1 Special cases
+
+`forgotten` remains in the cohort because the old record is meaningful historical evidence. If the memory jog does not restore enough recall, the user may defer it without changing canonical media data.
+
+`dropped` remains in the cohort because an abandoned viewing can be highly informative. It must not be normalized to `disliked` automatically; the fresh user response determines reaction/feedback.
+
+`partial` is handled similarly to `dropped`: the viewing state itself is not treated as a sentiment.
+
+### 7.2 Collections open question
+
+Collection reassessment is explicitly deferred. The current Stage A baseline contains collection-level `primary` ratings that participate in profile aggregates. Stage B must decide whether collections need a separate confirmation pass, exclusion from benchmark selection, or another treatment.
+
+## 8. Frozen strata and queue order
+
+Because pilot completion is not guaranteed, early sessions should already contain a useful cross-section of taste evidence.
+
+At cohort initialization, each item is assigned a frozen stratum based on pre-pilot state:
+
+- `special` — `dropped`, `forgotten`, or `partial`;
+- `low` — rating `<= 6.5`;
+- `medium_low` — rating `7.0–7.5`;
+- `central` — rating `8.0–8.5`;
+- `high` — rating `>= 9.0`;
+- `unrated_viewed` — included viewed state with no numeric rating.
+
+Queue order is deterministic **stratified round-robin**, not “all extremes first” and not “all sparse records first”. The helper cycles across non-empty strata and uses stable work id as the final tie-breaker inside a stratum unless a more explicit frozen ordering key is defined in implementation.
+
+Lifecycle still outranks stratum order:
+
+1. resumable `in_progress` items;
+2. fresh `pending` items in frozen stratified order;
+3. stop the main pass when `pending` is exhausted;
+4. only then begin a separate `deferred` pass.
+
+This gives useful early diversity while still guaranteeing whole-cohort coverage when the pilot completes.
+
+## 9. Unanchored reassessment contract
+
+The first human response must be collected without showing the previous rating or previous feedback by default.
+
+### 9.1 Phase A — unanchored prompt
+
+The card shown before the first response contains:
+
+- title;
+- year;
+- 1–2 sentence spoiler-free memory jog derived primarily from saved synopsis;
+- optional director or one principal actor when useful for recognition.
+
+It must **not** show:
+
+- old rating;
+- old reaction;
+- old feedback summary/signals.
+
+Example:
+
+> **Бэтмен (2022)** — мрачный детектив о расследовании серии убийств в Готэме.  
+> Как ты сейчас его оцениваешь? Если помнишь — что понравилось или не понравилось?
+
+### 9.2 Historical recall is optional and second-phase
+
+After the user has given a fresh opinion, the agent may show the previous record if doing so can help recover details or confirm whether a prior reason still applies.
+
+If the fresh response is already sufficient, the old record need not be shown at all.
+
+If the user explicitly asks before answering “что я раньше ставил/писал?”, the agent may reveal the old record, but the pilot must record that the response was exposed to prior evidence.
+
+Each item stores:
+
+`prior_exposure: none | before_response | after_response`
+
+This provenance lets Stage B distinguish independently elicited reassessment from reassessment that may have been anchored by historical values.
+
+## 10. Memory-jog contract
+
+The memory jog exists only to identify the work, not to steer evaluation.
+
+Rules:
+
+- spoiler-free;
+- 1–2 sentences;
+- primarily based on stored synopsis/metadata;
+- no evaluative adjectives invented by the agent;
+- no old user opinion;
+- no recommendation/taste hypothesis language;
+- director/actor only when useful for recognition.
+
+If stored synopsis is insufficient or missing, the agent should use available factual metadata rather than fabricate plot detail.
+
+## 11. Ledger state model
+
+Conceptual top-level shape:
 
 ```json
 {
   "schema_version": 1,
   "pilot_id": "primary-legacy-v1",
+  "pilot_status": "active",
   "target": "primary",
+  "base_revision": "35afaca898eae6937066f230906b41af0e1f6690",
+  "baseline_path": "media/baselines/intelligence-stage-a.json",
+  "baseline_canonical_input_digest": "sha256:98e9dc4521e69ee5273e302fc40cc1e5fc3d53b119e2c7637475ac45cce43fbf",
   "cohort_revision": "35afaca898eae6937066f230906b41af0e1f6690",
-  "cohort_work_ids": [],
-  "items": {
-    "work-id": {
-      "status": "pending",
-      "last_action_at": null,
-      "session_id": null,
-      "feedback_before_digest": null,
-      "semantic_before_digest": null,
-      "feedback_completed": false,
-      "semantic_required": null,
-      "semantic_completed": false,
-      "reviewed_at": null,
-      "reviewed_revision": null
-    }
-  }
+  "cohort_work_ids": ["..."],
+  "items": {},
+  "sessions": []
 }
 ```
 
-Timestamps are UTC ISO-8601. Digests are deterministic hashes of the relevant canonical component before the active reassessment step; they are resume aids, not media truth.
+Per-item lifecycle statuses:
 
-Allowed lifecycle statuses:
+- `pending`;
+- `in_progress`;
+- `reviewed`;
+- `deferred`.
 
-- `pending` — in the frozen cohort, not yet reassessed;
-- `in_progress` — selected into an active session and not fully completed;
-- `reviewed` — fresh reassessment successfully completed for this pilot epoch;
-- `deferred` — user cannot currently remember/reassess it or explicitly skips it for later.
+Per-item completion outcomes:
 
-State-specific requirements:
+- `changed` — fresh explicit evidence caused a canonical feedback mutation;
+- `confirmed_unchanged` — user independently confirmed already-current explicit evidence and no canonical feedback mutation was necessary;
+- `deferred` — user could not or chose not to reassess now.
 
-- `pending`: no active `session_id`; completion flags false/null;
-- `in_progress`: `session_id`, pre-state digests and completion flags are populated as stages run;
-- `reviewed`: `feedback_completed=true`, semantic requirement resolved, `reviewed_at` and `reviewed_revision` populated;
-- `deferred`: no media completion requirement; later deferred-pass selection may move it to `in_progress`.
+`reviewed` is a lifecycle state; `changed` / `confirmed_unchanged` are result categories.
 
-No additional lifecycle meaning may be inferred from missing fields.
+## 12. Hard anti-loop invariant
 
-## 8. Anti-loop / idempotence contract
+For one `pilot_id`, a work may be automatically human-reassessed at most once.
 
-This is a hard invariant.
+Once status is `reviewed`, the queue helper must never automatically re-add the item to `pending`, even if:
 
-### 8.1 One automatic reassessment per work per pilot epoch
+- later diagnostics change;
+- ordinary feedback changes later;
+- a future detector would classify the item differently;
+- later model/vocabulary work changes semantic coverage.
 
-For `pilot_id = primary-legacy-v1`, once an item reaches `reviewed`, the queue helper must never automatically return it to `pending` or show it for reassessment again.
+Repeating human reassessment requires explicit user action or a new pilot epoch/version.
 
-This remains true even if:
+The session runner also keeps an in-memory `seen_work_ids` guard so one work cannot be shown twice in one session.
 
-- the work still looks legacy-like to a diagnostic heuristic;
-- its semantic fingerprint remains smaller than another work’s;
-- later normal feedback edits change the work;
-- a future detector implementation becomes more aggressive.
+## 13. New typed pilot-state operations
 
-A repeat reassessment requires explicit user action or a new pilot epoch/version.
+Manual ledger merges twice per session are intentionally avoided. Pilot state gets narrow typed operations that pass through the existing deterministic command pipeline and trusted path-policy system.
 
-### 8.2 Ledger lifecycle outranks diagnostics
+Two operations are introduced.
 
-Diagnostics answer “why might this record deserve catch-up?” Ledger state answers “has this pilot already handled it?”. Ledger lifecycle always wins for automatic queue eligibility.
+### 13.1 `reserve_reassessment_session`
 
-### 8.3 In-session duplicate guard
+Purpose: reserve the next batch before any human reassessment write is allowed.
 
-The session runner maintains `seen_work_ids`. A work cannot be presented twice within one active session regardless of ledger refreshes or underlying media writes.
+Inputs conceptually include:
 
-### 8.4 Resume does not repeat completed human work
+- `operation_id`;
+- `pilot_id`;
+- `session_id`;
+- ordered work ids to reserve;
+- expected ledger revision/digest.
 
-If an item is `in_progress` and canonical state proves that fresh feedback was already successfully written, resume continues from the first unfinished technical stage rather than asking the user to rate the film again. `feedback_before_digest` plus the current canonical component and completion flag provide this reconciliation evidence.
+Effects:
 
-### 8.5 Later changes do not reopen the item
+- only the exact pilot ledger path;
+- normal `.media/operations/<operation-id>.json` audit record.
 
-A helper may compute informational `changed_after_review` by comparing current state with `reviewed_revision`/digests, but that condition is never an automatic reopen trigger.
+For each reserved item it stores at minimum:
 
-## 9. Queue ordering
+- `status: in_progress`;
+- `session_id`;
+- reservation timestamp;
+- pre-review digest of the relevant `primary` viewing/rating/reaction/feedback state;
+- frozen stratum/order metadata if not already present.
 
-The user intends to complete the whole cohort, so ordering is a convenience rather than a coverage mechanism.
+### 13.2 `complete_reassessment_item`
 
-Deterministic ordering:
+Purpose: atomically persist the human reassessment result and advance the ledger.
 
-1. unfinished `in_progress` items;
-2. `pending` items;
-3. stop the main pass when no pending work remains;
-4. only then begin a separate `deferred` pass.
+Preconditions:
 
-Within `pending`, use stable impact-first ordering: structured-feedback sparsity first, then missing semantic fingerprint, then stable work ID. This is pilot workflow priority only, not a recommendation-quality score.
+- matching item exists in the ledger;
+- status is `in_progress`;
+- `session_id` matches;
+- reservation is already present on current `main`;
+- current relevant feedback state matches the reserved pre-review digest, unless an explicit reconciliation path is invoked later by separate design.
 
-## 10. Reassessment card / memory jog
+If the digest does not match because another canonical feedback edit happened after reservation, the command fails closed rather than overwriting concurrent state.
 
-Every presented work includes a short spoiler-free memory aid before the question.
+Effects are one deterministic transaction:
 
-Required card content:
+- optionally mutate exactly the resolved canonical work feedback components;
+- update derived index/profile artifacts already required by the existing feedback transaction;
+- advance the ledger item to `reviewed` with `outcome: changed` or `confirmed_unchanged`;
+- record `prior_exposure`;
+- record operation provenance sufficient to audit the completion;
+- write `.media/operations/<operation-id>.json`.
 
-- title and year;
-- 1–2 sentence spoiler-free memory jog based primarily on saved synopsis;
-- current `primary` rating, if any;
-- current reaction, if any;
-- current/legacy feedback summary, if any;
-- whether structured feedback signals exist;
-- whether semantic fingerprint is present.
+`confirmed_unchanged` is valid even when the canonical work file does not change.
 
-Director or one principal actor may be added when useful for recognition, but the card remains concise and must not become a plot recap.
+### 13.3 Deferred outcome
 
-Example:
+A defer action is also persisted through the pilot-state route. It changes only ledger lifecycle state to `deferred` and records the session/timestamp; it does not mutate canonical media data.
 
-> **Бэтмен (2022)** — мрачный детективный Бэтмен расследует серию убийств элиты Готэма.  
-> Старая запись: **6/10**, «Не особо понравился». Structured signals: нет.  
-> Semantic fingerprint: есть.  
-> Как ты сейчас его оцениваешь?
+Implementation planning may represent defer as the completion operation with `outcome: deferred` or as a narrow separate command if schema clarity materially benefits. The architectural invariant is that defer never edits work evidence.
 
-The memory jog is read-only context, not evidence about user taste.
+## 14. Reservation-before-write invariant
 
-## 11. One-item reassessment flow
+This is mandatory and tested:
 
-### 11.1 Select
+> No canonical reassessment feedback write may occur for a work unless its `in_progress` reservation for the active `session_id` is already visible on current `main`.
 
-The helper returns the next item according to ledger state and deterministic ordering. Before the question, the active item is recorded as `in_progress` with `session_id` and pre-state component digests.
+The agent must not start collecting a batch under the assumption that a reservation PR “will merge later”. Reservation is part of the durable precondition.
 
-### 11.2 Present
+This ensures interruption recovery does not depend on reconstructing missing pre-review state after canonical feedback has changed.
 
-The agent shows the card and asks for a fresh opinion in natural language. It does not turn the interaction into a long questionnaire.
+## 15. Why atomic feedback + ledger completion is required
 
-Normal prompt:
+Using `edit_viewing_feedback` and then a separate ledger update creates an avoidable split-brain window: feedback can merge while pilot state still says `in_progress` without a durable completion marker.
 
-> «Как ты сейчас оцениваешь этот фильм? Можешь написать оценку и что понравилось/не понравилось — я разложу это по текущей структуре.»
+The pilot therefore uses the new completion command to combine:
 
-At most one short clarification may be asked when a materially important distinction remains ambiguous.
+- optional feedback mutation;
+- ledger completion;
+- operation audit record.
 
-### 11.3 Defer
+This is one business operation: “the user completed reassessment of this reserved work”.
 
-If the user says “не помню”, “пропустить” or equivalent:
+The implementation should reuse existing feedback mutation primitives rather than duplicate their rules, so history behavior and target/profile rebuilding remain consistent with Stage A.
 
-- do not change canonical media data;
-- do not lower existing confidence merely because memory is weak now;
-- set the pilot item to `deferred`;
-- continue with the next pending item.
-
-### 11.4 Normalize fresh explicit evidence
+## 16. Fresh explicit evidence normalization
 
 Only the current user response may create new explicit evidence.
 
-When clearly supported, the agent may derive:
+The agent may normalize clearly supported values into:
 
-- rating using the existing 1–10 / 0.5-step contract;
+- viewing state if the user explicitly corrects it;
+- rating;
 - reaction;
 - replacement feedback summary;
-- structured feedback signals using controlled vocabulary terms.
+- structured feedback signals using existing vocabulary terms.
 
-The old v1 summary is context only. If the user explicitly confirms it, it may be represented again as current explicit evidence. Otherwise it must not be silently promoted.
+Rules:
 
-### 11.5 Write feedback
+- old v1 text is historical context only;
+- `source: explicit` requires current confirmation;
+- strength reflects expressed intensity, not model confidence;
+- ambiguous structured term mapping is omitted rather than guessed;
+- `dropped`/`partial` do not imply sentiment;
+- similarity is never created from shared traits/ratings alone;
+- ephemeral mood comments do not become stable preference.
 
-Use existing `edit_viewing_feedback` for `primary` and change only components justified by the fresh response.
+## 17. History behavior
 
-Existing mutation behavior records changed components in `history.previous` and `history.current`. Therefore current feedback can become the fresh opinion while historical v1 content remains auditable without a new `legacy_review` field.
+When completion changes a feedback component, existing feedback mutation semantics must preserve the old value in `history.previous` and the new value in `history.current`.
 
-After exact-main success, set `feedback_completed=true` in pilot state.
+No extra `legacy_review` field is introduced.
 
-### 11.6 Semantic catch-up
+For `confirmed_unchanged`, no artificial no-op feedback history entry should be created merely to prove confirmation; the ledger outcome provides the confirmation provenance.
 
-Evaluate work semantics separately after feedback.
+## 18. Session lifecycle
 
-- Missing semantic fingerprint means `semantic_required=true`.
-- Existing fingerprint is not rebuilt solely because it has fewer traits than another work; absent a concrete gap, `semantic_required=false`.
-- No arbitrary minimum trait count is introduced.
-- New traits must use the existing controlled vocabulary.
-- Vocabulary expansion is a separate architecture/developer change.
-- User reaction may guide attention but cannot itself prove a work trait.
+Default batch size: **5 works**.
 
-Example:
+A normal session is:
 
-- “мне было затянуто” may support user feedback `reaction.pacing_dragging`;
-- it does **not** automatically prove work trait `pacing.slow`.
+1. build next deterministic batch from ledger/strata;
+2. reserve it durably on `main` with `reserve_reassessment_session`;
+3. present each item unanchored;
+4. collect fresh response;
+5. optionally expose historical record after response or on user request;
+6. atomically complete or defer each item;
+7. after session completion, run Stage A audit and persist a compact session progress snapshot;
+8. run taste-hypothesis reanalysis only if a milestone condition is met.
 
-If required, write semantic traits with existing `set_semantic_fingerprint`. After exact-main success set `semantic_completed=true`. If `semantic_required=false`, semantic completion is considered satisfied without a mutation.
+An interrupted session resumes `in_progress` items first. Items already completed are never asked again.
 
-### 11.7 Complete item
+## 19. Session audit and progress measurement
 
-An item becomes `reviewed` only when:
+After every completed session, run the canonical Stage A audit.
 
-- `feedback_completed=true`; and
-- `semantic_required` is resolved; and
-- either `semantic_required=false` or `semantic_completed=true`; and
-- the corresponding canonical state is present on current `main`.
+The ledger stores a compact immutable session snapshot rather than duplicating the whole audit JSON.
 
-Then populate `reviewed_at` and exact `reviewed_revision`.
+Snapshot fields should include at least:
 
-A technical failure leaves the item `in_progress` and resume starts from the first incomplete stage.
+- `session_id`;
+- completion timestamp;
+- newly reviewed count;
+- newly deferred count;
+- total reviewed/deferred counts;
+- `primary` work rating counts by source, especially `explicit` vs `inferred`;
+- `primary` structured-feedback coverage numerator/denominator;
+- current canonical input digest;
+- audit schema version;
+- audit source/base revision provenance sufficient to compare to the Stage A baseline.
 
-## 12. Structured feedback rules
+Semantic coverage is not expected to improve in this pilot and is not a success criterion.
 
-The pilot is intentionally conservative.
+The audit snapshot makes progress measurable and gives Stage B a timeline of explicit-evidence conversion.
 
-- `source: explicit` is used only for meaning actually stated or clearly confirmed in the current reassessment.
-- `strength: 1..3` reflects expressed intensity of reaction, not model confidence.
-- If sentiment/term mapping is materially ambiguous, omit the signal rather than fabricate ground truth.
-- Work traits and reaction-kind terms remain distinct.
-- Explicit similarity is not inferred merely because works share traits or ratings.
-- Ephemeral mood/current-context comments do not become stable preferences.
+## 20. Taste-hypothesis reanalysis cadence
 
-## 13. Session lifecycle
+Inferred hypotheses are explanation-only for numeric affinity aggregation after Stage A, so recalculating them after every 5-work session would create unnecessary LLM churn.
 
-Default reassessment session size is **5 works**.
+Reanalysis is triggered only:
 
-At session start, the pilot ledger reserves the selected batch as `in_progress` under one `session_id` before the first human question. This makes an interrupted session resumable without relying on conversational memory.
+- every **15 newly reviewed works** since the previous reanalysis;
+- at the end of the main `pending` pass;
+- on explicit user request.
 
-The user may continue beyond five, but five is the default operational chunk.
+The reanalysis rebuilds hypotheses from current raw/explicit evidence and replaces the target set through existing `set_inferred_preferences`.
 
-At the end of any session with at least one newly reviewed item, run one `primary` taste reanalysis. The pilot-state update reconciles final `reviewed`/`deferred` states after canonical writes are visible on `main`.
+Previous inferred hypotheses are never treated as independent confirming evidence.
 
-User-facing session summary remains brief:
+A weaker or empty replacement set is valid.
 
-- reviewed/deferred counts;
-- whether semantic catch-up occurred;
-- what materially changed in understanding of `primary` taste after reanalysis.
+## 21. Ground-truth relationship to Stage B
 
-Infrastructure details stay hidden in normal use unless requested.
+A reviewed item becomes high-quality confirmed explicit evidence, but not automatically a Stage B decision-benchmark member.
 
-## 14. Batched taste reanalysis
+Stage B will later define benchmark selection/stratification/leakage rules.
 
-Taste reanalysis happens once per session, not after each work.
+Useful reassessment provenance available to Stage B includes:
 
-The agent rebuilds candidate hypotheses from current raw/explicit evidence. Previous inferred hypotheses are not independent evidence and must not self-reinforce.
+- original frozen cohort identity;
+- pre-review digest;
+- completion outcome (`changed` vs `confirmed_unchanged`);
+- `prior_exposure` (`none`, `before_response`, `after_response`);
+- session membership/order;
+- operation provenance;
+- post-session audit progression.
 
-If evidence supports a changed hypothesis set, persist the full replacement via existing `set_inferred_preferences` for `primary`.
+This lets Stage B preferentially choose unanchored confirmations or analyze how often historical inferred/explicit values moved.
 
-A weaker or empty hypothesis set is valid if fresh evidence no longer supports older conclusions. Old hypotheses are not retained merely for continuity.
+## 22. Failure and resume semantics
 
-`partner` and `couple` explicit state are not rewritten by this pilot. Existing derived profile rebuild behavior remains derived behavior, not new explicit group evidence.
+The workflow is fail-closed.
 
-## 15. Ground-truth relationship to Stage B
+- reservation must be merged before reassessment writes;
+- completion without matching reservation fails;
+- completion against a changed pre-review digest fails as a concurrency conflict;
+- a failed completion leaves the item `in_progress`;
+- a failed defer leaves the item `in_progress`;
+- a successfully reviewed item cannot be completed a second time automatically;
+- unknown/ambiguous work identity blocks mutation;
+- canonical work evidence is never reconstructed from ledger copies because the ledger does not duplicate evidence content.
 
-Fresh reassessment produces high-value **confirmed explicit evidence**, but the pilot does not automatically declare every reviewed work part of the Stage B decision benchmark.
+Because completion is atomic across optional feedback mutation + ledger transition, interruption cannot create “feedback changed but completion marker missing” as an expected success path.
 
-Stage B later defines benchmark selection, stratification and leakage rules. Reassessed works become eligible source material.
+## 23. Path-policy and trust boundary
 
-Historical v1 text remains historical evidence; current reassessment becomes current explicit evidence. This distinction stays visible in history/provenance.
+The implementation is a developer change and must receive manual review.
 
-## 16. Failure and resume semantics
+Existing operations must remain unable to mutate:
 
-The workflow is fail-closed around canonical writes.
+`media/pilots/legacy-reassessment-primary.json`
 
-- Failed feedback mutation does not advance the item to `reviewed`.
-- Successful feedback followed by failed semantic catch-up leaves the item `in_progress`; resume starts at semantic catch-up.
-- Failed pilot-ledger persistence never rolls back canonical media. The next session reconciles exact canonical state against stored pre-state digests/completion state before repeating a human step.
-- Unknown/ambiguous work identity blocks mutation until resolved.
-- Provider metadata failure cannot corrupt reassessment of an already canonical work.
+The new pilot operations receive only narrow allowlists.
 
-Canonical media is source of truth; the ledger is operational state.
+Conceptually:
 
-## 17. Security and write-boundary requirements
+`reserve_reassessment_session`:
 
-This project is an architecture/tooling change and follows the manual developer route during implementation.
+- `media/pilots/legacy-reassessment-primary.json`;
+- `.media/operations/*.json`.
 
-Runtime reassessment preserves current safety boundaries:
+`complete_reassessment_item`:
 
-- no arbitrary model-authored shell or YAML patch for canonical media;
-- normal media writes use typed request schemas and deterministic services;
-- semantic writes validate controlled vocabulary;
-- pilot-state tooling writes only `media/pilots/legacy-reassessment-primary.json` and must validate its schema/state transitions;
-- pilot ledger changes are not normal media auto-merge operations in this design;
-- any path-policy or privileged-workflow change receives the same trusted-main/fail-closed review standard as Stage A;
-- no model/provider secrets enter browser/static data paths.
+- `media/pilots/legacy-reassessment-primary.json`;
+- exactly one resolved `media/data/works/*.yaml` work when feedback changes;
+- existing derived `media/generated/index.jsonl` / profile paths required by reused feedback primitives;
+- `.media/operations/*.json`.
 
-## 18. Documentation deliverables
+The declarative policy may need wildcard paths, but runtime planning must enforce the exact resolved work/entity set. Privileged workflow trust remains based on policy from trusted `main`, not PR-head executable code.
 
-Documentation is part of completion, not follow-up cleanup.
+No semantic/vocabulary path is authorized by the reassessment operations.
 
-Implementation updates:
+## 24. Archive lifecycle
 
-- `media/AGENTS.md` — agent-level legacy reassessment route and UX contract;
-- `docs/architecture/intelligence.md` — reassessment evidence/semantic separation and batched reanalysis;
-- `docs/architecture/write-pipeline.md` — pilot ledger/tooling boundary because it is intentionally separate from canonical typed writes;
-- `docs/reference/` — reassessment queue/ledger helper and CLI contract;
-- a dedicated pilot runbook — initialize/start/resume session, card format, statuses, deferred pass, taste reanalysis and completion/archive procedure;
-- `docs/status/current.md` — implemented capability and limitations;
-- executable documentation/contract tests wherever the repository already enforces synchronization.
+At pilot completion:
 
-The runbook must let a new conversation resume the process without hidden conversational memory.
+- set `pilot_status: completed`;
+- store final audit snapshot;
+- preserve the full ledger in place while Stage B is being designed/constructed.
 
-## 19. Testing requirements
+Only after Stage B no longer requires an active ledger path should a separate developer change move it under an archive location such as:
 
-### Queue/cohort
+`media/pilots/archive/legacy-reassessment-primary-v1.json`
 
-- deterministic frozen cohort generation;
-- inclusion of intended `primary` historical/watched evidence;
-- exclusion of clearly `unwatched` no-evidence records;
-- no `partner`/`couple` reassessment targets;
-- stable ordering and tie-breaking;
-- explicit refresh can append candidates but cannot erase completion.
+Archive movement must not alter the historical contents beyond archival metadata required by the chosen format.
 
-### Ledger lifecycle
+## 25. Documentation deliverables
 
-- valid `pending -> in_progress -> reviewed`;
-- valid `pending -> deferred`;
-- valid `deferred -> in_progress` only during deferred pass/explicit selection;
-- reviewed item cannot automatically reopen in same `pilot_id`;
-- deferred items do not reappear during main pending pass;
-- `in_progress` items resume first;
-- same-session `seen_work_ids` prevents duplicate presentation;
-- diagnostics cannot override `reviewed`;
-- invalid state transitions fail closed.
+Documentation is part of completion.
 
-### Reassessment card
+Implementation must update as applicable:
 
-- deterministic card payload;
-- spoiler-free synopsis-based memory-jog source behavior;
-- current rating/reaction/summary and signal/fingerprint presence are represented correctly;
-- card generation is read-only.
+- `media/AGENTS.md` — reassessment route, unanchored-first UX, reservation/completion rules, deferred behavior;
+- `docs/architecture/intelligence.md` — confirmed explicit evidence, separation from semantics, milestone reanalysis;
+- `docs/architecture/write-pipeline.md` — new pilot typed operations and atomic completion boundary;
+- `docs/reference/media-commands.md` — schemas/behavior for pilot operations;
+- a pilot runbook under `docs/` covering start/resume/session close/deferred pass/audit/reanalysis;
+- `docs/status/current.md` — current capability and limitations;
+- this design spec;
+- implementation plan after written-spec approval.
 
-### Feedback/history
+The runbook must emphasize that old ratings/reviews are hidden before the first response unless the user asks for them.
 
-- replacement preserves prior value in standard history;
-- only justified components change;
-- user silence about a component does not clear it;
-- old summary is not automatically converted to new explicit signals.
+## 26. Test requirements
 
-### Semantic separation
+Implementation is incomplete without tests for the following.
 
-- reaction terms are not written as work traits;
-- missing fingerprint produces `semantic_required=true`;
-- existing fingerprint is not declared insufficient by arbitrary trait-count threshold;
-- unknown vocabulary terms fail validation rather than being invented.
+### 26.1 Cohort and ordering
 
-### Resume/idempotence
+- `unwatched` never enters the cohort even when summary text is non-empty;
+- `watched`, `partial`, `dropped`, `forgotten` are handled according to contract;
+- frozen strata are deterministic;
+- stratified round-robin order is deterministic;
+- deferred items do not interrupt the main pending pass;
+- reviewed items never re-enter automatically.
 
-- interrupted after feedback/before semantics resumes at semantics;
-- completed human feedback is not asked again because a technical stage failed;
-- changed-after-review is informational and does not reopen automatically;
-- ledger/canonical disagreement reconciles toward canonical truth without losing anti-loop state.
+### 26.2 Unanchored UX payload
 
-### Reanalysis
+- pre-response card does not expose old rating/reaction/feedback;
+- post-response history exposure is allowed;
+- user-requested pre-response exposure records `prior_exposure: before_response`;
+- default independent reassessment records `none` or `after_response` as appropriate.
 
-- one session produces at most one `primary` reanalysis step;
-- old inferred hypotheses are not independent evidence;
-- partner/couple explicit state is not mutated.
+### 26.3 Reservation and atomic completion
 
-### Full gates
+- no completion is accepted before the reservation is visible in the repository state being processed;
+- wrong `session_id` fails closed;
+- changed pre-review digest fails closed;
+- completion updates work + ledger atomically in the deterministic transaction;
+- `confirmed_unchanged` advances ledger without creating artificial feedback history;
+- completing an already reviewed item fails/idempotently reports terminal state without a second human reassessment;
+- defer changes ledger only.
 
-Completed developer change runs at least:
+### 26.4 Path policy / security
+
+- all pre-existing Stage A operations reject `media/pilots/legacy-reassessment-primary.json`;
+- `reserve_reassessment_session` cannot mutate work/generated/preferences/vocabulary/schema paths;
+- `complete_reassessment_item` cannot mutate semantic/vocabulary/schema/workflow paths;
+- operation path policy matcher corpus remains green;
+- privileged auto-merge remains fail-closed for unknown operations/paths.
+
+### 26.5 Audit/progress
+
+- session close runs/consumes canonical audit output deterministically;
+- progress snapshot reflects explicit/inferred rating changes and structured-feedback coverage;
+- baseline references are preserved;
+- semantic coverage is not required to move.
+
+### 26.6 Repository validation
+
+Full gate:
 
 ```bash
 python -m pytest -q
@@ -454,28 +566,64 @@ python -m media.cli rebuild --check
 python -m media.cli doctor --format json
 ```
 
-Web checks are required only if implementation changes web/broker-visible behavior.
+Additionally, docs/contract tests must accept the new pilot directory, ledger schema and command references.
 
-## 20. Rollout
+## 27. Observability and stop conditions
 
-1. Implement queue/cohort/ledger foundations and documentation without changing existing recommendation behavior.
-2. Initialize `primary-legacy-v1` from the exact current revision and inspect the frozen cohort.
-3. Run a live pilot session of about five works.
-4. Verify history preservation, resume and anti-loop behavior from real output.
-5. Continue repeated sessions through the frozen pending cohort.
-6. Run the deferred pass only after pending is exhausted.
-7. Archive/freeze the completed ledger and use confirmed evidence as input to Stage B evaluation/ground-truth design.
+Primary progress measures are:
 
-## 21. Success criteria
+- proportion of frozen cohort in `reviewed`;
+- `changed` vs `confirmed_unchanged` counts;
+- `prior_exposure` distribution;
+- conversion of `primary` ratings from inferred to explicit where applicable;
+- structured-feedback coverage growth;
+- deferred backlog size.
 
-The design is successful when:
+The main pilot pass is complete when no `pending` or resumable `in_progress` items remain.
 
-- a new conversation can resume at the correct next work;
-- each cohort work is automatically presented at most once per pilot epoch unless explicitly reopened;
-- every reviewed item has fresh current explicit feedback and preserved historical context;
-- semantic catch-up improves missing work semantics without converting subjective reaction into factual traits;
-- `primary` taste reanalysis occurs in session-sized batches rather than per-film churn;
-- partner/couple data remains untouched;
-- canonical mutations continue through existing typed operations and verification gates;
-- documentation explains architecture and day-to-day pilot operation;
-- confirmed reassessment evidence can feed Stage B without treating old inferred labels as ground truth.
+The deferred pass is complete when the user either reviews or explicitly leaves remaining deferred items unresolved for this pilot epoch.
+
+Completion does not require semantic coverage growth.
+
+## 28. Open issues intentionally deferred
+
+The following are not decided by this pilot implementation:
+
+1. semantic vocabulary revision;
+2. semantic fingerprint provenance/versioning (`vocab_version`, `enriched_at`, `enriched_by`);
+3. targeted semantic enrichment policy;
+4. collection reassessment / benchmark treatment;
+5. Stage B benchmark sampling and leakage controls;
+6. deterministic assessment model/formula selection;
+7. partner/couple reassessment.
+
+## 29. Recommended implementation shape
+
+The recommended implementation is deliberately narrow:
+
+- deterministic cohort/queue/read-model helper;
+- versioned pilot ledger at the exact path above;
+- `reserve_reassessment_session` typed operation;
+- `complete_reassessment_item` typed operation that reuses existing feedback mutation primitives;
+- explicit defer handling through pilot state;
+- compact session audit snapshots;
+- milestone-triggered existing taste reanalysis;
+- documentation and tests as first-class deliverables.
+
+No semantic enrichment code is added to this cycle.
+
+## 30. Final architecture summary
+
+The pilot flow is:
+
+**frozen viewed cohort → stratified round-robin → durable reservation on `main` → unanchored memory jog + fresh response → optional historical recall → atomic explicit-feedback/ledger completion → session audit → inferred-hypothesis reanalysis every 15 reviewed works / end of main pass → deferred pass → completed immutable ledger for Stage B.**
+
+The central safety properties are:
+
+- no old rating anchoring by default;
+- no semantic/user-reaction conflation;
+- no canonical reassessment write before durable reservation;
+- no split completion between feedback and ledger;
+- no automatic reassessment loop;
+- no silent overwrite after concurrent feedback changes;
+- measurable progress against the frozen Stage A baseline.
