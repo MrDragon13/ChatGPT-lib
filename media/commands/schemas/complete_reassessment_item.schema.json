@@ -8,7 +8,7 @@
       "required": ["timing", "before_finalization"],
       "properties": {
         "timing": {"enum": ["none", "before_initial_response", "after_initial_response"]},
-        "before_finalization": {"const": true}
+        "before_finalization": {"type": "boolean"}
       }
     },
     "feedbackEdit": {
