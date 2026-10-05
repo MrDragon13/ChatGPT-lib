@@ -26,6 +26,24 @@ jobs:
           python-version: '3.12'
       - name: Install media dependencies
         run: python -m pip install -r media/requirements.txt
+      - name: Generate frozen Stage A reassessment ledger candidate
+        if: github.event.pull_request.head.ref == 'feat/media-legacy-reassessment-activation'
+        run: |
+          git fetch --no-tags --depth=1 origin 35afaca898eae6937066f230906b41af0e1f6690
+          git worktree add /tmp/chatgpt-lib-stage-a 35afaca898eae6937066f230906b41af0e1f6690
+          PYTHONPATH="$PWD" python -m media.tools.reassessment init \
+            --repo-root /tmp/chatgpt-lib-stage-a \
+            --output /tmp/legacy-reassessment-primary.json \
+            --base-revision 35afaca898eae6937066f230906b41af0e1f6690 \
+            --baseline-path media/baselines/intelligence-stage-a.json
+          python -m media.tools.reassessment summary /tmp/legacy-reassessment-primary.json
+      - name: Upload frozen reassessment ledger candidate
+        if: github.event.pull_request.head.ref == 'feat/media-legacy-reassessment-activation'
+        uses: actions/upload-artifact@v4
+        with:
+          name: legacy-reassessment-primary-candidate
+          path: /tmp/legacy-reassessment-primary.json
+          if-no-files-found: error
       - name: Run project tests
         run: python -m pytest -q
       - name: Validate canonical media
