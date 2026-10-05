@@ -49,16 +49,14 @@ def _fake_command(operation_id: str = UUID):
 
 
 def _plan(*, json_documents=None):
-    return SimpleNamespace(
+    return MutationPlan(
         operation_id=UUID,
         operation="record_viewing_feedback",
         changed_entities=(),
         documents={},
-        json_documents=json_documents or {},
         rebuild_index=False,
         rebuild_profile_targets=(),
-        details={},
-        jsonl_appends={},
+        json_documents=json_documents or {},
     )
 
 
