@@ -1,0 +1,44 @@
+name: TEMP Generate Reassessment Ledger
+
+on:
+  push:
+    branches:
+      - feat/media-legacy-reassessment-activation
+    paths:
+      - '.github/workflows/tmp-reassessment-ledger.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout activation foundation
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - name: Install media dependencies
+        run: python -m pip install -r media/requirements.txt
+      - name: Materialize frozen Stage A data
+        run: git worktree add /tmp/chatgpt-lib-stage-a 35afaca898eae6937066f230906b41af0e1f6690
+      - name: Generate deterministic pilot ledger
+        run: |
+          PYTHONPATH="$GITHUB_WORKSPACE" python -m media.tools.reassessment init \
+            --repo-root /tmp/chatgpt-lib-stage-a \
+            --output /tmp/legacy-reassessment-primary.json \
+            --base-revision 35afaca898eae6937066f230906b41af0e1f6690 \
+            --baseline-path media/baselines/intelligence-stage-a.json
+          PYTHONPATH="$GITHUB_WORKSPACE" python -m media.tools.reassessment summary /tmp/legacy-reassessment-primary.json
+          sha256sum /tmp/legacy-reassessment-primary.json
+      - name: Upload generated ledger
+        uses: actions/upload-artifact@v4
+        with:
+          name: legacy-reassessment-primary
+          path: /tmp/legacy-reassessment-primary.json
+          if-no-files-found: error
+          retention-days: 1
