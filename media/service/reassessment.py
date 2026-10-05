@@ -3,9 +3,11 @@ from __future__ import annotations
 import hashlib
 import json
 from collections import defaultdict
+from copy import deepcopy
 from pathlib import Path
 from typing import Any, Mapping
 
+from media.domain.errors import NotFoundError
 from media.repository.canonical import CanonicalRepository
 
 PILOT_ID = "primary-legacy-v1"
@@ -151,3 +153,127 @@ def read_ledger(path: Path) -> dict[str, Any]:
     if not isinstance(document, dict):
         raise ValueError("reassessment ledger root must be an object")
     return document
+
+
+def _open_reassessment_session(document: Mapping[str, Any]) -> Mapping[str, Any] | None:
+    sessions = document.get("sessions") or []
+    for session in sessions:
+        if isinstance(session, Mapping) and session.get("status") == "open":
+            return session
+    return None
+
+
+def _safe_reassessment_card(
+    record: Any,
+    *,
+    lifecycle: Mapping[str, Any],
+    order_rank: int | None,
+) -> dict[str, Any]:
+    identity = record.data.get("identity") or {}
+    metadata = record.data.get("metadata") or {}
+    external = metadata.get("external") or {}
+    directors = [
+        item.get("name")
+        for item in external.get("directors") or []
+        if isinstance(item, Mapping) and isinstance(item.get("name"), str)
+    ]
+    main_cast = [
+        item.get("name")
+        for item in external.get("main_cast") or []
+        if isinstance(item, Mapping) and isinstance(item.get("name"), str)
+    ]
+    return {
+        "work_id": record.id,
+        "title": identity.get("title_ru") or identity.get("title_original") or record.id,
+        "year": identity.get("year"),
+        "synopsis_short": external.get("synopsis_short"),
+        "directors": directors,
+        "main_cast": main_cast[:3],
+        "queue_status": lifecycle.get("status"),
+        "order_rank": order_rank,
+    }
+
+
+def build_reassessment_context(
+    repo: CanonicalRepository,
+    document: Mapping[str, Any],
+    *,
+    limit: int = 5,
+) -> dict[str, Any]:
+    """Build the unanchored first-response read model for reassessment."""
+    if limit < 1:
+        raise ValueError("limit must be at least 1")
+
+    frozen = document.get("frozen_cohort") or {}
+    frozen_ids = frozen.get("work_ids") or []
+    frozen_items = frozen.get("items") or {}
+    lifecycle_items = document.get("items") or {}
+    open_session = _open_reassessment_session(document)
+
+    if open_session is not None:
+        candidate_ids = [
+            work_id
+            for work_id in open_session.get("reserved_work_ids") or []
+            if isinstance(work_id, str)
+            and isinstance(lifecycle_items.get(work_id), Mapping)
+            and lifecycle_items[work_id].get("status") == "in_progress"
+        ]
+        open_summary = {
+            "session_id": open_session.get("session_id"),
+            "reserved_work_ids": list(open_session.get("reserved_work_ids") or []),
+        }
+    else:
+        pending_ids = [
+            work_id
+            for work_id in frozen_ids
+            if isinstance(work_id, str)
+            and isinstance(lifecycle_items.get(work_id), Mapping)
+            and lifecycle_items[work_id].get("status") == "pending"
+        ]
+        if pending_ids:
+            candidate_ids = pending_ids
+        else:
+            candidate_ids = [
+                work_id
+                for work_id in frozen_ids
+                if isinstance(work_id, str)
+                and isinstance(lifecycle_items.get(work_id), Mapping)
+                and lifecycle_items[work_id].get("status") == "deferred"
+            ]
+        open_summary = None
+
+    cards: list[dict[str, Any]] = []
+    for work_id in candidate_ids[:limit]:
+        record = repo.get_work(work_id)
+        if record is None:
+            continue
+        frozen_item = frozen_items.get(work_id) if isinstance(frozen_items, Mapping) else {}
+        order_rank = frozen_item.get("order_rank") if isinstance(frozen_item, Mapping) else None
+        cards.append(
+            _safe_reassessment_card(
+                record,
+                lifecycle=lifecycle_items.get(work_id) or {},
+                order_rank=order_rank,
+            )
+        )
+
+    return {
+        "pilot_id": document.get("pilot_id"),
+        "ledger_digest": ledger_digest_bytes(ledger_bytes(document)),
+        "open_session": open_summary,
+        "cards": cards,
+    }
+
+
+def build_reassessment_history(repo: CanonicalRepository, work_id: str) -> dict[str, Any]:
+    """Return explicit second-phase historical viewer evidence for one canonical work."""
+    record = repo.get_work(work_id)
+    if record is None:
+        raise NotFoundError(f"unknown reassessment work id: {work_id}")
+    signal = _primary_signal(record.data)
+    evidence = {
+        key: deepcopy(signal[key])
+        for key in ("viewing", "rating", "reaction", "feedback", "history")
+        if key in signal
+    }
+    return {"work_id": work_id, "viewer_evidence": evidence}
