@@ -6,6 +6,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterable
 
+from media.service.reassessment_validation import validate_reassessment_snapshot
+
 from .common import iter_jsonl, iter_yaml_files, load_yaml
 from .schema_utils import validate_against_schema
 
@@ -147,6 +149,13 @@ def validate_repository(repo_root: Path) -> list[ValidationIssue]:
     work_ids = set(works)
     list_ids = set(lists)
     tombstone_ids = set(tombstones)
+
+    pilot_path = media / "pilots/legacy-reassessment-primary.json"
+    if pilot_path.exists():
+        pilot_doc = _schema_check(issues, root, pilot_path, "reassessment-pilot.schema.json", schema_dir)
+        if isinstance(pilot_doc, dict):
+            for pilot_issue in validate_reassessment_snapshot(pilot_doc, canonical_work_ids=work_ids):
+                _issue(issues, pilot_path.relative_to(root), pilot_issue.code, pilot_issue.message)
 
     imdb_seen: dict[str, str] = {}
     tmdb_seen: dict[tuple[str, int], str] = {}
