@@ -100,6 +100,23 @@ def _ordered_ids_with_status(document: Mapping[str, Any], status: str) -> list[s
 
 
 def _assert_next_reservation_batch(document: Mapping[str, Any], work_ids: tuple[str, ...]) -> str:
+    lifecycle = document.get("items") or {}
+    requested_states = {
+        work_id: (lifecycle.get(work_id) or {}).get("status")
+        if isinstance(lifecycle.get(work_id), Mapping)
+        else None
+        for work_id in work_ids
+    }
+    for work_id, status in requested_states.items():
+        if status in {"reviewed", "in_progress"}:
+            raise CommandValidationError(
+                f"cannot reserve reassessment item {work_id} with status {status}"
+            )
+        if status not in {"pending", "deferred"}:
+            raise CommandValidationError(
+                f"cannot reserve reassessment item {work_id} with unknown lifecycle status {status}"
+            )
+
     pending = _ordered_ids_with_status(document, "pending")
     if pending:
         phase = "pending"
@@ -111,10 +128,7 @@ def _assert_next_reservation_batch(document: Mapping[str, Any], work_ids: tuple[
         raise CommandValidationError("no reassessment items are available for reservation")
     expected = tuple(eligible[: len(work_ids)])
     if tuple(work_ids) != expected:
-        if phase == "pending" and any(
-            (document.get("items") or {}).get(work_id, {}).get("status") == "deferred"
-            for work_id in work_ids
-        ):
+        if phase == "pending" and any(status == "deferred" for status in requested_states.values()):
             raise CommandValidationError("cannot reserve deferred items while the main pending pass remains")
         raise CommandValidationError(
             f"reassessment reservation must use the next frozen-order {phase} batch: {expected}"
