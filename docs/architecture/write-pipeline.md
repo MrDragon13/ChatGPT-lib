@@ -85,6 +85,24 @@ Path patterns используют один и тот же узкий grammar в
 
 `set_work_similarity`/`remove_work_similarity` ограничены relation storage и operation metadata. Если новый canonical work создаётся и совпадает с persisted external similarity endpoint, reconciliation relation paths допустимы только внутри соответствующего work-creation transaction.
 
+## Legacy reassessment serialized operations
+
+Legacy reassessment использует отдельную correctness-first цепочку поверх того же typed transaction boundary. Она не превращает старый текст в новый explicit evidence автоматически и не расширяет semantic/vocabulary права.
+
+- `reserve_reassessment_session` резервирует exact next frozen-order batch и переводит его в `in_progress`.
+- `complete_reassessment_item` атомарно объединяет optional `primary` feedback edit и lifecycle transition `in_progress -> reviewed|deferred`; существующие feedback mutation primitives сохраняют history/rebuild semantics.
+- `close_reassessment_session` закрывает только полностью resolved session, сохраняет audit/progress snapshot и при необходимости продвигает persisted scheduled-reanalysis state.
+
+Каждая ledger mutation несёт `expected_ledger_digest` от authoritative current `main`; следующая pilot write request создаётся только после того, как предыдущая стала видимой на `main`. Completion дополнительно проверяет raw pre-review work-file digest, поэтому concurrent canonical edit к reserved work заставляет replay вместо silent overwrite.
+
+`media/pilots/legacy-reassessment-primary.json` — operational provenance, не taste truth. Frozen cohort/base/baseline refs immutable; reviewed items и closed session snapshots monotonic/immutable. Runtime planner guards дублируются independent base→head transition validator'ом, который `Media Check` запускает против trusted replay base.
+
+Path scope остаётся узким: reserve/close могут менять только exact pilot ledger + receipt; complete может дополнительно изменить не более одного canonical work, только reserved `work_id`, и требуемые existing generated profile/index paths. Generic wildcard policy дополняется operation-specific cardinality/id guard.
+
+Privileged auto-merge не выполняет PR-head Python для этих проверок. Перед merge он заново читает current-main ledger bytes и сравнивает SHA-256 с trusted receipt `details.expected_ledger_digest`; для `complete_reassessment_item` также заново читает reserved work bytes и сверяет `pre_review_work_file_digest`. Stale operation fail-closed даже если Git merge технически возможен.
+
+Pilot foundation может быть auto-merge authority только после manual merge PR A. Первичное создание frozen ledger — отдельный manual activation PR, потому что у первого ledger snapshot нет trusted base ledger для transition comparison.
+
 ## Maintenance route
 
 `refresh_metadata` использует тот же deterministic transaction foundation, но относится к maintenance, а не к normal auto-merge data entry.
@@ -109,13 +127,13 @@ Path patterns используют один и тот же узкий grammar в
 
 ## Read-only routes
 
-`recommend_context`, `taste_context` и `assess_candidate` не создают operation PR и не мутируют canonical data. Если read path начинает писать состояние, это архитектурное изменение, а не implementation detail.
+`recommend_context`, `taste_context` и `assess_candidate` не создают operation PR и не мутируют canonical data. Legacy reassessment добавляет `reassessment-context` как unanchored safe-card route и отдельный `reassessment-history` explicit historical lookup; эти read models сами canonical state не меняют.
 
 ## Security properties
 
 GitHub Actions media pipeline не должен требовать live LLM credentials. Provider tokens выдаются только provider-dependent server/CI операциям. Browser никогда не получает repository write credentials или provider/model secrets.
 
-Privileged guarded merge использует только два доверенных источника policy decisions: policy bytes из trusted `main` и changed-file inventory из GitHub PR files API / PR metadata. Mutable PR code не определяет собственные права и PR-head Python не исполняется с write-capable credentials.
+Privileged guarded merge использует только доверенные policy/state inputs из `main` и GitHub PR metadata. Mutable PR code не определяет собственные права и PR-head Python не исполняется с write-capable credentials.
 
 ## Проверка developer change
 

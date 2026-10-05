@@ -49,9 +49,11 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
       - name: Replay branch on current main
+        id: replay
         shell: bash
         run: |
           git fetch origin main
+          echo "base_sha=$(git rev-parse origin/main)" >> "$GITHUB_OUTPUT"
           if ! git merge --no-edit origin/main; then
             git merge --abort || true
             echo '{"status":"conflict","reason":"stale_base_merge_conflict"}'
@@ -130,7 +132,7 @@ jobs:
             .media/operations
             "$REQUEST"
           )
-          for path in media/data/interactions media/preferences/inferred media/data/relations/similarity; do
+          for path in media/data/interactions media/preferences/inferred media/data/relations/similarity media/pilots; do
             if [ -e "$path" ] || git ls-files -- "$path" | grep -q .; then
               STAGE_PATHS+=("$path")
             fi
@@ -146,14 +148,20 @@ jobs:
           import json
           import subprocess
           import sys
-          from media.service.path_policy import verify_changed_paths
+          from media.service.path_policy import verify_changed_paths, verify_operation_specific_paths
+
           request_path = sys.argv[1]
           command = json.load(open('/tmp/media-request.json', encoding='utf-8'))
           paths = subprocess.check_output(['git', 'diff', '--cached', '--name-only'], text=True).splitlines()
           if request_path not in paths:
               raise SystemExit('transient request deletion is not staged')
           media_paths = [path for path in paths if path != request_path]
+          receipt_path = f".media/operations/{command['operation_id']}.json"
+          if receipt_path not in media_paths:
+              raise SystemExit(f'operation receipt is not staged: {receipt_path}')
+          receipt = json.load(open(receipt_path, encoding='utf-8'))
           verify_changed_paths(command['operation'], media_paths)
+          verify_operation_specific_paths(command['operation'], media_paths, receipt.get('details') or {})
           forbidden = ('media/schemas/', 'media/service/', 'media/domain/', '.github/workflows/')
           forbidden_exact = {'media/vocabulary.yaml', 'media/AGENTS.md'}
           bad = [path for path in paths if path.startswith(forbidden) or path in forbidden_exact]
@@ -182,4 +190,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           BRANCH: ${{ github.head_ref }}
           HEAD_SHA: ${{ steps.commit.outputs.head_sha }}
-        run: gh workflow run media-check.yml --ref "$BRANCH" -f expected_sha="$HEAD_SHA"
+          BASE_SHA: ${{ steps.replay.outputs.base_sha }}
+        run: gh workflow run media-check.yml --ref "$BRANCH" -f expected_sha="$HEAD_SHA" -f base_sha="$BASE_SHA"

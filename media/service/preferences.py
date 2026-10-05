@@ -104,4 +104,5 @@ def plan_set_inferred_preferences(
         {rel: payload} if changed else {},
         False,
         (command.target,) if changed else (),
+        details={"target": command.target},
     )

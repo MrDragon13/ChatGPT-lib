@@ -222,6 +222,115 @@ jobs:
             fi
           done
 
+          # Pilot stale-state and work-file guards. Eligibility still comes from trusted main policy above.
+          PILOT_OPERATION=false
+          if [ "$OP_KIND" = "reserve_reassessment_session" ] || \
+             [ "$OP_KIND" = "complete_reassessment_item" ] || \
+             [ "$OP_KIND" = "close_reassessment_session" ]; then
+            PILOT_OPERATION=true
+          fi
+
+          if [ "$PILOT_OPERATION" = true ]; then
+            LEDGER_PATH="media/pilots/legacy-reassessment-primary.json"
+            LEDGER_COUNT=0
+            WORK_FILES=()
+            for path in "${FILES[@]}"; do
+              if [ "$path" = "$LEDGER_PATH" ]; then
+                LEDGER_COUNT=$((LEDGER_COUNT + 1))
+              fi
+              if match_policy_path "$path" "media/data/works/*.yaml"; then
+                WORK_FILES+=("$path")
+              else
+                rc=$?
+                if [ "$rc" -eq 2 ]; then
+                  echo "::error::Invalid work path while checking pilot operation: $path"
+                  exit 3
+                fi
+              fi
+            done
+            if [ "$LEDGER_COUNT" -ne 1 ]; then
+              echo "::error::Pilot operation must change the exact reassessment ledger once"
+              exit 3
+            fi
+
+            EXPECTED_LEDGER_DIGEST=$(printf '%s' "$OP_JSON" | jq -er '.details.expected_ledger_digest')
+            if ! CURRENT_LEDGER_B64=$(gh api "repos/$REPO/contents/media/pilots/legacy-reassessment-primary.json?ref=main" --jq '.content'); then
+              echo "::error::Current-main reassessment ledger is missing"
+              exit 3
+            fi
+            printf '%s' "$CURRENT_LEDGER_B64" | tr -d '\n' | base64 --decode > /tmp/current-reassessment-ledger.json
+            CURRENT_LEDGER_DIGEST="sha256:$(sha256sum /tmp/current-reassessment-ledger.json | awk '{print $1}')"
+            if [ "$CURRENT_LEDGER_DIGEST" != "$EXPECTED_LEDGER_DIGEST" ]; then
+              echo "::error::Stale reassessment ledger: planned=$EXPECTED_LEDGER_DIGEST current=$CURRENT_LEDGER_DIGEST"
+              exit 3
+            fi
+
+            if [ "$OP_KIND" = "reserve_reassessment_session" ]; then
+              if [ "${#WORK_FILES[@]}" -ne 0 ]; then
+                echo "::error::reserve_reassessment_session may not change canonical work files"
+                exit 3
+              fi
+              if ! printf '%s' "$OP_JSON" | jq -e '
+                (.details.reserved_items | type == "object") and
+                (.details.reserved_items | length > 0) and
+                all(.details.reserved_items[];
+                  (.pre_review_work_file_digest | type == "string") and
+                  test("^sha256:[0-9a-f]{64}$")
+                )
+              ' >/dev/null; then
+                echo "::error::reserve_reassessment_session receipt has malformed reserved_items"
+                exit 3
+              fi
+              while IFS=$'\t' read -r WORK_ID EXPECTED_WORK_DIGEST; do
+                if [[ ! "$WORK_ID" =~ ^[a-z0-9][a-z0-9-]*$ ]]; then
+                  echo "::error::Invalid reserved work id in receipt: $WORK_ID"
+                  exit 3
+                fi
+                if ! CURRENT_WORK_B64=$(gh api "repos/$REPO/contents/media/data/works/$WORK_ID.yaml?ref=main" --jq '.content'); then
+                  echo "::error::Reserved current-main work file is missing: $WORK_ID"
+                  exit 3
+                fi
+                printf '%s' "$CURRENT_WORK_B64" | tr -d '\n' | base64 --decode > /tmp/current-reassessment-work.yaml
+                CURRENT_WORK_DIGEST="sha256:$(sha256sum /tmp/current-reassessment-work.yaml | awk '{print $1}')"
+                if [ "$CURRENT_WORK_DIGEST" != "$EXPECTED_WORK_DIGEST" ]; then
+                  echo "::error::Stale reserved work during reassessment reservation: work=$WORK_ID planned=$EXPECTED_WORK_DIGEST current=$CURRENT_WORK_DIGEST"
+                  exit 3
+                fi
+              done < <(printf '%s' "$OP_JSON" | jq -r '.details.reserved_items | to_entries[] | [.key, .value.pre_review_work_file_digest] | @tsv')
+            elif [ "$OP_KIND" = "complete_reassessment_item" ]; then
+              if [ "${#WORK_FILES[@]}" -gt 1 ]; then
+                echo "::error::complete_reassessment_item may change at most one work"
+                exit 3
+              fi
+              WORK_ID=$(printf '%s' "$OP_JSON" | jq -er '.details.work_id')
+              if [[ ! "$WORK_ID" =~ ^[a-z0-9][a-z0-9-]*$ ]]; then
+                echo "::error::Invalid reserved work id in completion receipt: $WORK_ID"
+                exit 3
+              fi
+              EXPECTED_WORK_PATH="media/data/works/$WORK_ID.yaml"
+              if [ "${#WORK_FILES[@]}" -eq 1 ] && [ "${WORK_FILES[0]}" != "$EXPECTED_WORK_PATH" ]; then
+                echo "::error::Changed work does not match reserved work path: expected=$EXPECTED_WORK_PATH actual=${WORK_FILES[0]}"
+                exit 3
+              fi
+              EXPECTED_WORK_DIGEST=$(printf '%s' "$OP_JSON" | jq -er '.details.pre_review_work_file_digest')
+              if ! CURRENT_WORK_B64=$(gh api "repos/$REPO/contents/media/data/works/$WORK_ID.yaml?ref=main" --jq '.content'); then
+                echo "::error::Reserved current-main work file is missing: $WORK_ID"
+                exit 3
+              fi
+              printf '%s' "$CURRENT_WORK_B64" | tr -d '\n' | base64 --decode > /tmp/current-reassessment-work.yaml
+              CURRENT_WORK_DIGEST="sha256:$(sha256sum /tmp/current-reassessment-work.yaml | awk '{print $1}')"
+              if [ "$CURRENT_WORK_DIGEST" != "$EXPECTED_WORK_DIGEST" ]; then
+                echo "::error::Stale reserved work file: planned=$EXPECTED_WORK_DIGEST current=$CURRENT_WORK_DIGEST"
+                exit 3
+              fi
+            else
+              if [ "${#WORK_FILES[@]}" -ne 0 ]; then
+                echo "::error::$OP_KIND may not change canonical work files"
+                exit 3
+              fi
+            fi
+          fi
+
           echo "eligible=true" >> "$GITHUB_OUTPUT"
           echo "number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
           echo "sha=$PR_HEAD_SHA" >> "$GITHUB_OUTPUT"

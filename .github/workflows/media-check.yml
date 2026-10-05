@@ -7,6 +7,10 @@ on:
         description: Optional exact head SHA expected by the caller
         required: false
         type: string
+      base_sha:
+        description: Trusted current-main SHA used to replay the operation
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -19,6 +23,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
+          fetch-depth: 0
       - name: Verify expected SHA
         if: ${{ inputs.expected_sha != '' }}
         shell: bash
@@ -30,6 +35,69 @@ jobs:
           python-version: '3.12'
       - name: Install media dependencies
         run: python -m pip install -r media/requirements.txt
+      - name: Validate reassessment base-to-head transition
+        shell: bash
+        env:
+          BASE_SHA: ${{ inputs.base_sha }}
+        run: |
+          set -euo pipefail
+          HEAD_SHA=$(git rev-parse HEAD)
+          git fetch origin main
+          git cat-file -e "$BASE_SHA^{commit}"
+          if ! git merge-base --is-ancestor "$BASE_SHA" origin/main; then
+            echo "::error::base_sha is not a trusted ancestor of current main"
+            exit 3
+          fi
+
+          LEDGER="media/pilots/legacy-reassessment-primary.json"
+          mapfile -t CHANGED < <(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+          ledger_changed=false
+          for path in "${CHANGED[@]}"; do
+            if [ "$path" = "$LEDGER" ]; then
+              ledger_changed=true
+              break
+            fi
+          done
+          if [ "$ledger_changed" != true ]; then
+            exit 0
+          fi
+          if ! git cat-file -e "$BASE_SHA:$LEDGER" 2>/dev/null; then
+            echo "::error::Base reassessment ledger is missing; auto-merge operation transitions require an already-active ledger"
+            exit 3
+          fi
+          git show "$BASE_SHA:$LEDGER" > /tmp/base-reassessment-ledger.json
+
+          RECEIPTS=()
+          for path in "${CHANGED[@]}"; do
+            case "$path" in
+              .media/operations/*.json) RECEIPTS+=("$path") ;;
+            esac
+          done
+          if [ "${#RECEIPTS[@]}" -ne 1 ]; then
+            echo "::error::Expected exactly one operation receipt for reassessment transition"
+            exit 3
+          fi
+          OPERATION=$(jq -er '.operation' "${RECEIPTS[0]}")
+          case "$OPERATION" in
+            reserve_reassessment_session|complete_reassessment_item|close_reassessment_session) ;;
+            *)
+              echo "::error::Pilot ledger changed under non-reassessment operation: $OPERATION"
+              exit 3
+              ;;
+          esac
+
+          EXPECTED_LEDGER_DIGEST=$(jq -er '.details.expected_ledger_digest' "${RECEIPTS[0]}")
+          BASE_LEDGER_DIGEST="sha256:$(sha256sum /tmp/base-reassessment-ledger.json | awk '{print $1}')"
+          if [ "$BASE_LEDGER_DIGEST" != "$EXPECTED_LEDGER_DIGEST" ]; then
+            echo "::error::Base ledger digest does not match operation receipt: base=$BASE_LEDGER_DIGEST expected=$EXPECTED_LEDGER_DIGEST"
+            exit 3
+          fi
+
+          python -m media.tools.validate_reassessment_transition \
+            --base /tmp/base-reassessment-ledger.json \
+            --head "$LEDGER" \
+            --operation "$OPERATION" \
+            --operation-receipt "${RECEIPTS[0]}"
       - name: Run project tests
         run: python -m pytest -q
       - name: Validate canonical media

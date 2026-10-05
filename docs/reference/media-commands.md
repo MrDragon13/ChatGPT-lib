@@ -16,6 +16,9 @@
 | `record_recommendation_interaction` | recommendation | write | Добавить append-only recommendation interaction event | да |
 | `set_work_similarity` | relation | write | Upsert одной target-specific undirected explicit similarity assertion | да |
 | `remove_work_similarity` | relation | write | Удалить explicit similarity для target/unordered pair | да |
+| `reserve_reassessment_session` | reassessment pilot | write | Зарезервировать до 5 frozen-cohort works в одной primary legacy reassessment session | да |
+| `complete_reassessment_item` | reassessment pilot | write | Завершить один reserved item как changed/confirmed unchanged/deferred с ledger serialization | да |
+| `close_reassessment_session` | reassessment pilot | write | Закрыть полностью разрешённую reassessment session и сохранить progress snapshot | да |
 | `recommend_context` | recommendation | read-only | Построить candidate/context read model для recommendation reasoning | n/a |
 | `taste_context` | intelligence | read-only | Построить компактный target taste/evidence context | n/a |
 | `assess_candidate` | intelligence | read-only | Собрать контекст для qualitative ответа «понравится ли мне X?» без mutation | n/a |
@@ -50,6 +53,9 @@ Source contracts:
 - `media/commands/schemas/record_recommendation_interaction.schema.json`
 - `media/commands/schemas/set_work_similarity.schema.json`
 - `media/commands/schemas/remove_work_similarity.schema.json`
+- `media/commands/schemas/reserve_reassessment_session.schema.json`
+- `media/commands/schemas/complete_reassessment_item.schema.json`
+- `media/commands/schemas/close_reassessment_session.schema.json`
 - `media/commands/schemas/recommend_context.schema.json`
 - `media/commands/schemas/taste_context.schema.json`
 - `media/commands/schemas/assess_candidate.schema.json`

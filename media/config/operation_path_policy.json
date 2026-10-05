@@ -86,6 +86,30 @@
         "media/data/relations/similarity/*.yaml",
         ".media/operations/*.json"
       ]
+    },
+    "reserve_reassessment_session": {
+      "auto_merge": true,
+      "allowed_paths": [
+        "media/pilots/legacy-reassessment-primary.json",
+        ".media/operations/*.json"
+      ]
+    },
+    "complete_reassessment_item": {
+      "auto_merge": true,
+      "allowed_paths": [
+        "media/pilots/legacy-reassessment-primary.json",
+        "media/data/works/*.yaml",
+        "media/generated/index.jsonl",
+        "media/generated/profiles/*.yaml",
+        ".media/operations/*.json"
+      ]
+    },
+    "close_reassessment_session": {
+      "auto_merge": true,
+      "allowed_paths": [
+        "media/pilots/legacy-reassessment-primary.json",
+        ".media/operations/*.json"
+      ]
     }
   }
 }

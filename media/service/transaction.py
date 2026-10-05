@@ -11,11 +11,14 @@ from typing import Any
 from media.domain.changeset import MutationPlan, OperationResult
 from media.domain.commands import (
     AddWorkCommand,
+    CloseReassessmentSessionCommand,
+    CompleteReassessmentItemCommand,
     EditViewingFeedbackCommand,
     RecordRecommendationInteractionCommand,
     RecordViewingFeedbackCommand,
     RefreshMetadataCommand,
     RemoveWorkSimilarityCommand,
+    ReserveReassessmentSessionCommand,
     SetInferredPreferencesCommand,
     SetInterestCommand,
     SetSemanticFingerprintCommand,
@@ -28,8 +31,13 @@ from media.service.enrich import plan_add_work_resolved
 from media.service.intelligence import plan_set_semantic_fingerprint
 from media.service.interactions import plan_record_recommendation_interaction
 from media.service.mutate import apply_feedback_updates, plan_edit_viewing_feedback, plan_record_viewing_feedback, plan_set_interest, profile_targets_for
-from media.service.path_policy import verify_changed_paths
+from media.service.path_policy import verify_changed_paths, verify_operation_specific_paths
 from media.service.preferences import plan_set_inferred_preferences
+from media.service.reassessment_mutate import (
+    plan_close_reassessment_session,
+    plan_complete_reassessment_item,
+    plan_reserve_reassessment_session,
+)
 from media.service.refresh import plan_refresh_metadata
 from media.service.similarity import plan_remove_work_similarity, plan_set_work_similarity, reconcile_similarity_for_new_work
 from media.tools.build_index import write_index
@@ -48,6 +56,9 @@ MutableCommand = (
     | RecordRecommendationInteractionCommand
     | SetWorkSimilarityCommand
     | RemoveWorkSimilarityCommand
+    | ReserveReassessmentSessionCommand
+    | CompleteReassessmentItemCommand
+    | CloseReassessmentSessionCommand
 )
 
 
@@ -78,6 +89,7 @@ def _with_similarity_reconciliation(repo: YamlRepository, plan: MutationPlan, wo
         rebuild_profile_targets=plan.rebuild_profile_targets,
         details=plan.details,
         jsonl_appends=plan.jsonl_appends,
+        json_documents=plan.json_documents,
     )
 
 
@@ -109,6 +121,9 @@ def _plan(repo: YamlRepository, command: MutableCommand, now: datetime | None, p
     if isinstance(command,RecordRecommendationInteractionCommand): return plan_record_recommendation_interaction(repo,command,now=now)
     if isinstance(command,SetWorkSimilarityCommand): return plan_set_work_similarity(repo,command,now=now)
     if isinstance(command,RemoveWorkSimilarityCommand): return plan_remove_work_similarity(repo,command,now=now)
+    if isinstance(command,ReserveReassessmentSessionCommand): return plan_reserve_reassessment_session(repo,command,now=now)
+    if isinstance(command,CompleteReassessmentItemCommand): return plan_complete_reassessment_item(repo,command,now=now)
+    if isinstance(command,CloseReassessmentSessionCommand): return plan_close_reassessment_session(repo,command,now=now)
     if isinstance(command,AddWorkCommand): return _plan_add_work(repo,command,now,provider)
     if isinstance(command,RefreshMetadataCommand): return plan_refresh_metadata(repo,command,provider,now=now)
     raise CommandValidationError("unsupported mutable command")
@@ -118,8 +133,8 @@ def preview_command(repo_root: Path, command: MutableCommand, *, now: datetime |
     repo_root=Path(repo_root); receipt=_receipt_path(repo_root,command.operation_id)
     if receipt.exists(): return _load_receipt(receipt)
     plan=_plan(YamlRepository(repo_root/"media"),command,now,provider)
-    paths=tuple(sorted(set(plan.documents)|set(plan.jsonl_appends)))
-    return OperationResult("planned" if plan.changed_entities else "no_change",plan.operation_id,plan.operation,plan.changed_entities,paths,plan.details)
+    paths=tuple(sorted(set(plan.documents)|set(plan.json_documents)|set(plan.jsonl_appends)))
+    return OperationResult("planned" if plan.has_changes else "no_change",plan.operation_id,plan.operation,plan.changed_entities,paths,plan.details)
 
 
 def _file_map(root: Path) -> dict[str, bytes]:
@@ -158,23 +173,33 @@ def _rebuild_requested_generated(temp_root: Path, plan: MutationPlan) -> None:
         dump_yaml(media_root/"generated"/"profiles"/f"{target}.yaml",build_profile(media_root,target))
 
 
+def _write_json_document(path: Path, document: Any) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(document, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+
+
 def execute_command(repo_root: Path, command: MutableCommand, *, now: datetime | None = None, provider: Any = None) -> OperationResult:
     repo_root=Path(repo_root); receipt=_receipt_path(repo_root,command.operation_id)
     if receipt.exists(): return _load_receipt(receipt)
     with tempfile.TemporaryDirectory(prefix="media-op-") as tmpdir:
         temp_root=Path(tmpdir)/"repo"; temp_root.mkdir(parents=True); shutil.copytree(repo_root/"media",temp_root/"media")
+        if (repo_root/".media").exists(): shutil.copytree(repo_root/".media",temp_root/".media")
         plan=_plan(YamlRepository(temp_root/"media"),command,now,provider)
         for rel,document in plan.documents.items(): dump_yaml(temp_root/rel,document)
+        for rel,document in plan.json_documents.items(): _write_json_document(temp_root/rel,document)
         for rel,appends in plan.jsonl_appends.items():
             path=temp_root/rel; rows=[row for _,row in iter_jsonl(path)] if path.exists() else []; rows.extend(dict(item) for item in appends); write_jsonl(path,rows)
-        if plan.changed_entities:
+        if plan.has_changes:
             issues=validate_repository(temp_root)
             if issues: raise TransactionValidationError("; ".join(f"{issue.code}: {issue.message}" for issue in issues[:10]))
             _rebuild_requested_generated(temp_root,plan)
-        media_paths=_changed_paths(repo_root,temp_root) if plan.changed_entities else []; status="applied" if plan.changed_entities else "no_change"
+        media_paths=_changed_paths(repo_root,temp_root) if plan.has_changes else []; status="applied" if plan.has_changes else "no_change"
         receipt_rel=str(receipt.relative_to(repo_root)).replace("\\","/"); changed_files=tuple(media_paths+[receipt_rel]); applied_at=(now or datetime.now(timezone.utc)).isoformat()
         payload={"operation_id":plan.operation_id,"operation":plan.operation,"status":status,"changed_entities":list(plan.changed_entities),"changed_files":list(changed_files),"applied_at":applied_at}
         if plan.details: payload["details"]=dict(plan.details)
         temp_receipt=temp_root/receipt_rel; temp_receipt.parent.mkdir(parents=True,exist_ok=True); temp_receipt.write_text(json.dumps(payload,ensure_ascii=False,sort_keys=True,indent=2)+"\n",encoding="utf-8")
-        sync_paths=media_paths+[receipt_rel]; verify_changed_paths(plan.operation,sync_paths); _sync_with_rollback(repo_root,temp_root,sync_paths)
+        sync_paths=media_paths+[receipt_rel]
+        verify_changed_paths(plan.operation,sync_paths)
+        verify_operation_specific_paths(plan.operation,sync_paths,plan.details)
+        _sync_with_rollback(repo_root,temp_root,sync_paths)
     return OperationResult(status,plan.operation_id,plan.operation,plan.changed_entities,changed_files,plan.details)
