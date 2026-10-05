@@ -274,8 +274,8 @@ jobs:
                 (.details.reserved_items | type == "object") and
                 (.details.reserved_items | length > 0) and
                 all(.details.reserved_items[];
-                  (.pre_review_work_file_digest | type == "string") and
-                  test("^sha256:[0-9a-f]{64}$")
+                  .pre_review_work_file_digest
+                  | (type == "string" and test("^sha256:[0-9a-f]{64}$"))
                 )
               ' >/dev/null; then
                 echo "::error::reserve_reassessment_session receipt has malformed reserved_items"
