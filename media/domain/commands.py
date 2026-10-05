@@ -104,6 +104,39 @@ class RemoveWorkSimilarityCommand:
 
 
 @dataclass(frozen=True)
+class ReserveReassessmentSessionCommand:
+    schema_version: int
+    operation_id: str
+    pilot_id: str
+    session_id: str
+    work_ids: tuple[str, ...]
+    expected_ledger_digest: str
+
+
+@dataclass(frozen=True)
+class CompleteReassessmentItemCommand:
+    schema_version: int
+    operation_id: str
+    pilot_id: str
+    session_id: str
+    work_id: str
+    expected_ledger_digest: str
+    outcome: Literal["changed", "confirmed_unchanged", "deferred"]
+    historical_exposure: Mapping[str, Any] | None = None
+    feedback_edit: Mapping[str, Any] | None = None
+
+
+@dataclass(frozen=True)
+class CloseReassessmentSessionCommand:
+    schema_version: int
+    operation_id: str
+    pilot_id: str
+    session_id: str
+    expected_ledger_digest: str
+    scheduled_reanalysis_operation_id: str | None = None
+
+
+@dataclass(frozen=True)
 class RecommendContextRequest:
     schema_version: int
     target: str
@@ -141,6 +174,9 @@ MediaCommand: TypeAlias = (
     | RecordRecommendationInteractionCommand
     | SetWorkSimilarityCommand
     | RemoveWorkSimilarityCommand
+    | ReserveReassessmentSessionCommand
+    | CompleteReassessmentItemCommand
+    | CloseReassessmentSessionCommand
 )
 
 ReadRequest: TypeAlias = RecommendContextRequest | TasteContextRequest | AssessCandidateRequest
