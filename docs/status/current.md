@@ -56,6 +56,14 @@ Internal recommendation request ограничивает candidate set лока�
 
 General recommendation request допускает external discovery; library при этом служит памятью о вкусах, exclusions и evidence anchors.
 
+### Legacy reassessment foundation
+
+Фундамент pilot переоценки legacy `primary` reviews реализован в PR A, но сам pilot **not activated / ещё не активирован** до отдельного manual PR B с frozen ledger. Approved frozen Stage A revision: `35afaca898eae6937066f230906b41af0e1f6690`.
+
+Foundation включает neutral/unanchored `reassessment-context`, отдельный opt-in `reassessment-history`, typed `reserve_reassessment_session` / `complete_reassessment_item` / `close_reassessment_session`, atomic feedback+ledger completion, current-ledger/work digests, monotonic transition validation и trusted workflow guards. Default session size — 5; scheduled inferred-hypothesis reanalysis — каждые 15 newly reviewed works и в конце main pending pass.
+
+Legacy reassessment обновляет explicit user evidence; semantic fingerprint backfill в этот pilot не входит. `media/pilots/` хранит operational provenance и намеренно исключён из Stage A `canonical_input_digest`. Generated profiles/affinities могут ожидаемо drift по мере замены inferred/approx evidence на fresh explicit evidence; progress сравнивается с frozen Stage A baseline, а не с предыдущим generated profile.
+
 ### Web
 
 Текущий exporter выдаёт **manifest v3**. Static GitHub Pages читает versioned derived manifest, а не canonical YAML.
@@ -74,6 +82,7 @@ Manifest v3 включает target-aware taste/recommendation data, semantic fi
 - External discovery/live model reasoning находится на agent/server boundary; static Pages остаётся работоспособным без live model.
 - Bulk provider metadata refresh требует manual review и не относится к normal auto-merge path.
 - Controlled vocabulary расширяется только отдельным developer/architecture change, а не автоматически из обычного feedback.
+- Legacy reassessment foundation не означает активный pilot: frozen cohort/ledger будет создан только отдельным activation PR после manual review/merge PR A и successful exact-revision developer gate.
 
 ## Verification model
 
@@ -89,6 +98,7 @@ Developer changes считаются проверенными только по�
 - `docs/architecture/write-pipeline.md` — typed mutation lifecycle;
 - `docs/architecture/web-and-broker.md` — manifest, Pages и security boundary;
 - `docs/reference/media-commands.md` — operation catalog;
-- `docs/reference/invariants.md` — cross-system safety rules.
+- `docs/reference/invariants.md` — cross-system safety rules;
+- `docs/runbooks/media-legacy-reassessment.md` — operational legacy reassessment flow.
 
-Dated files under `docs/superpowers/specs/` and `docs/superpowers/plans/` сохраняют историю проектных решений, но не заменяют current code, schemas, AGENTS contracts или living docs.
+Dated files under `docs/superpowers/specs/` и `docs/superpowers/plans/` сохраняют историю проектных решений, но не заменяют current code, schemas, AGENTS contracts или living docs.
