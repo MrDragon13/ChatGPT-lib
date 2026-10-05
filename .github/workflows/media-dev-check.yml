@@ -8,6 +8,7 @@ on:
       - 'media/commands/schemas/**'
       - 'media/config/operation_path_policy.json'
       - 'media/baselines/**'
+      - 'media/pilots/**'
       - 'tests/media/**'
       - '.github/workflows/media-*.yml'
 

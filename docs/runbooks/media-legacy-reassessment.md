@@ -1,12 +1,18 @@
 # Media legacy reassessment pilot runbook
 
-Status in PR A: **foundation implemented; pilot not activated**. The durable pilot ledger is created only by the separate manual activation PR after this foundation is reviewed and merged.
+Status: **pilot activated**. PR A foundation is merged; PR B installs the frozen ledger at `media/pilots/legacy-reassessment-primary.json`. No user item is reserved merely by activation.
 
 ## Purpose and boundary
 
 The pilot upgrades historical `primary` review evidence into current explicit rating/reaction/structured-feedback evidence before Stage B evaluation work. It does **not** perform semantic fingerprint backfill. Semantic vocabulary/provenance and targeted semantic enrichment are a separate later cycle.
 
 The frozen comparison point is Stage A revision `35afaca898eae6937066f230906b41af0e1f6690` and `media/baselines/intelligence-stage-a.json`. Progress and later quality comparisons use that frozen Stage A baseline, not yesterday's generated profile.
+
+## Activation snapshot
+
+The activated frozen cohort contains **55 works**: `23 central`, `10 high`, `10 low`, `9 medium_low`, and `3 special`. Initial lifecycle state is `55 pending`, `0 sessions`; ledger SHA-256 is `a401526355a629faf2d0559f9ad4346449dd86d97e649a4d13489f3d3f471b2f`. The Stage A canonical input digest remains `sha256:98e9dc4521e69ee5273e302fc40cc1e5fc3d53b119e2c7637475ac45cce43fbf`.
+
+The first frozen-order batch is `gattaca-1997`, `grand-budapest-hotel-2014`, `source-code-2011`, `project-hail-mary`, `interstellar-2014`. Do **not** reserve it during smoke testing; reserve only when the user is actually starting session 1. The first response for every item remains unanchored.
 
 The ledger lives at `media/pilots/legacy-reassessment-primary.json`. It is operational provenance, not taste truth. Canonical current opinion remains in work viewer signals and their existing history.
 
