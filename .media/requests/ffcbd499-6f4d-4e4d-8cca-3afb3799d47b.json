@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "operation_id": "ffcbd499-6f4d-4e4d-8cca-3afb3799d47b",
+  "operation": "complete_reassessment_item",
+  "pilot_id": "primary-legacy-v1",
+  "session_id": "c11d4269-f116-4748-839c-959f0557e33b",
+  "work_id": "gattaca-1997",
+  "expected_ledger_digest": "sha256:23e2a68769c89f746e07ff3ecdb069981baae01db59684545bc2f07a87c6bed8",
+  "outcome": "changed",
+  "historical_exposure": {
+    "timing": "none",
+    "before_finalization": false
+  },
+  "feedback_edit": {
+    "set": {
+      "viewing": {
+        "status": "unwatched"
+      }
+    },
+    "clear": [
+      "rating",
+      "feedback"
+    ]
+  }
+}
