@@ -68,6 +68,7 @@ Classify intent before choosing an operation; do not map a keyword directly to a
 - **semantic enrich** — update work knowledge through `set_semantic_fingerprint`; never turn film traits into explicit preferences silently.
 - **metadata maintenance** — provider refresh such as `refresh_metadata(all_movies)`; manual-review route.
 - **architecture/vocabulary maintenance** — developer/manual route for schemas, services, workflows, vocabulary, or documentation architecture.
+- **legacy reassessment** — run the active `primary-legacy-v1` pilot only when its ledger exists; use `reassessment-context` for unanchored safe cards, `reassessment-history` only as explicit second-phase historical lookup, and mutate only through `reserve_reassessment_session` / `complete_reassessment_item` / `close_reassessment_session`.
 
 If one user event contains several related normal signals, prefer one atomic operation when the schema supports it. Example: new work + feedback should use `record_viewing_feedback(create_if_missing=true)` rather than two independent writes.
 
@@ -115,6 +116,30 @@ Inferred hypotheses are explanation-only for numeric affinity aggregation. They 
 
 `set_semantic_fingerprint` describes the work, never the viewer. Film fingerprint describes the work, never the viewer reaction. Reaction-kind terms are invalid for work fingerprinting. Unknown vocabulary terms are not invented; vocabulary maintenance is a separate developer task.
 
+## Legacy reassessment pilot
+
+Legacy reassessment upgrades historical `primary` review evidence; it is not semantic enrichment. Never use the pilot to backfill or rewrite `metadata.semantic`, vocabulary, explicit similarity, partner/couple state, or stable preferences that the user did not state.
+
+The first response for each work must be **unanchored** by historical opinion. Use `python -m media.cli reassessment-context --limit 5 --format json` and present a neutral factual memory jog. Do not show the old rating, reaction, feedback summary/signals, or semantic traits before the user's first current answer unless the user explicitly asks what they previously rated/wrote.
+
+If history is needed, use `python -m media.cli reassessment-history <work-id> --format json` only as the second-phase route (or earlier on explicit user request) and record `historical_exposure` truthfully. Old opinion is historical context, not fresh explicit evidence.
+
+A new session must be durably reserved on authoritative `main` with `reserve_reassessment_session` before any canonical reassessment completion write. Default batch size is 5. `complete_reassessment_item` atomically combines the optional fresh `primary` feedback edit with the ledger lifecycle transition. `close_reassessment_session` is allowed only when all reserved items are resolved.
+
+All pilot writes serialize on current `expected_ledger_digest`; completion also validates the reserved raw work-file digest. If either state moved, fail closed and replay against current `main`. Never force around these guards.
+
+Completion semantics:
+
+- `changed` — fresh explicit evidence caused a canonical mutation; same numeric score still counts as changed when provenance moves from `inferred`/`explicit_approx` to `explicit`.
+- `confirmed_unchanged` — current canonical evidence is already explicit and semantically matches the fresh response; do not manufacture a no-op history entry.
+- `deferred` — user cannot or does not want to reassess now; ledger-only, no canonical opinion edit.
+
+Finish the main `pending` pass before bringing `deferred` items back. A `reviewed` item is terminal for this pilot and must never be automatically asked again. Scheduled taste reanalysis uses existing `set_inferred_preferences` only after every 15 newly reviewed works since the last scheduled milestone and once at the end of the main pending pass when reviewed evidence advanced; manual reanalysis does not reset this cadence.
+
+Generated profile/affinity drift is expected as direct explicit evidence replaces inferred/approx evidence. Evaluate pilot progress against the frozen Stage A baseline, not the immediately previous profile. The pilot ledger is operational provenance, not taste truth and not automatically a Stage B decision benchmark.
+
+During normal reassessment conversation hide Git/PR/workflow mechanics. Do not tell the user something was saved until the corresponding pilot operation is actually authoritative on `main`.
+
 ## Hard guardrails
 
 - Never invent schema fields.
@@ -150,7 +175,13 @@ Normal user-data writes:
 - `set_work_similarity`
 - `remove_work_similarity`
 
-Read-only requests: `recommend_context`, `taste_context`/`taste-context`, `assess_candidate`/`assess-candidate`. `refresh_metadata` is typed maintenance, not a normal auto-merge operation.
+Pilot-only serialized writes when the legacy reassessment ledger is active:
+
+- `reserve_reassessment_session`
+- `complete_reassessment_item`
+- `close_reassessment_session`
+
+Read-only requests: `recommend_context`, `taste_context`/`taste-context`, `assess_candidate`/`assess-candidate`; pilot read models are `reassessment-context` and explicit `reassessment-history`. `refresh_metadata` is typed maintenance, not a normal auto-merge operation.
 
 `edit_viewing_feedback` uses explicit set/clear/purge semantics; clearing one component does not erase neighboring signals. `record_recommendation_interaction` is append-only recommendation memory. `set_work_similarity`/`remove_work_similarity` operate on one current target-specific unordered relation, with deterministic external→canonical reconciliation when a matching work is later created.
 
@@ -173,6 +204,8 @@ The model must not directly update canonical YAML for normal user data mutation.
 ## Auto-merge and maintenance
 
 Eligible normal operations are defined by the declarative `media/config/operation_path_policy.json` contract. Runtime validation reads the local policy document; privileged guarded auto-merge separately fetches that policy from trusted `main`, reads changed filenames from the GitHub PR files API, and treats the PR-head operation marker only as JSON data. The privileged workflow must not execute PR-head Python. Any unavailable/malformed policy, unknown operation, `auto_merge: false`, or changed path outside trusted `allowed_paths` fails closed.
+
+Legacy reassessment operations add extra stale-state guards on top of normal path policy: authoritative current-main ledger digest is rechecked before merge, and `complete_reassessment_item` also rechecks the reserved canonical work digest and exact changed-work cardinality/id.
 
 `refresh_metadata(scope=all_movies)` is provider-dependent bulk maintenance and **must not auto-merge**. It remains open for explicit human review/merge. Architecture/vocabulary/schema/workflow changes are also manual.
 
@@ -207,3 +240,4 @@ If any step fails, canonical data must not be left partially modified.
 - “Что ты понял о моём вкусе?” → read/explain only.
 - “Переосмысли мой вкус” → reanalyze taste, then validated inferred replacement.
 - “Обнови понимание этого фильма” → semantic enrich, not viewer-taste edit.
+- “Давай переоценим старые отзывы” → active legacy reassessment route only; neutral current-answer-first flow, old opinion hidden unless requested.
