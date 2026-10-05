@@ -211,6 +211,7 @@ Test:
 
 - ledger digest is `sha256` of exact deterministic ledger bytes and changes after any ledger mutation;
 - relevant feedback-state digest is stable across mapping key order and covers only `primary` viewing/rating/reaction/feedback state used for concurrency checks;
+- a whole-work-file SHA-256 helper is deterministic and can be reproduced from raw repository bytes for privileged pre-merge defense-in-depth;
 - cohort membership includes `watched`, `partial`, `dropped`, `forgotten` and excludes `unwatched` regardless of summary text;
 - frozen strata match the approved boundaries;
 - `order_key == sha256(pilot_id + "\0" + work_id)`;
@@ -238,6 +239,7 @@ ALLOWED_COHORT_VIEWING = {"watched", "partial", "dropped", "forgotten"}
 
 def ledger_bytes(document: Mapping[str, Any]) -> bytes: ...
 def ledger_digest_bytes(payload: bytes) -> str: ...
+def file_sha256(payload: bytes) -> str: ...
 def feedback_state_digest(signal: Mapping[str, Any] | None) -> str: ...
 def frozen_stratum(signal: Mapping[str, Any]) -> str: ...
 def frozen_order_key(pilot_id: str, work_id: str) -> str: ...
@@ -247,7 +249,7 @@ def build_initial_ledger(...baseline refs...) -> dict[str, Any]: ...
 
 The builder must not inspect generated index/profile as truth.
 
-**Step 4 — Add developer-only initializer CLI**
+**Step 4 — Add developer-only initializer/summary CLI**
 
 `media/tools/reassessment.py` should support at least:
 
@@ -257,9 +259,11 @@ python -m media.tools.reassessment init \
   --output <ledger.json> \
   --base-revision <sha> \
   --baseline-path media/baselines/intelligence-stage-a.json
+
+python -m media.tools.reassessment summary <ledger.json>
 ```
 
-The initializer reads canonical works from `--repo-root`, copies the baseline canonical-input digest/schema provenance from the named baseline, writes deterministic JSON to `--output`, and refuses to overwrite an existing output unless an explicit developer-only flag is supplied.
+The initializer reads canonical works from `--repo-root`, copies the baseline canonical-input digest/schema provenance from the named baseline, writes deterministic JSON to `--output`, and refuses to overwrite an existing output unless an explicit developer-only flag is supplied. `summary` reports cohort/stratum/status counts without mutating anything.
 
 Do not expose pilot initialization as an auto-merge typed operation.
 
@@ -284,11 +288,9 @@ git commit -m "feat: build deterministic reassessment cohort"
 
 **Files:**
 - Modify: `media/tools/validate.py`
-- Modify/Create: `media/service/reassessment.py` or `media/service/reassessment_validation.py`
+- Create: `media/service/reassessment_validation.py`
 - Test: `tests/media/test_validator.py`
 - Test: `tests/media/test_reassessment_pilot.py`
-
-Prefer a separate `media/service/reassessment_validation.py` if the validation functions would make `reassessment.py` mix lifecycle logic with validation policy.
 
 **Step 1 — Write failing tests**
 
@@ -431,7 +433,7 @@ git commit -m "feat: expose unanchored reassessment context"
 - ledger digest mismatch fails closed;
 - only `pending` (main pass) or explicitly selected `deferred` (deferred pass) items can become `in_progress`;
 - reservation creates one open session record with `reserved_work_ids` and timestamps;
-- each reserved item stores current pre-review feedback-state digest;
+- each reserved item stores current `pre_review_feedback_digest` and current `pre_review_work_file_digest` (SHA-256 of raw canonical work file bytes);
 - reviewed item cannot be reserved;
 - duplicate/open conflicting session reservation fails.
 
@@ -442,8 +444,9 @@ git commit -m "feat: expose unanchored reassessment context"
 - requires current feedback-state digest to equal reserved digest;
 - `changed` reuses existing feedback edit semantics and history;
 - same score with `source: inferred` becomes `source: explicit` and outcome is `changed`;
-- `confirmed_unchanged` only succeeds when current canonical evidence already satisfies the fresh explicit result and creates no fake history;
+- `confirmed_unchanged` only succeeds when current canonical evidence is already explicit and creates no fake history;
 - completion may mutate at most one canonical work and it must be the reserved work id;
+- operation receipt/details preserve reserved work id, expected ledger digest, pre-review feedback digest, and pre-review work-file digest for downstream trusted checks;
 - `deferred` changes ledger only;
 - reviewed item cannot be completed again.
 
@@ -454,7 +457,7 @@ git commit -m "feat: expose unanchored reassessment context"
 - computes audit from repository state, not request-provided metrics;
 - appends one closed immutable session snapshot;
 - advances `scheduled_reanalysis.last_completed` only when a due scheduled operation id is supplied and corresponds to an applied `set_inferred_preferences` receipt for `primary`;
-- manual/user-requested reanalysis receipt does not advance scheduled state unless explicitly used as the due scheduled milestone under the close contract;
+- a manual/user-requested reanalysis does not reset scheduled cadence unless deliberately used as the due scheduled milestone under the close contract;
 - close does not mutate works/preferences/generated files itself.
 
 **Step 2 — Run**
@@ -472,10 +475,11 @@ In `media/service/reassessment_mutate.py`:
 - read ledger through one helper;
 - compare `expected_ledger_digest` against exact current ledger bytes;
 - produce updated ledger through `MutationPlan.json_documents`;
+- during reservation compute both relevant-feedback digest and raw work-file SHA-256;
 - for `changed`, construct an implicit-`primary` `TargetEdit` and call existing `apply_feedback_edits()` rather than reimplementing history rules;
 - set rebuild flags/profile targets exactly as `plan_edit_viewing_feedback()` would for a changed `primary` work;
 - for ledger-only outcomes leave `changed_entities=()` while `plan.has_changes` remains true;
-- include `expected_ledger_digest`, `session_id`, and outcome in trusted operation `details` for downstream verification/observability.
+- include `expected_ledger_digest`, `session_id`, reserved work id, and pre-review digest fields in trusted operation `details` for downstream verification/observability.
 
 For close, call `collect_intelligence_audit(repo.media_root.parent)` against the transaction’s temporary repository state.
 
@@ -540,7 +544,7 @@ git commit -m "test: lock reassessment audit independence"
 **Files:**
 - Modify: `media/config/operation_path_policy.json`
 - Modify: `media/service/path_policy.py` only if a small reusable operation-specific verifier belongs there; do **not** broaden matcher grammar
-- Modify/Create: `media/service/reassessment_validation.py`
+- Modify: `media/service/reassessment_validation.py`
 - Test: `tests/media/test_path_policy.py`
 - Modify: `tests/media/fixtures/operation_path_policy_cases.json`
 
@@ -604,7 +608,7 @@ git commit -m "security: scope reassessment pilot paths"
 
 **Files:**
 - Create: `media/tools/validate_reassessment_transition.py`
-- Modify/Create: `media/service/reassessment_validation.py`
+- Modify: `media/service/reassessment_validation.py`
 - Test: `tests/media/test_reassessment_transition.py`
 
 **Step 1 — Write failing pure transition tests**
@@ -679,7 +683,8 @@ Require:
 - Media Check fetches enough history/base state to materialize the base ledger and runs transition validation when the ledger changed;
 - missing base ledger is allowed only for manual activation/developer PR, never for an auto-merge pilot operation;
 - auto-merge recognizes the new operations only via trusted-main path policy;
-- before merging a pilot op, privileged auto-merge re-reads current-main ledger and verifies its digest equals the receipt’s trusted `details.expected_ledger_digest`; stale pilot PR fails closed even if Git could technically merge it;
+- before merging any pilot op, privileged auto-merge re-reads current-main ledger and verifies its digest equals the receipt’s trusted `details.expected_ledger_digest`; stale pilot PR fails closed even if Git could technically merge it;
+- before merging `complete_reassessment_item`, privileged auto-merge additionally re-reads the current-main reserved work file and verifies its SHA-256 equals receipt `details.pre_review_work_file_digest`; a concurrent ordinary edit/metadata change after planning therefore fails closed rather than relying on Git conflict behavior;
 - complete operation PR has at most one changed work and the work matches receipt/reserved id;
 - reserve/close PRs have no work path;
 - unknown/malformed pilot receipt fields fail closed.
@@ -715,10 +720,13 @@ The check token remains read-only.
 For the three pilot operation kinds, before merge:
 
 - fetch trusted current-main ledger bytes via GitHub Contents API;
-- compute the same ledger digest algorithm;
+- compute the same ledger SHA-256 algorithm;
 - compare with `details.expected_ledger_digest` in the bot-generated operation receipt;
+- for `complete_reassessment_item`, fetch the reserved current-main work file content and compare raw-file SHA-256 with `details.pre_review_work_file_digest`;
 - enforce pilot-specific changed-file cardinality/id checks;
-- fail closed if current main moved since the operation’s expected ledger state.
+- fail closed if current main moved in either relevant ledger state or reserved work state since planning.
+
+This second work-file guard is intentionally stricter than the planner’s relevant-feedback digest: any concurrent canonical edit to that work forces the reassessment completion to be replayed against fresh state.
 
 Do not add a generic shell pattern DSL or execute PR-head Python in the privileged workflow.
 
@@ -849,7 +857,7 @@ Confirm:
 - no new privileged trigger model;
 - no PR-head executable code used with write-capable token;
 - new auto-merge paths are the exact ledger + existing work/generated/receipt classes only;
-- stale expected ledger state fails before privileged merge.
+- stale expected ledger state and stale reserved-work state both fail before privileged merge.
 
 **Step 4 — Request code review**
 
@@ -902,8 +910,6 @@ Do **not** regenerate the cohort from current mutable `main` data.
 
 **Step 2 — Inspect the cohort before commit**
 
-Run a summary command (add a `summary` subcommand to the developer tool in PR A if not already present):
-
 ```bash
 python -m media.tools.reassessment summary media/pilots/legacy-reassessment-primary.json
 ```
@@ -923,17 +929,17 @@ Do not hard-code “55” in schema/tests unless the generated Stage A data prov
 
 **Step 3 — Prove the ledger does not perturb Stage A intelligence digest**
 
-Capture before/after audit output against PR B tree. The expected canonical input digest must remain:
-
-`sha256:98e9dc4521e69ee5273e302fc40cc1e5fc3d53b119e2c7637475ac45cce43fbf`
-
 Run:
 
 ```bash
 python -m media.tools.audit_intelligence . --format json
 ```
 
-Assert the digest and baseline metrics are unchanged except that repository now contains operational pilot state outside audit inventory.
+The expected canonical input digest must remain:
+
+`sha256:98e9dc4521e69ee5273e302fc40cc1e5fc3d53b119e2c7637475ac45cce43fbf`
+
+Baseline intelligence metrics should remain unchanged because `media/pilots/` is outside audit input inventory.
 
 **Step 4 — Validate the activated snapshot**
 
@@ -995,11 +1001,7 @@ python -m media.cli reassessment-context --limit 5 --format json
 python -m media.cli apply-command /tmp/reserve-session.json --dry-run --format json
 ```
 
-4. Confirm planned paths are only:
-
-- `media/pilots/legacy-reassessment-primary.json`
-- one `.media/operations/<operation-id>.json` after execution (receipt is not present in dry-run output until execute semantics as currently defined)
-
+4. Confirm planned data paths are only the pilot ledger (plus the operation receipt during real execution).
 5. **Do not submit/merge the real reserve request until the user is actually starting the first reassessment session.** Reservation changes durable lifecycle state and should correspond to a real session.
 
 ---
