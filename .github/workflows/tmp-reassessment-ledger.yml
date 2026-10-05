@@ -8,7 +8,7 @@ on:
       - '.github/workflows/tmp-reassessment-ledger.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   generate:
@@ -35,10 +35,35 @@ jobs:
             --baseline-path media/baselines/intelligence-stage-a.json
           PYTHONPATH="$GITHUB_WORKSPACE" python -m media.tools.reassessment summary /tmp/legacy-reassessment-primary.json
           sha256sum /tmp/legacy-reassessment-primary.json
+      - name: Install ledger into activation checkout
+        run: |
+          mkdir -p media/pilots
+          cp /tmp/legacy-reassessment-primary.json media/pilots/legacy-reassessment-primary.json
+      - name: Validate activated snapshot and frozen audit digest
+        run: |
+          python -m media.tools.validate .
+          python -m media.tools.audit_intelligence . --format json > /tmp/activation-audit.json
+          python - <<'PY'
+          import json
+          expected = 'sha256:98e9dc4521e69ee5273e302fc40cc1e5fc3d53b119e2c7637475ac45cce43fbf'
+          audit = json.load(open('/tmp/activation-audit.json', encoding='utf-8'))
+          actual = audit.get('canonical_input_digest')
+          if actual != expected:
+              raise SystemExit(f'canonical_input_digest changed: {actual} != {expected}')
+          print(json.dumps({'canonical_input_digest': actual}, sort_keys=True))
+          PY
+      - name: Commit deterministic ledger
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add media/pilots/legacy-reassessment-primary.json
+          git diff --cached --exit-code && { echo 'ledger already present'; exit 0; } || true
+          git commit -m "data: activate primary legacy reassessment pilot ledger"
+          git push origin HEAD:feat/media-legacy-reassessment-activation
       - name: Upload generated ledger
         uses: actions/upload-artifact@v4
         with:
-          name: legacy-reassessment-primary
+          name: legacy-reassessment-primary-verified
           path: /tmp/legacy-reassessment-primary.json
           if-no-files-found: error
           retention-days: 1
