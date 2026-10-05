@@ -63,12 +63,16 @@ def test_architecture_and_reference_docs_name_pilot_boundaries_and_typed_operati
     assert "expected_ledger_digest" in pipeline
 
 
-def test_status_says_foundation_is_implemented_but_pilot_not_yet_activated():
-    text = _text("docs/status/current.md").lower()
-    assert "reassessment" in text
-    assert "foundation" in text
-    assert "not activated" in text or "не актив" in text
-    assert "35afaca898eae6937066f230906b41af0e1f6690" in text
+def test_status_says_pilot_is_activated_from_frozen_stage_a_cohort_without_reserving_session_one():
+    status = _text("docs/status/current.md").lower()
+    runbook = _text("docs/runbooks/media-legacy-reassessment.md").lower()
+    assert "reassessment" in status
+    assert "foundation" in status
+    assert "активирован" in status
+    assert "35afaca898eae6937066f230906b41af0e1f6690" in status
+    assert "55 works" in status
+    assert "session 1" in runbook
+    assert "do **not** reserve" in runbook
 
 
 def test_docs_define_expected_profile_drift_against_frozen_stage_a_baseline():
