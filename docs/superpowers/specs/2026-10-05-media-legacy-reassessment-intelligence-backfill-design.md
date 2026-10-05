@@ -18,15 +18,15 @@ This revision deliberately separates human reassessment from semantic enrichment
 
 The pilot must:
 
-1. revisit the historical `primary` viewed cohort exactly once per pilot epoch;
+1. revisit the historical `primary` viewed cohort at most once automatically per pilot epoch;
 2. collect fresh user evidence without anchoring on the old rating/review by default;
 3. preserve historical feedback through existing `history` behavior when a mutation occurs;
 4. support `confirmed_unchanged` as a first-class outcome when the user independently confirms already-current explicit data;
-5. persist progress safely enough that an interrupted session does not make the user repeat completed human work;
-6. prevent automatic reassessment loops;
-7. prioritize early pilot coverage across contrasting evidence strata rather than letting the large cluster of `8/10` ratings dominate the first sessions;
+5. persist progress so an interrupted session does not make the user repeat completed human work;
+6. enforce anti-loop monotonicity independently in command planning and CI transition validation;
+7. prioritize early pilot coverage across contrasting evidence strata while remaining taste-neutral inside each stratum;
 8. keep semantic enrichment out of scope until vocabulary/provenance work is ready;
-9. measure pilot progress against the frozen Stage A baseline after every session;
+9. measure pilot progress against the frozen Stage A baseline after every closed session;
 10. preserve the existing typed-operation / deterministic-transaction / guarded-merge trust model;
 11. produce enough documentation that the pilot can be resumed correctly in a later conversation;
 12. leave a durable pilot ledger that Stage B can use to relate reassessed works back to their pre-pilot state.
@@ -85,7 +85,7 @@ The initial pilot identity is:
 
 The ledger is operational pilot state, not canonical taste/media truth. Ratings, reactions, feedback summaries/signals and semantic fingerprints are never duplicated into it.
 
-The ledger is versioned and retained after completion. It is archived only later, as a separate developer change, after Stage B no longer needs it as an active pilot artifact.
+The ledger is retained after completion and archived only later, as a separate developer change, after Stage B no longer needs it as an active pilot artifact.
 
 ## 7. Frozen cohort
 
@@ -118,7 +118,7 @@ Only canonical works are in v1. Collections are excluded even though collection 
 
 Collection reassessment is explicitly deferred. The current Stage A baseline contains collection-level `primary` ratings that participate in profile aggregates. Stage B must decide whether collections need a separate confirmation pass, exclusion from benchmark selection, or another treatment.
 
-## 8. Frozen strata and queue order
+## 8. Frozen strata and taste-neutral queue order
 
 Because pilot completion is not guaranteed, early sessions should already contain a useful cross-section of taste evidence.
 
@@ -131,16 +131,24 @@ At cohort initialization, each item is assigned a frozen stratum based on pre-pi
 - `high` — rating `>= 9.0`;
 - `unrated_viewed` — included viewed state with no numeric rating.
 
-Queue order is deterministic **stratified round-robin**, not “all extremes first” and not “all sparse records first”. The helper cycles across non-empty strata and uses stable work id as the final tie-breaker inside a stratum unless a more explicit frozen ordering key is defined in implementation.
+Inside each stratum the frozen order key is:
 
-Lifecycle still outranks stratum order:
+```text
+sha256(pilot_id + "\0" + work_id)
+```
+
+The resulting rank/order is persisted in the frozen cohort definition. `work_id` is used only as a deterministic collision tie-breaker.
+
+Queue order is deterministic **stratified round-robin** across non-empty strata. It is neither alphabetical nor “all extremes first”.
+
+Lifecycle outranks stratum order:
 
 1. resumable `in_progress` items;
 2. fresh `pending` items in frozen stratified order;
 3. stop the main pass when `pending` is exhausted;
 4. only then begin a separate `deferred` pass.
 
-This gives useful early diversity while still guaranteeing whole-cohort coverage when the pilot completes.
+The frozen stratum, hash order key and rank are immutable for the pilot epoch.
 
 ## 9. Unanchored reassessment contract
 
@@ -159,11 +167,12 @@ It must **not** show:
 
 - old rating;
 - old reaction;
-- old feedback summary/signals.
+- old feedback summary/signals;
+- evaluative or vocabulary-like traits such as “slow”, “dark”, “engaging”, “strong visuals”, even when a semantic fingerprint already contains them.
 
 Example:
 
-> **Бэтмен (2022)** — мрачный детектив о расследовании серии убийств в Готэме.  
+> **Бэтмен (2022)** — Брюс Уэйн расследует серию убийств в Готэме, связанных с загадками, оставленными преступником.  
 > Как ты сейчас его оцениваешь? Если помнишь — что понравилось или не понравилось?
 
 ### 9.2 Historical recall is optional and second-phase
@@ -174,11 +183,25 @@ If the fresh response is already sufficient, the old record need not be shown at
 
 If the user explicitly asks before answering “что я раньше ставил/писал?”, the agent may reveal the old record, but the pilot must record that the response was exposed to prior evidence.
 
-Each item stores:
+Instead of a single ambiguous exposure enum, each reviewed item stores:
 
-`prior_exposure: none | before_response | after_response`
+```json
+{
+  "historical_exposure": {
+    "timing": "none | before_initial_response | after_initial_response",
+    "before_finalization": false
+  }
+}
+```
 
-This provenance lets Stage B distinguish independently elicited reassessment from reassessment that may have been anchored by historical values.
+Examples:
+
+- history never shown: `timing=none`, `before_finalization=false`;
+- user asks for old rating before giving any fresh opinion: `before_initial_response`, `true`;
+- user first gives an independent opinion, then sees history and refines the final feedback: `after_initial_response`, `true`;
+- history is shown only after the canonical reassessment is already finalized: `after_initial_response`, `false`.
+
+This lets Stage B distinguish independent initial elicitation from fully unexposed final evidence.
 
 ## 10. Memory-jog contract
 
@@ -189,16 +212,23 @@ Rules:
 - spoiler-free;
 - 1–2 sentences;
 - primarily based on stored synopsis/metadata;
+- premise/identity facts rather than semantic/taste descriptors;
 - no evaluative adjectives invented by the agent;
 - no old user opinion;
 - no recommendation/taste hypothesis language;
 - director/actor only when useful for recognition.
 
-If stored synopsis is insufficient or missing, the agent should use available factual metadata rather than fabricate plot detail.
+If stored synopsis is insufficient or missing, the agent uses available factual metadata rather than fabricating plot detail.
 
-## 11. Ledger state model
+## 11. Ledger state model and mutability regions
 
-Conceptual top-level shape:
+The ledger has three logically distinct regions even if they are serialized in one JSON file:
+
+1. **frozen cohort definition** — immutable after pilot initialization;
+2. **pilot lifecycle state** — mutable only through allowed monotonic transitions;
+3. **closed session snapshots** — append-only and immutable after close.
+
+Conceptual shape:
 
 ```json
 {
@@ -209,10 +239,24 @@ Conceptual top-level shape:
   "base_revision": "35afaca898eae6937066f230906b41af0e1f6690",
   "baseline_path": "media/baselines/intelligence-stage-a.json",
   "baseline_canonical_input_digest": "sha256:98e9dc4521e69ee5273e302fc40cc1e5fc3d53b119e2c7637475ac45cce43fbf",
-  "cohort_revision": "35afaca898eae6937066f230906b41af0e1f6690",
-  "cohort_work_ids": ["..."],
+  "frozen_cohort": {
+    "cohort_revision": "35afaca898eae6937066f230906b41af0e1f6690",
+    "work_ids": ["..."],
+    "items": {
+      "work-id": {
+        "viewing_status": "watched",
+        "stratum": "central",
+        "order_key": "sha256:...",
+        "order_rank": 0,
+        "pre_pilot_feedback_digest": "sha256:..."
+      }
+    }
+  },
   "items": {},
-  "sessions": []
+  "sessions": [],
+  "scheduled_reanalysis": {
+    "last_completed": null
+  }
 }
 ```
 
@@ -225,36 +269,81 @@ Per-item lifecycle statuses:
 
 Per-item completion outcomes:
 
-- `changed` — fresh explicit evidence caused a canonical feedback mutation;
+- `changed` — fresh explicit evidence caused a canonical feedback/provenance mutation;
 - `confirmed_unchanged` — user independently confirmed already-current explicit evidence and no canonical feedback mutation was necessary;
 - `deferred` — user could not or chose not to reassess now.
 
 `reviewed` is a lifecycle state; `changed` / `confirmed_unchanged` are result categories.
 
-`confirmed_unchanged` is valid only when the existing canonical evidence is already explicit and semantically matches the fresh response. If the old score is identical but its provenance is `inferred` or `explicit_approx`, current confirmation must still mutate canonical provenance to `explicit`, so the outcome is `changed`.
+`confirmed_unchanged` is valid only when the existing canonical evidence is already explicit and semantically matches the fresh response. If the numeric score is identical but its provenance is `inferred` or `explicit_approx`, current confirmation must mutate canonical provenance to `explicit`, so the outcome is `changed`.
 
-## 12. Hard anti-loop invariant
+## 12. Hard anti-loop and monotonicity invariants
 
 For one `pilot_id`, a work may be automatically human-reassessed at most once.
 
-Once status is `reviewed`, the queue helper must never automatically re-add the item to `pending`, even if:
+Once status is `reviewed`, the queue helper must never automatically re-add the item to `pending`, `in_progress` or `deferred`, even if later diagnostics, ordinary feedback or model/vocabulary state change.
 
-- later diagnostics change;
-- ordinary feedback changes later;
-- a future detector would classify the item differently;
-- later model/vocabulary work changes semantic coverage.
-
-Repeating human reassessment requires explicit user action or a new pilot epoch/version.
+Repeating human reassessment requires explicit user action in a separately designed override path or a new pilot epoch/version.
 
 The session runner also keeps an in-memory `seen_work_ids` guard so one work cannot be shown twice in one session.
 
-## 13. New typed pilot-state operations
+Anti-loop protection is enforced twice:
 
-Manual ledger merges around each session are intentionally avoided. Pilot state gets narrow typed operations that pass through the existing deterministic command pipeline and trusted path-policy system.
+1. command/service preconditions;
+2. independent CI transition validation comparing trusted base state to candidate head state.
 
-Three operations are introduced.
+A bug in command planning must therefore still be caught before guarded merge.
 
-### 13.1 `reserve_reassessment_session`
+## 13. Ledger snapshot validation
+
+Ordinary repository validation checks the current ledger snapshot independently of how it was produced.
+
+At minimum it validates:
+
+- `pilot_id`, target, baseline refs and frozen cohort structure;
+- frozen cohort is non-empty and work IDs are unique;
+- frozen cohort work IDs exist canonically and their frozen membership status is one of the allowed cohort statuses;
+- frozen stratum/order metadata is complete and internally consistent;
+- each `reviewed` item has a terminal outcome, `historical_exposure`, `reviewed_at` and operation provenance;
+- `confirmed_unchanged` does not require or fabricate a feedback-history mutation;
+- closed sessions contain no items still reserved to that session as `in_progress`;
+- closed session counters agree with ledger lifecycle state at close;
+- `pilot_status: completed` is impossible while the main pass still has `pending` or resumable `in_progress` items.
+
+Snapshot validation belongs in normal `validate` / repository validation because it requires only one repository state.
+
+## 14. Base→head transition validation
+
+Pilot-operation PRs additionally run a dedicated transition validator over **trusted base ledger → candidate head ledger**.
+
+The transition validator is distinct from snapshot validation because it requires two revisions.
+
+It rejects at least:
+
+- changes to `pilot_id`, `base_revision`, baseline references or the frozen cohort definition;
+- changes to frozen stratum/order/pre-pilot reference metadata;
+- `reviewed` reverting to any non-terminal state;
+- rewriting terminal completion outcome, exposure provenance or completion timestamp;
+- deletion or mutation of previously closed session snapshots;
+- reordering/replacing the historical closed-session sequence;
+- illegal status transitions outside the operation contract;
+- mutation of scheduled-reanalysis history backwards.
+
+For normal pilot-operation PRs the validator implementation already lives on trusted `main`; the operation PR is restricted to data/operation paths and cannot alter validator code in the same auto-merged change.
+
+## 15. Serialized typed pilot operations
+
+Manual ledger merges around each session are intentionally avoided. Pilot state gets narrow typed operations through the existing deterministic command pipeline and trusted path-policy system.
+
+Every operation that mutates the ledger carries:
+
+`expected_ledger_digest`
+
+computed from the exact current ledger bytes/state on authoritative `main`.
+
+The write is rejected if current `main` no longer matches that digest.
+
+### 15.1 `reserve_reassessment_session`
 
 Purpose: reserve the next batch before any human reassessment write is allowed.
 
@@ -264,11 +353,11 @@ Inputs conceptually include:
 - `pilot_id`;
 - `session_id`;
 - ordered work ids to reserve;
-- expected ledger revision/digest.
+- `expected_ledger_digest`.
 
 Effects:
 
-- only the exact pilot ledger path;
+- exact pilot ledger path;
 - normal `.media/operations/<operation-id>.json` audit record.
 
 For each reserved item it stores at minimum:
@@ -276,10 +365,11 @@ For each reserved item it stores at minimum:
 - `status: in_progress`;
 - `session_id`;
 - reservation timestamp;
-- pre-review digest of the relevant `primary` viewing/rating/reaction/feedback state;
-- frozen stratum/order metadata if not already present.
+- pre-review digest of the relevant current `primary` viewing/rating/reaction/feedback state.
 
-### 13.2 `complete_reassessment_item`
+Frozen stratum/order metadata comes from the immutable cohort definition and is not rewritten by reservation.
+
+### 15.2 `complete_reassessment_item`
 
 Purpose: atomically persist one human reassessment result and advance the ledger.
 
@@ -289,16 +379,17 @@ Preconditions:
 - status is `in_progress`;
 - `session_id` matches;
 - reservation is already present on current `main`;
-- current relevant feedback state matches the reserved pre-review digest, unless an explicit reconciliation path is invoked later by separate design.
+- `expected_ledger_digest` matches current authoritative ledger state;
+- current relevant feedback state matches the reserved pre-review digest.
 
-If the digest does not match because another canonical feedback edit happened after reservation, the command fails closed rather than overwriting concurrent state.
+If another pilot write changed the ledger or another canonical feedback edit changed the work after reservation, the command fails closed rather than overwriting concurrent state.
 
 Effects are one deterministic transaction:
 
-- optionally mutate exactly the resolved canonical work feedback components;
+- optionally mutate exactly the reserved canonical work feedback components;
 - update derived index/profile artifacts already required by the existing feedback transaction;
 - advance the ledger item to `reviewed` with `outcome: changed` or `confirmed_unchanged`, or to `deferred` with `outcome: deferred`;
-- record `prior_exposure` for reviewed outcomes;
+- record `historical_exposure` for reviewed outcomes;
 - record operation provenance sufficient to audit the result;
 - write `.media/operations/<operation-id>.json`.
 
@@ -306,42 +397,75 @@ Effects are one deterministic transaction:
 
 A defer outcome changes only ledger lifecycle state and never edits canonical media evidence.
 
-### 13.3 `close_reassessment_session`
+### 15.3 `close_reassessment_session`
 
-Purpose: durably close a session and append its measured progress snapshot after all intended item completions/deferments for that session have settled on `main`.
+Purpose: durably close a fully resolved session and append its measured progress snapshot.
+
+Inputs conceptually include:
+
+- `operation_id`;
+- `pilot_id`;
+- `session_id`;
+- `expected_ledger_digest`;
+- optional `scheduled_reanalysis_operation_id` when a scheduled milestone reanalysis was required and completed before close.
 
 Preconditions:
 
-- matching `session_id` exists;
-- there are no unresolved reserved items that the caller is attempting to silently skip; any intentionally unfinished items remain explicitly `in_progress` and keep the session non-closed;
-- audit is computed from current canonical state, not supplied as untrusted arbitrary metrics by the caller.
+- matching session exists;
+- `expected_ledger_digest` matches current authoritative ledger state;
+- all items reserved to the session are resolved (`reviewed` or `deferred`);
+- if a scheduled reanalysis is due, the referenced `set_inferred_preferences` operation is already successfully present on current `main`, targets `primary`, and is newer than the previously recorded scheduled reanalysis.
 
 Effects:
 
-- run/derive the canonical Stage A intelligence audit against current repository state;
-- append one immutable session summary/progress snapshot to the ledger;
+- run/derive the canonical Stage A intelligence audit from current repository state;
+- append one immutable session summary/progress snapshot;
 - mark the session closed;
+- when applicable, persist `scheduled_reanalysis.last_completed = {reviewed_count, operation_id, completed_at}`;
 - write `.media/operations/<operation-id>.json`.
 
-It does not mutate works, preferences, semantics or generated taste state.
+It does not itself generate hypotheses or mutate canonical works. Scheduled reanalysis continues to use the existing `set_inferred_preferences` operation.
 
 If the user stops mid-session, the session remains open and resumes later; it is not force-closed merely to obtain an audit snapshot.
 
-## 14. Reservation-before-write invariant
+## 16. Strict serialization rule
+
+All ledger-mutating writes are serialized against authoritative `main`.
+
+Rule:
+
+> The next pilot write request may be created only after the previous pilot write has succeeded and its resulting ledger state is visible on current `main`.
+
+The next user question may be asked while the previous operation settles, but the next ledger-mutating request must wait for the resulting `main` ledger digest.
+
+Two `complete_reassessment_item` requests constructed from the same ledger digest cannot both succeed. The first accepted write changes the digest; the second must fail closed as stale.
+
+Typical operational cost for a full 5-work session is approximately:
+
+- 1 reservation PR;
+- 5 item completion/defer PRs;
+- 1 close PR;
+- plus 1 existing `set_inferred_preferences` PR on scheduled milestone sessions.
+
+For a cohort around 55 works this is roughly 77 pilot-operation PRs plus a small number of milestone reanalysis PRs. This is an explicit correctness-first pilot cost.
+
+Ledger-only reservation/close changes do not need a Pages publish for product correctness. If the current publish workflow supports a safe trusted path-based skip, implementation should avoid unnecessary Pages publications for ledger-only merges; this optimization is not a prerequisite for pilot correctness.
+
+## 17. Reservation-before-write invariant
 
 This is mandatory and tested:
 
 > No canonical reassessment feedback write may occur for a work unless its `in_progress` reservation for the active `session_id` is already visible on current `main`.
 
-The agent must not start collecting a batch under the assumption that a reservation PR “will merge later”. Reservation is part of the durable precondition.
+The agent must not start a write under the assumption that a reservation PR “will merge later”. Reservation is a durable precondition.
 
 This ensures interruption recovery does not depend on reconstructing missing pre-review state after canonical feedback has changed.
 
-## 15. Why atomic feedback + ledger completion is required
+## 18. Why atomic feedback + ledger completion is required
 
 Using `edit_viewing_feedback` and then a separate ledger update creates an avoidable split-brain window: feedback can merge while pilot state still says `in_progress` without a durable completion marker.
 
-The pilot therefore uses the new completion command to combine:
+The pilot therefore uses `complete_reassessment_item` to combine:
 
 - optional feedback mutation;
 - ledger completion/defer transition;
@@ -349,9 +473,9 @@ The pilot therefore uses the new completion command to combine:
 
 This is one business operation: “the user completed or deferred reassessment of this reserved work”.
 
-The implementation should reuse existing feedback mutation primitives rather than duplicate their rules, so history behavior and target/profile rebuilding remain consistent with Stage A.
+The implementation reuses existing feedback mutation primitives rather than duplicating their rules, so history behavior and target/profile rebuilding remain consistent with Stage A.
 
-## 16. Fresh explicit evidence normalization
+## 19. Fresh explicit evidence normalization
 
 Only the current user response may create new explicit evidence.
 
@@ -373,38 +497,40 @@ Rules:
 - similarity is never created from shared traits/ratings alone;
 - ephemeral mood comments do not become stable preference.
 
-## 17. History behavior
+## 20. History behavior
 
-When completion changes a feedback component, existing feedback mutation semantics must preserve the old value in `history.previous` and the new value in `history.current`.
+When completion changes a feedback component, existing feedback mutation semantics preserve the old value in `history.previous` and the new value in `history.current`.
 
 No extra `legacy_review` field is introduced.
 
-For `confirmed_unchanged`, no artificial no-op feedback history entry should be created merely to prove confirmation; the ledger outcome provides the confirmation provenance.
+For `confirmed_unchanged`, no artificial no-op feedback history entry is created merely to prove confirmation; the ledger outcome provides the confirmation provenance.
 
-## 18. Session lifecycle
+## 21. Session lifecycle
 
 Default batch size: **5 works**.
 
 A normal session is:
 
-1. build next deterministic batch from ledger/strata;
+1. build the next deterministic batch from lifecycle + frozen stratified order;
 2. reserve it durably on `main` with `reserve_reassessment_session`;
 3. present each item unanchored;
 4. collect fresh response;
-5. optionally expose historical record after response or on user request;
-6. atomically complete or defer each item;
-7. when the whole reserved batch is resolved, close the session with `close_reassessment_session`, which records the Stage A audit snapshot;
-8. run taste-hypothesis reanalysis only if a milestone condition is met.
+5. optionally expose historical record after the initial response or on user request;
+6. atomically complete or defer the item;
+7. wait for each pilot write to become authoritative on `main` before issuing the next pilot write;
+8. when the reserved batch is fully resolved, determine whether scheduled taste reanalysis is due;
+9. if due, run existing `set_inferred_preferences` and wait for its successful result on `main`;
+10. close the session with `close_reassessment_session`, recording the Stage A audit snapshot and, when applicable, scheduled-reanalysis state.
 
 An interrupted session resumes `in_progress` items first. Items already completed are never asked again. An interrupted session is not closed until its reserved items are resolved.
 
-## 19. Session audit and progress measurement
+## 22. Session audit and progress measurement
 
 Every closed session records the canonical Stage A audit through `close_reassessment_session`.
 
 The ledger stores a compact immutable session snapshot rather than duplicating the whole audit JSON.
 
-Snapshot fields should include at least:
+Snapshot fields include at least:
 
 - `session_id`;
 - completion timestamp;
@@ -417,27 +543,63 @@ Snapshot fields should include at least:
 - audit schema version;
 - audit source/base revision provenance sufficient to compare to the Stage A baseline.
 
+`media/pilots/` is explicitly **outside** the Stage A intelligence canonical-input inventory. Therefore ledger-only changes must not change `canonical_input_digest`.
+
+This exclusion is a tested contract, not an accidental implementation detail.
+
 Semantic coverage is not expected to improve in this pilot and is not a success criterion.
 
-The audit snapshot makes progress measurable and gives Stage B a timeline of explicit-evidence conversion.
-
-## 20. Taste-hypothesis reanalysis cadence
+## 23. Taste-hypothesis reanalysis cadence and persistent state
 
 Inferred hypotheses are explanation-only for numeric affinity aggregation after Stage A, so recalculating them after every 5-work session would create unnecessary LLM churn.
 
-Reanalysis is triggered only:
+Scheduled reanalysis is due only:
 
-- every **15 newly reviewed works** since the previous reanalysis;
-- at the end of the main `pending` pass;
-- on explicit user request.
+- every **15 newly reviewed works** since the previous scheduled reanalysis;
+- at the end of the main `pending` pass.
 
-The reanalysis rebuilds hypotheses from current raw/explicit evidence and replaces the target set through existing `set_inferred_preferences`.
+The ledger persists:
 
-Previous inferred hypotheses are never treated as independent confirming evidence.
+```json
+{
+  "scheduled_reanalysis": {
+    "last_completed": {
+      "reviewed_count": 15,
+      "operation_id": "...",
+      "completed_at": "..."
+    }
+  }
+}
+```
 
-A weaker or empty replacement set is valid.
+Due calculation is therefore deterministic across conversations:
 
-## 21. Ground-truth relationship to Stage B
+```text
+reviewed_total - last_completed.reviewed_count >= 15
+```
+
+If no scheduled reanalysis has completed yet, the previous count is zero.
+
+Scheduled reanalysis rebuilds hypotheses from current raw/explicit evidence and replaces the target set through existing `set_inferred_preferences`.
+
+Previous inferred hypotheses are never treated as independent confirming evidence. A weaker or empty replacement set is valid.
+
+An explicit user-requested reanalysis may occur at any time, but **does not reset or advance the scheduled 15-review cadence**. Only a scheduled milestone reanalysis referenced and verified by `close_reassessment_session` advances `scheduled_reanalysis.last_completed`.
+
+## 24. Expected profile drift
+
+The pilot intentionally changes the evidence base. Therefore generated profile changes are expected, not automatically regressions.
+
+Expected effects include:
+
+- ratings moving from `source: inferred` or `explicit_approx` to `source: explicit` even when the numeric score stays the same;
+- substantial growth in structured direct feedback signals;
+- changes in generated profiles/affinities caused by new direct evidence;
+- later milestone changes in inferred hypotheses.
+
+Longitudinal pilot comparisons must be interpreted relative to the frozen Stage A baseline/base revision, not relative to whichever generated profile happened to exist immediately before a session.
+
+## 25. Ground-truth relationship to Stage B
 
 A reviewed item becomes high-quality confirmed explicit evidence, but not automatically a Stage B decision-benchmark member.
 
@@ -445,35 +607,39 @@ Stage B will later define benchmark selection/stratification/leakage rules.
 
 Useful reassessment provenance available to Stage B includes:
 
-- original frozen cohort identity;
+- immutable frozen cohort identity/order;
 - pre-review digest;
 - completion outcome (`changed` vs `confirmed_unchanged`);
-- `prior_exposure` (`none`, `before_response`, `after_response`);
+- `historical_exposure` timing/finalization flags;
 - session membership/order;
 - operation provenance;
 - post-session audit progression.
 
-This lets Stage B preferentially choose unanchored confirmations or analyze how often historical inferred/explicit values moved.
+This lets Stage B select fully unexposed final evidence when needed, or separately analyze independently elicited initial answers that were later refined after historical recall.
 
-## 22. Failure and resume semantics
+## 26. Failure and resume semantics
 
 The workflow is fail-closed.
 
 - reservation must be merged before reassessment writes;
+- every pilot write must match current `expected_ledger_digest`;
 - completion without matching reservation fails;
-- completion against a changed pre-review digest fails as a concurrency conflict;
+- completion against a changed pre-review feedback digest fails as a concurrency conflict;
+- stale parallel pilot writes fail;
 - a failed completion leaves the item `in_progress`;
 - a failed defer leaves the item `in_progress`;
-- a session with unresolved `in_progress` items cannot be closed;
+- a session with unresolved reserved items cannot be closed;
 - a successfully reviewed item cannot be completed a second time automatically;
+- closed session snapshots cannot be rewritten;
+- frozen cohort definition cannot change after initialization;
 - unknown/ambiguous work identity blocks mutation;
 - canonical work evidence is never reconstructed from ledger copies because the ledger does not duplicate evidence content.
 
 Because completion is atomic across optional feedback mutation + ledger transition, interruption cannot create “feedback changed but completion marker missing” as an expected success path.
 
-## 23. Path-policy and trust boundary
+## 27. Path-policy and trust boundary
 
-The implementation is a developer change and must receive manual review.
+The implementation is a developer change and receives manual review.
 
 Existing operations must remain unable to mutate:
 
@@ -491,7 +657,7 @@ Conceptually:
 `complete_reassessment_item`:
 
 - `media/pilots/legacy-reassessment-primary.json`;
-- exactly one resolved `media/data/works/*.yaml` work when feedback changes;
+- at most one `media/data/works/*.yaml` path, and it must resolve to the reserved work id;
 - existing derived `media/generated/index.jsonl` / profile paths required by reused feedback primitives;
 - `.media/operations/*.json`.
 
@@ -500,11 +666,13 @@ Conceptually:
 - `media/pilots/legacy-reassessment-primary.json`;
 - `.media/operations/*.json`.
 
-The declarative policy may need wildcard paths, but runtime planning must enforce the exact resolved work/entity set. Privileged workflow trust remains based on policy from trusted `main`, not PR-head executable code.
+Runtime planning and CI changed-file validation both enforce that `complete_reassessment_item` changes **no more than one canonical work**, and that any changed work is exactly the reserved item. A second matching `media/data/works/*.yaml` path is rejected even though the declarative wildcard can syntactically match it.
 
-No semantic/vocabulary path is authorized by the reassessment operations.
+The path-policy grammar is not generalized with a new max-files DSL solely for this pilot; operation-specific constraints and tests are sufficient until another use case justifies a generic mechanism.
 
-## 24. Archive lifecycle
+Privileged workflow trust remains based on policy from trusted `main`, not PR-head executable code. No semantic/vocabulary path is authorized by reassessment operations.
+
+## 28. Archive lifecycle
 
 At pilot completion:
 
@@ -516,75 +684,100 @@ Only after Stage B no longer requires an active ledger path should a separate de
 
 `media/pilots/archive/legacy-reassessment-primary-v1.json`
 
-Archive movement must not alter the historical contents beyond archival metadata required by the chosen format.
+Archive movement must not alter historical contents beyond explicit archival metadata required by the chosen format.
 
-## 25. Documentation deliverables
+## 29. Documentation deliverables
 
 Documentation is part of completion.
 
 Implementation must update as applicable:
 
-- `media/AGENTS.md` — reassessment route, unanchored-first UX, reservation/completion rules, deferred behavior;
-- `docs/architecture/intelligence.md` — confirmed explicit evidence, separation from semantics, milestone reanalysis;
-- `docs/architecture/write-pipeline.md` — new pilot typed operations and atomic completion boundary;
+- `media/AGENTS.md` — reassessment route, unanchored-first UX, serialized reservation/completion/close rules, deferred behavior;
+- `docs/architecture/intelligence.md` — confirmed explicit evidence, semantic separation, expected profile drift, milestone reanalysis;
+- `docs/architecture/write-pipeline.md` — pilot typed operations, ledger serialization, base→head transition validation and atomic completion boundary;
 - `docs/reference/media-commands.md` — schemas/behavior for pilot operations;
 - a pilot runbook under `docs/` covering start/resume/session close/deferred pass/audit/reanalysis;
 - `docs/status/current.md` — current capability and limitations;
 - this design spec;
 - implementation plan after written-spec approval.
 
-The runbook must emphasize that old ratings/reviews are hidden before the first response unless the user asks for them.
+The runbook emphasizes that old ratings/reviews and semantic descriptors are hidden before the first response unless the user explicitly asks for historical data.
 
-## 26. Test requirements
+## 30. Test requirements
 
 Implementation is incomplete without tests for the following.
 
-### 26.1 Cohort and ordering
+### 30.1 Cohort and ordering
 
 - `unwatched` never enters the cohort even when summary text is non-empty;
 - `watched`, `partial`, `dropped`, `forgotten` are handled according to contract;
 - frozen strata are deterministic;
+- `sha256(pilot_id + "\0" + work_id)` order is deterministic and persisted;
 - stratified round-robin order is deterministic;
 - deferred items do not interrupt the main pending pass;
-- reviewed items never re-enter automatically.
+- reviewed items never re-enter automatically;
+- frozen cohort work ids/strata/order/reference data cannot change after initialization.
 
-### 26.2 Unanchored UX payload
+### 30.2 Unanchored UX payload
 
-- pre-response card does not expose old rating/reaction/feedback;
-- post-response history exposure is allowed;
-- user-requested pre-response exposure records `prior_exposure: before_response`;
-- default independent reassessment records `none` or `after_response` as appropriate.
+- pre-response card does not expose old rating/reaction/feedback or evaluative semantic traits;
+- neutral memory-jog payload uses premise/identity facts;
+- post-initial-response history exposure is allowed;
+- user-requested pre-response exposure records `before_initial_response` + `before_finalization=true`;
+- exposure after independent initial answer but before finalization records `after_initial_response` + `true`;
+- exposure after finalization records `after_initial_response` + `false`;
+- default no-history path records `none` + `false`.
 
-### 26.3 Reservation and atomic completion
+### 30.3 Reservation, serialization and atomic completion
 
-- no completion is accepted before the reservation is visible in the repository state being processed;
+- no completion is accepted before reservation is visible in repository state;
 - wrong `session_id` fails closed;
-- changed pre-review digest fails closed;
-- completion updates work + ledger atomically in the deterministic transaction;
-- an identical numeric score with old `inferred`/`explicit_approx` provenance mutates provenance to `explicit` and yields `changed`;
-- `confirmed_unchanged` advances ledger without creating artificial feedback history;
-- completing an already reviewed item fails/idempotently reports terminal state without a second human reassessment;
+- changed pre-review feedback digest fails closed;
+- stale `expected_ledger_digest` fails closed for reserve, complete and close;
+- two completes based on the same ledger digest cannot both succeed;
+- completion updates work + ledger atomically in deterministic transaction;
+- identical numeric score with old `inferred`/`explicit_approx` provenance mutates provenance to `explicit` and yields `changed`;
+- `confirmed_unchanged` advances ledger without artificial feedback history;
+- completing an already reviewed item cannot reopen/reassess it;
 - defer changes ledger only;
 - session close fails while reserved items remain unresolved;
-- session close computes progress from canonical state and appends exactly one immutable snapshot.
+- session close appends exactly one immutable snapshot.
 
-### 26.4 Path policy / security
+### 30.4 Snapshot and transition validation
+
+- invalid terminal reviewed item fails snapshot validation;
+- closed session with unresolved reservation fails snapshot validation;
+- empty/duplicate/invalid frozen cohort fails snapshot validation;
+- base→head validator rejects cohort/base/baseline mutation;
+- base→head validator rejects `reviewed` rollback;
+- base→head validator rejects mutation/deletion of closed session snapshots;
+- base→head validator rejects scheduled-reanalysis state moving backwards;
+- valid monotonic pilot transitions pass.
+
+### 30.5 Path policy / security
 
 - all pre-existing Stage A operations reject `media/pilots/legacy-reassessment-primary.json`;
 - `reserve_reassessment_session` cannot mutate work/generated/preferences/vocabulary/schema paths;
 - `complete_reassessment_item` cannot mutate semantic/vocabulary/schema/workflow paths;
+- completion changing more than one `media/data/works/*.yaml` path fails;
+- completion changing a work different from the reserved work fails;
 - `close_reassessment_session` cannot mutate work/generated/preferences/vocabulary/schema paths;
-- operation path policy matcher corpus remains green;
+- operation path-policy matcher corpus remains green;
 - privileged auto-merge remains fail-closed for unknown operations/paths.
 
-### 26.5 Audit/progress
+### 30.6 Audit/progress and reanalysis state
 
-- session close runs/consumes canonical audit output deterministically;
+- ledger-only mutation leaves Stage A `canonical_input_digest` unchanged;
+- `media/pilots/` is excluded from audit input inventory;
+- session close computes audit output deterministically;
 - progress snapshot reflects explicit/inferred rating changes and structured-feedback coverage;
 - baseline references are preserved;
-- semantic coverage is not required to move.
+- semantic coverage is not required to move;
+- scheduled reanalysis due calculation survives a new process/conversation;
+- manual user-requested reanalysis does not reset scheduled cadence;
+- close accepts a scheduled milestone only when referenced `set_inferred_preferences` operation is already valid on current `main`.
 
-### 26.6 Repository validation
+### 30.7 Repository validation
 
 Full gate:
 
@@ -595,16 +788,16 @@ python -m media.cli rebuild --check
 python -m media.cli doctor --format json
 ```
 
-Additionally, docs/contract tests must accept the new pilot directory, ledger schema and command references.
+Additionally, docs/contract tests accept the new pilot directory, ledger schema and command references.
 
-## 27. Observability and stop conditions
+## 31. Observability and stop conditions
 
 Primary progress measures are:
 
 - proportion of frozen cohort in `reviewed`;
 - `changed` vs `confirmed_unchanged` counts;
-- `prior_exposure` distribution;
-- conversion of `primary` ratings from inferred to explicit where applicable;
+- historical exposure distribution;
+- conversion of `primary` ratings from inferred/approximate to explicit where applicable;
 - structured-feedback coverage growth;
 - deferred backlog size.
 
@@ -614,7 +807,7 @@ The deferred pass is complete when the user either reviews or explicitly leaves 
 
 Completion does not require semantic coverage growth.
 
-## 28. Open issues intentionally deferred
+## 32. Open issues intentionally deferred
 
 The following are not decided by this pilot implementation:
 
@@ -626,33 +819,39 @@ The following are not decided by this pilot implementation:
 6. deterministic assessment model/formula selection;
 7. partner/couple reassessment.
 
-## 29. Recommended implementation shape
+## 33. Recommended implementation shape
 
 The recommended implementation is deliberately narrow:
 
 - deterministic cohort/queue/read-model helper;
 - versioned pilot ledger at the exact path above;
+- snapshot validator for one-state ledger invariants;
+- base→head transition validator for monotonicity/immutability;
 - `reserve_reassessment_session` typed operation;
-- `complete_reassessment_item` typed operation that reuses existing feedback mutation primitives;
-- `close_reassessment_session` typed operation that computes/persists immutable audit progress;
+- `complete_reassessment_item` typed operation reusing existing feedback mutation primitives;
+- `close_reassessment_session` typed operation computing/persisting immutable audit progress and scheduled-reanalysis state;
+- serialized pilot writes by `expected_ledger_digest`;
 - compact session audit snapshots;
 - milestone-triggered existing taste reanalysis;
 - documentation and tests as first-class deliverables.
 
 No semantic enrichment code is added to this cycle.
 
-## 30. Final architecture summary
+## 34. Final architecture summary
 
 The pilot flow is:
 
-**frozen viewed cohort → stratified round-robin → durable reservation on `main` → unanchored memory jog + fresh response → optional historical recall → atomic explicit-feedback/ledger completion (or defer) → durable session close + audit snapshot → inferred-hypothesis reanalysis every 15 reviewed works / end of main pass → deferred pass → completed immutable ledger for Stage B.**
+**immutable viewed cohort + frozen hash order → stratified round-robin → durable reservation on `main` → neutral unanchored memory jog + fresh response → optional historical recall with explicit exposure provenance → serialized atomic explicit-feedback/ledger completion (or defer) → scheduled reanalysis when due → durable session close + audit snapshot → deferred pass → completed immutable ledger for Stage B.**
 
 The central safety properties are:
 
 - no old rating anchoring by default;
+- no evaluative semantic anchoring in the memory jog;
 - no semantic/user-reaction conflation;
 - no canonical reassessment write before durable reservation;
+- no concurrent pilot writes against stale ledger state;
 - no split completion between feedback and ledger;
 - no automatic reassessment loop;
+- no silent mutation of frozen cohort or closed sessions;
 - no silent overwrite after concurrent feedback changes;
 - measurable progress against the frozen Stage A baseline.
