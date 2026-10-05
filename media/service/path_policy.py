@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Iterable, Mapping
 
 from media.domain.errors import PathPolicyError
 
@@ -96,3 +96,29 @@ def verify_changed_paths(operation: str, paths: Iterable[str]) -> None:
     if not allowed: raise PathPolicyError(f"no write policy for operation: {operation}")
     rejected=[path for path in paths if not any(matches_policy_path(path,pattern) for pattern in allowed)]
     if rejected: raise PathPolicyError(f"operation {operation} may not modify: {', '.join(sorted(rejected))}")
+
+
+def verify_operation_specific_paths(
+    operation: str,
+    paths: Iterable[str],
+    details: Mapping[str, Any] | None = None,
+) -> None:
+    """Enforce write-shape constraints that the simple declarative wildcard grammar cannot express."""
+    if operation != "complete_reassessment_item":
+        return
+
+    normalized = tuple(paths)
+    work_paths = tuple(path for path in normalized if path.startswith("media/data/works/") and path.endswith(".yaml"))
+    if len(work_paths) > 1:
+        raise PathPolicyError("complete_reassessment_item may modify at most one canonical work")
+    if not work_paths:
+        return
+
+    work_id = (details or {}).get("work_id")
+    if not isinstance(work_id, str) or not work_id:
+        raise PathPolicyError("complete_reassessment_item work-file mutation requires planner work_id")
+    expected = f"media/data/works/{work_id}.yaml"
+    if work_paths[0] != expected:
+        raise PathPolicyError(
+            f"complete_reassessment_item may modify only the reserved work {expected}, got {work_paths[0]}"
+        )
