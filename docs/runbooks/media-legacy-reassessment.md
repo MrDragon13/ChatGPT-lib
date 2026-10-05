@@ -16,11 +16,12 @@ Default session size is **5** works.
 
 1. Read `python -m media.cli reassessment-context --limit 5 --format json`.
 2. If there is an open session, resume its `in_progress` items. Otherwise the context returns the next frozen-order `pending` works; only after the main pending pass is exhausted may `deferred` items return.
-3. Before the first answer for a work, show only a neutral factual memory jog: title/year, short factual synopsis and, if useful, factual director/cast. Do not expose old rating, reaction, feedback, structured signals or semantic traits by default.
-4. Ask for the user's current opinion. If the user first asks what they previously wrote, historical evidence may be shown, but record that exposure truthfully.
-5. If historical recall is needed after the independent first answer, use `python -m media.cli reassessment-history <work-id> --format json`. This is a separate second-phase route.
-6. Record the result through the typed completion operation. Do not directly edit YAML/JSON.
-7. Continue until all reserved works are resolved, then close the session and persist the audit snapshot.
+3. For a new batch, run `reserve_reassessment_session` and wait until that reservation is authoritative on `main`. Do not present the first work from a new batch before durable reservation.
+4. For each reserved work, show only a neutral factual memory jog before the first current answer: title/year, short factual synopsis and, if useful, factual director/cast. Do not expose old rating, reaction, feedback, structured signals or semantic traits by default.
+5. Ask for the user's current opinion. If the user first asks what they previously wrote, historical evidence may be shown, but record that exposure truthfully.
+6. If historical recall is needed after the independent first answer, use `python -m media.cli reassessment-history <work-id> --format json`. This is a separate second-phase route.
+7. Record the result through `complete_reassessment_item`. Do not directly edit YAML/JSON.
+8. Continue until all reserved works are resolved, then close the session and persist the audit snapshot.
 
 Git/PR/workflow mechanics stay behind the scenes during the normal user conversation.
 
@@ -44,13 +45,13 @@ Never synthesize a fresh explicit signal from old v1 text without the user's cur
 
 Lifecycle states are `pending`, `in_progress`, `reviewed`, and `deferred`.
 
-- `reserve_reassessment_session` moves the exact next frozen-order batch into `in_progress` and must reach authoritative `main` before any completion write for those works.
+- `reserve_reassessment_session` moves the exact next frozen-order batch into `in_progress`, records whether the session belongs to the `pending` or `deferred` phase, and must reach authoritative `main` before the first work from that new batch is presented.
 - `complete_reassessment_item` atomically applies at most one `primary` feedback mutation and advances the corresponding ledger item.
 - `close_reassessment_session` closes a fully resolved session and stores its Stage A audit progress snapshot.
 
 A `reviewed` item is terminal for pilot `primary-legacy-v1` and must never automatically reopen. `deferred` means the user could not or did not want to give a reliable current opinion; it returns only in the deferred pass after all `pending` work is exhausted.
 
-All three pilot writes serialize on the current ledger `expected_ledger_digest`. `complete_reassessment_item` also carries the raw pre-review work-file digest. Stale ledger or work state fails closed and must be replayed against current `main`.
+All three pilot writes serialize on the current ledger `expected_ledger_digest`. Reservation and completion also carry raw work-file digests used by guarded merge to fail closed if a reserved canonical work moved after planning. Stale ledger or work state must be replayed against current `main`.
 
 ## Completion outcomes
 
@@ -65,6 +66,8 @@ Fresh reassessment rating/reaction/feedback signals use explicit provenance. The
 ## Taste reanalysis cadence
 
 Scheduled inferred-hypothesis replacement is not run after every work or every session. It is due after **15 newly reviewed works** since the previous scheduled pilot reanalysis and once at the end of the main `pending` pass if reviewed evidence advanced.
+
+The end-of-main-pass trigger is one-shot. Once a `deferred`-phase session has started, later deferred sessions return to the normal 15-new-review cadence rather than retriggering end-of-main reanalysis after every reviewed item.
 
 The persistent `scheduled_reanalysis.last_completed.reviewed_count` in the ledger is the cadence source. A user-requested manual taste reanalysis does not reset this scheduled pilot counter.
 
@@ -88,7 +91,7 @@ Interpret that drift against the frozen Stage A baseline, not against a previous
 
 If reserve has reached `main`, never ask the user to restart the whole session merely because a later write failed. Re-read `reassessment-context` and resume `in_progress` work.
 
-If a completion PR is stale because the ledger or reserved work changed concurrently, discard/replay that completion against current `main`. Do not force-merge around the digest guards.
+If a reservation or completion PR is stale because the ledger or any reserved work changed concurrently, discard/replay it against current `main`. Do not force-merge around the digest guards.
 
 A session cannot close while any of its reserved works remains `in_progress`.
 
@@ -96,4 +99,6 @@ A session cannot close while any of its reserved works remains `in_progress`.
 
 PR A installs this foundation but creates no ledger. PR B manually initializes the frozen cohort from the exact Stage A revision, validates it, and activates the pilot.
 
-The pilot itself is complete only after the main and deferred passes satisfy the design stop conditions. The ledger remains intact for Stage B benchmark construction; it is not deleted merely because reassessment conversations are finished.
+The main pass is complete when no `pending` or resumable `in_progress` items remain. The deferred pass is complete when every remaining deferred item has been revisited in a `deferred`-phase session and the user either reviewed it or explicitly left it unresolved for this pilot epoch. At that point `pilot_status` may become `completed` even if some deliberately unresolved items still have lifecycle status `deferred`.
+
+The ledger remains intact for Stage B benchmark construction; it is not deleted merely because reassessment conversations are finished.
