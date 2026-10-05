@@ -231,6 +231,8 @@ Per-item completion outcomes:
 
 `reviewed` is a lifecycle state; `changed` / `confirmed_unchanged` are result categories.
 
+`confirmed_unchanged` is valid only when the existing canonical evidence is already explicit and semantically matches the fresh response. If the old score is identical but its provenance is `inferred` or `explicit_approx`, current confirmation must still mutate canonical provenance to `explicit`, so the outcome is `changed`.
+
 ## 12. Hard anti-loop invariant
 
 For one `pilot_id`, a work may be automatically human-reassessed at most once.
@@ -248,9 +250,9 @@ The session runner also keeps an in-memory `seen_work_ids` guard so one work can
 
 ## 13. New typed pilot-state operations
 
-Manual ledger merges twice per session are intentionally avoided. Pilot state gets narrow typed operations that pass through the existing deterministic command pipeline and trusted path-policy system.
+Manual ledger merges around each session are intentionally avoided. Pilot state gets narrow typed operations that pass through the existing deterministic command pipeline and trusted path-policy system.
 
-Two operations are introduced.
+Three operations are introduced.
 
 ### 13.1 `reserve_reassessment_session`
 
@@ -279,7 +281,7 @@ For each reserved item it stores at minimum:
 
 ### 13.2 `complete_reassessment_item`
 
-Purpose: atomically persist the human reassessment result and advance the ledger.
+Purpose: atomically persist one human reassessment result and advance the ledger.
 
 Preconditions:
 
@@ -295,18 +297,35 @@ Effects are one deterministic transaction:
 
 - optionally mutate exactly the resolved canonical work feedback components;
 - update derived index/profile artifacts already required by the existing feedback transaction;
-- advance the ledger item to `reviewed` with `outcome: changed` or `confirmed_unchanged`;
-- record `prior_exposure`;
-- record operation provenance sufficient to audit the completion;
+- advance the ledger item to `reviewed` with `outcome: changed` or `confirmed_unchanged`, or to `deferred` with `outcome: deferred`;
+- record `prior_exposure` for reviewed outcomes;
+- record operation provenance sufficient to audit the result;
 - write `.media/operations/<operation-id>.json`.
 
 `confirmed_unchanged` is valid even when the canonical work file does not change.
 
-### 13.3 Deferred outcome
+A defer outcome changes only ledger lifecycle state and never edits canonical media evidence.
 
-A defer action is also persisted through the pilot-state route. It changes only ledger lifecycle state to `deferred` and records the session/timestamp; it does not mutate canonical media data.
+### 13.3 `close_reassessment_session`
 
-Implementation planning may represent defer as the completion operation with `outcome: deferred` or as a narrow separate command if schema clarity materially benefits. The architectural invariant is that defer never edits work evidence.
+Purpose: durably close a session and append its measured progress snapshot after all intended item completions/deferments for that session have settled on `main`.
+
+Preconditions:
+
+- matching `session_id` exists;
+- there are no unresolved reserved items that the caller is attempting to silently skip; any intentionally unfinished items remain explicitly `in_progress` and keep the session non-closed;
+- audit is computed from current canonical state, not supplied as untrusted arbitrary metrics by the caller.
+
+Effects:
+
+- run/derive the canonical Stage A intelligence audit against current repository state;
+- append one immutable session summary/progress snapshot to the ledger;
+- mark the session closed;
+- write `.media/operations/<operation-id>.json`.
+
+It does not mutate works, preferences, semantics or generated taste state.
+
+If the user stops mid-session, the session remains open and resumes later; it is not force-closed merely to obtain an audit snapshot.
 
 ## 14. Reservation-before-write invariant
 
@@ -325,10 +344,10 @@ Using `edit_viewing_feedback` and then a separate ledger update creates an avoid
 The pilot therefore uses the new completion command to combine:
 
 - optional feedback mutation;
-- ledger completion;
+- ledger completion/defer transition;
 - operation audit record.
 
-This is one business operation: “the user completed reassessment of this reserved work”.
+This is one business operation: “the user completed or deferred reassessment of this reserved work”.
 
 The implementation should reuse existing feedback mutation primitives rather than duplicate their rules, so history behavior and target/profile rebuilding remain consistent with Stage A.
 
@@ -374,14 +393,14 @@ A normal session is:
 4. collect fresh response;
 5. optionally expose historical record after response or on user request;
 6. atomically complete or defer each item;
-7. after session completion, run Stage A audit and persist a compact session progress snapshot;
+7. when the whole reserved batch is resolved, close the session with `close_reassessment_session`, which records the Stage A audit snapshot;
 8. run taste-hypothesis reanalysis only if a milestone condition is met.
 
-An interrupted session resumes `in_progress` items first. Items already completed are never asked again.
+An interrupted session resumes `in_progress` items first. Items already completed are never asked again. An interrupted session is not closed until its reserved items are resolved.
 
 ## 19. Session audit and progress measurement
 
-After every completed session, run the canonical Stage A audit.
+Every closed session records the canonical Stage A audit through `close_reassessment_session`.
 
 The ledger stores a compact immutable session snapshot rather than duplicating the whole audit JSON.
 
@@ -445,6 +464,7 @@ The workflow is fail-closed.
 - completion against a changed pre-review digest fails as a concurrency conflict;
 - a failed completion leaves the item `in_progress`;
 - a failed defer leaves the item `in_progress`;
+- a session with unresolved `in_progress` items cannot be closed;
 - a successfully reviewed item cannot be completed a second time automatically;
 - unknown/ambiguous work identity blocks mutation;
 - canonical work evidence is never reconstructed from ledger copies because the ledger does not duplicate evidence content.
@@ -473,6 +493,11 @@ Conceptually:
 - `media/pilots/legacy-reassessment-primary.json`;
 - exactly one resolved `media/data/works/*.yaml` work when feedback changes;
 - existing derived `media/generated/index.jsonl` / profile paths required by reused feedback primitives;
+- `.media/operations/*.json`.
+
+`close_reassessment_session`:
+
+- `media/pilots/legacy-reassessment-primary.json`;
 - `.media/operations/*.json`.
 
 The declarative policy may need wildcard paths, but runtime planning must enforce the exact resolved work/entity set. Privileged workflow trust remains based on policy from trusted `main`, not PR-head executable code.
@@ -536,15 +561,19 @@ Implementation is incomplete without tests for the following.
 - wrong `session_id` fails closed;
 - changed pre-review digest fails closed;
 - completion updates work + ledger atomically in the deterministic transaction;
+- an identical numeric score with old `inferred`/`explicit_approx` provenance mutates provenance to `explicit` and yields `changed`;
 - `confirmed_unchanged` advances ledger without creating artificial feedback history;
 - completing an already reviewed item fails/idempotently reports terminal state without a second human reassessment;
-- defer changes ledger only.
+- defer changes ledger only;
+- session close fails while reserved items remain unresolved;
+- session close computes progress from canonical state and appends exactly one immutable snapshot.
 
 ### 26.4 Path policy / security
 
 - all pre-existing Stage A operations reject `media/pilots/legacy-reassessment-primary.json`;
 - `reserve_reassessment_session` cannot mutate work/generated/preferences/vocabulary/schema paths;
 - `complete_reassessment_item` cannot mutate semantic/vocabulary/schema/workflow paths;
+- `close_reassessment_session` cannot mutate work/generated/preferences/vocabulary/schema paths;
 - operation path policy matcher corpus remains green;
 - privileged auto-merge remains fail-closed for unknown operations/paths.
 
@@ -605,7 +634,7 @@ The recommended implementation is deliberately narrow:
 - versioned pilot ledger at the exact path above;
 - `reserve_reassessment_session` typed operation;
 - `complete_reassessment_item` typed operation that reuses existing feedback mutation primitives;
-- explicit defer handling through pilot state;
+- `close_reassessment_session` typed operation that computes/persists immutable audit progress;
 - compact session audit snapshots;
 - milestone-triggered existing taste reanalysis;
 - documentation and tests as first-class deliverables.
@@ -616,7 +645,7 @@ No semantic enrichment code is added to this cycle.
 
 The pilot flow is:
 
-**frozen viewed cohort → stratified round-robin → durable reservation on `main` → unanchored memory jog + fresh response → optional historical recall → atomic explicit-feedback/ledger completion → session audit → inferred-hypothesis reanalysis every 15 reviewed works / end of main pass → deferred pass → completed immutable ledger for Stage B.**
+**frozen viewed cohort → stratified round-robin → durable reservation on `main` → unanchored memory jog + fresh response → optional historical recall → atomic explicit-feedback/ledger completion (or defer) → durable session close + audit snapshot → inferred-hypothesis reanalysis every 15 reviewed works / end of main pass → deferred pass → completed immutable ledger for Stage B.**
 
 The central safety properties are:
 
