@@ -497,7 +497,11 @@
       "status": "pending"
     },
     "gattaca-1997": {
-      "status": "pending"
+      "pre_review_feedback_digest": "sha256:c8e2ed0eab9c7967c43523708d8cf6ab1cd1f9dc6104c0a962c9e2e4ea919df9",
+      "pre_review_work_file_digest": "sha256:7a564773300db70dc2040983c408aff2aa3fbc771f59b584a299523df81f47f0",
+      "reserved_at": "2026-10-05T22:29:07.394473Z",
+      "session_id": "c11d4269-f116-4748-839c-959f0557e33b",
+      "status": "in_progress"
     },
     "gentlemen-2019": {
       "status": "pending"
@@ -506,7 +510,11 @@
       "status": "pending"
     },
     "grand-budapest-hotel-2014": {
-      "status": "pending"
+      "pre_review_feedback_digest": "sha256:ccedf3359d80dee06b2e94191c3d50eddedbf9a59bf05f9c720dd4e976ea9919",
+      "pre_review_work_file_digest": "sha256:ffbf01ede1cad431017847e555c20765d80dd7a2cf63b0ac03495e8a4841742a",
+      "reserved_at": "2026-10-05T22:29:07.394473Z",
+      "session_id": "c11d4269-f116-4748-839c-959f0557e33b",
+      "status": "in_progress"
     },
     "green-book-2018": {
       "status": "pending"
@@ -521,7 +529,11 @@
       "status": "pending"
     },
     "interstellar-2014": {
-      "status": "pending"
+      "pre_review_feedback_digest": "sha256:6db005456b3e492311097dd5defccf967942404a016215b771af89363a579363",
+      "pre_review_work_file_digest": "sha256:3b707b5bd77d09942698faa97b3479475e997288a77497b078fdfe23dade5748",
+      "reserved_at": "2026-10-05T22:29:07.394473Z",
+      "session_id": "c11d4269-f116-4748-839c-959f0557e33b",
+      "status": "in_progress"
     },
     "intouchables-2011": {
       "status": "pending"
@@ -566,7 +578,11 @@
       "status": "pending"
     },
     "project-hail-mary": {
-      "status": "pending"
+      "pre_review_feedback_digest": "sha256:5ffab2d0e2bf2e915326317f9252b72d3ba21feab6e277f2ebcbb1a8b06bec96",
+      "pre_review_work_file_digest": "sha256:a73d9adac68f7001171090df4ba37975c1bc940f83bf4af846322ac7ceb97bf9",
+      "reserved_at": "2026-10-05T22:29:07.394473Z",
+      "session_id": "c11d4269-f116-4748-839c-959f0557e33b",
+      "status": "in_progress"
     },
     "ready-player-one-2018": {
       "status": "pending"
@@ -587,7 +603,11 @@
       "status": "pending"
     },
     "source-code-2011": {
-      "status": "pending"
+      "pre_review_feedback_digest": "sha256:dd652b9a6b5b497bc01f1de7aee265be5bc1a4184841bfc3ee0b76cbac10b464",
+      "pre_review_work_file_digest": "sha256:569bad0e96b83e0f641cf572a42d83c83a111dac8499f1635a3ce1712c7dc326",
+      "reserved_at": "2026-10-05T22:29:07.394473Z",
+      "session_id": "c11d4269-f116-4748-839c-959f0557e33b",
+      "status": "in_progress"
     },
     "terminal-2004": {
       "status": "pending"
@@ -623,6 +643,20 @@
     "last_completed": null
   },
   "schema_version": 1,
-  "sessions": [],
+  "sessions": [
+    {
+      "opened_at": "2026-10-05T22:29:07.394473Z",
+      "phase": "pending",
+      "reserved_work_ids": [
+        "gattaca-1997",
+        "grand-budapest-hotel-2014",
+        "source-code-2011",
+        "project-hail-mary",
+        "interstellar-2014"
+      ],
+      "session_id": "c11d4269-f116-4748-839c-959f0557e33b",
+      "status": "open"
+    }
+  ],
   "target": "primary"
 }
