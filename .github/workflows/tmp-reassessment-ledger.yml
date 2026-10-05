@@ -1,4 +1,4 @@
-name: TEMP Generate Reassessment Ledger
+name: TEMP Finalize Reassessment Activation
 
 on:
   push:
@@ -11,59 +11,66 @@ permissions:
   contents: write
 
 jobs:
-  generate:
+  finalize:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout activation foundation
+      - name: Checkout activation branch
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - name: Set up Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: '3.12'
-      - name: Install media dependencies
-        run: python -m pip install -r media/requirements.txt
-      - name: Materialize frozen Stage A data
-        run: git worktree add /tmp/chatgpt-lib-stage-a 35afaca898eae6937066f230906b41af0e1f6690
-      - name: Generate deterministic pilot ledger
+      - name: Verify committed ledger bytes
         run: |
-          PYTHONPATH="$GITHUB_WORKSPACE" python -m media.tools.reassessment init \
-            --repo-root /tmp/chatgpt-lib-stage-a \
-            --output /tmp/legacy-reassessment-primary.json \
-            --base-revision 35afaca898eae6937066f230906b41af0e1f6690 \
-            --baseline-path media/baselines/intelligence-stage-a.json
-          PYTHONPATH="$GITHUB_WORKSPACE" python -m media.tools.reassessment summary /tmp/legacy-reassessment-primary.json
-          sha256sum /tmp/legacy-reassessment-primary.json
-      - name: Install ledger into activation checkout
+          echo "a401526355a629faf2d0559f9ad4346449dd86d97e649a4d13489f3d3f471b2f  media/pilots/legacy-reassessment-primary.json" | sha256sum -c -
+      - name: Update activation documentation
         run: |
-          mkdir -p media/pilots
-          cp /tmp/legacy-reassessment-primary.json media/pilots/legacy-reassessment-primary.json
-      - name: Validate activated snapshot and frozen audit digest
-        run: |
-          python -m media.tools.validate .
-          python -m media.tools.audit_intelligence . --format json > /tmp/activation-audit.json
           python - <<'PY'
-          import json
-          expected = 'sha256:98e9dc4521e69ee5273e302fc40cc1e5fc3d53b119e2c7637475ac45cce43fbf'
-          audit = json.load(open('/tmp/activation-audit.json', encoding='utf-8'))
-          actual = audit.get('canonical_input_digest')
-          if actual != expected:
-              raise SystemExit(f'canonical_input_digest changed: {actual} != {expected}')
-          print(json.dumps({'canonical_input_digest': actual}, sort_keys=True))
+          from pathlib import Path
+
+          status_path = Path('docs/status/current.md')
+          status = status_path.read_text(encoding='utf-8')
+          replacements = [
+              (
+                  '### Legacy reassessment foundation',
+                  '### Legacy reassessment pilot',
+              ),
+              (
+                  'Фундамент pilot переоценки legacy `primary` reviews реализован в PR A, но сам pilot **not activated / ещё не активирован** до отдельного manual PR B с frozen ledger. Approved frozen Stage A revision: `35afaca898eae6937066f230906b41af0e1f6690`.',
+                  'Pilot переоценки legacy `primary` reviews **активирован** отдельным manual PR B. Frozen Stage A revision: `35afaca898eae6937066f230906b41af0e1f6690`; frozen cohort содержит **55 works**: `23 central`, `10 high`, `10 low`, `9 medium_low`, `3 special`. На старте все 55 items имеют `pending`, sessions пусты.',
+              ),
+              (
+                  'Foundation включает neutral/unanchored `reassessment-context`, отдельный opt-in `reassessment-history`, typed `reserve_reassessment_session` / `complete_reassessment_item` / `close_reassessment_session`, atomic feedback+ledger completion, current-ledger/work digests, monotonic transition validation и trusted workflow guards. Default session size — 5; scheduled inferred-hypothesis reanalysis — каждые 15 newly reviewed works и в конце main pending pass.',
+                  'Runtime foundation включает neutral/unanchored `reassessment-context`, отдельный opt-in `reassessment-history`, typed `reserve_reassessment_session` / `complete_reassessment_item` / `close_reassessment_session`, atomic feedback+ledger completion, current-ledger/work digests, monotonic transition validation и trusted workflow guards. Default session size — 5; scheduled inferred-hypothesis reanalysis — каждые 15 newly reviewed works и в конце main pending pass.',
+              ),
+              (
+                  '- Legacy reassessment foundation не означает активный pilot: frozen cohort/ledger будет создан только отдельным activation PR после manual review/merge PR A и successful exact-revision developer gate.',
+                  '- Legacy reassessment pilot активен, но первая durable reservation создаётся только при фактическом старте пользовательской сессии; smoke test не должен случайно потребить batch. Semantic fingerprint backfill остаётся отдельным будущим циклом.',
+              ),
+          ]
+          for old, new in replacements:
+              if old not in status:
+                  raise SystemExit(f'missing expected status text: {old[:80]}')
+              status = status.replace(old, new, 1)
+          status_path.write_text(status, encoding='utf-8')
+
+          runbook_path = Path('docs/runbooks/media-legacy-reassessment.md')
+          runbook = runbook_path.read_text(encoding='utf-8')
+          old_status = 'Status in PR A: **foundation implemented; pilot not activated**. The durable pilot ledger is created only by the separate manual activation PR after this foundation is reviewed and merged.'
+          new_status = 'Status: **pilot activated**. PR A foundation is merged; PR B installs the frozen ledger at `media/pilots/legacy-reassessment-primary.json`. No user item is reserved merely by activation.'
+          if old_status not in runbook:
+              raise SystemExit('missing expected runbook status')
+          runbook = runbook.replace(old_status, new_status, 1)
+          anchor = 'The frozen comparison point is Stage A revision `35afaca898eae6937066f230906b41af0e1f6690` and `media/baselines/intelligence-stage-a.json`. Progress and later quality comparisons use that frozen Stage A baseline, not yesterday\'s generated profile.\n'
+          activation = '''The frozen comparison point is Stage A revision `35afaca898eae6937066f230906b41af0e1f6690` and `media/baselines/intelligence-stage-a.json`. Progress and later quality comparisons use that frozen Stage A baseline, not yesterday's generated profile.\n\n## Activation snapshot\n\nThe activated frozen cohort contains **55 works**: `23 central`, `10 high`, `10 low`, `9 medium_low`, and `3 special`. Initial lifecycle state is `55 pending`, `0 sessions`; ledger SHA-256 is `a401526355a629faf2d0559f9ad4346449dd86d97e649a4d13489f3d3f471b2f`. The Stage A canonical input digest remains `sha256:98e9dc4521e69ee5273e302fc40cc1e5fc3d53b119e2c7637475ac45cce43fbf`.\n\nThe first frozen-order batch is `gattaca-1997`, `grand-budapest-hotel-2014`, `source-code-2011`, `project-hail-mary`, `interstellar-2014`. Do **not** reserve it during smoke testing; reserve only when the user is actually starting session 1. The first response for every item remains unanchored.\n'''
+          if anchor not in runbook:
+              raise SystemExit('missing expected runbook baseline anchor')
+          runbook = runbook.replace(anchor, activation, 1)
+          runbook_path.write_text(runbook, encoding='utf-8')
           PY
-      - name: Commit deterministic ledger
+      - name: Commit docs and remove temporary workflow
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add media/pilots/legacy-reassessment-primary.json
-          git diff --cached --exit-code && { echo 'ledger already present'; exit 0; } || true
-          git commit -m "data: activate primary legacy reassessment pilot ledger"
+          git rm .github/workflows/tmp-reassessment-ledger.yml
+          git add docs/status/current.md docs/runbooks/media-legacy-reassessment.md
+          git commit -m "docs: mark legacy reassessment pilot active"
           git push origin HEAD:feat/media-legacy-reassessment-activation
-      - name: Upload generated ledger
-        uses: actions/upload-artifact@v4
-        with:
-          name: legacy-reassessment-primary-verified
-          path: /tmp/legacy-reassessment-primary.json
-          if-no-files-found: error
-          retention-days: 1
