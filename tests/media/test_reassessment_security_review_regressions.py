@@ -3,7 +3,7 @@ from __future__ import annotations
 from copy import deepcopy
 from pathlib import Path
 
-from media.service.reassessment_mutate import _pilot_completion_ready
+from media.service.reassessment_mutate import _pilot_completion_ready, _scheduled_reanalysis_due
 from media.service.reassessment_validation import validate_reassessment_transition
 
 
@@ -210,6 +210,32 @@ def test_pilot_completion_waits_until_every_remaining_deferred_item_was_explicit
 
     document["sessions"][0]["phase"] = "deferred"
     assert _pilot_completion_ready(document) is True
+
+
+def test_end_of_main_pass_reanalysis_fires_once_before_deferred_phase_then_returns_to_fifteen_review_cadence():
+    document = _base()
+    document["items"] = {
+        "a": {"status": "reviewed"},
+        "b": {"status": "deferred", "session_id": SESSION, "outcome": "deferred", "operation_id": OP},
+    }
+    document["scheduled_reanalysis"]["last_completed"] = None
+    assert _scheduled_reanalysis_due(document) is True
+
+    document["scheduled_reanalysis"]["last_completed"] = {
+        "reviewed_count": 0,
+        "operation_id": REANALYSIS,
+        "completed_at": "2026-10-05T12:00:00Z",
+    }
+    document["sessions"] = [{
+        "session_id": SESSION,
+        "reserved_work_ids": ["b"],
+        "status": "closed",
+        "phase": "deferred",
+        "opened_at": "2026-10-05T12:05:00Z",
+        "closed_at": "2026-10-05T12:10:00Z",
+        "snapshot": {},
+    }]
+    assert _scheduled_reanalysis_due(document) is False
 
 
 def test_workflow_requires_trusted_main_base_and_reserve_work_digest_without_embedded_operation_case():
