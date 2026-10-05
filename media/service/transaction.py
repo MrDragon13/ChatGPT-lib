@@ -31,7 +31,7 @@ from media.service.enrich import plan_add_work_resolved
 from media.service.intelligence import plan_set_semantic_fingerprint
 from media.service.interactions import plan_record_recommendation_interaction
 from media.service.mutate import apply_feedback_updates, plan_edit_viewing_feedback, plan_record_viewing_feedback, plan_set_interest, profile_targets_for
-from media.service.path_policy import verify_changed_paths
+from media.service.path_policy import verify_changed_paths, verify_operation_specific_paths
 from media.service.preferences import plan_set_inferred_preferences
 from media.service.reassessment_mutate import (
     plan_close_reassessment_session,
@@ -198,5 +198,8 @@ def execute_command(repo_root: Path, command: MutableCommand, *, now: datetime |
         payload={"operation_id":plan.operation_id,"operation":plan.operation,"status":status,"changed_entities":list(plan.changed_entities),"changed_files":list(changed_files),"applied_at":applied_at}
         if plan.details: payload["details"]=dict(plan.details)
         temp_receipt=temp_root/receipt_rel; temp_receipt.parent.mkdir(parents=True,exist_ok=True); temp_receipt.write_text(json.dumps(payload,ensure_ascii=False,sort_keys=True,indent=2)+"\n",encoding="utf-8")
-        sync_paths=media_paths+[receipt_rel]; verify_changed_paths(plan.operation,sync_paths); _sync_with_rollback(repo_root,temp_root,sync_paths)
+        sync_paths=media_paths+[receipt_rel]
+        verify_changed_paths(plan.operation,sync_paths)
+        verify_operation_specific_paths(plan.operation,sync_paths,plan.details)
+        _sync_with_rollback(repo_root,temp_root,sync_paths)
     return OperationResult(status,plan.operation_id,plan.operation,plan.changed_entities,changed_files,plan.details)
