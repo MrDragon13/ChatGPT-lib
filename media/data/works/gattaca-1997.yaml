@@ -14,18 +14,27 @@ identity:
     imdb: tt0119177
 viewer_signals:
   primary:
-    viewing:
-      status: forgotten
-    rating:
-      score: null
-      source: none
-      confidence: none
-    feedback:
-      summary: Смотрел в детстве, почти ничего не помнит.
-      signals: []
+    viewing: &id001
+      status: unwatched
+    history:
+    - at: '2026-10-05T22:45:54.445030Z'
+      previous:
+        viewing:
+          status: forgotten
+        rating:
+          score: null
+          source: none
+          confidence: none
+        feedback:
+          summary: Смотрел в детстве, почти ничего не помнит.
+          signals: []
+      current:
+        viewing: *id001
+        rating: null
+        feedback: null
 provenance:
   created_at: '2026-10-01'
-  updated_at: '2026-10-01'
+  updated_at: '2026-10-05'
 metadata:
   external:
     genres:

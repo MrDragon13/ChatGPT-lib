@@ -497,11 +497,18 @@
       "status": "pending"
     },
     "gattaca-1997": {
+      "historical_exposure": {
+        "before_finalization": false,
+        "timing": "none"
+      },
+      "operation_id": "ffcbd499-6f4d-4e4d-8cca-3afb3799d47b",
+      "outcome": "changed",
       "pre_review_feedback_digest": "sha256:c8e2ed0eab9c7967c43523708d8cf6ab1cd1f9dc6104c0a962c9e2e4ea919df9",
       "pre_review_work_file_digest": "sha256:7a564773300db70dc2040983c408aff2aa3fbc771f59b584a299523df81f47f0",
       "reserved_at": "2026-10-05T22:29:07.394473Z",
+      "reviewed_at": "2026-10-05T22:45:54.443962Z",
       "session_id": "c11d4269-f116-4748-839c-959f0557e33b",
-      "status": "in_progress"
+      "status": "reviewed"
     },
     "gentlemen-2019": {
       "status": "pending"

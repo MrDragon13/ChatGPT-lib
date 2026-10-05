@@ -1,0 +1,24 @@
+{
+  "applied_at": "2026-10-05T22:46:04.520247+00:00",
+  "changed_entities": [
+    "gattaca-1997"
+  ],
+  "changed_files": [
+    "media/data/works/gattaca-1997.yaml",
+    "media/generated/index.jsonl",
+    "media/pilots/legacy-reassessment-primary.json",
+    ".media/operations/ffcbd499-6f4d-4e4d-8cca-3afb3799d47b.json"
+  ],
+  "details": {
+    "expected_ledger_digest": "sha256:23e2a68769c89f746e07ff3ecdb069981baae01db59684545bc2f07a87c6bed8",
+    "outcome": "changed",
+    "pilot_id": "primary-legacy-v1",
+    "pre_review_feedback_digest": "sha256:c8e2ed0eab9c7967c43523708d8cf6ab1cd1f9dc6104c0a962c9e2e4ea919df9",
+    "pre_review_work_file_digest": "sha256:7a564773300db70dc2040983c408aff2aa3fbc771f59b584a299523df81f47f0",
+    "session_id": "c11d4269-f116-4748-839c-959f0557e33b",
+    "work_id": "gattaca-1997"
+  },
+  "operation": "complete_reassessment_item",
+  "operation_id": "ffcbd499-6f4d-4e4d-8cca-3afb3799d47b",
+  "status": "applied"
+}
