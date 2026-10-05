@@ -13,7 +13,7 @@
 4. **Normal mutations use a typed command.** LLM/CLI/web не применяют произвольный YAML patch вместо существующего operation contract.
 5. **Unknown is better than guessed.** Ambiguous identity/provider result останавливает mutation или требует input; система не угадывает work.
 6. **Operation scope stays narrow.** Auto-merge-eligible operation не получает скрытый доступ к architecture/schema/vocabulary/workflow paths.
-7. **Read-only stays read-only.** `recommend_context`, `taste_context` и `assess_candidate` не мутируют canonical state.
+7. **Read-only stays read-only.** `recommend_context`, `taste_context`, `assess_candidate`, `reassessment-context` и `reassessment-history` не мутируют canonical state.
 
 ## Targets
 
@@ -31,29 +31,36 @@
 16. **Fallback is not personalized evidence.** `ranking_basis=none` не выдаётся за semantic taste match; active top-level `limitations` являются частью material context.
 17. **Assessment is qualitative.** Candidate assessment не сохраняет prediction и не изображает fake precise probability/opaque score как знание пользователя; partial `assessment_coverage` не маскируется под fully grounded certainty.
 18. **Couple disagreement stays observable.** Per-term member disagreement может быть показан отдельно, но сама observability projection не меняет couple aggregation.
+19. **Legacy evidence does not become fresh explicit evidence automatically.** Старый review/rating — historical context; новый `explicit` требует current user confirmation.
+20. **Legacy reassessment is not semantic enrichment.** Pilot не пишет semantic fingerprint/vocabulary и не превращает reaction в factual work traits.
 
 ## External identity
 
-19. **External mention does not create a canonical work.** Recommendation, candidate assessment или similarity endpoint может ссылаться на внешний work без добавления его в library.
-20. **Persistent external reference requires stable identity.** Для долговременной relation нужен устойчивый provider ID; title/year — display snapshot, не единственный ключ.
-21. **Reconciliation is deterministic.** Когда external identity становится canonical work, relation normalization не должна создавать duplicate/self-link или user signals побочно.
+21. **External mention does not create a canonical work.** Recommendation, candidate assessment или similarity endpoint может ссылаться на внешний work без добавления его в library.
+22. **Persistent external reference requires stable identity.** Для долговременной relation нужен устойчивый provider ID; title/year — display snapshot, не единственный ключ.
+23. **Reconciliation is deterministic.** Когда external identity становится canonical work, relation normalization не должна создавать duplicate/self-link или user signals побочно.
 
 ## Vocabulary and schemas
 
-22. **Unknown vocabulary terms are not invented.** Если подходящего controlled vocabulary term нет, normal data entry не создаёт новый term/synonym скрыто.
-23. **Normal data entry cannot change schema.** Schema/vocabulary evolution — manual developer/architecture work с tests/migration policy.
-24. **No invented fields.** Writer использует только fields, разрешённые текущим schema contract.
+24. **Unknown vocabulary terms are not invented.** Если подходящего controlled vocabulary term нет, normal data entry не создаёт новый term/synonym скрыто.
+25. **Normal data entry cannot change schema.** Schema/vocabulary evolution — manual developer/architecture work с tests/migration policy.
+26. **No invented fields.** Writer использует только fields, разрешённые текущим schema contract.
 
-## Security
+## Security and pilot monotonicity
 
-25. **Browser never receives write/provider/model secrets.** GitHub write token, provider credentials и model secrets остаются server/CI side.
-26. **Broker reuses typed validation.** Browser write boundary не обходит command schemas, target safety или canonical validation.
-27. **Static Pages remains safe without live model.** Core read surface не зависит от client-side model credentials.
-28. **Privileged auto-merge uses trusted policy.** Declarative operation policy читается из trusted `main`, changed paths — из GitHub PR metadata / files API; PR-head Python не определяет собственные разрешения и не исполняется privileged workflow.
-29. **Trust-policy changes require normal review.** Изменение `media/config/operation_path_policy.json`, workflow/guard или executable media semantics не может само разрешить себе auto-merge в том же PR.
+27. **Browser never receives write/provider/model secrets.** GitHub write token, provider credentials и model secrets остаются server/CI side.
+28. **Broker reuses typed validation.** Browser write boundary не обходит command schemas, target safety или canonical validation.
+29. **Static Pages remains safe without live model.** Core read surface не зависит от client-side model credentials.
+30. **Privileged auto-merge uses trusted policy.** Declarative operation policy читается из trusted `main`, changed paths — из GitHub PR metadata / files API; PR-head Python не определяет собственные разрешения и не исполняется privileged workflow.
+31. **Trust-policy changes require normal review.** Изменение `media/config/operation_path_policy.json`, workflow/guard или executable media semantics не может само разрешить себе auto-merge в том же PR.
+32. **Reservation precedes reassessment write.** `complete_reassessment_item` не может писать canonical feedback, пока matching `in_progress` reservation не присутствует на authoritative `main`.
+33. **Pilot writes serialize on current state.** Каждый ledger write сверяет `expected_ledger_digest`; completion дополнительно сверяет reserved raw work-file digest.
+34. **Reviewed is terminal within one pilot epoch.** Reviewed item не возвращается автоматически в pending/in_progress/deferred; repeat reassessment требует нового explicit override/epoch design.
+35. **Frozen cohort and closed history are immutable.** Base/frozen metadata, terminal reviewed provenance и closed session snapshots не переписываются operation PR; independent base→head validation проверяет это отдельно от planner.
+36. **Pilot ledger is operational provenance, not taste truth.** Он не входит в Stage A `canonical_input_digest` и не становится benchmark автоматически.
 
 ## Verification
 
-30. **Exact revision matters.** GREEN должен относиться к exact head/merge SHA, который проверяется или публикуется.
-31. **Full validation before completion.** Focused tests недостаточны для финального success claim; выполняется project regression/validate/rebuild/doctor и релевантные web gates.
-32. **Historical spec is rationale, not current authority.** Dated plan/spec не переопределяет реализованный code/schema/operating contract после merge.
+37. **Exact revision matters.** GREEN должен относиться к exact head/merge SHA, который проверяется или публикуется.
+38. **Full validation before completion.** Focused tests недостаточны для финального success claim; выполняется project regression/validate/rebuild/doctor и релевантные web gates.
+39. **Historical spec is rationale, not current authority.** Dated plan/spec не переопределяет реализованный code/schema/operating contract после merge.
