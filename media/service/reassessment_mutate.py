@@ -168,6 +168,13 @@ def _deferred_total(document: Mapping[str, Any]) -> int:
     )
 
 
+def _deferred_phase_started(document: Mapping[str, Any]) -> bool:
+    return any(
+        isinstance(session, Mapping) and session.get("phase") == "deferred"
+        for session in document.get("sessions") or []
+    )
+
+
 def _scheduled_reanalysis_due(document: Mapping[str, Any]) -> bool:
     reviewed_total = _reviewed_total(document)
     state = document.get("scheduled_reanalysis") or {}
@@ -176,7 +183,40 @@ def _scheduled_reanalysis_due(document: Mapping[str, Any]) -> bool:
     if reviewed_total - int(last_count) >= 15:
         return True
     main_pass_complete = not _ordered_ids_with_status(document, "pending")
-    return main_pass_complete and reviewed_total > int(last_count)
+    return (
+        main_pass_complete
+        and not _deferred_phase_started(document)
+        and reviewed_total > int(last_count)
+    )
+
+
+def _pilot_completion_ready(document: Mapping[str, Any]) -> bool:
+    lifecycle = document.get("items") or {}
+    if any(
+        isinstance(item, Mapping) and item.get("status") in {"pending", "in_progress"}
+        for item in lifecycle.values()
+    ):
+        return False
+
+    deferred = {
+        work_id: item
+        for work_id, item in lifecycle.items()
+        if isinstance(item, Mapping) and item.get("status") == "deferred"
+    }
+    if not deferred:
+        return True
+
+    session_by_id = {
+        session.get("session_id"): session
+        for session in document.get("sessions") or []
+        if isinstance(session, Mapping) and isinstance(session.get("session_id"), str)
+    }
+    return all(
+        isinstance(item.get("session_id"), str)
+        and isinstance(session_by_id.get(item.get("session_id")), Mapping)
+        and session_by_id[item.get("session_id")].get("phase") == "deferred"
+        for item in deferred.values()
+    )
 
 
 def _load_verified_reanalysis_receipt(
@@ -260,6 +300,7 @@ def plan_reserve_reassessment_session(
             "session_id": command.session_id,
             "reserved_work_ids": list(command.work_ids),
             "status": "open",
+            "phase": phase,
             "opened_at": at,
         }
     )
@@ -487,10 +528,7 @@ def plan_close_reassessment_session(
         }
         ledger["scheduled_reanalysis"] = scheduled_state
 
-    if not any(
-        isinstance(item, Mapping) and item.get("status") in {"pending", "in_progress", "deferred"}
-        for item in lifecycle_items.values()
-    ):
+    if _pilot_completion_ready(ledger):
         ledger["pilot_status"] = "completed"
 
     return MutationPlan(
