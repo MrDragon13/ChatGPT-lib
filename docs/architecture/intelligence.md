@@ -127,6 +127,24 @@ Explanation должно показывать конфликт, если он в
 
 Similarity может быть дополнительным мостом между evidence works, но не заменяет ratings/reactions/feedback как independent user signal.
 
+## Legacy reassessment and explicit evidence backfill
+
+Legacy reassessment — отдельный pilot для улучшения качества historical `primary` user evidence перед Stage B. Он не является semantic enrichment cycle: semantic fingerprint work, vocabulary evolution и semantic provenance/backfill остаются отдельными задачами.
+
+Ключевой evidence rule — **unanchored first**. `reassessment-context` показывает только safe factual memory jog; old rating/reaction/feedback и semantic traits не должны якорить первый текущий ответ. Historical state читается отдельным `reassessment-history` route после независимого ответа либо раньше только по явному запросу пользователя; timing/finalization exposure записывается как provenance.
+
+Fresh current response может создать explicit viewing/rating/reaction/feedback. Старый v1 review остаётся historical context и сам по себе не преобразуется в explicit evidence. Если пользователь подтверждает тот же numeric rating, но существующий source был `inferred` или `explicit_approx`, canonical provenance всё равно меняется на `explicit`, поэтому outcome — `changed`, а не `confirmed_unchanged`.
+
+`confirmed_unchanged` означает, что уже существующее canonical evidence было explicit и fresh response не требует mutation. Для такого случая не создаётся искусственная feedback-history запись: confirmation provenance хранится в pilot ledger.
+
+Pilot ledger — operational provenance, не taste truth и не Stage B benchmark сам по себе. Reviewed evidence позже может участвовать в benchmark selection, но Stage B отдельно определит sampling/leakage rules.
+
+Default session size — 5. Deferred works не смешиваются с main pending pass и возвращаются только после его завершения. Scheduled `set_inferred_preferences` replacement выполняется после каждых 15 newly reviewed works с предыдущего scheduled milestone и один раз в конце main pending pass, если reviewed evidence продвинулось. Manual user-requested reanalysis не сбрасывает этот counter.
+
+Поскольку pilot намеренно меняет evidence base, generated profiles/affinities могут drift. Это ожидаемый результат замены inferred/approx evidence свежим direct explicit evidence, а не автоматическая regression. Progress и quality comparison интерпретируются относительно frozen Stage A baseline/revision, а не относительно непосредственно предыдущего generated profile.
+
+`media/pilots/` исключён из Stage A `canonical_input_digest`: ledger-only lifecycle mutation не должна выглядеть как изменение intelligence input. Canonical work mutation, напротив, меняет audit state обычным способом.
+
 ## Explainability rules
 
 Хорошее объяснение рекомендации или assessment:
@@ -143,6 +161,6 @@ Similarity может быть дополнительным мостом меж�
 
 Audit сначала валидирует canonical state и затем считает метрики из canonical/config inputs. Generated profiles не считаются источником истины: profile metrics строятся через `build_profile()` в памяти. Recommendation pool строится из canonical works через `build_index_rows()` и ту же eligibility policy, что runtime, поэтому stale `media/generated/index.jsonl` не меняет аудит.
 
-`canonical_input_digest` — детерминированный SHA-256 content digest входов, способных изменить audit result. В него входят viewer/group config, vocabulary, canonical works/collections/lists/tombstones, similarity/interactions и explicit/inferred preferences. Schema/code revision хранится через git provenance, а не смешивается с data-content digest.
+`canonical_input_digest` — детерминированный SHA-256 content digest входов, способных изменить audit result. В него входят viewer/group config, vocabulary, canonical works/collections/lists/tombstones, similarity/interactions и explicit/inferred preferences. Schema/code revision хранится через git provenance, а не смешивается с data-content digest. Pilot ledger под `media/pilots/` намеренно не входит в этот inventory.
 
 Baseline под `media/baselines/` — **historical baseline**, то есть фиксированная точка сравнения, а не lockfile текущих пользовательских данных. Детерминированный payload не содержит wall-clock timestamp или git SHA; `source_revision` и `generated_at` лежат в отдельном `.meta.json` provenance-файле.
