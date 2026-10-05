@@ -120,13 +120,13 @@ Inferred hypotheses are explanation-only for numeric affinity aggregation. They 
 
 Legacy reassessment upgrades historical `primary` review evidence; it is not semantic enrichment. Never use the pilot to backfill or rewrite `metadata.semantic`, vocabulary, explicit similarity, partner/couple state, or stable preferences that the user did not state.
 
-The first response for each work must be **unanchored** by historical opinion. Use `python -m media.cli reassessment-context --limit 5 --format json` and present a neutral factual memory jog. Do not show the old rating, reaction, feedback summary/signals, or semantic traits before the user's first current answer unless the user explicitly asks what they previously rated/wrote.
+The first response for each work must be **unanchored** by historical opinion. Use `python -m media.cli reassessment-context --limit 5 --format json` to identify the next batch. For a new batch, durably apply `reserve_reassessment_session` and wait until that reservation is authoritative on `main` **before presenting the first work**. Then present a neutral factual memory jog. Do not show the old rating, reaction, feedback summary/signals, or semantic traits before the user's first current answer unless the user explicitly asks what they previously rated/wrote.
 
 If history is needed, use `python -m media.cli reassessment-history <work-id> --format json` only as the second-phase route (or earlier on explicit user request) and record `historical_exposure` truthfully. Old opinion is historical context, not fresh explicit evidence.
 
-A new session must be durably reserved on authoritative `main` with `reserve_reassessment_session` before any canonical reassessment completion write. Default batch size is 5. `complete_reassessment_item` atomically combines the optional fresh `primary` feedback edit with the ledger lifecycle transition. `close_reassessment_session` is allowed only when all reserved items are resolved.
+Default batch size is 5. `complete_reassessment_item` atomically combines the optional fresh `primary` feedback edit with the ledger lifecycle transition. `close_reassessment_session` is allowed only when all reserved items are resolved.
 
-All pilot writes serialize on current `expected_ledger_digest`; completion also validates the reserved raw work-file digest. If either state moved, fail closed and replay against current `main`. Never force around these guards.
+All pilot writes serialize on current `expected_ledger_digest`. Reservation and completion also depend on raw reserved-work digests: if the ledger or any reserved work moves before guarded merge/completion, fail closed and replay against current `main`. Never force around these guards.
 
 Completion semantics:
 
@@ -134,7 +134,9 @@ Completion semantics:
 - `confirmed_unchanged` — current canonical evidence is already explicit and semantically matches the fresh response; do not manufacture a no-op history entry.
 - `deferred` — user cannot or does not want to reassess now; ledger-only, no canonical opinion edit.
 
-Finish the main `pending` pass before bringing `deferred` items back. A `reviewed` item is terminal for this pilot and must never be automatically asked again. Scheduled taste reanalysis uses existing `set_inferred_preferences` only after every 15 newly reviewed works since the last scheduled milestone and once at the end of the main pending pass when reviewed evidence advanced; manual reanalysis does not reset this cadence.
+Finish the main `pending` pass before bringing `deferred` items back. Each session records whether it belongs to the `pending` or `deferred` phase. A `reviewed` item is terminal for this pilot and must never be automatically asked again. The deferred pass may finish with items still `deferred` only after each such item was explicitly revisited in a deferred-phase session and left unresolved for this pilot epoch.
+
+Scheduled taste reanalysis uses existing `set_inferred_preferences` after every 15 newly reviewed works since the last scheduled milestone and once at the end of the main pending pass when reviewed evidence advanced. That end-of-main trigger is one-shot; after deferred phase begins, only the 15-review cadence applies. Manual reanalysis does not reset this cadence.
 
 Generated profile/affinity drift is expected as direct explicit evidence replaces inferred/approx evidence. Evaluate pilot progress against the frozen Stage A baseline, not the immediately previous profile. The pilot ledger is operational provenance, not taste truth and not automatically a Stage B decision benchmark.
 
@@ -205,7 +207,7 @@ The model must not directly update canonical YAML for normal user data mutation.
 
 Eligible normal operations are defined by the declarative `media/config/operation_path_policy.json` contract. Runtime validation reads the local policy document; privileged guarded auto-merge separately fetches that policy from trusted `main`, reads changed filenames from the GitHub PR files API, and treats the PR-head operation marker only as JSON data. The privileged workflow must not execute PR-head Python. Any unavailable/malformed policy, unknown operation, `auto_merge: false`, or changed path outside trusted `allowed_paths` fails closed.
 
-Legacy reassessment operations add extra stale-state guards on top of normal path policy: authoritative current-main ledger digest is rechecked before merge, and `complete_reassessment_item` also rechecks the reserved canonical work digest and exact changed-work cardinality/id.
+Legacy reassessment operations add extra stale-state guards on top of normal path policy: authoritative current-main ledger digest is rechecked before merge; reservation rechecks every planned reserved-work raw digest; and `complete_reassessment_item` rechecks the reserved canonical work digest plus exact changed-work cardinality/id.
 
 `refresh_metadata(scope=all_movies)` is provider-dependent bulk maintenance and **must not auto-merge**. It remains open for explicit human review/merge. Architecture/vocabulary/schema/workflow changes are also manual.
 
@@ -240,4 +242,4 @@ If any step fails, canonical data must not be left partially modified.
 - “Что ты понял о моём вкусе?” → read/explain only.
 - “Переосмысли мой вкус” → reanalyze taste, then validated inferred replacement.
 - “Обнови понимание этого фильма” → semantic enrich, not viewer-taste edit.
-- “Давай переоценим старые отзывы” → active legacy reassessment route only; neutral current-answer-first flow, old opinion hidden unless requested.
+- “Давай переоценим старые отзывы” → active legacy reassessment route only; reserve the batch first, then use neutral current-answer-first flow with old opinion hidden unless requested.
