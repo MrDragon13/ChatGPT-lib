@@ -20,6 +20,34 @@ def _mapping(value: Any) -> Mapping[str, Any]:
     return value if isinstance(value, Mapping) else {}
 
 
+def _completed_pilot_state_is_valid(document: Mapping[str, Any]) -> bool:
+    lifecycle = _mapping(document.get("items"))
+    if any(
+        _mapping(item).get("status") in {"pending", "in_progress"}
+        for item in lifecycle.values()
+    ):
+        return False
+
+    deferred = {
+        work_id: _mapping(item)
+        for work_id, item in lifecycle.items()
+        if _mapping(item).get("status") == "deferred"
+    }
+    if not deferred:
+        return True
+
+    sessions = {
+        _mapping(session).get("session_id"): _mapping(session)
+        for session in document.get("sessions") or []
+        if isinstance(_mapping(session).get("session_id"), str)
+    }
+    return all(
+        isinstance(item.get("session_id"), str)
+        and _mapping(sessions.get(item.get("session_id"))).get("phase") == "deferred"
+        for item in deferred.values()
+    )
+
+
 def validate_reassessment_snapshot(
     document: Mapping[str, Any],
     *,
@@ -76,18 +104,12 @@ def validate_reassessment_snapshot(
                     f"reviewed item lacks terminal outcome/exposure/timestamp/operation provenance: {work_id}",
                 )
 
-    if document.get("pilot_status") == "completed":
-        resumable = [
-            work_id
-            for work_id, item_raw in lifecycle_items.items()
-            if _mapping(item_raw).get("status") in {"pending", "in_progress"}
-        ]
-        if resumable:
-            _issue(
-                issues,
-                "reassessment_incomplete_pilot",
-                "completed pilot still contains pending or in-progress main-pass items",
-            )
+    if document.get("pilot_status") == "completed" and not _completed_pilot_state_is_valid(document):
+        _issue(
+            issues,
+            "reassessment_incomplete_pilot",
+            "completed pilot has pending/in-progress work or deferred items without deferred-pass provenance",
+        )
 
     previous_reviewed_total = -1
     previous_deferred_total = -1
@@ -370,6 +392,8 @@ def _validate_close_transition(
         _issue(issues, "reassessment_transition_close", "completed pilot cannot be reopened")
     if head.get("pilot_status") not in {"active", "completed"}:
         _issue(issues, "reassessment_transition_close", "invalid pilot_status after close")
+    if head.get("pilot_status") == "completed" and not _completed_pilot_state_is_valid(head):
+        _issue(issues, "reassessment_transition_close", "close cannot complete pilot before deferred stop condition is proven")
 
 
 def validate_reassessment_transition(
