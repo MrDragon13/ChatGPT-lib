@@ -11,11 +11,14 @@ from typing import Any
 from media.domain.changeset import MutationPlan, OperationResult
 from media.domain.commands import (
     AddWorkCommand,
+    CloseReassessmentSessionCommand,
+    CompleteReassessmentItemCommand,
     EditViewingFeedbackCommand,
     RecordRecommendationInteractionCommand,
     RecordViewingFeedbackCommand,
     RefreshMetadataCommand,
     RemoveWorkSimilarityCommand,
+    ReserveReassessmentSessionCommand,
     SetInferredPreferencesCommand,
     SetInterestCommand,
     SetSemanticFingerprintCommand,
@@ -30,6 +33,11 @@ from media.service.interactions import plan_record_recommendation_interaction
 from media.service.mutate import apply_feedback_updates, plan_edit_viewing_feedback, plan_record_viewing_feedback, plan_set_interest, profile_targets_for
 from media.service.path_policy import verify_changed_paths
 from media.service.preferences import plan_set_inferred_preferences
+from media.service.reassessment_mutate import (
+    plan_close_reassessment_session,
+    plan_complete_reassessment_item,
+    plan_reserve_reassessment_session,
+)
 from media.service.refresh import plan_refresh_metadata
 from media.service.similarity import plan_remove_work_similarity, plan_set_work_similarity, reconcile_similarity_for_new_work
 from media.tools.build_index import write_index
@@ -48,6 +56,9 @@ MutableCommand = (
     | RecordRecommendationInteractionCommand
     | SetWorkSimilarityCommand
     | RemoveWorkSimilarityCommand
+    | ReserveReassessmentSessionCommand
+    | CompleteReassessmentItemCommand
+    | CloseReassessmentSessionCommand
 )
 
 
@@ -110,6 +121,9 @@ def _plan(repo: YamlRepository, command: MutableCommand, now: datetime | None, p
     if isinstance(command,RecordRecommendationInteractionCommand): return plan_record_recommendation_interaction(repo,command,now=now)
     if isinstance(command,SetWorkSimilarityCommand): return plan_set_work_similarity(repo,command,now=now)
     if isinstance(command,RemoveWorkSimilarityCommand): return plan_remove_work_similarity(repo,command,now=now)
+    if isinstance(command,ReserveReassessmentSessionCommand): return plan_reserve_reassessment_session(repo,command,now=now)
+    if isinstance(command,CompleteReassessmentItemCommand): return plan_complete_reassessment_item(repo,command,now=now)
+    if isinstance(command,CloseReassessmentSessionCommand): return plan_close_reassessment_session(repo,command,now=now)
     if isinstance(command,AddWorkCommand): return _plan_add_work(repo,command,now,provider)
     if isinstance(command,RefreshMetadataCommand): return plan_refresh_metadata(repo,command,provider,now=now)
     raise CommandValidationError("unsupported mutable command")
@@ -169,6 +183,7 @@ def execute_command(repo_root: Path, command: MutableCommand, *, now: datetime |
     if receipt.exists(): return _load_receipt(receipt)
     with tempfile.TemporaryDirectory(prefix="media-op-") as tmpdir:
         temp_root=Path(tmpdir)/"repo"; temp_root.mkdir(parents=True); shutil.copytree(repo_root/"media",temp_root/"media")
+        if (repo_root/".media").exists(): shutil.copytree(repo_root/".media",temp_root/".media")
         plan=_plan(YamlRepository(temp_root/"media"),command,now,provider)
         for rel,document in plan.documents.items(): dump_yaml(temp_root/rel,document)
         for rel,document in plan.json_documents.items(): _write_json_document(temp_root/rel,document)
