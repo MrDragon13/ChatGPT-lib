@@ -95,6 +95,30 @@ EXPECTED_POLICY = {
             ".media/operations/*.json",
         ],
     },
+    "reserve_reassessment_session": {
+        "auto_merge": True,
+        "allowed_paths": [
+            "media/pilots/legacy-reassessment-primary.json",
+            ".media/operations/*.json",
+        ],
+    },
+    "complete_reassessment_item": {
+        "auto_merge": True,
+        "allowed_paths": [
+            "media/pilots/legacy-reassessment-primary.json",
+            "media/data/works/*.yaml",
+            "media/generated/index.jsonl",
+            "media/generated/profiles/*.yaml",
+            ".media/operations/*.json",
+        ],
+    },
+    "close_reassessment_session": {
+        "auto_merge": True,
+        "allowed_paths": [
+            "media/pilots/legacy-reassessment-primary.json",
+            ".media/operations/*.json",
+        ],
+    },
 }
 
 CASES_PATH = Path(__file__).parent / "fixtures" / "operation_path_policy_cases.json"
@@ -245,6 +269,7 @@ def test_existing_feedback_operation_cannot_modify_future_intelligence_paths():
     for path in (
         "media/preferences/inferred/primary.yaml",
         "media/data/interactions/2026-10.jsonl",
+        "media/pilots/legacy-reassessment-primary.json",
     ):
         with pytest.raises(PathPolicyError):
             verify_changed_paths("record_viewing_feedback", [path])
@@ -263,6 +288,7 @@ def test_similarity_operations_allow_only_relation_and_receipt_paths():
             "media/data/works/arrival-2016.yaml",
             "media/generated/index.jsonl",
             "media/preferences/inferred/primary.yaml",
+            "media/pilots/legacy-reassessment-primary.json",
         ):
             with pytest.raises(PathPolicyError):
                 verify_changed_paths(operation, [forbidden])
