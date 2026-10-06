@@ -67,6 +67,14 @@ viewer_signals:
       previous: {}
       current:
         rating: *id004
+    - at: '2026-10-06T18:16:18.858017Z'
+      previous: {}
+      current:
+        feedback: &id005
+          summary: 'Фильм очень понравился: посмотрела самостоятельно, много смеялась;
+            позже пересмотрела вместе с primary, и второй просмотр тоже остался положительным.'
+          signals: []
+    feedback: *id005
 provenance:
   created_at: '2026-10-01'
   updated_at: '2026-10-06'
