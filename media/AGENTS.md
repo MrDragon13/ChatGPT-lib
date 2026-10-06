@@ -128,7 +128,7 @@ If history is needed, use reassessment-history only as the second-phase route (o
 
 Default human batch size is 5. complete_reassessment_item combines optional fresh primary feedback with the human lifecycle transition. reviewed is terminal for human reassessment; deferred returns only after the main pending pass.
 
-Mixed-target feedback stays separate. If the same answer contains clearly attributed partner evidence, first complete primary and wait until it is authoritative on main; then re-read the work and record only net-new/corrective partner evidence through a separate normal feedback operation. Do not create a no-op and do not weaken stronger existing provenance.
+Mixed-target feedback stays separate. If the same answer contains clearly attributed partner evidence, first complete primary; **after the primary reassessment completion is authoritative on `main`**, re-read the work and record only net-new/corrective partner evidence through a **separate normal feedback operation**. Do not create a no-op and do not weaken stronger existing provenance.
 
 For each newly reviewed item, normally finish these follow-ups before presenting the next human card:
 
