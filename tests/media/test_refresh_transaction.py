@@ -189,3 +189,20 @@ def test_refresh_work_metadata_preview_is_bound_to_current_work_digest(tmp_path)
     assert preview.changed_entities == ("arrival-2016",)
     assert preview.details["work_id"] == "arrival-2016"
     assert preview.details["expected_work_digest"] == digest
+
+
+def test_refresh_work_metadata_execute_writes_replayable_receipt_under_narrow_policy(tmp_path):
+    import hashlib
+    from media.domain.types import WorkRef
+
+    root = _arrival_only_repo(tmp_path)
+    provider = ArrivalProvider()
+    path = root / "media/data/works/arrival-2016.yaml"
+    digest = "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+    command = RefreshWorkMetadataCommand(1, UUID2, WorkRef(id="arrival-2016"), digest)
+    result = execute_command(root, command, provider=provider, now=NOW)
+    assert result.status == "applied"
+    assert result.details["work_id"] == "arrival-2016"
+    assert path.exists()
+    replay = execute_command(root, command, provider=provider, now=NOW)
+    assert replay.status == "already_applied"
