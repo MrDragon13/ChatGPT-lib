@@ -5,13 +5,16 @@ from dataclasses import asdict
 from datetime import datetime, timezone
 from typing import Any, Mapping
 
+import yaml
+
 from media.domain.changeset import MutationPlan
-from media.domain.commands import RefreshMetadataCommand
-from media.domain.errors import MetadataRefreshPreflightError, ProviderUnavailableError
+from media.domain.commands import RefreshMetadataCommand, RefreshWorkMetadataCommand
+from media.domain.errors import CommandValidationError, MetadataRefreshPreflightError, ProviderUnavailableError
 from media.providers.base import CanonicalMetadata, MetadataProvider, ProviderCandidate
 from media.repository.canonical import WorkRecord
 from media.repository.yaml_repo import YamlRepository
-from media.service.resolve import normalize_title
+from media.service.reassessment import file_sha256
+from media.service.resolve import normalize_title, resolve_work
 
 
 def _candidate_dict(candidate: ProviderCandidate) -> dict[str, Any]:
@@ -58,8 +61,10 @@ def _resolve_candidate(
     identity = record.data.get("identity") or {}
     external_ids = identity.get("external_ids") or {}
     canonical_tmdb = _canonical_tmdb(record)
-    override = command.tmdb_overrides.get(record.id)
-    expected_year = command.year_overrides.get(record.id, identity.get("year"))
+    tmdb_overrides = getattr(command, "tmdb_overrides", {})
+    year_overrides = getattr(command, "year_overrides", {})
+    override = tmdb_overrides.get(record.id)
+    expected_year = year_overrides.get(record.id, identity.get("year"))
 
     if canonical_tmdb is not None:
         canonical_type = canonical_tmdb.get("media_type")
@@ -261,6 +266,61 @@ def plan_refresh_metadata(
         tuple(changed_entities),
         documents,
         bool(documents),
+        (),
+        details,
+    )
+
+
+
+def _yaml_digest(document: Mapping[str, Any]) -> str:
+    payload = yaml.safe_dump(dict(document), sort_keys=False, allow_unicode=True).encode("utf-8")
+    return file_sha256(payload)
+
+
+def plan_refresh_work_metadata(
+    repo: YamlRepository,
+    command: RefreshWorkMetadataCommand,
+    provider: MetadataProvider | None,
+    *,
+    now: datetime | None = None,
+) -> MutationPlan:
+    record = resolve_work(repo, command.work_ref)
+    actual_digest = file_sha256(record.path.read_bytes())
+    if actual_digest != command.expected_work_digest:
+        raise CommandValidationError(
+            f"work digest mismatch for {record.id}: expected {command.expected_work_digest}, current {actual_digest}"
+        )
+    if provider is None:
+        raise ProviderUnavailableError("metadata provider is required for refresh_work_metadata")
+    if (record.data.get("identity") or {}).get("format") != "movie":
+        raise MetadataRefreshPreflightError((_blocker(record.id, "identity_conflict"),))
+
+    candidate, blocker = _resolve_candidate(record, command, provider)
+    if blocker is not None:
+        raise MetadataRefreshPreflightError((blocker,))
+    assert candidate is not None
+    metadata = provider.fetch_work(candidate.media_type, candidate.provider_id)
+    if not _identity_compatible(record, candidate, metadata):
+        raise MetadataRefreshPreflightError((_blocker(record.id, "identity_conflict"),))
+
+    value = now or datetime.now(timezone.utc)
+    day = value.date().isoformat()
+    document = _refreshed_document(record, metadata, day=day)
+    changed = document != record.data
+    path = f"media/data/works/{record.id}.yaml"
+    final_digest = _yaml_digest(document) if changed else actual_digest
+    details = {
+        "work_id": record.id,
+        "expected_work_digest": command.expected_work_digest,
+        "work_digest": final_digest,
+        "unmapped_genre_ids": sorted(metadata.unmapped_genre_ids),
+    }
+    return MutationPlan(
+        command.operation_id,
+        "refresh_work_metadata",
+        (record.id,) if changed else (),
+        {path: document} if changed else {},
+        changed,
         (),
         details,
     )

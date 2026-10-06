@@ -17,6 +17,7 @@ from media.domain.commands import (
     RecordRecommendationInteractionCommand,
     RecordViewingFeedbackCommand,
     RefreshMetadataCommand,
+    RefreshWorkMetadataCommand,
     RemoveWorkSimilarityCommand,
     ReserveReassessmentSessionCommand,
     SetInferredPreferencesCommand,
@@ -38,7 +39,7 @@ from media.service.reassessment_mutate import (
     plan_complete_reassessment_item,
     plan_reserve_reassessment_session,
 )
-from media.service.refresh import plan_refresh_metadata
+from media.service.refresh import plan_refresh_metadata, plan_refresh_work_metadata
 from media.service.similarity import plan_remove_work_similarity, plan_set_work_similarity, reconcile_similarity_for_new_work
 from media.tools.build_index import write_index
 from media.tools.build_profiles import build_profile
@@ -51,6 +52,7 @@ MutableCommand = (
     | SetInterestCommand
     | AddWorkCommand
     | RefreshMetadataCommand
+    | RefreshWorkMetadataCommand
     | SetSemanticFingerprintCommand
     | SetInferredPreferencesCommand
     | RecordRecommendationInteractionCommand
@@ -126,6 +128,7 @@ def _plan(repo: YamlRepository, command: MutableCommand, now: datetime | None, p
     if isinstance(command,CloseReassessmentSessionCommand): return plan_close_reassessment_session(repo,command,now=now)
     if isinstance(command,AddWorkCommand): return _plan_add_work(repo,command,now,provider)
     if isinstance(command,RefreshMetadataCommand): return plan_refresh_metadata(repo,command,provider,now=now)
+    if isinstance(command,RefreshWorkMetadataCommand): return plan_refresh_work_metadata(repo,command,provider,now=now)
     raise CommandValidationError("unsupported mutable command")
 
 
