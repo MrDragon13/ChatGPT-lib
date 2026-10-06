@@ -126,6 +126,10 @@ If history is needed, use `python -m media.cli reassessment-history <work-id> --
 
 Default batch size is 5. `complete_reassessment_item` atomically combines the optional fresh `primary` feedback edit with the ledger lifecycle transition. `close_reassessment_session` is allowed only when all reserved items are resolved.
 
+Mixed-target feedback is allowed at the conversation layer, but the pilot completion remains strictly `primary`-only. If the same reassessment answer also contains clearly attributed evidence for `partner` or another non-pilot target, do not drop that evidence and do not put it into `complete_reassessment_item`. First complete the reserved `primary` item. Only after the primary reassessment completion is authoritative on `main`, re-read the current canonical work and, if net-new or corrective evidence remains, record it through a separate normal feedback operation for that target. This ordering preserves the reserved-work digest guard.
+
+Before a non-pilot follow-up, compare the attributed evidence with the current canonical target. Do not create a no-op. Do not weaken stronger existing provenance: approximate or second-hand phrasing must not overwrite an existing exact explicit rating merely because it appeared in the same message. Preserve the stronger exact value and write only supported net-new/corrective components, such as additional qualitative feedback. If nothing material is new, skip the follow-up write.
+
 All pilot writes serialize on current `expected_ledger_digest`. Reservation and completion also depend on raw reserved-work digests: if the ledger or any reserved work moves before guarded merge/completion, fail closed and replay against current `main`. Never force around these guards.
 
 Completion semantics:
