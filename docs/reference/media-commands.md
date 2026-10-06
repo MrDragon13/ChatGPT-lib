@@ -33,7 +33,7 @@ Write operation имеет `operation_id` и применяется через d
 
 Колонка выше описывает intended current class, но executable authority остаётся за workflow/path-policy code. Даже auto-merge-eligible operation не merge'ится, если затронула запрещённый path, не прошла exact-head checks или перестала соответствовать operation contract.
 
-`refresh_metadata` намеренно остаётся manual maintenance operation.
+`refresh_metadata` намеренно остаётся manual maintenance operation. `refresh_work_metadata` и `record_reassessment_modernization` — узкие reassessment-modernization operations; successful metadata/semantic checks могут иметь trusted status `no_change` без искусственной canonical mutation.
 
 ## External works
 

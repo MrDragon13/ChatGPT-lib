@@ -62,7 +62,7 @@ Pilot переоценки legacy `primary` reviews **активирован** �
 
 Runtime foundation включает neutral/unanchored `reassessment-context`, отдельный opt-in `reassessment-history`, typed `reserve_reassessment_session` / `complete_reassessment_item` / `close_reassessment_session`, atomic feedback+ledger completion, current-ledger/work digests, monotonic transition validation и trusted workflow guards. Default session size — 5; scheduled inferred-hypothesis reanalysis — каждые 15 newly reviewed works и в конце main pending pass.
 
-Legacy reassessment обновляет explicit user evidence; semantic fingerprint backfill в этот pilot не входит. `media/pilots/` хранит operational provenance и намеренно исключён из Stage A `canonical_input_digest`. Generated profiles/affinities могут ожидаемо drift по мере замены inferred/approx evidence на fresh explicit evidence; progress сравнивается с frozen Stage A baseline, а не с предыдущим generated profile.
+Legacy reassessment human completion обновляет explicit user evidence отдельно от work semantics. Card modernization теперь является resumable follow-up: `reassessment-modernization-context` обнаруживает **due modernization**; `refresh_work_metadata` обновляет одну карточку; `set_semantic_fingerprint` независимо перепроверяет work semantics; `record_reassessment_modernization` фиксирует `completed`/`blocked`. Due modernization восстанавливается **before reserving a fresh reassessment batch**. `media/pilots/` остаётся operational provenance и исключён из Stage A `canonical_input_digest`.
 
 ### Web
 
@@ -82,7 +82,7 @@ Manifest v3 включает target-aware taste/recommendation data, semantic fi
 - External discovery/live model reasoning находится на agent/server boundary; static Pages остаётся работоспособным без live model.
 - Bulk provider metadata refresh требует manual review и не относится к normal auto-merge path.
 - Controlled vocabulary расширяется только отдельным developer/architecture change, а не автоматически из обычного feedback.
-- Legacy reassessment pilot активен, но первая durable reservation создаётся только при фактическом старте пользовательской сессии; smoke test не должен случайно потребить batch. Semantic fingerprint backfill остаётся отдельным будущим циклом.
+- Legacy reassessment pilot активен; already reviewed карточки без modernization marker считаются due. Modernization не повторяет human reassessment, не превращает viewer feedback в semantic truth и не меняет 15-review taste cadence.
 
 ## Verification model
 

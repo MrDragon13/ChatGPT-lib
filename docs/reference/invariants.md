@@ -32,7 +32,7 @@
 17. **Assessment is qualitative.** Candidate assessment не сохраняет prediction и не изображает fake precise probability/opaque score как знание пользователя; partial `assessment_coverage` не маскируется под fully grounded certainty.
 18. **Couple disagreement stays observable.** Per-term member disagreement может быть показан отдельно, но сама observability projection не меняет couple aggregation.
 19. **Legacy evidence does not become fresh explicit evidence automatically.** Старый review/rating — historical context; новый `explicit` требует current user confirmation.
-20. **Legacy reassessment is not semantic enrichment.** Pilot не пишет semantic fingerprint/vocabulary и не превращает reaction в factual work traits.
+20. **Human reassessment is not semantic enrichment.** `complete_reassessment_item` не пишет semantic fingerprint/vocabulary и не превращает reaction в factual work traits; post-review modernization использует отдельные metadata/semantic operations.
 
 ## External identity
 
@@ -58,9 +58,11 @@
 34. **Reviewed is terminal within one pilot epoch.** Reviewed item не возвращается автоматически в pending/in_progress/deferred; repeat reassessment требует нового explicit override/epoch design.
 35. **Frozen cohort and closed history are immutable.** Base/frozen metadata, terminal reviewed provenance и closed session snapshots не переписываются operation PR; independent base→head validation проверяет это отдельно от planner.
 36. **Pilot ledger is operational provenance, not taste truth.** Он не входит в Stage A `canonical_input_digest` и не становится benchmark автоматически.
+37. **Modernization never reopens human review.** Reviewed item остаётся terminal; due/blocked/completed modernization меняет только отдельный monotonic sub-state.
+38. **Viewer feedback is not work semantic truth.** Modernization semantic fingerprint выводится независимо; trusted metadata/semantic `no_change` может служить успешным evidence check. **Modernization does not increment** taste-reanalysis cadence.
 
 ## Verification
 
-37. **Exact revision matters.** GREEN должен относиться к exact head/merge SHA, который проверяется или публикуется.
-38. **Full validation before completion.** Focused tests недостаточны для финального success claim; выполняется project regression/validate/rebuild/doctor и релевантные web gates.
-39. **Historical spec is rationale, not current authority.** Dated plan/spec не переопределяет реализованный code/schema/operating contract после merge.
+39. **Exact revision matters.** GREEN должен относиться к exact head/merge SHA, который проверяется или публикуется.
+40. **Full validation before completion.** Focused tests недостаточны для финального success claim; выполняется project regression/validate/rebuild/doctor и релевантные web gates.
+41. **Historical spec is rationale, not current authority.** Dated plan/spec не переопределяет реализованный code/schema/operating contract после merge.
