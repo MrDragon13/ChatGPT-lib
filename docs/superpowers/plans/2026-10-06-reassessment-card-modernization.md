@@ -270,8 +270,8 @@ Commit message: `feat: expose reassessment modernization context`
 - Modify: `tests/media/test_reassessment_security_review_regressions.py`
 
 **Interfaces:**
-- Produces: `plan_record_reassessment_modernization(repo: YamlRepository, command: RecordReassessmentModernizationCommand, *, now: datetime | None = None) -> MutationPlan`.
-- Planner reads current ledger, canonical work bytes, vocabulary bytes, and referenced `.media/operations/<id>.json` receipts through repository-relative paths.
+- Produces: `plan_record_reassessment_modernization(repo_root: Path, repo: YamlRepository, command: RecordReassessmentModernizationCommand, *, now: datetime | None = None) -> MutationPlan`.
+- `repo_root` is the authoritative transaction workspace root (the temporary repo during execution); the planner reads the current ledger, canonical work bytes, vocabulary bytes, and referenced `.media/operations/<id>.json` receipts from that root rather than treating receipts as `YamlRepository` state.
 - Receipt details include `work_id`, `outcome`, `expected_ledger_digest`, `expected_work_digest`, and resulting modernization record.
 - Metadata and semantic evidence receipts may each have `status: applied` or trusted `status: no_change`.
 
