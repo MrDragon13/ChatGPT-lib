@@ -79,7 +79,7 @@ jobs:
           fi
           OPERATION=$(jq -er '.operation' "${RECEIPTS[0]}")
           case "$OPERATION" in
-            reserve_reassessment_session|complete_reassessment_item|close_reassessment_session) ;;
+            reserve_reassessment_session|complete_reassessment_item|close_reassessment_session|record_reassessment_modernization) ;;
             *)
               echo "::error::Pilot ledger changed under non-reassessment operation: $OPERATION"
               exit 3

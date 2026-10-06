@@ -104,21 +104,22 @@ def verify_operation_specific_paths(
     details: Mapping[str, Any] | None = None,
 ) -> None:
     """Enforce write-shape constraints that the simple declarative wildcard grammar cannot express."""
-    if operation != "complete_reassessment_item":
+    if operation not in {"complete_reassessment_item", "refresh_work_metadata"}:
         return
 
     normalized = tuple(paths)
     work_paths = tuple(path for path in normalized if path.startswith("media/data/works/") and path.endswith(".yaml"))
     if len(work_paths) > 1:
-        raise PathPolicyError("complete_reassessment_item may modify at most one canonical work")
+        raise PathPolicyError(f"{operation} may modify at most one canonical work")
     if not work_paths:
         return
 
     work_id = (details or {}).get("work_id")
     if not isinstance(work_id, str) or not work_id:
-        raise PathPolicyError("complete_reassessment_item work-file mutation requires planner work_id")
+        raise PathPolicyError(f"{operation} work-file mutation requires planner work_id")
     expected = f"media/data/works/{work_id}.yaml"
     if work_paths[0] != expected:
+        label = "reserved work" if operation == "complete_reassessment_item" else "selected work"
         raise PathPolicyError(
-            f"complete_reassessment_item may modify only the reserved work {expected}, got {work_paths[0]}"
+            f"{operation} may modify only the {label} {expected}, got {work_paths[0]}"
         )
