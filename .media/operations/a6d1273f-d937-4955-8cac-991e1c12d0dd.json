@@ -1,0 +1,26 @@
+{
+  "applied_at": "2026-10-06T16:23:39.483181+00:00",
+  "changed_entities": [
+    "grand-budapest-hotel-2014"
+  ],
+  "changed_files": [
+    "media/data/works/grand-budapest-hotel-2014.yaml",
+    "media/generated/index.jsonl",
+    "media/generated/profiles/couple.yaml",
+    "media/generated/profiles/primary.yaml",
+    "media/pilots/legacy-reassessment-primary.json",
+    ".media/operations/a6d1273f-d937-4955-8cac-991e1c12d0dd.json"
+  ],
+  "details": {
+    "expected_ledger_digest": "sha256:f8ca8478425ae9387addcbe5fe8b2a69ecbca0ebe75f76633e7d5df270453c2e",
+    "outcome": "changed",
+    "pilot_id": "primary-legacy-v1",
+    "pre_review_feedback_digest": "sha256:ccedf3359d80dee06b2e94191c3d50eddedbf9a59bf05f9c720dd4e976ea9919",
+    "pre_review_work_file_digest": "sha256:ffbf01ede1cad431017847e555c20765d80dd7a2cf63b0ac03495e8a4841742a",
+    "session_id": "c11d4269-f116-4748-839c-959f0557e33b",
+    "work_id": "grand-budapest-hotel-2014"
+  },
+  "operation": "complete_reassessment_item",
+  "operation_id": "a6d1273f-d937-4955-8cac-991e1c12d0dd",
+  "status": "applied"
+}
