@@ -25,7 +25,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--operation",
         required=True,
-        choices=("reserve_reassessment_session", "complete_reassessment_item", "close_reassessment_session"),
+        choices=("reserve_reassessment_session", "complete_reassessment_item", "close_reassessment_session", "record_reassessment_modernization"),
     )
     parser.add_argument("--operation-receipt", required=True)
     args = parser.parse_args(argv)

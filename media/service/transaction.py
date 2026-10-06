@@ -15,6 +15,7 @@ from media.domain.commands import (
     CompleteReassessmentItemCommand,
     EditViewingFeedbackCommand,
     RecordRecommendationInteractionCommand,
+    RecordReassessmentModernizationCommand,
     RecordViewingFeedbackCommand,
     RefreshMetadataCommand,
     RefreshWorkMetadataCommand,
@@ -37,6 +38,7 @@ from media.service.preferences import plan_set_inferred_preferences
 from media.service.reassessment_mutate import (
     plan_close_reassessment_session,
     plan_complete_reassessment_item,
+    plan_record_reassessment_modernization,
     plan_reserve_reassessment_session,
 )
 from media.service.refresh import plan_refresh_metadata, plan_refresh_work_metadata
@@ -61,6 +63,7 @@ MutableCommand = (
     | ReserveReassessmentSessionCommand
     | CompleteReassessmentItemCommand
     | CloseReassessmentSessionCommand
+    | RecordReassessmentModernizationCommand
 )
 
 
@@ -114,7 +117,14 @@ def _plan_record_feedback(repo: YamlRepository, command: RecordViewingFeedbackCo
     return _with_similarity_reconciliation(repo, plan, work_id)
 
 
-def _plan(repo: YamlRepository, command: MutableCommand, now: datetime | None, provider: Any = None) -> MutationPlan:
+def _plan(
+    repo: YamlRepository,
+    command: MutableCommand,
+    now: datetime | None,
+    provider: Any = None,
+    *,
+    repo_root: Path | None = None,
+) -> MutationPlan:
     if isinstance(command,RecordViewingFeedbackCommand): return _plan_record_feedback(repo,command,now,provider)
     if isinstance(command,EditViewingFeedbackCommand): return plan_edit_viewing_feedback(repo,command,now=now)
     if isinstance(command,SetInterestCommand): return plan_set_interest(repo,command,now=now)
@@ -126,6 +136,9 @@ def _plan(repo: YamlRepository, command: MutableCommand, now: datetime | None, p
     if isinstance(command,ReserveReassessmentSessionCommand): return plan_reserve_reassessment_session(repo,command,now=now)
     if isinstance(command,CompleteReassessmentItemCommand): return plan_complete_reassessment_item(repo,command,now=now)
     if isinstance(command,CloseReassessmentSessionCommand): return plan_close_reassessment_session(repo,command,now=now)
+    if isinstance(command,RecordReassessmentModernizationCommand):
+        root = Path(repo_root) if repo_root is not None else repo.media_root.parent
+        return plan_record_reassessment_modernization(root,repo,command,now=now)
     if isinstance(command,AddWorkCommand): return _plan_add_work(repo,command,now,provider)
     if isinstance(command,RefreshMetadataCommand): return plan_refresh_metadata(repo,command,provider,now=now)
     if isinstance(command,RefreshWorkMetadataCommand): return plan_refresh_work_metadata(repo,command,provider,now=now)
@@ -135,7 +148,7 @@ def _plan(repo: YamlRepository, command: MutableCommand, now: datetime | None, p
 def preview_command(repo_root: Path, command: MutableCommand, *, now: datetime | None = None, provider: Any = None) -> OperationResult:
     repo_root=Path(repo_root); receipt=_receipt_path(repo_root,command.operation_id)
     if receipt.exists(): return _load_receipt(receipt)
-    plan=_plan(YamlRepository(repo_root/"media"),command,now,provider)
+    plan=_plan(YamlRepository(repo_root/"media"),command,now,provider,repo_root=repo_root)
     paths=tuple(sorted(set(plan.documents)|set(plan.json_documents)|set(plan.jsonl_appends)))
     return OperationResult("planned" if plan.has_changes else "no_change",plan.operation_id,plan.operation,plan.changed_entities,paths,plan.details)
 
@@ -187,7 +200,7 @@ def execute_command(repo_root: Path, command: MutableCommand, *, now: datetime |
     with tempfile.TemporaryDirectory(prefix="media-op-") as tmpdir:
         temp_root=Path(tmpdir)/"repo"; temp_root.mkdir(parents=True); shutil.copytree(repo_root/"media",temp_root/"media")
         if (repo_root/".media").exists(): shutil.copytree(repo_root/".media",temp_root/".media")
-        plan=_plan(YamlRepository(temp_root/"media"),command,now,provider)
+        plan=_plan(YamlRepository(temp_root/"media"),command,now,provider,repo_root=temp_root)
         for rel,document in plan.documents.items(): dump_yaml(temp_root/rel,document)
         for rel,document in plan.json_documents.items(): _write_json_document(temp_root/rel,document)
         for rel,appends in plan.jsonl_appends.items():

@@ -20,6 +20,59 @@ def _mapping(value: Any) -> Mapping[str, Any]:
     return value if isinstance(value, Mapping) else {}
 
 
+_MODERNIZATION_BLOCKERS = {
+    "provider_identity_missing",
+    "provider_identity_ambiguous",
+    "provider_identity_conflict",
+    "semantic_context_insufficient",
+}
+
+
+def _sha256(value: Any) -> bool:
+    return isinstance(value, str) and len(value) == 71 and value.startswith("sha256:") and all(
+        char in "0123456789abcdef" for char in value[7:]
+    )
+
+
+def _validate_modernization_snapshot(
+    work_id: str,
+    lifecycle: Mapping[str, Any],
+    issues: list[ReassessmentSnapshotIssue],
+) -> None:
+    modernization_raw = lifecycle.get("modernization")
+    if modernization_raw is None:
+        return
+    modernization = _mapping(modernization_raw)
+    if lifecycle.get("status") != "reviewed":
+        _issue(issues, "reassessment_modernization", f"only reviewed items may carry modernization: {work_id}")
+        return
+    status = modernization.get("status")
+    if status == "blocked":
+        if (
+            modernization.get("blocker_code") not in _MODERNIZATION_BLOCKERS
+            or not isinstance(modernization.get("recorded_at"), str)
+            or not modernization.get("recorded_at")
+            or not _sha256(modernization.get("work_digest"))
+            or any(key in modernization for key in ("metadata_operation_id", "semantic_operation_id", "vocabulary_digest", "completed_at"))
+        ):
+            _issue(issues, "reassessment_modernization", f"blocked modernization provenance is invalid: {work_id}")
+    elif status == "completed":
+        if (
+            not isinstance(modernization.get("metadata_operation_id"), str)
+            or not modernization.get("metadata_operation_id")
+            or not isinstance(modernization.get("semantic_operation_id"), str)
+            or not modernization.get("semantic_operation_id")
+            or not isinstance(modernization.get("completed_at"), str)
+            or not modernization.get("completed_at")
+            or not _sha256(modernization.get("work_digest"))
+            or not _sha256(modernization.get("vocabulary_digest"))
+            or any(key in modernization for key in ("blocker_code", "recorded_at"))
+        ):
+            _issue(issues, "reassessment_modernization", f"completed modernization provenance is invalid: {work_id}")
+    else:
+        _issue(issues, "reassessment_modernization", f"invalid modernization status for {work_id}: {status}")
+
+
 def _completed_pilot_state_is_valid(document: Mapping[str, Any]) -> bool:
     lifecycle = _mapping(document.get("items"))
     if any(
@@ -89,6 +142,7 @@ def validate_reassessment_snapshot(
 
     for work_id, lifecycle_raw in lifecycle_items.items():
         lifecycle = _mapping(lifecycle_raw)
+        _validate_modernization_snapshot(work_id, lifecycle, issues)
         if lifecycle.get("status") == "reviewed":
             if (
                 lifecycle.get("outcome") not in {"changed", "confirmed_unchanged"}
@@ -182,12 +236,24 @@ def _receipt_details(
     return details
 
 
-def _validate_terminal_items(base: Mapping[str, Any], head: Mapping[str, Any], issues: list[ReassessmentSnapshotIssue]) -> None:
+def _validate_terminal_items(
+    base: Mapping[str, Any],
+    head: Mapping[str, Any],
+    *,
+    operation: str,
+    issues: list[ReassessmentSnapshotIssue],
+) -> None:
     base_items = _mapping(base.get("items"))
     head_items = _mapping(head.get("items"))
     for work_id, item in base_items.items():
-        if _mapping(item).get("status") == "reviewed" and head_items.get(work_id) != item:
-            _issue(issues, "reassessment_transition_terminal", f"reviewed reassessment item is immutable: {work_id}")
+        if _mapping(item).get("status") != "reviewed" or head_items.get(work_id) == item:
+            continue
+        if operation == "record_reassessment_modernization":
+            before = dict(_mapping(item)); before.pop("modernization", None)
+            after = dict(_mapping(head_items.get(work_id))); after.pop("modernization", None)
+            if before == after:
+                continue
+        _issue(issues, "reassessment_transition_terminal", f"reviewed reassessment item is immutable: {work_id}")
 
 
 def _validate_closed_session_history(base: Mapping[str, Any], head: Mapping[str, Any], issues: list[ReassessmentSnapshotIssue]) -> None:
@@ -396,6 +462,48 @@ def _validate_close_transition(
         _issue(issues, "reassessment_transition_close", "close cannot complete pilot before deferred stop condition is proven")
 
 
+def _validate_modernization_transition(
+    base: Mapping[str, Any],
+    head: Mapping[str, Any],
+    details: Mapping[str, Any],
+    issues: list[ReassessmentSnapshotIssue],
+) -> None:
+    work_id = details.get("work_id")
+    outcome = details.get("outcome")
+    expected_modernization = details.get("modernization")
+    if not isinstance(work_id, str) or outcome not in {"blocked", "completed"} or not isinstance(expected_modernization, Mapping):
+        _issue(issues, "reassessment_transition_modernization", "modernization receipt lacks work/outcome/provenance")
+        return
+    if _changed_item_ids(base, head) != {work_id}:
+        _issue(issues, "reassessment_transition_modernization", "modernization must change exactly one reviewed item")
+    before = _mapping(_mapping(base.get("items")).get(work_id))
+    after = _mapping(_mapping(head.get("items")).get(work_id))
+    before_human = dict(before); before_human.pop("modernization", None)
+    after_human = dict(after); after_human.pop("modernization", None)
+    if before.get("status") != "reviewed" or before_human != after_human:
+        _issue(issues, "reassessment_transition_modernization", "modernization may not change human reassessment fields")
+    before_modernization = _mapping(before.get("modernization"))
+    after_modernization = _mapping(after.get("modernization"))
+    before_status = before_modernization.get("status") if before_modernization else None
+    after_status = after_modernization.get("status")
+    if before_status is None:
+        allowed = after_status in {"blocked", "completed"}
+    elif before_status == "blocked":
+        allowed = after_status == "completed"
+    else:
+        allowed = False
+    if not allowed:
+        _issue(issues, "reassessment_transition_modernization", f"illegal modernization transition: {before_status} -> {after_status}")
+    if after_status != outcome or dict(after_modernization) != dict(expected_modernization):
+        _issue(issues, "reassessment_transition_modernization", "modernization state must exactly match receipt details")
+    if base.get("sessions") != head.get("sessions"):
+        _issue(issues, "reassessment_transition_modernization", "modernization may not change session records")
+    if base.get("pilot_status") != head.get("pilot_status"):
+        _issue(issues, "reassessment_transition_modernization", "modernization may not change pilot_status")
+    if base.get("scheduled_reanalysis") != head.get("scheduled_reanalysis"):
+        _issue(issues, "reassessment_transition_modernization", "modernization may not change scheduled reanalysis state")
+
+
 def validate_reassessment_transition(
     base: Mapping[str, Any],
     head: Mapping[str, Any],
@@ -408,7 +516,7 @@ def validate_reassessment_transition(
     for key in _IMMUTABLE_TRANSITION_KEYS:
         if base.get(key) != head.get(key):
             _issue(issues, "reassessment_transition_immutable", f"immutable pilot region changed: {key}")
-    _validate_terminal_items(base, head, issues)
+    _validate_terminal_items(base, head, operation=operation, issues=issues)
     _validate_closed_session_history(base, head, issues)
     _validate_reanalysis_transition(base, head, operation=operation, details=details, issues=issues)
 
@@ -418,6 +526,8 @@ def validate_reassessment_transition(
         _validate_complete_transition(base, head, receipt, details, issues)
     elif operation == "close_reassessment_session":
         _validate_close_transition(base, head, details, issues)
+    elif operation == "record_reassessment_modernization":
+        _validate_modernization_transition(base, head, details, issues)
     else:
         _issue(issues, "reassessment_transition_operation", f"unsupported reassessment transition operation: {operation}")
     return issues
