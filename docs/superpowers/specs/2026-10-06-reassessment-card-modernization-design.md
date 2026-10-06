@@ -1,7 +1,7 @@
 # Reassessment Card Modernization — Design
 
 **Date:** 2026-10-06  
-**Status:** proposed for implementation planning  
+**Status:** approved for implementation planning  
 **Base revision:** `d85596038cc42a0d2f6c417fc7e4e2eff8e6a89e`  
 **Related pilot:** `primary-legacy-v1`
 
@@ -73,12 +73,14 @@ It refreshes exactly one existing canonical work and reuses the current provider
 Requirements:
 
 - exactly one `work_ref`;
+- current `expected_work_digest` over the exact canonical work bytes;
 - no bulk scope;
 - no viewer, semantic, preference, pilot-ledger, schema, vocabulary, or workflow mutation;
 - provider identity must resolve safely under the existing identity-compatibility rules;
 - stable canonical TMDB identity is the preferred direct route;
 - stable IMDb resolution may be accepted when unique and identity-compatible;
 - ambiguous or conflicting identity fails closed and leaves the work blockable for modernization;
+- stale `expected_work_digest` fails closed before provider data can overwrite the work;
 - the operation is eligible for guarded auto-merge because its path scope is one work plus normal generated/receipt artifacts and identity checks are deterministic.
 
 The existing `refresh_metadata(scope=all_movies)` remains the manual bulk-maintenance route and is not repurposed for this workflow.
@@ -95,9 +97,19 @@ Rules:
 - user feedback may guide what distinctions are worth examining, but may not be copied into work semantics merely because the user stated them;
 - only current vocabulary terms are permitted;
 - an empty trait set is valid if the current evidence does not justify any controlled terms;
-- the semantic operation may be an applied no-op when the existing fingerprint already matches the current result; that still counts as an explicit semantic check for modernization provenance.
+- if the existing fingerprint already matches the current result, the normal typed operation may legitimately produce `status: no_change` rather than `applied`;
+- an authoritative `no_change` receipt is still positive evidence that the current semantic result was explicitly checked under this modernization flow.
 
 This design deliberately reuses `set_semantic_fingerprint` rather than creating a second semantic-write mechanism.
+
+### 5.4 Idempotent modernization checks
+
+Modernization must succeed when the current card is already up to date. Therefore both `refresh_work_metadata` and `set_semantic_fingerprint` may finish with either:
+
+- `status: applied` — canonical state changed; or
+- `status: no_change` — current canonical state already matched the planned result.
+
+For these two operations only, the trusted auto-merge path must allow an authoritative `no_change` receipt to land on `main` when the operation kind is eligible, the request was processed by the trusted command workflow, changed paths contain only the receipt/request lifecycle allowed by policy, and exact-head verification succeeds. This exception must not weaken the normal path policy or turn arbitrary failed/no-op operations into successful modernization evidence.
 
 ## 6. Modernization state in the reassessment ledger
 
@@ -143,7 +155,7 @@ Add one narrow ledger-only typed operation:
 
 It records one of two outcomes for one already-reviewed work:
 
-- `completed` — authoritative metadata refresh and semantic refresh both succeeded;
+- `completed` — authoritative metadata refresh and semantic refresh both succeeded or were authoritatively confirmed as already current;
 - `blocked` — modernization cannot safely continue because of a deterministic blocker that requires resolution outside the normal automatic flow.
 
 Common inputs include:
@@ -180,8 +192,9 @@ Preconditions for all outcomes:
 
 Additional preconditions for `completed`:
 
-- referenced metadata receipt exists, is `applied`, is a `refresh_work_metadata` operation for the same work, and occurred after human completion;
-- referenced semantic receipt exists, is `applied`, is `set_semantic_fingerprint` for the same work, and occurred after the referenced metadata operation;
+- referenced metadata receipt exists on authoritative state, has status `applied` or `no_change`, is a `refresh_work_metadata` operation for the same work, and occurred after human completion;
+- referenced semantic receipt exists on authoritative state, has status `applied` or `no_change`, is `set_semantic_fingerprint` for the same work, and occurred after the referenced metadata operation;
+- receipt details are sufficient to bind the operation to the expected work instead of trusting caller-provided ids alone;
 - the supplied vocabulary digest matches current `media/vocabulary.yaml` bytes.
 
 Additional preconditions for `blocked`:
@@ -284,6 +297,8 @@ The existing reassessment transition validator must preserve all human anti-loop
 
 Normal non-pilot operations still may not mutate the pilot ledger. Only the dedicated modernization recording operation may add or advance modernization provenance there.
 
+Trusted auto-merge may accept `no_change` only for the idempotent modernization check operations explicitly named in section 5.4, with the same exact-head and path-policy verification as `applied` operations.
+
 ## 13. Validation and tests
 
 Required tests include:
@@ -295,16 +310,17 @@ Required tests include:
 5. metadata identity conflict/ambiguity fails closed without altering the work;
 6. semantic refresh cannot write unknown vocabulary terms or reaction-kind terms;
 7. viewer feedback is unchanged across metadata/semantic modernization;
-8. completed modernization requires matching applied metadata and semantic receipts for the same work;
-9. semantic receipt must occur after metadata refresh;
-10. vocabulary digest mismatch fails completed modernization;
-11. blocked modernization accepts only controlled blocker codes and cannot modify human completion state;
-12. blocked modernization may advance to completed but completed cannot be rewritten or reopened;
-13. modernization recording cannot revert or rewrite human `reviewed` state/outcome/exposure;
-14. completed modernization does not automatically re-enter the due queue;
-15. startup/resume prefers due modernization before reserving a fresh human batch;
-16. Gattaca/Grand Budapest-style pre-existing reviewed items become due without repeating human reassessment;
-17. all existing reassessment, operation-path, doctor, rebuild, audit, and matcher tests remain green.
+8. completed modernization requires matching authoritative metadata and semantic receipts for the same work;
+9. both `applied` and trusted `no_change` metadata/semantic receipts are valid completion evidence;
+10. semantic receipt must occur after metadata refresh;
+11. vocabulary digest mismatch fails completed modernization;
+12. blocked modernization accepts only controlled blocker codes and cannot modify human completion state;
+13. blocked modernization may advance to completed but completed cannot be rewritten or reopened;
+14. modernization recording cannot revert or rewrite human `reviewed` state/outcome/exposure;
+15. completed modernization does not automatically re-enter the due queue;
+16. startup/resume prefers due modernization before reserving a fresh human batch;
+17. Gattaca/Grand Budapest-style pre-existing reviewed items become due without repeating human reassessment;
+18. all existing reassessment, operation-path, doctor, rebuild, audit, and matcher tests remain green.
 
 ## 14. Documentation changes
 
