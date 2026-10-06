@@ -85,3 +85,27 @@ def test_cli_reassessment_history_is_explicit_second_phase(tmp_path, monkeypatch
     assert payload["viewer_evidence"]["feedback"]["summary"] == "Старый отзыв"
     assert "metadata" not in payload
     assert "semantic" not in repr(payload)
+
+
+def test_cli_reassessment_modernization_context_returns_reviewed_due_without_viewer_evidence(tmp_path, monkeypatch, capsys):
+    root = copy_fixture_repo(tmp_path)
+    work_id = _activate_fixture_ledger(root)
+    ledger_path = root / "media/pilots/legacy-reassessment-primary.json"
+    ledger = json.loads(ledger_path.read_text(encoding="utf-8"))
+    ledger["items"][work_id] = {
+        "status": "reviewed",
+        "outcome": "changed",
+        "reviewed_at": "2026-10-06T12:00:00Z",
+        "historical_exposure": {"timing": "none", "before_finalization": False},
+        "operation_id": "123e4567-e89b-42d3-a456-426614174090",
+        "session_id": "123e4567-e89b-42d3-a456-426614174091",
+    }
+    ledger_path.write_bytes(ledger_bytes(ledger))
+    monkeypatch.chdir(root)
+
+    assert main(["reassessment-modernization-context", "--limit", "5", "--format", "json"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["cards"][0]["work_id"] == work_id
+    assert payload["cards"][0]["modernization_status"] == "due"
+    assert "rating" not in repr(payload)
+    assert "feedback" not in repr(payload)
