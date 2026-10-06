@@ -30,3 +30,33 @@ def test_assess_candidate_request_cannot_be_applied(tmp_path,monkeypatch,capsys)
 
 def test_web_export_writes_manifest_and_reports_size(tmp_path,monkeypatch,capsys):
     root=copy_fixture_repo(tmp_path); rebuild_generated(root/"media"); output=root/"build"/"manifest.json"; monkeypatch.chdir(root); assert main(["web-export","--output",str(output),"--format","json"])==0; result=json.loads(capsys.readouterr().out); assert result["status"]=="ok"; assert result["output"]==str(output); assert result["works"]==8; assert result["bytes"]==output.stat().st_size; manifest=json.loads(output.read_text(encoding="utf-8")); assert manifest["schema_version"]==3
+
+
+def test_refresh_work_metadata_cli_dry_run_initializes_provider(tmp_path, monkeypatch, capsys):
+    import hashlib
+
+    root=copy_fixture_repo(tmp_path); rebuild_generated(root/"media")
+    work=root/"media/data/works/arrival-2016.yaml"
+    digest="sha256:"+hashlib.sha256(work.read_bytes()).hexdigest()
+    request=_write_json(root/"refresh-one.json",{
+        "schema_version":1,
+        "operation_id":"123e4567-e89b-42d3-a456-426614174203",
+        "operation":"refresh_work_metadata",
+        "work_ref":{"id":"arrival-2016"},
+        "expected_work_digest":digest,
+    })
+    class Provider:
+        def __init__(self, token): pass
+        def fetch_work(self, media_type, provider_id):
+            from media.providers.base import CanonicalMetadata
+            return CanonicalMetadata(
+                identity={"format":"movie","title_original":"Arrival","title_ru":"Прибытие","year":2016,"release_date":"2016-11-10","external_ids":{"tmdb":{"media_type":"movie","id":329865},"imdb":"tt2543164"}},
+                external={"runtime_min":116,"provenance":{"provider":"tmdb","provider_id":329865,"fetched_at":"2026-10-07T00:00:00Z"}},
+            )
+        def search_work(self, title, year=None): return []
+        def find_by_imdb(self, imdb_id): return []
+    monkeypatch.chdir(root); monkeypatch.setenv("TMDB_READ_TOKEN","token"); monkeypatch.setattr("media.cli.TMDBProvider",Provider)
+    assert main(["apply-command",str(request),"--dry-run","--format","json"])==0
+    result=json.loads(capsys.readouterr().out)
+    assert result["status"] in {"planned","no_change"}
+    assert result["operation"]=="refresh_work_metadata"
