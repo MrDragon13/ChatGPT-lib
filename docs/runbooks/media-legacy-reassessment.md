@@ -69,6 +69,12 @@ All three pilot writes serialize on the current ledger `expected_ledger_digest`.
 
 Fresh reassessment rating/reaction/feedback signals use explicit provenance. The pilot does not infer semantic traits from reactions and never writes `set_semantic_fingerprint`.
 
+## Mixed-target partner follow-up
+
+`complete_reassessment_item` remains `primary`-only. If the user's same current answer also contains clearly attributed `partner` evidence, treat that as a **partner follow-up**, not as part of the pilot completion. Complete `primary` first and wait until that completion is authoritative on `main`; then re-read the canonical work before planning any partner mutation. Writing partner state before primary completion would change the reserved work file and correctly make the pilot completion stale.
+
+After the re-read, use a separate normal feedback operation only for net-new or corrective partner evidence. Do not create a no-op. Do not weaken stronger existing provenance: an approximate second-hand estimate must not replace an existing exact explicit rating. Keep the stronger exact value while adding supported qualitative feedback when that qualitative evidence is genuinely new. If the canonical partner evidence is already equivalent, skip the partner write entirely. The partner follow-up does not alter the pilot ledger or its `primary` lifecycle outcome.
+
 ## Taste reanalysis cadence
 
 Scheduled inferred-hypothesis replacement is not run after every work or every session. It is due after **15 newly reviewed works** since the previous scheduled pilot reanalysis and once at the end of the main `pending` pass if reviewed evidence advanced.

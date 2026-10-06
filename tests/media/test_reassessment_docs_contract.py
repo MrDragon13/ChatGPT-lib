@@ -47,6 +47,34 @@ def test_runbook_states_pilot_lifecycle_cadence_and_no_semantic_backfill():
         assert phrase.lower() in text.lower()
 
 
+def test_reassessment_routes_explicit_partner_evidence_after_primary_completion():
+    agent = _text("media/AGENTS.md").lower()
+    prompt = _text("media/START_PROMPT.md").lower()
+    runbook = _text("docs/runbooks/media-legacy-reassessment.md").lower()
+
+    assert "mixed-target" in agent
+    assert "after the primary reassessment completion is authoritative on `main`" in agent
+    assert "separate normal feedback operation" in agent
+    assert "нескольких зрител" in prompt
+    assert "сначала заверши переоценку `primary`" in prompt
+    assert "partner follow-up" in runbook
+
+
+def test_reassessment_partner_follow_up_avoids_noops_and_provenance_regression():
+    combined = "\n".join(
+        _text(path)
+        for path in (
+            "media/AGENTS.md",
+            "docs/runbooks/media-legacy-reassessment.md",
+        )
+    ).lower()
+
+    assert "do not create a no-op" in combined
+    assert "do not weaken stronger existing provenance" in combined
+    assert "approximate" in combined
+    assert "exact" in combined
+
+
 def test_architecture_and_reference_docs_name_pilot_boundaries_and_typed_operations():
     intelligence = _text("docs/architecture/intelligence.md")
     pipeline = _text("docs/architecture/write-pipeline.md")
