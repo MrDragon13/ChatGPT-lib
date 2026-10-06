@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "operation_id": "be90f269-fbbc-4ab7-88d2-01d2ad35730e",
+  "operation": "edit_viewing_feedback",
+  "work_ref": {
+    "id": "grand-budapest-hotel-2014"
+  },
+  "target_edits": [
+    {
+      "target": "partner",
+      "set": {
+        "feedback": {
+          "summary": "Фильм очень понравился: посмотрела самостоятельно, много смеялась; позже пересмотрела вместе с primary, и второй просмотр тоже остался положительным.",
+          "signals": []
+        }
+      }
+    }
+  ]
+}
