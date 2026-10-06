@@ -96,8 +96,8 @@ affinities:
       weight: 1.26
   humor.absurd:
     score: -1.0
-    confidence: low
-    evidence_count: 1
+    confidence: medium
+    evidence_count: 2
     evidence:
     - entity_id: game-night-2018
       source_target: primary
@@ -107,6 +107,14 @@ affinities:
       source: inferred
       confidence: high
       weight: 1.26
+    - entity_id: grand-budapest-hotel-2014
+      source_target: primary
+      source_kind: feedback
+      sentiment: negative
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
   humor.witty:
     score: 1.0
     confidence: low
@@ -409,7 +417,7 @@ rules:
 constraints: []
 summary:
   ratings_count: 55
-  reactions_count: 1
+  reactions_count: 2
   relations_count: 0
   viewing_count: 107
 evidence:
