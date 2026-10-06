@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chatgpt-lib.local/commands/refresh_work_metadata.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "operation_id", "operation", "work_ref", "expected_work_digest"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "operation_id": {"type": "string", "minLength": 36, "maxLength": 36},
+    "operation": {"const": "refresh_work_metadata"},
+    "work_ref": {"$ref": "https://chatgpt-lib.local/commands/common.schema.json#/$defs/workRef"},
+    "expected_work_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+  }
+}

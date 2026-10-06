@@ -56,6 +56,14 @@ class RefreshMetadataCommand:
 
 
 @dataclass(frozen=True)
+class RefreshWorkMetadataCommand:
+    schema_version: int
+    operation_id: str
+    work_ref: WorkRef
+    expected_work_digest: str
+
+
+@dataclass(frozen=True)
 class SetInferredPreferencesCommand:
     schema_version: int
     operation_id: str
@@ -137,6 +145,26 @@ class CloseReassessmentSessionCommand:
 
 
 @dataclass(frozen=True)
+class RecordReassessmentModernizationCommand:
+    schema_version: int
+    operation_id: str
+    pilot_id: str
+    work_id: str
+    outcome: Literal["completed", "blocked"]
+    expected_ledger_digest: str
+    expected_work_digest: str
+    metadata_operation_id: str | None = None
+    semantic_operation_id: str | None = None
+    vocabulary_digest: str | None = None
+    blocker_code: Literal[
+        "provider_identity_missing",
+        "provider_identity_ambiguous",
+        "provider_identity_conflict",
+        "semantic_context_insufficient",
+    ] | None = None
+
+
+@dataclass(frozen=True)
 class RecommendContextRequest:
     schema_version: int
     target: str
@@ -169,6 +197,7 @@ MediaCommand: TypeAlias = (
     | SetInterestCommand
     | AddWorkCommand
     | RefreshMetadataCommand
+    | RefreshWorkMetadataCommand
     | SetInferredPreferencesCommand
     | SetSemanticFingerprintCommand
     | RecordRecommendationInteractionCommand
@@ -177,6 +206,7 @@ MediaCommand: TypeAlias = (
     | ReserveReassessmentSessionCommand
     | CompleteReassessmentItemCommand
     | CloseReassessmentSessionCommand
+    | RecordReassessmentModernizationCommand
 )
 
 ReadRequest: TypeAlias = RecommendContextRequest | TasteContextRequest | AssessCandidateRequest

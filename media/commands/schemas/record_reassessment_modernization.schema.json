@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chatgpt-lib.local/commands/record_reassessment_modernization.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "operation_id", "operation", "pilot_id", "work_id", "outcome", "expected_ledger_digest", "expected_work_digest"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "operation_id": {"type": "string", "minLength": 36, "maxLength": 36},
+    "operation": {"const": "record_reassessment_modernization"},
+    "pilot_id": {"const": "primary-legacy-v1"},
+    "work_id": {"type": "string", "minLength": 1},
+    "outcome": {"enum": ["completed", "blocked"]},
+    "expected_ledger_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "expected_work_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "metadata_operation_id": {"type": "string", "minLength": 36, "maxLength": 36},
+    "semantic_operation_id": {"type": "string", "minLength": 36, "maxLength": 36},
+    "vocabulary_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "blocker_code": {"enum": ["provider_identity_missing", "provider_identity_ambiguous", "provider_identity_conflict", "semantic_context_insufficient"]}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"outcome": {"const": "completed"}}, "required": ["outcome"]},
+      "then": {
+        "required": ["metadata_operation_id", "semantic_operation_id", "vocabulary_digest"],
+        "not": {"required": ["blocker_code"]}
+      }
+    },
+    {
+      "if": {"properties": {"outcome": {"const": "blocked"}}, "required": ["outcome"]},
+      "then": {
+        "required": ["blocker_code"],
+        "not": {"anyOf": [
+          {"required": ["metadata_operation_id"]},
+          {"required": ["semantic_operation_id"]},
+          {"required": ["vocabulary_digest"]}
+        ]}
+      }
+    }
+  ]
+}
