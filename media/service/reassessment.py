@@ -277,3 +277,99 @@ def build_reassessment_history(repo: CanonicalRepository, work_id: str) -> dict[
         if key in signal
     }
     return {"work_id": work_id, "viewer_evidence": evidence}
+
+
+
+def build_reassessment_modernization_context(
+    repo: CanonicalRepository,
+    document: Mapping[str, Any],
+    *,
+    include_blocked: bool = False,
+    limit: int = 20,
+) -> dict[str, Any]:
+    """Return factual operational cards for reviewed works that still need modernization."""
+    if limit < 1:
+        raise ValueError("limit must be at least 1")
+
+    vocabulary_path = repo.media_root / "vocabulary.yaml"
+    if not vocabulary_path.exists():
+        raise NotFoundError("media vocabulary is missing")
+    vocabulary_digest = file_sha256(vocabulary_path.read_bytes())
+    frozen = document.get("frozen_cohort") or {}
+    frozen_items = frozen.get("items") or {}
+    lifecycle = document.get("items") or {}
+
+    candidates: list[tuple[str, int, str, Mapping[str, Any]]] = []
+    for work_id, item in lifecycle.items():
+        if not isinstance(work_id, str) or not isinstance(item, Mapping) or item.get("status") != "reviewed":
+            continue
+        modernization = item.get("modernization")
+        if modernization is None:
+            modernization_status = "due"
+        elif isinstance(modernization, Mapping) and modernization.get("status") == "blocked":
+            if not include_blocked:
+                continue
+            modernization_status = "blocked"
+        else:
+            continue
+        reviewed_at = item.get("reviewed_at")
+        reviewed_key = reviewed_at if isinstance(reviewed_at, str) else ""
+        frozen_item = frozen_items.get(work_id) if isinstance(frozen_items, Mapping) else {}
+        rank = frozen_item.get("order_rank") if isinstance(frozen_item, Mapping) else None
+        rank_key = rank if isinstance(rank, int) else 10**9
+        candidates.append((reviewed_key, rank_key, work_id, item))
+
+    candidates.sort(key=lambda value: (value[0], value[1], value[2]))
+    cards: list[dict[str, Any]] = []
+    for _, rank_key, work_id, item in candidates[:limit]:
+        record = repo.get_work(work_id)
+        if record is None:
+            continue
+        identity = record.data.get("identity") or {}
+        metadata = record.data.get("metadata") or {}
+        external = metadata.get("external") or {}
+        semantic = metadata.get("semantic") or {}
+        external_ids = identity.get("external_ids") or {}
+        provider_identity = {
+            key: deepcopy(external_ids[key])
+            for key in ("tmdb", "imdb")
+            if key in external_ids
+        }
+        provider_provenance = external.get("provenance") or {}
+        traits = semantic.get("traits") or []
+        modernization = item.get("modernization")
+        modernization_status = (
+            modernization.get("status")
+            if isinstance(modernization, Mapping)
+            else "due"
+        )
+        blocker_code = (
+            modernization.get("blocker_code")
+            if isinstance(modernization, Mapping)
+            else None
+        )
+        frozen_item = frozen_items.get(work_id) if isinstance(frozen_items, Mapping) else {}
+        order_rank = frozen_item.get("order_rank") if isinstance(frozen_item, Mapping) else None
+        cards.append(
+            {
+                "work_id": work_id,
+                "title": identity.get("title_ru") or identity.get("title_original") or work_id,
+                "year": identity.get("year"),
+                "reviewed_at": item.get("reviewed_at"),
+                "order_rank": order_rank,
+                "provider_identity": provider_identity,
+                "provider_fetched_at": provider_provenance.get("fetched_at"),
+                "semantic_trait_count": len(traits) if isinstance(traits, list) else 0,
+                "work_digest": file_sha256(record.path.read_bytes()),
+                "vocabulary_digest": vocabulary_digest,
+                "modernization_status": modernization_status,
+                "blocker_code": blocker_code,
+            }
+        )
+
+    return {
+        "pilot_id": document.get("pilot_id"),
+        "ledger_digest": ledger_digest_bytes(ledger_bytes(document)),
+        "vocabulary_digest": vocabulary_digest,
+        "cards": cards,
+    }
