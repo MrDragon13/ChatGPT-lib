@@ -48,7 +48,7 @@ The four-layer model remains authoritative:
 
 Legacy reassessment still owns layer 3. Card modernization owns layers 1 and 2. Scheduled taste reanalysis continues to own layer 4.
 
-A statement such as “the absurd humor did not work for me” may immediately produce viewer feedback `humor.absurd -> negative` when supported by the user’s words. It does **not** by itself prove that `humor.absurd` belongs in the work fingerprint. Work semantics must be produced independently from factual work context and the semantic-enrichment route.
+A statement such as “the absurd humor did not work for me” may immediately produce viewer feedback `humor.absurd -> negative` when supported by the user’s words. It does **not** by itself prove that `humor.absurd` belongs in the work fingerprint. Work semantics must be produced independently through the current semantic-enrichment procedure using current factual/source context and the controlled vocabulary.
 
 ## 5. Recommended architecture
 
@@ -78,7 +78,7 @@ Requirements:
 - provider identity must resolve safely under the existing identity-compatibility rules;
 - stable canonical TMDB identity is the preferred direct route;
 - stable IMDb resolution may be accepted when unique and identity-compatible;
-- ambiguous or conflicting identity fails closed and leaves the work due/blocked for modernization;
+- ambiguous or conflicting identity fails closed and leaves the work blockable for modernization;
 - the operation is eligible for guarded auto-merge because its path scope is one work plus normal generated/receipt artifacts and identity checks are deterministic.
 
 The existing `refresh_metadata(scope=all_movies)` remains the manual bulk-maintenance route and is not repurposed for this workflow.
@@ -87,7 +87,7 @@ The existing `refresh_metadata(scope=all_movies)` remains the manual bulk-mainte
 
 After the metadata refresh is authoritative on `main`, re-read the canonical work and current `media/vocabulary.yaml`.
 
-Use the existing `set_semantic_fingerprint` operation to replace the work semantic traits with the best current fingerprint supported by the refreshed factual record and the controlled vocabulary.
+Use the existing `set_semantic_fingerprint` operation to replace the work semantic traits with the best current fingerprint supported by the refreshed factual/source context and the controlled vocabulary.
 
 Rules:
 
@@ -124,48 +124,77 @@ Modernization interpretation:
 
 - human item not yet `reviewed`: modernization is not applicable;
 - human item `reviewed` and no modernization object: modernization is due;
-- `modernization.status = completed`: this pilot epoch has completed the current modernization pass;
-- `modernization.status = blocked`: modernization was attempted but requires manual identity/data resolution; the human item remains reviewed and must not re-enter the human queue.
+- `modernization.status = blocked`: a deterministic modernization attempt cannot proceed without resolving the recorded blocker;
+- `modernization.status = completed`: this pilot epoch has completed the current modernization pass.
 
-The modernization sub-state is monotonic for this pilot epoch. A later vocabulary/provenance migration may define a new enrichment epoch rather than rewriting this historical completion marker.
+Allowed modernization transitions are:
 
-## 7. Modernization completion operation
+- absent/due → `blocked`;
+- absent/due → `completed`;
+- `blocked` → `completed` after the blocker is resolved.
 
-Add a narrow ledger-only typed operation:
+`completed` is terminal for this modernization epoch. None of these transitions may alter or reopen the human `reviewed` state, outcome, exposure provenance, or reviewed timestamp. A later vocabulary/provenance migration may define a new enrichment epoch rather than rewriting this historical completion marker.
 
-`complete_reassessment_modernization`
+## 7. Modernization ledger operation
 
-Purpose: attest that the metadata and semantic follow-ups already landed on authoritative `main` for one reviewed work.
+Add one narrow ledger-only typed operation:
 
-Inputs include:
+`record_reassessment_modernization`
+
+It records one of two outcomes for one already-reviewed work:
+
+- `completed` — authoritative metadata refresh and semantic refresh both succeeded;
+- `blocked` — modernization cannot safely continue because of a deterministic blocker that requires resolution outside the normal automatic flow.
+
+Common inputs include:
 
 - `operation_id`;
 - `pilot_id`;
 - `work_id`;
+- `outcome`;
 - current `expected_ledger_digest`;
-- current `expected_work_digest`;
+- current `expected_work_digest`.
+
+For `completed`, inputs additionally include:
+
 - `metadata_operation_id`;
 - `semantic_operation_id`;
 - current `vocabulary_digest`.
 
-Preconditions:
+For `blocked`, inputs additionally include a narrow blocker code such as:
+
+- `provider_identity_missing`;
+- `provider_identity_ambiguous`;
+- `provider_identity_conflict`;
+- `semantic_context_insufficient`.
+
+The implementation may add another blocker code only when a concrete fail-closed condition requires it; free-form blocker strings are not accepted.
+
+Preconditions for all outcomes:
 
 - pilot and work match the frozen cohort;
 - human item status is `reviewed`;
-- modernization is not already completed;
 - current ledger digest matches;
 - current work digest matches;
+- an already `completed` modernization cannot be rewritten.
+
+Additional preconditions for `completed`:
+
 - referenced metadata receipt exists, is `applied`, is a `refresh_work_metadata` operation for the same work, and occurred after human completion;
 - referenced semantic receipt exists, is `applied`, is `set_semantic_fingerprint` for the same work, and occurred after the referenced metadata operation;
 - the supplied vocabulary digest matches current `media/vocabulary.yaml` bytes.
 
+Additional preconditions for `blocked`:
+
+- blocker code is from the controlled set;
+- the block does not claim a successful metadata/semantic completion;
+- the current work remains otherwise untouched by the ledger operation.
+
 Effects:
 
 - mutate only the exact reassessment ledger path plus the normal operation receipt;
-- record modernization completion metadata;
+- record the modernization outcome and provenance;
 - never mutate canonical work/viewer data itself.
-
-A separate `block_reassessment_modernization` transition may be added only if implementation shows that blockers need durable structured state. Prefer YAGNI: initially, a failed metadata/semantic operation simply leaves the reviewed item due and the error remains visible in the operation/workflow result. Add durable `blocked` only if resume behavior cannot distinguish a real blocker from an interrupted attempt.
 
 ## 8. Read-only modernization context
 
@@ -173,9 +202,9 @@ Add a read-only helper/CLI surface:
 
 `reassessment-modernization-context`
 
-It returns reviewed works that are due for modernization, ordered by human completion time and frozen order as deterministic tie-breaker.
+It returns reviewed works that still need modernization attention, ordered by human completion time and frozen order as deterministic tie-breaker.
 
-For each due work it exposes only operational/factual fields needed by the agent, such as:
+For each work it exposes only operational/factual fields needed by the agent, such as:
 
 - work id/title/year;
 - human reviewed timestamp;
@@ -183,9 +212,11 @@ For each due work it exposes only operational/factual fields needed by the agent
 - current semantic trait count;
 - current work digest;
 - current vocabulary digest;
-- current modernization status.
+- modernization status and blocker code when present.
 
 It does not expose or alter user feedback as an input to semantic truth.
+
+Default selection returns due items first, then blocked items only when the caller explicitly requests retry/recovery or the blocker is known to be resolved. Completed items do not re-enter automatically.
 
 On startup, this context is checked before creating a new reassessment session. Due modernization from already-reviewed items should be drained first so an interrupted conversation resumes the full end-to-end workflow rather than silently accumulating stale cards.
 
@@ -201,16 +232,17 @@ After this design is active, the normal per-work flow becomes:
 6. run `refresh_work_metadata` for the same work;
 7. re-read the refreshed canonical work and current vocabulary;
 8. derive and apply `set_semantic_fingerprint` independently;
-9. record `complete_reassessment_modernization`;
+9. record `record_reassessment_modernization(outcome=completed)`;
 10. only then present the next reassessment card, unless modernization is genuinely blocked.
 
 If modernization fails because of provider identity or another deterministic blocker:
 
 - do not undo or reopen the human reassessment;
 - do not ask the user to repeat the review;
+- when the blocker maps to the controlled blocker set, record `record_reassessment_modernization(outcome=blocked)`;
 - report the blocker only if user action is required;
 - continue the human session when safe;
-- leave the work discoverable as modernization-due for later recovery.
+- leave the blocked item available for explicit recovery without placing it back into the normal human queue.
 
 ## 10. Backfill for already-reviewed works
 
@@ -221,7 +253,7 @@ The first backfill set is therefore at least:
 - `gattaca-1997`;
 - `grand-budapest-hotel-2014`.
 
-No human reassessment is repeated. The agent runs only metadata refresh, semantic refresh, and modernization completion for them.
+No human reassessment is repeated. The agent runs only metadata refresh, semantic refresh, and modernization recording for them.
 
 The exact due set must come from the current ledger at execution time rather than being hard-coded in code or prompts.
 
@@ -235,6 +267,7 @@ Closed-session audit/progress should be extended with modernization counts only 
 
 - human reviewed count;
 - reviewed-but-modernization-due count;
+- modernization blocked count;
 - modernization completed count.
 
 Scheduled taste reanalysis remains triggered by fresh human review milestones (15 newly reviewed works, end main pass, explicit request). Modernization alone does not increment that cadence.
@@ -243,33 +276,35 @@ Scheduled taste reanalysis remains triggered by fresh human review milestones (1
 
 All new writes use the existing typed command / deterministic transaction / path-policy / exact-head Media Check / privileged auto-merge model.
 
-`refresh_work_metadata` should protect against stale work state with an expected work digest so a concurrent feedback or other work mutation causes fail-closed/replay rather than overwriting current data.
+`refresh_work_metadata` protects against stale work state with an expected work digest so a concurrent feedback or other work mutation causes fail-closed/replay rather than overwriting current data.
 
-`complete_reassessment_modernization` serializes on both current ledger digest and current work digest.
+`record_reassessment_modernization` serializes on both current ledger digest and current work digest.
 
-The existing reassessment transition validator must preserve all human anti-loop invariants while allowing only the new monotonic modernization sub-state transition.
+The existing reassessment transition validator must preserve all human anti-loop invariants while allowing only the new monotonic modernization sub-state transitions.
 
-Normal non-pilot operations still may not mutate the pilot ledger. Only the dedicated modernization completion operation may add modernization provenance there.
+Normal non-pilot operations still may not mutate the pilot ledger. Only the dedicated modernization recording operation may add or advance modernization provenance there.
 
 ## 13. Validation and tests
 
 Required tests include:
 
 1. reviewed item without modernization is returned as due;
-2. pending/in-progress/deferred human item is not eligible for modernization completion;
+2. pending/in-progress/deferred human item is not eligible for modernization recording;
 3. single-work metadata refresh changes only the selected work and allowed derived/receipt paths;
 4. stale expected work digest fails closed;
 5. metadata identity conflict/ambiguity fails closed without altering the work;
 6. semantic refresh cannot write unknown vocabulary terms or reaction-kind terms;
 7. viewer feedback is unchanged across metadata/semantic modernization;
-8. modernization completion requires matching applied metadata and semantic receipts for the same work;
+8. completed modernization requires matching applied metadata and semantic receipts for the same work;
 9. semantic receipt must occur after metadata refresh;
-10. vocabulary digest mismatch fails completion;
-11. modernization completion cannot revert or rewrite human `reviewed` state/outcome/exposure;
-12. already-completed modernization does not automatically re-enter the due queue;
-13. startup/resume prefers due modernization before reserving a fresh human batch;
-14. Gattaca/Grand Budapest-style pre-existing reviewed items become due without repeating human reassessment;
-15. all existing reassessment, operation-path, doctor, rebuild, audit, and matcher tests remain green.
+10. vocabulary digest mismatch fails completed modernization;
+11. blocked modernization accepts only controlled blocker codes and cannot modify human completion state;
+12. blocked modernization may advance to completed but completed cannot be rewritten or reopened;
+13. modernization recording cannot revert or rewrite human `reviewed` state/outcome/exposure;
+14. completed modernization does not automatically re-enter the due queue;
+15. startup/resume prefers due modernization before reserving a fresh human batch;
+16. Gattaca/Grand Budapest-style pre-existing reviewed items become due without repeating human reassessment;
+17. all existing reassessment, operation-path, doctor, rebuild, audit, and matcher tests remain green.
 
 ## 14. Documentation changes
 
