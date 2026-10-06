@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "operation_id": "77ea7e2f-1fac-4788-ba8d-55bfa1a9ee9e",
+  "operation": "complete_reassessment_item",
+  "pilot_id": "primary-legacy-v1",
+  "session_id": "c11d4269-f116-4748-839c-959f0557e33b",
+  "work_id": "grand-budapest-hotel-2014",
+  "expected_ledger_digest": "sha256:f8ca8478425ae9387addcbe5fe8b2a69ecbca0ebe75f76633e7d5df270453c2e",
+  "outcome": "changed",
+  "historical_exposure": {
+    "timing": "none",
+    "before_finalization": false
+  },
+  "feedback_edit": {
+    "set": {
+      "viewing": {
+        "status": "watched"
+      },
+      "rating": {
+        "score": 6.0,
+        "source": "explicit",
+        "confidence": "exact"
+      },
+      "reaction": {
+        "value": "mixed",
+        "source": "explicit",
+        "confidence": "high"
+      },
+      "feedback": {
+        "summary": "У фильма выразительный собственный стиль, идея и характерная подача; актёры играют хорошо, и всё в рамках фильма смотрится органично. Лёгкий абсурдный юмор в основном не зашёл, а с самим сюжетом возникло личное несовпадение, поэтому итоговая оценка — 6/10, максимум около 6.5.",
+        "signals": [
+          {
+            "term": "style.distinctive",
+            "sentiment": "positive",
+            "strength": 2,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "acting.strong",
+            "sentiment": "positive",
+            "strength": 2,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "humor.absurd",
+            "sentiment": "negative",
+            "strength": 2,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "story.personal_fit",
+            "sentiment": "negative",
+            "strength": 2,
+            "source": "explicit",
+            "confidence": "high"
+          }
+        ]
+      }
+    }
+  }
+}
