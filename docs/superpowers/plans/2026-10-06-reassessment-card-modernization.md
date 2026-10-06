@@ -17,6 +17,7 @@
 - Viewer reaction is not semantic truth. `set_semantic_fingerprint` remains an independent semantic write using current vocabulary terms only.
 - `refresh_metadata(scope=all_movies)` remains the manual bulk-maintenance route; modernization adds a distinct one-work operation.
 - Every mutating operation must fail closed on stale authoritative state.
+- `refresh_work_metadata` and `set_semantic_fingerprint` may legitimately produce authoritative `status: no_change`; those trusted receipts are valid modernization evidence when all path/exact-head guards pass.
 - A modernization failure must not require the user to repeat the human review.
 - Scheduled taste reanalysis cadence remains based only on human review milestones.
 - Existing Stage A reassessment anti-loop, historical-exposure, audit, and guarded-merge invariants remain intact.
@@ -24,10 +25,10 @@
 ## Review Focus
 
 1. A concurrent feedback edit between planning and `refresh_work_metadata` must produce a stale-work failure rather than overwrite the new feedback. Covered in Task 2.
-2. A metadata or semantic receipt for another work, a no-change receipt with the wrong operation, or receipts in the wrong order must not attest modernization completion. Covered in Task 5.
+2. A metadata or semantic receipt for another work, an untrusted/wrong-kind `no_change` receipt, or receipts in the wrong order must not attest modernization completion. Covered in Task 5.
 3. `blocked → completed` must be legal while `completed → blocked/completed rewrite` remains illegal and human reassessment fields remain immutable. Covered in Task 5.
 4. Existing reviewed items created before this feature must appear as modernization-due without migration or human re-prompt. Covered in Task 4 and Task 7.
-5. Trusted automation must treat the new provider operation and ledger operation with the same exact-head/path/stale-state discipline as existing operations. Covered in Task 3 and Task 5.
+5. Trusted automation must treat the new provider operation, idempotent no-change checks, and ledger operation with the same exact-head/path/stale-state discipline as existing applied operations. Covered in Task 3 and Task 5.
 
 ---
 
@@ -89,7 +90,7 @@ Commit message: `feat: add reassessment modernization commands`
 **Interfaces:**
 - Produces: `plan_refresh_work_metadata(repo: YamlRepository, command: RefreshWorkMetadataCommand, provider: MetadataProvider | None, *, now: datetime | None = None) -> MutationPlan`.
 - Reuses existing `_resolve_candidate`, `_identity_compatible`, `_merge_external`, and `_refreshed_document` logic instead of copying provider reconciliation.
-- Receipt `details` must include `work_id`, `expected_work_digest`, and the resulting/current `work_digest` when planning succeeds.
+- Receipt `details` must include `work_id`, `expected_work_digest`, and the resulting/current `work_digest` even when canonical data is already current and the operation result is `no_change`.
 
 - [ ] **Step 1: Write failing planner tests**
 
@@ -99,7 +100,8 @@ Cover:
 - missing/ambiguous/conflicting identity fails closed through existing metadata preflight error semantics;
 - stale `expected_work_digest` is rejected before provider result can overwrite the file;
 - viewer signals and semantic fingerprint survive metadata refresh byte-for-structure unchanged;
-- another work is never modified.
+- another work is never modified;
+- already-current provider data produces a `no_change` plan with binding details for the selected work.
 
 - [ ] **Step 2: Run targeted tests and verify RED**
 
@@ -109,7 +111,7 @@ Expected: FAIL because planner/command dispatch does not exist.
 
 - [ ] **Step 3: Extract/reuse one-work refresh primitives and add planner**
 
-Use the canonical work file bytes for the stale digest check. Preserve manual overrides through the existing `_refreshed_document` merge rules. Set index rebuild only when the canonical work actually changes; do not rebuild taste profiles for factual metadata alone unless existing generated contracts require it.
+Use the canonical work file bytes for the stale digest check. Preserve manual overrides through the existing `_refreshed_document` merge rules. Set index rebuild only when the canonical work actually changes; do not rebuild taste profiles for factual metadata alone unless existing generated contracts require it. Always emit binding planner details for trusted receipt verification.
 
 - [ ] **Step 4: Wire transaction and CLI provider detection**
 
@@ -141,9 +143,10 @@ Commit message: `feat: add single-work metadata refresh`
 - Modify: `tests/media/test_auto_merge_dispatch_contract.py`
 
 **Interfaces:**
-- `refresh_work_metadata` allowed paths: exactly one canonical work, normal generated index if changed, and one operation receipt; `auto_merge: true`.
+- `refresh_work_metadata` allowed paths: exactly one canonical work when changed, normal generated index if changed, and one operation receipt; `auto_merge: true`.
 - `record_reassessment_modernization` allowed paths: exact pilot ledger plus one operation receipt; `auto_merge: true`.
 - `verify_operation_specific_paths` uses planner `details.work_id` to reject a work path not matching the selected work.
+- Trusted auto-merge accepts `status: no_change` only for `refresh_work_metadata` and `set_semantic_fingerprint`; all other existing operation status rules remain unchanged.
 
 - [ ] **Step 1: Write failing policy/workflow contract tests**
 
@@ -152,6 +155,8 @@ Assert:
 - `record_reassessment_modernization` cannot modify canonical works/generated files;
 - `Media Command` marks `refresh_work_metadata` provider-dependent;
 - auto-merge recognizes `record_reassessment_modernization` as a pilot-ledger transition and `refresh_work_metadata` as a normal stale-work guarded write;
+- trusted `no_change` receipts for `refresh_work_metadata` and `set_semantic_fingerprint` can pass eligibility with receipt-only output plus transient request deletion;
+- `no_change` for unrelated operations is still rejected by auto-merge;
 - `Media Check` allows only the dedicated modernization operation to create the modernization ledger transition.
 
 - [ ] **Step 2: Run targeted tests and verify RED**
@@ -162,7 +167,7 @@ Expected: FAIL on missing policies/workflow branches.
 
 - [ ] **Step 3: Add declarative policy and operation-specific path checks**
 
-Keep the wildcard grammar unchanged. Add only the narrow new entries and selected-work shape validation.
+Keep the wildcard grammar unchanged. Add only the narrow new entries and selected-work shape validation. Receipt-only `no_change` output must still pass the declared allowed-path policy.
 
 - [ ] **Step 4: Harden workflows**
 
@@ -170,7 +175,8 @@ In trusted `main` workflow code:
 - provider dispatch recognizes `refresh_work_metadata`;
 - before merging `refresh_work_metadata`, compare the current-main raw work SHA-256 with receipt `details.expected_work_digest`;
 - include `record_reassessment_modernization` in the pilot-ledger operation allowlist;
-- retain exact-head Media Check before merge.
+- accept `no_change` only when `OP_KIND` is `refresh_work_metadata` or `set_semantic_fingerprint`, the trusted receipt binds to the operation, and exact-head Media Check succeeded;
+- retain exact-head Media Check before every merge.
 
 - [ ] **Step 5: Run targeted tests and verify GREEN**
 
@@ -249,16 +255,19 @@ Commit message: `feat: expose reassessment modernization context`
 - Produces: `plan_record_reassessment_modernization(repo: YamlRepository, command: RecordReassessmentModernizationCommand, *, now: datetime | None = None) -> MutationPlan`.
 - The planner reads current ledger, canonical work bytes, current vocabulary bytes, and referenced `.media/operations/<id>.json` receipts through repository-relative paths.
 - Receipt details include `work_id`, `outcome`, `expected_ledger_digest`, `expected_work_digest`, and the resulting modernization record.
+- Metadata and semantic evidence receipts may each have `status: applied` or trusted `status: no_change`.
 
 - [ ] **Step 1: Write failing mutation tests**
 
 For `completed`, assert rejection when:
 - work is not human `reviewed`;
 - ledger/work digest is stale;
-- metadata receipt is missing, not `applied`, wrong operation, wrong work, or predates human review;
-- semantic receipt is missing, wrong work, or occurs before metadata receipt;
+- metadata receipt is missing, has a status other than `applied|no_change`, has the wrong operation/work, lacks binding details, or predates human review;
+- semantic receipt is missing, has a status other than `applied|no_change`, refers to the wrong work, or occurs before metadata receipt;
 - vocabulary digest is stale;
 - modernization is already completed.
+
+Also assert successful completion when metadata and/or semantic receipts are authoritative `no_change` receipts for the correct work and in the correct order.
 
 For `blocked`, assert:
 - only controlled blocker codes are accepted;
@@ -275,7 +284,7 @@ Expected: FAIL because planner/validation does not exist.
 
 - [ ] **Step 3: Implement planner and transaction dispatch**
 
-Write only `media/pilots/legacy-reassessment-primary.json` through `json_documents`. Preserve all existing human lifecycle fields byte-for-value. Use current receipt timestamps/operation details rather than trusting caller claims.
+Write only `media/pilots/legacy-reassessment-primary.json` through `json_documents`. Preserve all existing human lifecycle fields byte-for-value. Use current receipt timestamps/operation/details rather than trusting caller claims; accept only the two allowed successful/check statuses defined by the spec.
 
 - [ ] **Step 4: Extend snapshot validator**
 
@@ -327,6 +336,7 @@ Pin these phrases/semantics rather than prose layout:
 - viewer feedback cannot be copied directly into work semantics;
 - due modernization is recovered before new human batch reservation;
 - next card normally waits for modernization completion/block recording for the previous reviewed item;
+- trusted `no_change` metadata/semantic checks count as successful modernization evidence;
 - taste reanalysis cadence remains 15/end-main/manual, not per modernization.
 
 - [ ] **Step 2: Run docs tests and verify RED**
@@ -355,11 +365,12 @@ Commit message: `docs: make reassessment modernization end to end`
 
 **Files:**
 - No new architecture files unless verification exposes a concrete defect.
-- Runtime data after merge: operation receipts, the two already-reviewed work files as needed, and modernization fields in `media/pilots/legacy-reassessment-primary.json`.
+- Runtime data after merge: operation receipts, the already-reviewed work files only when metadata/semantics actually change, and modernization fields in `media/pilots/legacy-reassessment-primary.json`.
 
 **Interfaces:**
 - Uses `reassessment-modernization-context` as the source of truth for due items.
 - Uses normal operation branches/requests for `refresh_work_metadata`, `set_semantic_fingerprint`, and `record_reassessment_modernization`.
+- `applied` and trusted `no_change` metadata/semantic receipts are both acceptable authoritative steps.
 
 - [ ] **Step 1: Run the full pre-merge gate**
 
@@ -388,10 +399,10 @@ Do not hard-code the due set. Verify that already-reviewed items such as `gattac
 
 For each due item:
 1. apply `refresh_work_metadata` with the fresh current work digest;
-2. wait until authoritative on `main`;
+2. wait until its `applied` or trusted `no_change` receipt is authoritative on `main`;
 3. re-read canonical work and current vocabulary;
 4. derive the current semantic fingerprint independently of viewer sentiment;
-5. apply `set_semantic_fingerprint` and wait for authoritative `main`;
+5. apply `set_semantic_fingerprint` and wait for its `applied` or trusted `no_change` receipt on authoritative `main`;
 6. apply `record_reassessment_modernization(outcome=completed)` with fresh ledger/work/vocabulary digests;
 7. on a deterministic provider/semantic blocker, record `outcome=blocked` with the controlled code instead of fabricating data.
 
