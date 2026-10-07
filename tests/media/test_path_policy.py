@@ -86,6 +86,7 @@ EXPECTED_POLICY = {
     },
     "set_inferred_preferences": {
         "auto_merge": True,
+        "execution_class": "v6_single_runner",
         "allowed_paths": [
             "media/preferences/inferred/*.yaml",
             "media/generated/profiles/*.yaml",
