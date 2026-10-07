@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "operation_id": "0be2c98d-ea42-4ec1-a28f-fc674627cc65",
+  "operation": "refresh_work_metadata",
+  "work_ref": {
+    "id": "grand-budapest-hotel-2014"
+  },
+  "expected_work_digest": "sha256:e20533fc8a6fbabd2d6ebf3fd93597135dc9fbaab9b2e9a3be394c2231c2db02"
+}
