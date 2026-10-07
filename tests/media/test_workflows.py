@@ -169,6 +169,11 @@ def test_record_media_entry_uses_single_runner_execution_class():
     assert policy["execution_class"]=="v6_single_runner"
 
 
+def test_checkpointed_inferred_preferences_use_single_runner_execution_class():
+    policy=_policy()["operations"]["set_inferred_preferences"]
+    assert policy["execution_class"]=="v6_single_runner"
+
+
 def test_v6_fast_path_merges_exact_checked_head_without_direct_main_push():
     text=_text("media-command.yml")
     assert "Merge checked v6 operation" in text
@@ -207,5 +212,7 @@ def test_v6_fast_path_uses_targeted_authoritative_gate_not_full_pytest_or_doctor
     assert "python -m media.tools.validate ." in fast
     assert "python -m media.cli rebuild --check" in fast
     assert "tests/media/test_record_media_entry.py" in fast
+    assert "tests/media/test_inferred_preferences.py" in fast
+    assert "tests/media/test_v6_reanalysis_status.py" in fast
     assert "python -m pytest -q" not in fast
     assert "media.cli doctor" not in fast
