@@ -6,6 +6,7 @@
 
 | Operation | Категория | Режим | Основной effect | Normal auto-merge |
 | --- | --- | --- | --- | --- |
+| `record_media_entry` | feedback/library | write | Атомарно записать пользовательский отзыв; для отсутствующего work одновременно проверить identity/минимальные metadata/semantics и создать work | да |
 | `record_viewing_feedback` | feedback | write | Записать viewing/rating/reaction/feedback; может атомарно создать отсутствующий work при `create_if_missing` | да |
 | `edit_viewing_feedback` | feedback | write | Точечно изменить/clear/purge target-scoped viewing feedback | да |
 | `set_interest` | library intent | write | Установить устойчивое interest state для target/work | да |
@@ -45,6 +46,7 @@ Similarity может persist external endpoint без создания canonica
 
 Source contracts:
 
+- `media/commands/schemas/record_media_entry.schema.json`
 - `media/commands/schemas/record_viewing_feedback.schema.json`
 - `media/commands/schemas/edit_viewing_feedback.schema.json`
 - `media/commands/schemas/set_interest.schema.json`
