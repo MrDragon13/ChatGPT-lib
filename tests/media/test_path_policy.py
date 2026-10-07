@@ -11,6 +11,7 @@ from media.service.path_policy import allowed_paths_for_operation, verify_change
 EXPECTED_POLICY = {
     "record_media_entry": {
         "auto_merge": True,
+        "execution_class": "v6_single_runner",
         "allowed_paths": [
             "media/data/works/*.yaml",
             "media/generated/index.jsonl",
@@ -85,6 +86,7 @@ EXPECTED_POLICY = {
     },
     "set_inferred_preferences": {
         "auto_merge": True,
+        "execution_class": "v6_single_runner",
         "allowed_paths": [
             "media/preferences/inferred/*.yaml",
             "media/generated/profiles/*.yaml",

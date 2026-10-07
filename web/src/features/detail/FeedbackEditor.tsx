@@ -198,11 +198,13 @@ export function FeedbackEditor({
 
   useEffect(() => {
     if (pending) return;
+    const localDraft = proposedChange(current, ratingInput, reaction, feedbackSummary);
+    if (open && Object.keys(localDraft).length > 0) return;
     setRatingInput(current.rating?.toString() ?? "");
     setReaction(current.reaction ?? "unknown");
     setFeedbackSummary(current.feedbackSummary ?? "");
     setTemplateApplied(false);
-  }, [current.rating, current.reaction, current.feedbackSummary, pending]);
+  }, [current.rating, current.reaction, current.feedbackSummary, pending, open]);
 
   useEffect(() => {
     if (!pending || pending.status === "failed" || pending.status === "published") return;
@@ -272,12 +274,19 @@ export function FeedbackEditor({
   useEffect(() => {
     if (!pending || pending.status !== "published" || !refreshCompleted) return;
     if (proposalMatches(current, pending.proposed) || !sameSnapshot(current, pending.baseline)) {
+      const localDraft = proposedChange(current, ratingInput, reaction, feedbackSummary);
+      const hasLocalDraft = Object.keys(localDraft).length > 0;
       setPending(null);
       setRefreshCompleted(false);
-      setMessage(null);
-      updateOpen(false);
+      if (hasLocalDraft) {
+        setMessage("Первое изменение сохранено. Новые правки ещё не отправлены.");
+        updateOpen(true);
+      } else {
+        setMessage(null);
+        updateOpen(false);
+      }
     }
-  }, [current, pending, refreshCompleted]);
+  }, [current, pending, refreshCompleted, ratingInput, reaction, feedbackSummary]);
 
   const validationError = ratingError(ratingInput);
   const ratingSliderValue = ratingInput.trim() && !validationError ? ratingInput : "5.5";
@@ -436,7 +445,7 @@ export function FeedbackEditor({
                   value={ratingInput}
                   onChange={(event) => setRatingInput(event.currentTarget.value)}
                   aria-describedby={validationError ? "feedback-rating-error" : undefined}
-                  disabled={operationPending || submitting}
+                  disabled={submitting}
                 />
               </label>
               <div className="feedback-form__rating-slider">
@@ -448,7 +457,7 @@ export function FeedbackEditor({
                   value={ratingSliderValue}
                   onChange={(event) => setRatingInput(event.currentTarget.value)}
                   aria-label="Оценка, ползунок"
-                  disabled={operationPending || submitting}
+                  disabled={submitting}
                 />
                 <div className="feedback-form__rating-scale" aria-hidden="true">
                   <span>1</span>
@@ -461,7 +470,7 @@ export function FeedbackEditor({
               <select
                 value={reaction}
                 onChange={(event) => setReaction(event.currentTarget.value as FeedbackReaction)}
-                disabled={operationPending || submitting}
+                disabled={submitting}
               >
                 {REACTIONS.map((entry) => <option key={entry.value} value={entry.value}>{entry.label}</option>)}
               </select>
@@ -475,7 +484,7 @@ export function FeedbackEditor({
               rows={5}
               value={feedbackSummary}
               onChange={(event) => setFeedbackSummary(event.currentTarget.value)}
-              disabled={operationPending || submitting}
+              disabled={submitting}
             />
           </label>
 
@@ -484,7 +493,7 @@ export function FeedbackEditor({
               type="button"
               className="feedback-form__tertiary"
               onClick={() => setFeedbackSummary("")}
-              disabled={!feedbackSummary || operationPending || submitting}
+              disabled={!feedbackSummary || submitting}
             >
               Очистить отзыв
             </button>

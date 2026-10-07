@@ -100,3 +100,50 @@ describe("active feedback conflicts", () => {
     expect(fetchMock.mock.calls.some(([request, init]) => String(request).endsWith("/git/refs") && init?.method === "POST")).toBe(false);
   });
 });
+
+
+it("treats an open record_media_entry as the active operation for the same work and target", async () => {
+  const existingId = "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff";
+  const existingBranch = `media/op-${existingId}`;
+  const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async (request, init) => {
+    const url = new URL(String(request));
+    if (url.pathname.endsWith("/app/installations/67890/access_tokens")) return json({ token: "installation-token" }, 201);
+    if (url.pathname.endsWith("/pulls") && (!init?.method || init.method === "GET")) {
+      return json([{
+        number: 88,
+        state: "open",
+        head: { ref: existingBranch, repo: { full_name: "MrDragon13/ChatGPT-lib" } },
+        base: { ref: "main" },
+      }]);
+    }
+    if (url.pathname.endsWith("/pulls/88/commits")) return json([{ sha: "initial-v6-sha" }]);
+    if (url.pathname.includes(`/contents/.media/requests/${existingId}.json`)) {
+      return json({
+        encoding: "base64",
+        content: base64Json({
+          operation: "record_media_entry",
+          work_ref: { id: "game-night-2018" },
+          target_updates: [{ target: "primary", rating: { score: 8 } }],
+          preconditions: { expected_viewer_digests: { primary: "sha256:" + "a".repeat(64) } },
+        }),
+      });
+    }
+    throw new Error(`unexpected GitHub call: ${init?.method ?? "GET"} ${url}`);
+  });
+
+  const brokerEnv = env();
+  const token = await issueSession("197501470", brokerEnv);
+  const response = await worker.fetch(new Request("https://broker.example/v1/feedback", {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${token}`,
+      "content-type": "application/json",
+      origin: "https://mrdragon13.github.io",
+    },
+    body: JSON.stringify({ work_id: "game-night-2018", target: "primary", rating: 9 }),
+  }), brokerEnv);
+
+  expect(response.status).toBe(409);
+  await expect(response.json()).resolves.toMatchObject({ error: "active_operation", operation_id: existingId, pr_number: 88 });
+  expect(fetchMock.mock.calls.some(([request, init]) => String(request).endsWith("/git/refs") && init?.method === "POST")).toBe(false);
+});

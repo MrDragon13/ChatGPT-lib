@@ -55,18 +55,18 @@ def test_media_command_only_dispatches_read_only_check_for_exact_applied_head():
     assert "media-auto-merge.yml" not in text
 
 
-def test_auto_merge_starts_after_command_and_waits_for_authoritative_check():
+def test_legacy_auto_merge_starts_only_after_authoritative_media_check():
     text = _text("media-auto-merge.yml")
     assert "workflow_run:" in text
-    assert "workflows: [Media Command]" in text
-    assert "github.event.workflow_run.event == 'pull_request'" in text
-    assert "media-check.yml" in text
-    assert "workflow_dispatch" in text
+    assert "workflows: [Media Check]" in text
+    assert "workflows: [Media Command]" not in text
+    assert "github.event.workflow_run.event == 'workflow_dispatch'" in text
+    assert "github.event.workflow_run.head_sha" in text
     assert "CHECKED_SHA" in text
-    assert "head_sha" in text
     assert "actions: write" in text
     assert "run-name:" in text
     assert "github.event.workflow_run.head_branch" in text
+    assert "gh run list --workflow media-check.yml" not in text
 
 
 def test_auto_merge_trust_boundary_uses_main_policy_and_pr_file_metadata():
@@ -185,3 +185,18 @@ def test_auto_merge_revalidates_modernization_work_and_ledger_digests_against_cu
     assert '[ "$OP_KIND" = "record_reassessment_modernization" ]' in text
     assert 'Stale reassessment ledger during modernization' in text
     assert 'Stale work during modernization marker' in text
+
+
+def test_legacy_auto_merge_starts_from_media_check_not_media_command():
+    text=_text("media-auto-merge.yml")
+    assert "workflows: [Media Check]" in text
+    assert "workflows: [Media Command]" not in text
+    assert "github.event.workflow_run.event == 'workflow_dispatch'" in text
+
+
+def test_legacy_auto_merge_uses_checked_workflow_head_without_polling_media_check():
+    text=_text("media-auto-merge.yml")
+    assert "github.event.workflow_run.head_sha" in text
+    assert "CHECKED_SHA" in text
+    assert "gh run list --workflow media-check.yml" not in text
+    assert "workflow_dispatch" in text

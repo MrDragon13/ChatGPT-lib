@@ -3,7 +3,7 @@ run-name: Media Auto Merge · ${{ github.event.workflow_run.head_branch }}
 
 on:
   workflow_run:
-    workflows: [Media Command]
+    workflows: [Media Check]
     types: [completed]
 
 permissions:
@@ -19,7 +19,7 @@ jobs:
   merge-normal-data-operation:
     if: >-
       github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.event == 'workflow_dispatch' &&
       startsWith(github.event.workflow_run.head_branch, 'media/op-')
     runs-on: ubuntu-latest
     steps:
@@ -30,6 +30,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          CHECKED_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           set -euo pipefail
 
@@ -119,6 +120,11 @@ jobs:
             echo "::error::Only same-repository operation PRs targeting main are eligible"
             exit 3
           fi
+          if [ "$PR_HEAD_SHA" != "$CHECKED_SHA" ]; then
+            echo "::error::Media Check head does not match current PR head: checked=$CHECKED_SHA pr=$PR_HEAD_SHA"
+            exit 3
+          fi
+
 
           COMMIT_ACTOR=$(gh api "repos/$REPO/commits/$PR_HEAD_SHA" --jq '.author.login // empty')
           if [ "$COMMIT_ACTOR" != "github-actions[bot]" ]; then
@@ -181,6 +187,10 @@ jobs:
 
           if ! OP_POLICY=$(printf '%s' "$POLICY_JSON" | jq -ce --arg op "$OP_KIND" '.operations[$op] // empty'); then
             echo "::error::Operation kind is absent from trusted main policy: $OP_KIND"
+            exit 3
+          fi
+          if printf '%s' "$OP_POLICY" | jq -e '.execution_class == "v6_single_runner"' >/dev/null; then
+            echo "::error::v6 single-runner operations must merge inside Media Command"
             exit 3
           fi
           if ! printf '%s' "$OP_POLICY" | jq -e '
@@ -380,48 +390,7 @@ jobs:
 
           echo "eligible=true" >> "$GITHUB_OUTPUT"
           echo "number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
-          echo "sha=$PR_HEAD_SHA" >> "$GITHUB_OUTPUT"
-
-      - name: Wait for authoritative exact-head Media Check
-        if: ${{ steps.pr.outputs.eligible == 'true' }}
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPO: ${{ github.repository }}
-          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
-          CHECKED_SHA: ${{ steps.pr.outputs.sha }}
-        run: |
-          set -euo pipefail
-
-          for attempt in $(seq 1 60); do
-            RUNS=$(gh api --method GET "repos/$REPO/actions/workflows/media-check.yml/runs" \
-              -f branch="$HEAD_BRANCH" \
-              -f event=workflow_dispatch \
-              -f per_page=20)
-            RUN_ROW=$(printf '%s' "$RUNS" | jq -r --arg sha "$CHECKED_SHA" \
-              'first(.workflow_runs[] | select(.head_sha == $sha)) // empty | [.status, (.conclusion // ""), (.html_url // "")] | @tsv')
-
-            if [ -z "$RUN_ROW" ]; then
-              echo "Authoritative Media Check for $CHECKED_SHA has not appeared yet (attempt $attempt/60)."
-              sleep 5
-              continue
-            fi
-
-            IFS=$'\t' read -r RUN_STATUS RUN_CONCLUSION RUN_URL <<< "$RUN_ROW"
-            echo "Media Check: status=$RUN_STATUS conclusion=${RUN_CONCLUSION:-pending} $RUN_URL"
-            if [ "$RUN_STATUS" != "completed" ]; then
-              sleep 5
-              continue
-            fi
-            if [ "$RUN_CONCLUSION" != "success" ]; then
-              echo "::error::Authoritative Media Check did not succeed: $RUN_CONCLUSION"
-              exit 4
-            fi
-            exit 0
-          done
-
-          echo "::error::Timed out waiting for authoritative Media Check for $CHECKED_SHA"
-          exit 4
+          echo "sha=$CHECKED_SHA" >> "$GITHUB_OUTPUT"
 
       - name: Merge verified normal data operation
         id: merge

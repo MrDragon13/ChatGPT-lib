@@ -53,17 +53,34 @@ Normal write создаётся на свежей same-repo `media/op-*` вет�
 
 ### 6. Exact-head gate
 
-Authoritative `Media Check` запускается для точного resulting head SHA. Это исключает ситуацию, когда зелёный check относится к предыдущему commit.
+Для legacy operations authoritative `Media Check` запускается для точного resulting head SHA. Это исключает ситуацию, когда зелёный check относится к предыдущему commit.
+
+Для dormant v6 `record_media_entry` и checkpointed `set_inferred_preferences` действует отдельный быстрый путь. Один `Media Command` runner:
+
+1. сериализуется через общую группу `media-data-pipeline` без отмены ожидающих запусков;
+2. заново накладывает исходный typed request на свежий `main`;
+3. применяет deterministic transaction;
+4. запускает canonical validation, `rebuild --check` и точечные operation-specific tests;
+5. коммитит и push'ит проверенный результат в operation branch;
+6. повторно сверяет base SHA с текущим `main`;
+7. сливает exact checked head через GitHub API;
+8. запускает Pages для exact merge SHA.
+
+Если `main` изменился вне сериализованного media pipeline, запрос повторно накладывается на новый base и заново проверяется. Число таких повторов ограничено; после лимита операция fail closed. Provider secret передаётся этому пути только для `create_if_missing=true`.
+
+Текущая реализация same-runner merge опирается на фактическую конфигурацию репозитория без required status check, который ожидает завершения самого `Media Command`. Изменение branch protection/rulesets требует повторной проверки этого предположения, а не молчаливого bypass.
 
 ### 7. Guarded merge
 
-Auto-merge разрешён только allowlisted normal data operations и только для operation-specific path set. **Guarded merge** не распространяется на architecture/schema/vocabulary/workflow changes.
+Auto-merge разрешён только allowlisted normal data operations и только для operation-specific path set. `record_media_entry` и checkpointed `set_inferred_preferences` выполняют этот guarded merge внутри `Media Command`; legacy normal operations временно получают тот же trust boundary через успешный `Media Check -> Media Auto Merge`. **Guarded merge** не распространяется на architecture/schema/vocabulary/workflow changes.
 
 Canonical policy — declarative `media/config/operation_path_policy.json`. Runtime transaction проверяет локальную копию policy, а privileged auto-merge **не доверяет PR checkout**: он получает policy из trusted `main` через GitHub Contents API и список changed filenames через GitHub PR files API. PR-head operation marker читается только как JSON data. Privileged workflow не должен импортировать или исполнять PR-head Python.
 
 Path patterns используют один и тот же узкий grammar в Python и privileged workflow: repository-relative POSIX path; exact match либо ровно один `*`; wildcard не пересекает `/`; matching anchored ко всему path. `**`, второй `*`, `?`, character classes, brace expansion и ненормализованные paths invalid и приводят к fail closed.
 
-Текущая trust-модель privileged workflow опирается также на trigger `workflow_run`: исполняемое определение `media-auto-merge.yml` существует на default branch, а GitHub формирует для `workflow_run` event ref/SHA от default branch. Поэтому mutable PR не подменяет definition privileged workflow, который получает write-capable token. Это допущение относится именно к текущему trigger model. Переход на `pull_request_target`, checkout/eval PR-head executable code или другой механизм требует **separate security review**; текущий trust argument автоматически на него не переносится.
+Для legacy operations trust-модель privileged `Media Auto Merge` опирается на trigger `workflow_run`: исполняемое определение workflow существует на default branch, а PR-head Python с write-capable token там не запускается. Поля event ref/SHA из события считаются только входными метаданными: workflow заново сверяет exact checked head с текущим PR и trusted `main`, прежде чем разрешить merge. Переход на `pull_request_target`, изменение event model или расширение круга недоверенных авторов требует separate security review, а не механической замены trigger.
+
+Dormant v6 `record_media_entry` и checkpointed `set_inferred_preferences` используют другой, более узкий контракт same-runner merge: только same-repo `media/op-*` PR, до исполнения разрешён ровно один request-файл, затем рабочее дерево строится заново от свежего `main` и в него возвращается только сохранённый JSON request. Этот путь рассчитан на текущий персональный репозиторий, где `main` не защищён branch protection/ruleset и same-repo writers уже являются доверенными. Это **не** общий механизм для недоверенных contributor/fork PR. Изменение collaborator-модели, branch protection или event model требует отдельного security review.
 
 Любая ошибка fetch/decode/JSON parsing, неизвестная operation, `auto_merge: false`, unsupported matcher grammar, пустой/invalid allowlist или path вне trusted policy приводит к fail closed.
 
@@ -133,7 +150,7 @@ Pilot foundation может быть auto-merge authority только посл�
 
 GitHub Actions media pipeline не должен требовать live LLM credentials. Provider tokens выдаются только provider-dependent server/CI операциям. Browser никогда не получает repository write credentials или provider/model secrets.
 
-Privileged guarded merge использует только доверенные policy/state inputs из `main` и GitHub PR metadata. Mutable PR code не определяет собственные права и PR-head Python не исполняется с write-capable credentials.
+Legacy privileged guarded merge использует только доверенные policy/state inputs из `main` и GitHub PR metadata; PR-head Python там не исполняется с write-capable credentials. V6 same-runner path вместо этого опирается на same-repo/request-only contract, повторную сборку рабочего дерева от свежего `main`, operation path policy и exact base/head guards, описанные выше.
 
 ## Проверка developer change
 

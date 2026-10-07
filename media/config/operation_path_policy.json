@@ -19,7 +19,8 @@
         "media/generated/profiles/*.yaml",
         ".media/operations/*.json",
         "media/data/relations/similarity/*.yaml"
-      ]
+      ],
+      "execution_class": "v6_single_runner"
     },
     "record_viewing_feedback": {
       "auto_merge": true,
@@ -73,7 +74,8 @@
         "media/preferences/inferred/*.yaml",
         "media/generated/profiles/*.yaml",
         ".media/operations/*.json"
-      ]
+      ],
+      "execution_class": "v6_single_runner"
     },
     "record_recommendation_interaction": {
       "auto_merge": true,
