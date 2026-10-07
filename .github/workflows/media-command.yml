@@ -184,7 +184,14 @@ jobs:
             # Targeted authoritative data gate. Full developer regression remains in Media Dev Check.
             python -m media.tools.validate .
             python -m media.cli rebuild --check
-            python -m pytest               tests/media/test_record_media_entry.py               tests/media/test_v6_performance_contract.py               tests/media/test_build_index.py               tests/media/test_build_profiles.py               -q
+            python -m pytest \
+              tests/media/test_record_media_entry.py \
+              tests/media/test_inferred_preferences.py \
+              tests/media/test_v6_reanalysis_status.py \
+              tests/media/test_v6_performance_contract.py \
+              tests/media/test_build_index.py \
+              tests/media/test_build_profiles.py \
+              -q
 
             git commit -m "data: apply media operation $OPERATION_ID"
             HEAD_SHA=$(git rev-parse HEAD)
