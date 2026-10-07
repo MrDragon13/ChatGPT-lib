@@ -4,6 +4,7 @@ from copy import deepcopy
 
 from media.service.reanalysis_status import (
     EvidenceCheckpoint,
+    build_reanalysis_context,
     get_reanalysis_status,
     snapshot_evidence,
 )
@@ -172,3 +173,18 @@ def test_snapshot_checkpoint_is_stable_and_content_bound(tmp_path):
     assert changed.checkpoint.material_event_count == 1
     assert changed.checkpoint.material_event_prefix_digest != first.checkpoint.material_event_prefix_digest
     assert changed.evidence_digest != first.evidence_digest
+
+
+def test_couple_reanalysis_context_uses_member_counters_without_third_counter(tmp_path):
+    root = copy_fixture_repo(tmp_path)
+    for index in range(5):
+        _append_material_event(root, target="primary", event_no=index + 1, rating=7.0 + index / 2)
+
+    context = build_reanalysis_context(root / "media", "couple")
+
+    assert context["target"] == "couple"
+    assert context["due"] is True
+    assert set(context["members"]) == {"primary", "partner"}
+    assert context["members"]["primary"]["due"] is True
+    assert context["members"]["partner"]["due"] is False
+    assert "outstanding_count" not in context
