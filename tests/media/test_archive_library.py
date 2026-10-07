@@ -177,7 +177,9 @@ def test_work_without_user_data_has_only_heading_before_next_work(tmp_path):
     root=_repo(tmp_path)
     text=render_library_archive(root/"media")
     start=text.index("### Пустой фильм / Bare Film (2001)")
-    section=text[start:].split("\n### ",1)[0]
+    tail=text[start:]
+    boundaries=[position for marker in ("\n### ","\n## ") if (position:=tail.find(marker,1))>=0]
+    section=tail[:min(boundaries)] if boundaries else tail
     assert section.strip()=="### Пустой фильм / Bare Film (2001)"
 
 
