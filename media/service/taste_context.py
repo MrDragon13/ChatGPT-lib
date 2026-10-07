@@ -183,6 +183,8 @@ def build_taste_context(media_root: Path, request: TasteContextRequest) -> dict[
     }
     if reanalysis["due"]:
         result["limitations"].append("taste_reanalysis_due")
+    if int((profile.get("evidence") or {}).get("entity_count") or 0) == 0:
+        result["limitations"].append("cold_start_no_work_evidence")
     if members:
         agreements.sort(key=lambda item:item["id"]); disagreements.sort(key=lambda item:item["id"])
         term_signals = _couple_term_signals(media_root, members)
