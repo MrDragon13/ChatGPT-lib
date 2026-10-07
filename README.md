@@ -1,5 +1,7 @@
 # ChatGPT-lib
 
+Текущая media capability line: **Media Intelligence v6**.
+
 Личная библиотека структурированных данных и профилей, собранных в диалогах с ChatGPT. Основной живой subsystem — персональная media intelligence system: фильмы, сериалы и анимация, multi-viewer сигналы, semantic fingerprints, taste context, рекомендации, candidate assessment и explicit similarity между произведениями.
 
 ## Что умеет проект сейчас
