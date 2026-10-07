@@ -1,1 +1,165 @@
-{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://chatgpt-lib.local/commands/set_inferred_preferences.schema.json","$defs":{"evidence":{"type":"object","additionalProperties":false,"required":["entity_id","kind"],"properties":{"entity_id":{"type":"string","minLength":1},"kind":{"enum":["explicit_feedback","rating_correlation","reaction_correlation","viewing_correlation","recommendation_interaction","explicit_preference"]},"source_target":{"type":["string","null"]}}},"hypothesis":{"type":"object","additionalProperties":false,"required":["id","statement","affinity","confidence","terms","evidence"],"properties":{"id":{"type":"string","pattern":"^[a-z0-9][a-z0-9-]*$","minLength":3},"statement":{"type":"string","minLength":3,"maxLength":2000},"affinity":{"type":"number","minimum":-1,"maximum":1},"confidence":{"enum":["high","medium","low"]},"terms":{"type":"array","minItems":1,"uniqueItems":true,"items":{"type":"string","minLength":3}},"evidence":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/evidence"}}}}},"type":"object","additionalProperties":false,"required":["schema_version","operation_id","operation","target","hypotheses"],"properties":{"schema_version":{"const":1},"operation_id":{"type":"string","minLength":36,"maxLength":36},"operation":{"const":"set_inferred_preferences"},"target":{"type":"string","minLength":1},"hypotheses":{"type":"array","items":{"$ref":"#/$defs/hypothesis"}}}}
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chatgpt-lib.local/commands/set_inferred_preferences.schema.json",
+  "$defs": {
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entity_id",
+        "kind"
+      ],
+      "properties": {
+        "entity_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "explicit_feedback",
+            "rating_correlation",
+            "reaction_correlation",
+            "viewing_correlation",
+            "recommendation_interaction",
+            "explicit_preference"
+          ]
+        },
+        "source_target": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "hypothesis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "statement",
+        "affinity",
+        "confidence",
+        "terms",
+        "evidence"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "minLength": 3
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 2000
+        },
+        "affinity": {
+          "type": "number",
+          "minimum": -1,
+          "maximum": 1
+        },
+        "confidence": {
+          "enum": [
+            "high",
+            "medium",
+            "low"
+          ]
+        },
+        "terms": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 3
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/evidence"
+          }
+        }
+      }
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "evidenceCheckpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "material_event_count",
+        "material_event_prefix_digest"
+      ],
+      "properties": {
+        "material_event_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "material_event_prefix_digest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "analysis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_checkpoint",
+        "evidence_digest",
+        "algorithm_version"
+      ],
+      "properties": {
+        "evidence_checkpoint": {
+          "$ref": "#/$defs/evidenceCheckpoint"
+        },
+        "evidence_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "algorithm_version": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "operation_id",
+    "operation",
+    "target",
+    "hypotheses"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "operation_id": {
+      "type": "string",
+      "minLength": 36,
+      "maxLength": 36
+    },
+    "operation": {
+      "const": "set_inferred_preferences"
+    },
+    "target": {
+      "type": "string",
+      "minLength": 1
+    },
+    "hypotheses": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/hypothesis"
+      }
+    },
+    "analysis": {
+      "$ref": "#/$defs/analysis"
+    }
+  }
+}
