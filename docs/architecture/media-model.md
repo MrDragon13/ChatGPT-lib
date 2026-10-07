@@ -1,107 +1,148 @@
 # Media domain model
 
-Этот документ описывает текущую модель данных media subsystem: что является canonical, что derived, как разделяются viewers/targets и как связаны feedback, taste evidence, semantic knowledge и work similarity.
+Этот документ описывает текущую v6 модель media data: что хранится как canonical, что является derived, как разделены viewers/targets, semantics, feedback и taste evidence.
 
 ## Canonical data
 
-Основные canonical paths:
+Основные пути:
 
 - `media/data/works/` — одно произведение на YAML-файл;
-- `media/data/collections/` — франшизы/серии и membership;
-- `media/data/lists/` — пользовательские списки по target;
-- `media/data/interactions/` — append-only recommendation interaction events;
-- `media/data/relations/similarity/` — explicit target-specific similarity assertions;
-- `media/data/tombstones/` — redirects для merged IDs;
-- `media/preferences/explicit/` — устойчивые явно заявленные предпочтения/ограничения;
+- `media/data/collections/` — серии/франшизы;
+- `media/data/lists/` — target-scoped списки;
+- `media/data/interactions/` — recommendation interaction events;
+- `media/data/relations/similarity/` — explicit target-specific similarity;
+- `media/data/tombstones/` — redirects после identity merge;
+- `media/preferences/explicit/` — явно заявленные устойчивые preferences/rules;
 - `media/preferences/inferred/` — evidence-backed taste hypotheses;
-- `media/config/` — viewer/group configuration;
+- `media/config/` — viewers/groups и технические настройки;
 - `media/vocabulary.yaml` — controlled semantic vocabulary.
 
-Generated files под `media/generated/` не являются canonical и не должны редактироваться вручную как источник новых фактов.
+Generated files не являются canonical и не редактируются вручную как источник новых фактов.
 
-## Work
+После v6 reset активные works/collections/similarity/interactions/inferred preferences начинаются пустыми. Это валидное canonical состояние.
 
-Canonical work хранит identity, metadata, user/group signals, provenance и semantic knowledge. Work ID стабилен: identity merge/reconciliation не означает произвольную замену ID без explicit migration policy.
+## Логические слои work
 
-Произведение может существовать без viewing feedback. Viewing, rating, reaction, free-text feedback, rewatch/interest и recommendation interaction — разные сигналы; отсутствие одного не означает значение другого.
+Физически work остаётся одним YAML, но логически состоит из независимых слоёв:
+
+1. **identity** — формат, названия, год, stable external IDs;
+2. **metadata** — фактические сведения о произведении;
+3. **semantics** — controlled semantic fingerprint;
+4. **viewer/group state** — viewing, rating, reaction, feedback и другие subjective signals.
+
+Изменение viewer feedback само по себе не делает metadata или semantics устаревшими. Изменение dynamic provider metrics само по себе не инвалидирует semantic fingerprint.
 
 ## Targets
 
-Система использует три основных target-контекста:
-
 - `primary` — основной пользователь;
-- `partner` — отдельный viewer context;
-- `couple` — group target для совместного reasoning.
+- `partner` — отдельный viewer;
+- `couple` — group target.
 
-`couple` не является скрытым средним двух пользователей. Если evidence конфликтует, read model должен уметь показать disagreement. Subjective state не переносится между `primary`, `partner` и `couple` автоматически.
+`couple` не является скрытым средним. Disagreement должен оставаться видимым. Subjective state не переносится между targets автоматически.
+
+Для автоматического taste reanalysis независимые checkpoints существуют только у `primary` и `partner`; `couple` проверяет состояния участников и не имеет третьего счётчика.
 
 ## Explicit и inferred evidence
 
-**Explicit evidence** — то, что пользователь сказал/оценил напрямую: rating, reaction, feedback, explicit preference, interest или similarity assertion.
+Explicit evidence — то, что пользователь сообщил напрямую: viewing/rating/reaction/feedback, explicit preference, interest или similarity assertion.
 
-**Inferred evidence** — evidence-backed hypothesis, построенная из независимых пользовательских сигналов. Inferred output не считается independent evidence для другого inferred output: вывод не может сам себя подтверждать через цепочку повторных выводов.
+Inferred preference — гипотеза, построенная из независимого evidence. Она не становится самостоятельным evidence для следующего inference.
 
-Один rating сам по себе не должен автоматически превращать все свойства фильма в сильную taste preference.
+Свежий explicit signal имеет приоритет над устаревшей inferred interpretation.
+
+## Feedback history и material evidence
+
+History может содержать `event_id` и `material_evidence`.
+
+Для taste checkpoint один пользовательский эпизод даёт максимум одно новое material event. Cosmetic summary edit, retry, `no_change` или metadata-only mutation не продвигают checkpoint.
+
+Содержательная текстовая причина, которая должна влиять на taste, нормализуется в explicit `feedback.signals`; `feedback.summary` сам по себе остаётся human-readable текстом.
 
 ## Semantic fingerprint
 
-Semantic fingerprint описывает произведение, а не зрителя. Traits используют controlled vocabulary и provenance/confidence. Неизвестный semantic term не придумывается автоматически во время обычной записи данных; vocabulary evolution — отдельная developer/architecture задача.
+Semantic fingerprint описывает work, не зрителя.
+
+Он строится из фактической semantic input projection, controlled vocabulary и версии алгоритма. Rating/reaction/feedback пользователя не входят в semantic input.
+
+Для reuse используются:
+
+- semantic input digest;
+- vocabulary digest;
+- algorithm version.
+
+Если вход и версия не изменились, fingerprint используется повторно.
+
+## Metadata freshness
+
+Metadata делится минимум на:
+
+- identity-critical facts;
+- относительно статические факты;
+- dynamic metrics.
+
+Stale optional metadata не блокирует human feedback существующего work.
+
+## Viewer digest
+
+`compute_viewer_digest(work, target)` зависит только от состояния конкретного target. Изменение metadata, semantics или другого viewer не меняет этот digest.
+
+Digest используется как дешёвая precondition-защита от stale/repeated write.
+
+Internal `media/generated/index.jsonl` хранит target digests для быстрого Broker/LLM read path. Public Web manifest эти digests не публикует.
 
 ## WorkRef
 
-Некоторые операции должны ссылаться на произведение, которое ещё не является canonical work. Для этого используется `WorkRef`-подобная модель:
+Операции могут ссылаться на:
 
-- canonical reference — локальный `work_id`;
-- external reference — stable provider identity (`tmdb`, `imdb` и т. п.) плюс display snapshot вроде title/year.
+- canonical work через `work_id`;
+- external work через stable provider identity и display snapshot.
 
-External mention не означает автоматическое добавление work в медиатеку и не создаёт viewing/rating/reaction/interest state.
+External reference сам по себе не создаёт canonical work, viewing, rating, reaction или interest.
 
-## Explicit work similarity
+## Explicit similarity
 
-Similarity хранится отдельно от factual `work.canonical_relations`, потому что она:
+Similarity хранится отдельно и является:
 
-- субъективна;
+- subjective;
 - target-specific;
 - undirected;
-- может связывать canonical и external endpoints.
+- способной связывать canonical и external endpoints.
 
-Одна logical relation определяется как `(target, unordered pair)`. Поэтому A↔B и B↔A — одна assertion. Повторная запись делает upsert текущего мнения; remove удаляет эту же связь независимо от порядка endpoints.
+Одна relation определяется как `(target, unordered pair)`. Similarity — evidence/hint для поиска, recommendation и explanation, но не preference сама по себе.
 
-Причины similarity могут содержать существующие vocabulary terms и optional note. LLM-derived semantic similarity остаётся derived knowledge и не становится canonical assertion без явного подтверждения пользователя.
-
-## Reconciliation external → canonical
-
-Когда внешний endpoint позже появляется как реальный canonical work с той же stable provider identity, выполняется deterministic **reconciliation**:
-
-1. external endpoint сопоставляется canonical `work_id`;
-2. relation переписывается на canonical reference;
-3. self-link после identity collapse удаляется;
-4. совпавшие relations дедуплицируются по утверждённой deterministic policy;
-5. пользовательские viewing/taste сигналы не создаются побочно.
-
-Reconciliation является data-normalization step, а не recommendation inference.
+Когда external endpoint позже становится canonical work с той же stable identity, deterministic reconciliation нормализует relation без побочного создания viewer signals.
 
 ## Derived data
 
 Из canonical state строятся:
 
 - retrieval index;
-- deterministic profiles/affinities;
-- taste context;
-- recommendation context;
-- runtime SQLite database;
-- versioned web manifest;
-- bidirectional web projection explicit similarity.
+- profiles/affinities;
+- cached reanalysis status;
+- taste/recommendation contexts;
+- временный runtime SQLite;
+- Web manifest;
+- Web projection similarity.
 
-Derived projection может быть удобнее canonical representation. Например, одна undirected canonical similarity relation может появляться на обеих локальных work pages. Это не дублирует canonical assertion.
+`changed_domains` описывает, что изменилось. Отдельный dependency planner строит `DirtyPlan` и определяет минимальный набор derived outputs. Один output пересобирается максимум один раз за transaction.
+
+## Pre-v6 archive
+
+`docs/archive/media-library-before-v6-reset-2026-10-07.md` — human-readable историческая памятка.
+
+Она **не является canonical data**, не участвует автоматически в taste/recommendation input и не является machine-readable restore source.
+
+При повторном прохождении старого фильма архив может использоваться только как нейтральный checklist; старый rating/reaction/feedback не подмешивается в новый ответ без явного запроса пользователя.
 
 ## Инварианты
 
-- canonical data нельзя заменять generated state;
+- canonical нельзя заменять generated state;
 - unknown лучше guessed identity;
 - target нельзя менять молча;
-- inferred output не является independent evidence;
-- semantic fingerprint описывает work, не viewer reaction;
-- similarity является evidence/hint, но не preference сама по себе;
-- external endpoint не создаёт canonical work автоматически;
-- provider outage не должен разрушать уже сохранённую stable external identity.
+- explicit evidence выше inferred interpretation;
+- semantic fingerprint описывает work, а не viewer reaction;
+- similarity — evidence/hint, не preference;
+- external reference не создаёт work автоматически;
+- archive не является intelligence input;
+- пустая библиотека — валидное состояние;
+- provider outage не должен разрушать уже сохранённую stable identity.
