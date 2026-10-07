@@ -73,3 +73,34 @@ def test_manual_overrides_are_allowlisted_not_provider_shaped_escape_hatch():
 def test_collection_supports_sparse_signals_without_propagating_members():
     doc = {"schema_version": 4, "id": "series-x", "entity_type": "collection", "name_ru": "Серия X", "name_original": "Series X", "member_ids": [], "viewer_signals": {"primary": {"rating": {"score": 8.5, "source": "inferred", "confidence": "medium"}}}}
     valid(doc, "collection.schema.json")
+
+
+def test_v6_history_entry_accepts_event_id_and_material_evidence():
+    doc = base_work()
+    doc["viewer_signals"] = {
+        "primary": {
+            "viewing": {"status": "watched"},
+            "history": [
+                {
+                    "at": "2026-10-07T12:00:00Z",
+                    "event_id": "123e4567-e89b-42d3-a456-426614174001",
+                    "material_evidence": True,
+                    "current": {"viewing": {"status": "watched"}},
+                }
+            ],
+        }
+    }
+    valid(doc)
+
+
+def test_v6_semantic_bookkeeping_fields_are_optional_and_valid():
+    doc = base_work()
+    doc["metadata"] = {
+        "semantic": {
+            "traits": [],
+            "input_digest": "sha256:" + "1" * 64,
+            "vocabulary_digest": "sha256:" + "2" * 64,
+            "algorithm_version": "media-semantic-v1",
+        }
+    }
+    valid(doc)
