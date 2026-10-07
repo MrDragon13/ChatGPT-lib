@@ -78,7 +78,9 @@ Canonical policy — declarative `media/config/operation_path_policy.json`. Runt
 
 Path patterns используют один и тот же узкий grammar в Python и privileged workflow: repository-relative POSIX path; exact match либо ровно один `*`; wildcard не пересекает `/`; matching anchored ко всему path. `**`, второй `*`, `?`, character classes, brace expansion и ненормализованные paths invalid и приводят к fail closed.
 
-Текущая trust-модель privileged workflow опирается также на trigger `workflow_run`: исполняемое определение `media-auto-merge.yml` существует на default branch, а GitHub формирует для `workflow_run` event ref/SHA от default branch. Поэтому mutable PR не подменяет definition privileged workflow, который получает write-capable token. Это допущение относится именно к текущему trigger model. Переход на `pull_request_target`, checkout/eval PR-head executable code или другой механизм требует **separate security review**; текущий trust argument автоматически на него не переносится.
+Для legacy operations trust-модель privileged `Media Auto Merge` опирается на trigger `workflow_run`: исполняемое определение workflow существует на default branch, а PR-head Python с write-capable token там не запускается.
+
+Dormant v6 `record_media_entry` использует другой, более узкий контракт same-runner merge: только same-repo `media/op-*` PR, до исполнения разрешён ровно один request-файл, затем рабочее дерево строится заново от свежего `main` и в него возвращается только сохранённый JSON request. Этот путь рассчитан на текущий персональный репозиторий, где `main` не защищён branch protection/ruleset и same-repo writers уже являются доверенными. Это **не** общий механизм для недоверенных contributor/fork PR. Изменение collaborator-модели, branch protection или event model требует отдельного security review.
 
 Любая ошибка fetch/decode/JSON parsing, неизвестная operation, `auto_merge: false`, unsupported matcher grammar, пустой/invalid allowlist или path вне trusted policy приводит к fail closed.
 
@@ -148,7 +150,7 @@ Pilot foundation может быть auto-merge authority только посл�
 
 GitHub Actions media pipeline не должен требовать live LLM credentials. Provider tokens выдаются только provider-dependent server/CI операциям. Browser никогда не получает repository write credentials или provider/model secrets.
 
-Privileged guarded merge использует только доверенные policy/state inputs из `main` и GitHub PR metadata. Mutable PR code не определяет собственные права и PR-head Python не исполняется с write-capable credentials.
+Legacy privileged guarded merge использует только доверенные policy/state inputs из `main` и GitHub PR metadata; PR-head Python там не исполняется с write-capable credentials. V6 same-runner path вместо этого опирается на same-repo/request-only contract, повторную сборку рабочего дерева от свежего `main`, operation path policy и exact base/head guards, описанные выше.
 
 ## Проверка developer change
 
