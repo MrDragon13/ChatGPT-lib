@@ -156,3 +156,20 @@ def test_record_media_entry_new_work_cli_initializes_provider(tmp_path, monkeypa
     result=json.loads(capsys.readouterr().out)
     assert result["operation"]=="record_media_entry"
     assert result["status"]=="planned"
+
+
+def test_media_entry_context_cli_returns_compact_json(tmp_path, monkeypatch, capsys):
+    root=copy_fixture_repo(tmp_path)
+    request=_write_json(root/"entry-context.json",{
+        "schema_version":1,
+        "operation":"media_entry_context",
+        "work_ref":{"id":"arrival-2016"},
+        "target":"primary",
+    })
+    monkeypatch.chdir(root)
+    assert main(["media-entry-context","--request",str(request),"--format","json"])==0
+    result=json.loads(capsys.readouterr().out)
+    assert result["exists"] is True
+    assert result["target"]=="primary"
+    assert "history" not in result["viewer"]["state"]
+    assert len(json.dumps(result,ensure_ascii=False,separators=(",",":")).encode("utf-8")) < 6000
