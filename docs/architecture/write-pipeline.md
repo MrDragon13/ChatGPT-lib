@@ -53,11 +53,26 @@ Normal write создаётся на свежей same-repo `media/op-*` вет�
 
 ### 6. Exact-head gate
 
-Authoritative `Media Check` запускается для точного resulting head SHA. Это исключает ситуацию, когда зелёный check относится к предыдущему commit.
+Для legacy operations authoritative `Media Check` запускается для точного resulting head SHA. Это исключает ситуацию, когда зелёный check относится к предыдущему commit.
+
+Для dormant v6 `record_media_entry` действует отдельный быстрый путь. Один `Media Command` runner:
+
+1. сериализуется через общую группу `media-data-pipeline` без отмены ожидающих запусков;
+2. заново накладывает исходный typed request на свежий `main`;
+3. применяет deterministic transaction;
+4. запускает canonical validation, `rebuild --check` и точечные operation-specific tests;
+5. коммитит и push'ит проверенный результат в operation branch;
+6. повторно сверяет base SHA с текущим `main`;
+7. сливает exact checked head через GitHub API;
+8. запускает Pages для exact merge SHA.
+
+Если `main` изменился вне сериализованного media pipeline, запрос повторно накладывается на новый base и заново проверяется. Число таких повторов ограничено; после лимита операция fail closed. Provider secret передаётся этому пути только для `create_if_missing=true`.
+
+Текущая реализация same-runner merge опирается на фактическую конфигурацию репозитория без required status check, который ожидает завершения самого `Media Command`. Изменение branch protection/rulesets требует повторной проверки этого предположения, а не молчаливого bypass.
 
 ### 7. Guarded merge
 
-Auto-merge разрешён только allowlisted normal data operations и только для operation-specific path set. **Guarded merge** не распространяется на architecture/schema/vocabulary/workflow changes.
+Auto-merge разрешён только allowlisted normal data operations и только для operation-specific path set. `record_media_entry` выполняет этот guarded merge внутри `Media Command`; legacy normal operations временно получают тот же trust boundary через успешный `Media Check -> Media Auto Merge`. **Guarded merge** не распространяется на architecture/schema/vocabulary/workflow changes.
 
 Canonical policy — declarative `media/config/operation_path_policy.json`. Runtime transaction проверяет локальную копию policy, а privileged auto-merge **не доверяет PR checkout**: он получает policy из trusted `main` через GitHub Contents API и список changed filenames через GitHub PR files API. PR-head operation marker читается только как JSON data. Privileged workflow не должен импортировать или исполнять PR-head Python.
 
