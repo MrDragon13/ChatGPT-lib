@@ -529,6 +529,14 @@
         "before_finalization": false,
         "timing": "none"
       },
+      "modernization": {
+        "completed_at": "2026-10-07T09:43:57.891341Z",
+        "metadata_operation_id": "0be2c98d-ea42-4ec1-a28f-fc674627cc65",
+        "semantic_operation_id": "a41f3b62-27c8-4b61-a22c-e89731e9cf49",
+        "status": "completed",
+        "vocabulary_digest": "sha256:523339428874178b77f5fb6bec5b4d0ef3bf2415d666c1a064f1b19d31651378",
+        "work_digest": "sha256:9ade70d0a290cd63b0de99488499178d1b439322cf0f0a3d2e9517f42e31e13e"
+      },
       "operation_id": "a6d1273f-d937-4955-8cac-991e1c12d0dd",
       "outcome": "changed",
       "pre_review_feedback_digest": "sha256:ccedf3359d80dee06b2e94191c3d50eddedbf9a59bf05f9c720dd4e976ea9919",
