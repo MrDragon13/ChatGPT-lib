@@ -15,6 +15,7 @@ from media.domain.commands import (
     ProviderWorkRef,
     ReadRequest,
     RecommendContextRequest,
+    RecordMediaEntryCommand,
     RecordRecommendationInteractionCommand,
     RecordReassessmentModernizationCommand,
     RecordViewingFeedbackCommand,
@@ -29,10 +30,11 @@ from media.domain.commands import (
     TasteContextRequest,
 )
 from media.domain.errors import CommandValidationError
-from media.domain.types import TargetEdit, TargetUpdate, WorkRef
+from media.domain.types import CreationContext, MediaEntryPreconditions, ProviderIdentity, SemanticSnapshot, TargetEdit, TargetUpdate, WorkRef
 from media.tools.schema_utils import validate_against_schema
 
 _SCHEMA_BY_OPERATION = {
+    "record_media_entry": "record_media_entry.schema.json",
     "record_viewing_feedback": "record_viewing_feedback.schema.json",
     "edit_viewing_feedback": "edit_viewing_feedback.schema.json",
     "set_interest": "set_interest.schema.json",
