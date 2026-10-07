@@ -6,7 +6,7 @@ from media.commands.schema import parse_command
 from media.domain.errors import UnknownTargetError
 from media.tools.common import dump_yaml, load_yaml
 from media.tools.rebuild import rebuild_generated
-from tests.media.fixture_repo import copy_fixture_repo
+from tests.media.fixture_repo import append_material_rating_event, copy_fixture_repo
 
 
 def request(candidate=None,target="primary",text="Мне это зайдёт?"):
@@ -198,3 +198,19 @@ def test_candidate_assessment_validates_target(tmp_path):
     from media.service.assessment import build_candidate_assessment_context
     with pytest.raises(UnknownTargetError):
         build_candidate_assessment_context(root/"media",request(target="ghost"))
+
+
+def test_candidate_assessment_exposes_due_reanalysis_gate(tmp_path):
+    root=copy_fixture_repo(tmp_path); rebuild_generated(root/"media")
+    for index in range(5):
+        append_material_rating_event(
+            root,
+            score=7.0 + index / 2,
+            event_id=f"123e4567-e89b-42d3-a456-4266141748{index:02d}",
+            at=f"2026-10-07T15:0{index}:00Z",
+        )
+    from media.service.assessment import build_candidate_assessment_context
+    result=build_candidate_assessment_context(root/"media",request())
+    assert result["reanalysis"]["due"] is True
+    assert result["taste_context"]["reanalysis"]["due"] is True
+    assert "taste_reanalysis_due" in result["limitations"]
