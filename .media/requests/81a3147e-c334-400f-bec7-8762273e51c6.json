@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "operation_id": "81a3147e-c334-400f-bec7-8762273e51c6",
+  "operation": "refresh_work_metadata",
+  "work_ref": {
+    "id": "gattaca-1997"
+  },
+  "expected_work_digest": "sha256:54d2a5b2f8e8fa37ace027559c9a75962a134643c2d0e848a8d08ea54a15bb14"
+}
