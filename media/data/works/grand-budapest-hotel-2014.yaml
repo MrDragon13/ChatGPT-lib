@@ -77,7 +77,7 @@ viewer_signals:
     feedback: *id005
 provenance:
   created_at: '2026-10-01'
-  updated_at: '2026-10-06'
+  updated_at: '2026-10-07'
 metadata:
   external:
     genres:
@@ -160,13 +160,13 @@ metadata:
         path: /jK65srQczOKTpW62wPxwwKztGgE.jpg
     external_metrics:
       tmdb:
-        score: 8.026
-        votes: 16547
-        observed_at: '2026-10-01'
+        score: 8.025
+        votes: 16572
+        observed_at: '2026-10-07'
     provenance:
       provider: tmdb
       provider_id: 120467
-      fetched_at: '2026-10-01T11:51:00.342195Z'
+      fetched_at: '2026-10-07T09:35:45.240279Z'
   semantic:
     traits:
     - term: visuals.strong
