@@ -205,7 +205,7 @@ def test_couple_term_signals_expose_member_directions_without_changing_aggregati
 
 
 def test_taste_context_exposes_due_reanalysis_gate(tmp_path):
-    root=copy_fixture_repo(tmp_path); rebuild_generated(root/"media")
+    root=copy_fixture_repo(tmp_path)
     for index in range(5):
         append_material_rating_event(
             root,
@@ -213,6 +213,7 @@ def test_taste_context_exposes_due_reanalysis_gate(tmp_path):
             event_id=f"123e4567-e89b-42d3-a456-4266141745{index:02d}",
             at=f"2026-10-07T12:0{index}:00Z",
         )
+    rebuild_generated(root/"media")
     from media.service.taste_context import build_taste_context
     result=build_taste_context(root/"media",request("primary"))
     assert result["reanalysis"]["target"]=="primary"
@@ -231,6 +232,7 @@ def test_couple_taste_context_exposes_member_reanalysis_statuses(tmp_path):
             event_id=f"123e4567-e89b-42d3-a456-4266141746{index:02d}",
             at=f"2026-10-07T13:0{index}:00Z",
         )
+    rebuild_generated(root/"media")
     from media.service.taste_context import build_taste_context
     result=build_taste_context(root/"media",request("couple"))
     assert result["reanalysis"]["due"] is True
