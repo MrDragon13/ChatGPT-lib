@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chatgpt-lib.local/commands/record_media_entry.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "operation_id",
+    "idempotency_key",
+    "operation",
+    "work_ref",
+    "create_if_missing",
+    "target_updates",
+    "preconditions"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "operation_id": {
+      "type": "string",
+      "minLength": 36,
+      "maxLength": 36
+    },
+    "idempotency_key": {
+      "type": "string",
+      "minLength": 36,
+      "maxLength": 36
+    },
+    "operation": {
+      "const": "record_media_entry"
+    },
+    "work_ref": {
+      "$ref": "https://chatgpt-lib.local/commands/common.schema.json#/$defs/workRef"
+    },
+    "create_if_missing": {
+      "type": "boolean"
+    },
+    "target_updates": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "https://chatgpt-lib.local/commands/common.schema.json#/$defs/targetUpdate"
+      }
+    },
+    "creation_context": {
+      "$ref": "https://chatgpt-lib.local/commands/common.schema.json#/$defs/creationContext"
+    },
+    "semantic_snapshot": {
+      "$ref": "https://chatgpt-lib.local/commands/common.schema.json#/$defs/semanticSnapshot"
+    },
+    "preconditions": {
+      "$ref": "https://chatgpt-lib.local/commands/common.schema.json#/$defs/mediaEntryPreconditions"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "create_if_missing": {
+            "const": true
+          }
+        },
+        "required": [
+          "create_if_missing"
+        ]
+      },
+      "then": {
+        "required": [
+          "creation_context",
+          "semantic_snapshot"
+        ]
+      },
+      "else": {
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "creation_context"
+              ]
+            },
+            {
+              "required": [
+                "semantic_snapshot"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
