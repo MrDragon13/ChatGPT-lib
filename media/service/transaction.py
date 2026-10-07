@@ -31,8 +31,9 @@ from media.domain.types import WorkRef
 from media.repository.yaml_repo import YamlRepository
 from media.service.enrich import plan_add_work_resolved
 from media.service.intelligence import plan_set_semantic_fingerprint
+from media.service.derived import derive_dirty_plan
 from media.service.interactions import plan_record_recommendation_interaction
-from media.service.mutate import apply_feedback_updates, plan_edit_viewing_feedback, plan_record_viewing_feedback, plan_set_interest, profile_targets_for
+from media.service.mutate import apply_feedback_updates, plan_edit_viewing_feedback, plan_record_viewing_feedback, plan_set_interest
 from media.service.path_policy import verify_changed_paths, verify_operation_specific_paths
 from media.service.preferences import plan_set_inferred_preferences
 from media.service.reassessment_mutate import (
@@ -85,13 +86,17 @@ def _with_similarity_reconciliation(repo: YamlRepository, plan: MutationPlan, wo
         return plan
     documents = dict(plan.documents)
     documents.update(relation_documents)
+    domains = set(plan.changed_domains)
+    for rel in relation_documents:
+        prefix = "media/data/relations/similarity/"
+        if rel.startswith(prefix) and rel.endswith(".yaml"):
+            domains.add(f"similarity:{Path(rel).stem}")
     return MutationPlan(
         operation_id=plan.operation_id,
         operation=plan.operation,
         changed_entities=plan.changed_entities,
         documents=documents,
-        rebuild_index=plan.rebuild_index,
-        rebuild_profile_targets=plan.rebuild_profile_targets,
+        changed_domains=tuple(sorted(domains)),
         details=plan.details,
         jsonl_appends=plan.jsonl_appends,
         json_documents=plan.json_documents,
@@ -112,8 +117,15 @@ def _plan_record_feedback(repo: YamlRepository, command: RecordViewingFeedbackCo
         return plan_record_viewing_feedback(repo,replace(command,work_ref=WorkRef(id=work_id),create_if_missing=False),now=now)
     if len(add_plan.documents)!=1: raise CommandValidationError("create-if-missing expected exactly one new work document")
     path,document=next(iter(add_plan.documents.items())); updated_document,_,touched_targets=apply_feedback_updates(repo,document,command.target_updates,now=now)
-    profile_targets=tuple(sorted(set(add_plan.rebuild_profile_targets)|set(profile_targets_for(repo,touched_targets))))
-    plan = MutationPlan(command.operation_id,"record_viewing_feedback",(work_id,),{path:updated_document},True,profile_targets)
+    domains = set(add_plan.changed_domains)
+    domains.update(f"viewer:{target}" for target in touched_targets)
+    plan = MutationPlan(
+        command.operation_id,
+        "record_viewing_feedback",
+        (work_id,),
+        {path:updated_document},
+        tuple(sorted(domains)),
+    )
     return _with_similarity_reconciliation(repo, plan, work_id)
 
 
@@ -183,9 +195,10 @@ def _sync_with_rollback(original: Path, temporary: Path, paths: list[str]) -> No
 
 def _rebuild_requested_generated(temp_root: Path, plan: MutationPlan) -> None:
     media_root=temp_root/"media"
-    if plan.rebuild_index:
+    dirty=derive_dirty_plan(YamlRepository(media_root),plan)
+    if dirty.rebuild_index:
         write_index(media_root)
-    for target in plan.rebuild_profile_targets:
+    for target in dirty.rebuild_profile_targets:
         dump_yaml(media_root/"generated"/"profiles"/f"{target}.yaml",build_profile(media_root,target))
 
 
