@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "operation_id": "a41f3b62-27c8-4b61-a22c-e89731e9cf49",
+  "operation": "set_semantic_fingerprint",
+  "work_ref": {
+    "id": "grand-budapest-hotel-2014"
+  },
+  "traits": [
+    {
+      "term": "genre.comedy",
+      "source": "external_source",
+      "confidence": "high"
+    },
+    {
+      "term": "genre.drama",
+      "source": "external_source",
+      "confidence": "high"
+    },
+    {
+      "term": "visuals.strong",
+      "source": "llm_inferred",
+      "confidence": "high"
+    },
+    {
+      "term": "atmosphere.immersive",
+      "source": "llm_inferred",
+      "confidence": "high"
+    },
+    {
+      "term": "humor.witty",
+      "source": "llm_inferred",
+      "confidence": "high"
+    },
+    {
+      "term": "structure.ensemble",
+      "source": "llm_inferred",
+      "confidence": "high"
+    },
+    {
+      "term": "characters.charisma",
+      "source": "llm_inferred",
+      "confidence": "high"
+    },
+    {
+      "term": "humor.absurd",
+      "source": "llm_inferred",
+      "confidence": "medium"
+    },
+    {
+      "term": "pacing.fast",
+      "source": "llm_inferred",
+      "confidence": "high"
+    },
+    {
+      "term": "tone.light",
+      "source": "llm_inferred",
+      "confidence": "medium"
+    }
+  ]
+}
