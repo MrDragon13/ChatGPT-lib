@@ -245,3 +245,9 @@ def test_manifest_v3_does_not_publish_v6_reanalysis_fields_before_cutover(tmp_pa
     for context in manifest["recommendations"].values():
         assert "reanalysis" not in context
         assert "taste_reanalysis_due" not in context["limitations"]
+
+
+def test_manifest_never_exports_internal_viewer_digests(tmp_path):
+    root=copy_fixture_repo(tmp_path); prepare_derived(root)
+    manifest=_web_export_module().build_web_manifest(root/"media")
+    assert "viewer_digests" not in _all_keys(manifest)
