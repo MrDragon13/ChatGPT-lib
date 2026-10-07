@@ -20,26 +20,83 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["kind", "id", "title_original", "title_ru", "year"],
+          "required": [
+            "kind",
+            "id",
+            "title_original",
+            "title_ru",
+            "year"
+          ],
           "properties": {
-            "kind": {"const": "canonical"},
-            "id": {"type": "string", "minLength": 1},
-            "title_original": {"type": ["string", "null"]},
-            "title_ru": {"type": ["string", "null"]},
-            "year": {"type": ["integer", "null"]}
+            "kind": {
+              "const": "canonical"
+            },
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "title_original": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "title_ru": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "year": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
           }
         },
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["kind", "provider", "id", "title", "year"],
+          "required": [
+            "kind",
+            "provider",
+            "id",
+            "title",
+            "year"
+          ],
           "properties": {
-            "kind": {"const": "external"},
-            "provider": {"enum": ["tmdb", "imdb"]},
-            "media_type": {"enum": ["movie", "tv"]},
-            "id": {"type": ["integer", "string"]},
-            "title": {"type": "string", "minLength": 1},
-            "year": {"type": ["integer", "null"]}
+            "kind": {
+              "const": "external"
+            },
+            "provider": {
+              "enum": [
+                "tmdb",
+                "imdb"
+              ]
+            },
+            "media_type": {
+              "enum": [
+                "movie",
+                "tv"
+              ]
+            },
+            "id": {
+              "type": [
+                "integer",
+                "string"
+              ]
+            },
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "year": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
           }
         }
       ]
@@ -47,39 +104,81 @@
     "workSimilarity": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["other", "terms", "note", "updated_at", "provenance"],
+      "required": [
+        "other",
+        "terms",
+        "note",
+        "updated_at",
+        "provenance"
+      ],
       "properties": {
-        "other": {"$ref": "#/$defs/similarityOther"},
-        "terms": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
-        "note": {"type": ["string", "null"]},
-        "updated_at": {"type": "string", "minLength": 1},
+        "other": {
+          "$ref": "#/$defs/similarityOther"
+        },
+        "terms": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "note": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "updated_at": {
+          "type": "string",
+          "minLength": 1
+        },
         "provenance": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["source"],
-          "properties": {"source": {"const": "explicit"}}
+          "required": [
+            "source"
+          ],
+          "properties": {
+            "source": {
+              "const": "explicit"
+            }
+          }
         }
       }
     }
   },
   "properties": {
-    "schema_version": {"const": 3},
-    "default_target": {"type": ["string", "null"]},
+    "schema_version": {
+      "const": 3
+    },
+    "default_target": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "targets": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["viewers", "groups"],
+      "required": [
+        "viewers",
+        "groups"
+      ],
       "properties": {
         "viewers": {
           "type": "array",
-          "items": {"type": "string"},
+          "items": {
+            "type": "string"
+          },
           "uniqueItems": true
         },
         "groups": {
           "type": "object",
           "additionalProperties": {
             "type": "array",
-            "items": {"type": "string"},
+            "items": {
+              "type": "string"
+            },
             "uniqueItems": true
           }
         }
@@ -90,88 +189,194 @@
       "additionalProperties": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["kind", "label_ru"],
+        "required": [
+          "kind",
+          "label_ru"
+        ],
         "properties": {
-          "kind": {"type": "string"},
-          "label_ru": {"type": "string"}
+          "kind": {
+            "type": "string"
+          },
+          "label_ru": {
+            "type": "string"
+          }
         }
       }
     },
     "profiles": {
       "type": "object",
-      "additionalProperties": {"type": "object"}
+      "additionalProperties": {
+        "type": "object"
+      }
     },
     "taste_contexts": {
       "type": "object",
       "additionalProperties": {
         "type": "object",
         "additionalProperties": true,
-        "required": ["schema_version", "target", "profile", "representative", "recent_feedback", "exclusions"],
+        "required": [
+          "schema_version",
+          "target",
+          "profile",
+          "representative",
+          "recent_feedback",
+          "exclusions"
+        ],
         "properties": {
-          "schema_version": {"const": 1},
-          "target": {"type": "string"},
+          "schema_version": {
+            "const": 1
+          },
+          "target": {
+            "type": "string"
+          },
           "profile": {
             "type": "object",
             "additionalProperties": true,
-            "required": ["explicit_preferences", "inferred_preferences", "rules", "constraints", "strongest_affinities", "summary"],
+            "required": [
+              "explicit_preferences",
+              "inferred_preferences",
+              "rules",
+              "constraints",
+              "strongest_affinities",
+              "summary"
+            ],
             "properties": {
-              "explicit_preferences": {"type": "array"},
-              "inferred_preferences": {"type": "array"},
-              "rules": {"type": "array"},
-              "constraints": {"type": "array"},
-              "strongest_affinities": {"type": "array"},
-              "summary": {"type": "object"}
+              "explicit_preferences": {
+                "type": "array"
+              },
+              "inferred_preferences": {
+                "type": "array"
+              },
+              "rules": {
+                "type": "array"
+              },
+              "constraints": {
+                "type": "array"
+              },
+              "strongest_affinities": {
+                "type": "array"
+              },
+              "summary": {
+                "type": "object"
+              }
             }
           },
           "representative": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["high", "low"],
+            "required": [
+              "high",
+              "low"
+            ],
             "properties": {
-              "high": {"type": "array"},
-              "low": {"type": "array"}
+              "high": {
+                "type": "array"
+              },
+              "low": {
+                "type": "array"
+              }
             }
           },
-          "recent_feedback": {"type": "array"},
+          "recent_feedback": {
+            "type": "array"
+          },
           "exclusions": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["watched", "not_interested"],
+            "required": [
+              "watched",
+              "not_interested"
+            ],
             "properties": {
-              "watched": {"type": "array", "items": {"type": "string"}},
-              "not_interested": {"type": "array", "items": {"type": "string"}}
+              "watched": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "not_interested": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
             }
           },
           "couple": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["members", "agreements", "disagreements", "term_signals"],
+            "required": [
+              "members",
+              "agreements",
+              "disagreements",
+              "term_signals"
+            ],
             "properties": {
-              "members": {"type": "array", "items": {"type": "string"}},
-              "agreements": {"type": "array"},
-              "disagreements": {"type": "array"},
+              "members": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "agreements": {
+                "type": "array"
+              },
+              "disagreements": {
+                "type": "array"
+              },
               "term_signals": {
                 "type": "array",
                 "items": {
                   "type": "object",
                   "additionalProperties": false,
-                  "required": ["term", "members", "status"],
+                  "required": [
+                    "term",
+                    "members",
+                    "status"
+                  ],
                   "properties": {
-                    "term": {"type": "string", "minLength": 1},
+                    "term": {
+                      "type": "string",
+                      "minLength": 1
+                    },
                     "members": {
                       "type": "object",
                       "additionalProperties": {
                         "type": "object",
                         "additionalProperties": false,
-                        "required": ["direction", "confidence", "evidence_count"],
+                        "required": [
+                          "direction",
+                          "confidence",
+                          "evidence_count"
+                        ],
                         "properties": {
-                          "direction": {"enum": ["positive", "negative", null]},
-                          "confidence": {"type": ["string", "null"]},
-                          "evidence_count": {"type": "integer", "minimum": 0}
+                          "direction": {
+                            "enum": [
+                              "positive",
+                              "negative",
+                              null
+                            ]
+                          },
+                          "confidence": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "evidence_count": {
+                            "type": "integer",
+                            "minimum": 0
+                          }
                         }
                       }
                     },
-                    "status": {"enum": ["agreement", "disagreement", "insufficient"]}
+                    "status": {
+                      "enum": [
+                        "agreement",
+                        "disagreement",
+                        "insufficient"
+                      ]
+                    }
                   }
                 }
               }
@@ -185,9 +390,17 @@
       "additionalProperties": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["target", "request", "coverage", "limitations", "candidates"],
+        "required": [
+          "target",
+          "request",
+          "coverage",
+          "limitations",
+          "candidates"
+        ],
         "properties": {
-          "target": {"type": "string"},
+          "target": {
+            "type": "string"
+          },
           "request": {
             "type": "object",
             "additionalProperties": true
@@ -206,14 +419,38 @@
               "returned_fallback"
             ],
             "properties": {
-              "pool_total": {"type": "integer", "minimum": 0},
-              "pool_with_fingerprint": {"type": "integer", "minimum": 0},
-              "pool_with_personalized_basis": {"type": "integer", "minimum": 0},
-              "pool_fallback": {"type": "integer", "minimum": 0},
-              "returned_total": {"type": "integer", "minimum": 0},
-              "returned_with_fingerprint": {"type": "integer", "minimum": 0},
-              "returned_with_personalized_basis": {"type": "integer", "minimum": 0},
-              "returned_fallback": {"type": "integer", "minimum": 0}
+              "pool_total": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "pool_with_fingerprint": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "pool_with_personalized_basis": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "pool_fallback": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "returned_total": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "returned_with_fingerprint": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "returned_with_personalized_basis": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "returned_fallback": {
+                "type": "integer",
+                "minimum": 0
+              }
             }
           },
           "limitations": {
@@ -222,7 +459,8 @@
               "enum": [
                 "partial_semantic_coverage",
                 "fallback_candidates_present",
-                "no_personalized_candidates"
+                "no_personalized_candidates",
+                "empty_library"
               ]
             },
             "uniqueItems": true
@@ -231,7 +469,11 @@
             "type": "array",
             "items": {
               "type": "object",
-              "not": {"required": ["score"]},
+              "not": {
+                "required": [
+                  "score"
+                ]
+              },
               "additionalProperties": true
             }
           }
@@ -257,33 +499,64 @@
           "provenance"
         ],
         "properties": {
-          "id": {"type": "string"},
-          "identity": {"type": "object", "additionalProperties": true},
+          "id": {
+            "type": "string"
+          },
+          "identity": {
+            "type": "object",
+            "additionalProperties": true
+          },
           "metadata": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["external"],
+            "required": [
+              "external"
+            ],
             "properties": {
-              "external": {"type": "object", "additionalProperties": true}
+              "external": {
+                "type": "object",
+                "additionalProperties": true
+              }
             }
           },
-          "viewer_signals": {"type": "object", "additionalProperties": true},
-          "group_signals": {"type": "object", "additionalProperties": true},
-          "interest": {"type": "object", "additionalProperties": true},
+          "viewer_signals": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "group_signals": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "interest": {
+            "type": "object",
+            "additionalProperties": true
+          },
           "traits": {
             "type": "array",
-            "items": {"type": "string"}
+            "items": {
+              "type": "string"
+            }
           },
           "semantic_fingerprint": {
             "type": "array",
             "items": {
               "type": "object",
               "additionalProperties": true,
-              "required": ["term", "source", "confidence"],
+              "required": [
+                "term",
+                "source",
+                "confidence"
+              ],
               "properties": {
-                "term": {"type": "string"},
-                "source": {"type": "string"},
-                "confidence": {"type": "string"}
+                "term": {
+                  "type": "string"
+                },
+                "source": {
+                  "type": "string"
+                },
+                "confidence": {
+                  "type": "string"
+                }
               }
             }
           },
@@ -291,20 +564,37 @@
             "type": "object",
             "additionalProperties": {
               "type": "array",
-              "items": {"$ref": "#/$defs/workSimilarity"}
+              "items": {
+                "$ref": "#/$defs/workSimilarity"
+              }
             }
           },
           "collections": {
             "type": "array",
-            "items": {"type": "string"}
+            "items": {
+              "type": "string"
+            }
           },
           "provenance": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["created_at", "updated_at"],
+            "required": [
+              "created_at",
+              "updated_at"
+            ],
             "properties": {
-              "created_at": {"type": ["string", "null"]},
-              "updated_at": {"type": ["string", "null"]}
+              "created_at": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "updated_at": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
             }
           }
         }
