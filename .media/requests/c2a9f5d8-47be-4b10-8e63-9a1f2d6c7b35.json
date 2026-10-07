@@ -1,9 +1,0 @@
-{
-  "schema_version": 1,
-  "operation_id": "c2a9f5d8-47be-4b10-8e63-9a1f2d6c7b35",
-  "operation": "refresh_work_metadata",
-  "work_ref": {
-    "id": "source-code-2011"
-  },
-  "expected_work_digest": "sha256:53a1d529ac3113eb455c8160c21042bf8e56dddc366dd9cccba212796150f3f7"
-}

@@ -116,10 +116,10 @@ metadata:
         path: /mDb4uku4zEElsITXDpbir4fR0HW.jpg
     external_metrics:
       tmdb:
-        score: 7.312
-        votes: 9443
-        observed_at: '2026-10-01'
+        score: 7.3
+        votes: 9459
+        observed_at: '2026-10-07'
     provenance:
       provider: tmdb
       provider_id: 45612
-      fetched_at: '2026-10-01T11:51:05.825332Z'
+      fetched_at: '2026-10-07T12:58:07.859741Z'
