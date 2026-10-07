@@ -203,7 +203,7 @@ def test_v6_fast_path_dispatches_pages_for_exact_merge_sha_not_media_check():
 
 def test_v6_fast_path_uses_targeted_authoritative_gate_not_full_pytest_or_doctor():
     text=_text("media-command.yml")
-    fast=text.split("- name: Replay v6 operation on latest main",1)[1].split("- name: Dispatch read-only check for exact new head",1)[0]
+    fast=text.split("- name: Replay v6 operation on latest main",1)[1].split("- name: Replay branch on current main",1)[0]
     assert "python -m media.tools.validate ." in fast
     assert "python -m media.cli rebuild --check" in fast
     assert "tests/media/test_record_media_entry.py" in fast
