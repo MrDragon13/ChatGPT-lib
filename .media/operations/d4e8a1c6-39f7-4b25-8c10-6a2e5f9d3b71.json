@@ -1,0 +1,17 @@
+{
+  "applied_at": "2026-10-07T13:01:49.702877+00:00",
+  "changed_entities": [
+    "source-code-2011"
+  ],
+  "changed_files": [
+    "media/data/works/source-code-2011.yaml",
+    "media/generated/index.jsonl",
+    ".media/operations/d4e8a1c6-39f7-4b25-8c10-6a2e5f9d3b71.json"
+  ],
+  "details": {
+    "work_id": "source-code-2011"
+  },
+  "operation": "set_semantic_fingerprint",
+  "operation_id": "d4e8a1c6-39f7-4b25-8c10-6a2e5f9d3b71",
+  "status": "applied"
+}

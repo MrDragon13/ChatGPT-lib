@@ -123,3 +123,35 @@ metadata:
       provider: tmdb
       provider_id: 45612
       fetched_at: '2026-10-07T12:58:07.859741Z'
+  semantic:
+    traits:
+    - term: genre.thriller
+      source: external_source
+      confidence: high
+    - term: genre.science_fiction
+      source: external_source
+      confidence: high
+    - term: genre.mystery
+      source: external_source
+      confidence: high
+    - term: narrative.time_loop
+      source: llm_inferred
+      confidence: high
+    - term: structure.mystery
+      source: llm_inferred
+      confidence: high
+    - term: story.problem_solving
+      source: llm_inferred
+      confidence: high
+    - term: story.intrigue
+      source: llm_inferred
+      confidence: high
+    - term: story.twists
+      source: llm_inferred
+      confidence: medium
+    - term: pacing.fast
+      source: llm_inferred
+      confidence: medium
+    - term: tone.serious
+      source: llm_inferred
+      confidence: high
