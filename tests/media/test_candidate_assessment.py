@@ -201,7 +201,7 @@ def test_candidate_assessment_validates_target(tmp_path):
 
 
 def test_candidate_assessment_exposes_due_reanalysis_gate(tmp_path):
-    root=copy_fixture_repo(tmp_path); rebuild_generated(root/"media")
+    root=copy_fixture_repo(tmp_path)
     for index in range(5):
         append_material_rating_event(
             root,
@@ -209,6 +209,7 @@ def test_candidate_assessment_exposes_due_reanalysis_gate(tmp_path):
             event_id=f"123e4567-e89b-42d3-a456-4266141748{index:02d}",
             at=f"2026-10-07T15:0{index}:00Z",
         )
+    rebuild_generated(root/"media")
     from media.service.assessment import build_candidate_assessment_context
     result=build_candidate_assessment_context(root/"media",request())
     assert result["reanalysis"]["due"] is True
