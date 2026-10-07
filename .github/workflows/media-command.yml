@@ -86,7 +86,7 @@ jobs:
           operation = command['operation']
           create_if_missing = bool(command.get('create_if_missing', False))
           needs_provider = operation == 'add_work' or operation == 'refresh_metadata' or operation == 'refresh_work_metadata' or (
-              operation == 'record_viewing_feedback' and create_if_missing
+              operation in {'record_media_entry', 'record_viewing_feedback'} and create_if_missing
           )
           with open(sys.argv[2], 'a', encoding='utf-8') as output:
               print(f'operation={operation}', file=output)
