@@ -179,6 +179,13 @@ class RecordReassessmentModernizationCommand:
 
 
 @dataclass(frozen=True)
+class MediaEntryContextRequest:
+    schema_version: int
+    work_ref: WorkRef
+    target: str
+
+
+@dataclass(frozen=True)
 class RecommendContextRequest:
     schema_version: int
     target: str
@@ -224,4 +231,4 @@ MediaCommand: TypeAlias = (
     | RecordReassessmentModernizationCommand
 )
 
-ReadRequest: TypeAlias = RecommendContextRequest | TasteContextRequest | AssessCandidateRequest
+ReadRequest: TypeAlias = MediaEntryContextRequest | RecommendContextRequest | TasteContextRequest | AssessCandidateRequest
