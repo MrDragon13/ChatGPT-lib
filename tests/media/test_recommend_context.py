@@ -199,7 +199,7 @@ def test_limitations_are_top_level_fact_only_and_deterministically_ordered(tmp_p
 
 
 def test_recommend_context_exposes_due_reanalysis_without_blocking_context_build(tmp_path):
-    root=copy_fixture_repo(tmp_path); prepare_derived(root)
+    root=copy_fixture_repo(tmp_path)
     for index in range(5):
         append_material_rating_event(
             root,
@@ -207,6 +207,7 @@ def test_recommend_context_exposes_due_reanalysis_without_blocking_context_build
             event_id=f"123e4567-e89b-42d3-a456-4266141747{index:02d}",
             at=f"2026-10-07T14:0{index}:00Z",
         )
+    prepare_derived(root)
     context=build_recommend_context(root/"media",request("primary"))
     assert context["reanalysis"]["due"] is True
     assert context["candidates"]
