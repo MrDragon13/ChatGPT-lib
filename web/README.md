@@ -10,9 +10,11 @@
 - [`PRODUCT.md`](../PRODUCT.md) — media-web product brief.
 - [`DESIGN.md`](../DESIGN.md) — visual/design-system contract.
 
-Canonical media state живёт под `media/`; frontend не читает и не мутирует canonical YAML напрямую. Поддерживаемые edits идут через protected broker и существующий typed-command pipeline.
+Canonical media state живёт под `media/`; frontend не читает и не мутирует canonical YAML напрямую. Поддерживаемые edits идут через protected Broker, который преобразует feedback в `record_media_entry` и передаёт его в общий v6 typed-command pipeline.
 
 Пока запись по произведению ещё не подтверждена, editor не отправляет второй write по тому же `work/target`. Пользователь при этом может продолжать править локальный черновик; после публикации первой операции Web обновляет canonical manifest и только затем разрешает отправить накопленное уточнение.
+
+После v6 reset пустая медиатека — нормальное состояние. Home/Library/History должны показывать явный empty state и оставаться доступными на desktop/mobile/reduced-motion. Не создавайте фиктивные works ради UI.
 
 ## Локальная проверка
 
