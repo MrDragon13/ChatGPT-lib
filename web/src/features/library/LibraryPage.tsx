@@ -152,10 +152,16 @@ export function LibraryPage() {
         </div>
       ) : (
         <div className="library-zero" role="status">
-          <p className="eyebrow">Ничего не найдено</p>
-          <h2>С такими фильтрами пусто</h2>
-          <p>Измените поиск, жанр, год или статус просмотра — данные медиатеки не изменятся.</p>
-          <button type="button" onClick={() => update({ query: "", viewing: "all", genre: null, year: null })}>Сбросить фильтры</button>
+          <p className="eyebrow">{manifest.works.length ? "Ничего не найдено" : "Новая медиатека"}</p>
+          <h2>{manifest.works.length ? "С такими фильтрами пусто" : "Медиатека пока пуста"}</h2>
+          <p>
+            {manifest.works.length
+              ? "Измените поиск, жанр, год или статус просмотра — данные медиатеки не изменятся."
+              : "Добавьте первый фильм через ChatGPT. После подтверждённого сохранения он появится здесь автоматически."}
+          </p>
+          {manifest.works.length ? (
+            <button type="button" onClick={() => update({ query: "", viewing: "all", genre: null, year: null })}>Сбросить фильтры</button>
+          ) : null}
         </div>
       )}
     </section>
