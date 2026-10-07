@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "operation_id": "c7537ded-c1de-4789-bd3f-84472eda1f6a",
+  "operation": "set_semantic_fingerprint",
+  "work_ref": {
+    "id": "gattaca-1997"
+  },
+  "traits": [
+    {
+      "term": "genre.science_fiction",
+      "source": "external_source",
+      "confidence": "high"
+    },
+    {
+      "term": "genre.drama",
+      "source": "external_source",
+      "confidence": "high"
+    },
+    {
+      "term": "story.intrigue",
+      "source": "llm_inferred",
+      "confidence": "high"
+    },
+    {
+      "term": "worldbuilding.strong",
+      "source": "llm_inferred",
+      "confidence": "high"
+    },
+    {
+      "term": "tone.serious",
+      "source": "llm_inferred",
+      "confidence": "high"
+    },
+    {
+      "term": "characters.depth",
+      "source": "llm_inferred",
+      "confidence": "high"
+    },
+    {
+      "term": "atmosphere.immersive",
+      "source": "llm_inferred",
+      "confidence": "medium"
+    },
+    {
+      "term": "visuals.strong",
+      "source": "llm_inferred",
+      "confidence": "medium"
+    },
+    {
+      "term": "pacing.moderate",
+      "source": "llm_inferred",
+      "confidence": "medium"
+    }
+  ]
+}
