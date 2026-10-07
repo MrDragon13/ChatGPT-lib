@@ -6,8 +6,8 @@
   "work_id": "gattaca-1997",
   "outcome": "completed",
   "expected_ledger_digest": "sha256:4448c391c57661dc74d4db8aa385de4813e9d488bcbbb7856d7d24715e54d5b4",
-  "expected_work_digest": "sha256:50a0d757427e7b26e29714b651214164208b6d37fd4a17d77ad60cac2caae40f",
+  "expected_work_digest": "sha256:170dee00c006ddb2c2c92d4c6e5eb7f95719330f4ec465084a01297e362b1b27",
   "metadata_operation_id": "81a3147e-c334-400f-bec7-8762273e51c6",
   "semantic_operation_id": "c7537ded-c1de-4789-bd3f-84472eda1f6a",
-  "vocabulary_digest": "sha256:bb099a2637b003de01b16537b411815442cff7591c68be52799344118d3a534c"
+  "vocabulary_digest": "sha256:523339428874178b77f5fb6bec5b4d0ef3bf2415d666c1a064f1b19d31651378"
 }
