@@ -1,7 +1,7 @@
 {
+  "operation": "record_reassessment_modernization",
   "schema_version": 1,
   "operation_id": "d4643fd1-9c2a-4861-a919-97dee8ae8bac",
-  "operation": "record_reassessment_modernization",
   "pilot_id": "primary-legacy-v1",
   "work_id": "gattaca-1997",
   "outcome": "completed",
