@@ -150,5 +150,7 @@ def test_pages_deploy_remains_independent_of_cloudflare_credentials():
 
 def test_record_media_entry_provider_secret_is_gated_by_creation():
     text=_text("media-command.yml")
-    assert "operation == 'record_media_entry'" in text
-    assert "record_media_entry" in text and "create_if_missing" in text
+    assert "'record_media_entry'" in text
+    assert "create_if_missing" in text
+    assert "needs_provider" in text
+    assert "steps.operation.outputs.needs_provider == 'true'" in text
