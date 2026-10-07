@@ -17,6 +17,7 @@ def test_existing_operations_cannot_modify_reassessment_ledger():
         "edit_viewing_feedback",
         "set_interest",
         "set_semantic_fingerprint",
+        "refresh_work_metadata",
         "set_inferred_preferences",
         "record_recommendation_interaction",
         "set_work_similarity",
@@ -93,3 +94,21 @@ def test_complete_shape_guard_requires_planner_work_id_when_a_work_changes():
             [LEDGER, "media/data/works/arrival-2016.yaml", RECEIPT],
             {},
         )
+
+
+def test_modernization_marker_allows_only_exact_ledger_and_receipt():
+    verify_changed_paths("record_reassessment_modernization", [LEDGER, RECEIPT])
+    verify_operation_specific_paths(
+        "record_reassessment_modernization",
+        [LEDGER, RECEIPT],
+        {"work_id": "arrival-2016", "outcome": "completed"},
+    )
+    for forbidden in (
+        "media/data/works/arrival-2016.yaml",
+        "media/generated/index.jsonl",
+        "media/generated/profiles/primary.yaml",
+        "media/vocabulary.yaml",
+        "media/pilots/other.json",
+    ):
+        with pytest.raises(PathPolicyError):
+            verify_changed_paths("record_reassessment_modernization", [forbidden])

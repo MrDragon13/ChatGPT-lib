@@ -167,3 +167,21 @@ def test_media_publish_mode_skips_only_redundant_heavy_checks():
         "Upload GitHub Pages artifact",
     ):
         assert f"- name: {required_step}" in pages
+
+
+def test_auto_merge_allows_trusted_no_change_only_for_semantic_and_single_work_refresh():
+    text = _text("media-auto-merge.yml")
+    assert 'TRUSTED_NO_CHANGE_OPERATION=false' in text
+    assert '[ "$OP_KIND" = "refresh_work_metadata" ]' in text
+    assert '[ "$OP_KIND" = "set_semantic_fingerprint" ]' in text
+    assert 'if [ "$OP_STATUS" != "applied" ] && ! { [ "$OP_STATUS" = "no_change" ] && [ "$TRUSTED_NO_CHANGE_OPERATION" = true ]; }; then' in text
+
+
+def test_auto_merge_revalidates_modernization_work_and_ledger_digests_against_current_main():
+    text = _text("media-auto-merge.yml")
+    assert 'if [ "$OP_KIND" = "refresh_work_metadata" ]; then' in text
+    assert 'details.expected_work_digest' in text
+    assert 'Stale work during metadata modernization' in text
+    assert '[ "$OP_KIND" = "record_reassessment_modernization" ]' in text
+    assert 'Stale reassessment ledger during modernization' in text
+    assert 'Stale work during modernization marker' in text

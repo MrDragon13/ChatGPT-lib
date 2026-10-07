@@ -10,6 +10,10 @@ VALID_UUID = "123e4567-e89b-42d3-a456-426614174000"
 SESSION_UUID = "123e4567-e89b-42d3-a456-426614174001"
 REANALYSIS_UUID = "123e4567-e89b-42d3-a456-426614174002"
 LEDGER_DIGEST = "sha256:" + "a" * 64
+WORK_DIGEST = "sha256:" + "b" * 64
+VOCABULARY_DIGEST = "sha256:" + "c" * 64
+METADATA_UUID = "123e4567-e89b-42d3-a456-426614174003"
+SEMANTIC_UUID = "123e4567-e89b-42d3-a456-426614174004"
 
 
 def valid_record_feedback_dict() -> dict:
@@ -319,3 +323,89 @@ def test_reassessment_session_ids_and_optional_reanalysis_id_are_canonical_uuids
     with pytest.raises(CommandValidationError): parse_command(bad)
     bad = valid_close_reassessment_dict(); bad["scheduled_reanalysis_operation_id"] = "not-a-uuid"
     with pytest.raises(CommandValidationError): parse_command(bad)
+
+
+def valid_refresh_work_metadata_dict() -> dict:
+    return {
+        "schema_version": 1,
+        "operation_id": VALID_UUID,
+        "operation": "refresh_work_metadata",
+        "work_ref": {"id": "arrival-2016"},
+        "expected_work_digest": WORK_DIGEST,
+    }
+
+
+def valid_record_modernization_dict(outcome: str = "completed") -> dict:
+    data = {
+        "schema_version": 1,
+        "operation_id": VALID_UUID,
+        "operation": "record_reassessment_modernization",
+        "pilot_id": "primary-legacy-v1",
+        "work_id": "arrival-2016",
+        "outcome": outcome,
+        "expected_ledger_digest": LEDGER_DIGEST,
+        "expected_work_digest": WORK_DIGEST,
+    }
+    if outcome == "completed":
+        data.update({
+            "metadata_operation_id": METADATA_UUID,
+            "semantic_operation_id": SEMANTIC_UUID,
+            "vocabulary_digest": VOCABULARY_DIGEST,
+        })
+    else:
+        data["blocker_code"] = "provider_identity_ambiguous"
+    return data
+
+
+def test_refresh_work_metadata_requires_one_work_and_digest():
+    command = parse_command(valid_refresh_work_metadata_dict())
+    assert type(command).__name__ == "RefreshWorkMetadataCommand"
+    assert command.work_ref.id == "arrival-2016"
+    assert command.expected_work_digest == WORK_DIGEST
+
+    bad = valid_refresh_work_metadata_dict(); bad["expected_work_digest"] = "sha256:nope"
+    with pytest.raises(CommandValidationError):
+        parse_command(bad)
+    bad = valid_refresh_work_metadata_dict(); bad["unexpected"] = True
+    with pytest.raises(CommandValidationError):
+        parse_command(bad)
+
+
+def test_reassessment_modernization_completed_and_blocked_variants_are_typed():
+    completed = parse_command(valid_record_modernization_dict("completed"))
+    assert type(completed).__name__ == "RecordReassessmentModernizationCommand"
+    assert completed.outcome == "completed"
+    assert completed.metadata_operation_id == METADATA_UUID
+    assert completed.semantic_operation_id == SEMANTIC_UUID
+    assert completed.vocabulary_digest == VOCABULARY_DIGEST
+    assert completed.blocker_code is None
+
+    blocked = parse_command(valid_record_modernization_dict("blocked"))
+    assert blocked.outcome == "blocked"
+    assert blocked.blocker_code == "provider_identity_ambiguous"
+    assert blocked.metadata_operation_id is None
+
+
+def test_reassessment_modernization_variant_fields_are_strict():
+    bad = valid_record_modernization_dict("completed"); bad.pop("semantic_operation_id")
+    with pytest.raises(CommandValidationError):
+        parse_command(bad)
+    bad = valid_record_modernization_dict("completed"); bad["blocker_code"] = "provider_identity_conflict"
+    with pytest.raises(CommandValidationError):
+        parse_command(bad)
+    bad = valid_record_modernization_dict("blocked"); bad["metadata_operation_id"] = METADATA_UUID
+    with pytest.raises(CommandValidationError):
+        parse_command(bad)
+    bad = valid_record_modernization_dict("blocked"); bad["blocker_code"] = "whatever"
+    with pytest.raises(CommandValidationError):
+        parse_command(bad)
+
+
+def test_modernization_operation_ids_are_canonical_lowercase_uuids():
+    bad = valid_refresh_work_metadata_dict(); bad["operation_id"] = "NOT-A-UUID"
+    with pytest.raises(CommandValidationError):
+        parse_command(bad)
+    for key in ("metadata_operation_id", "semantic_operation_id"):
+        bad = valid_record_modernization_dict("completed"); bad[key] = "not-a-uuid"
+        with pytest.raises(CommandValidationError):
+            parse_command(bad)

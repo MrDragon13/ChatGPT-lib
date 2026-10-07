@@ -110,6 +110,21 @@
         "media/pilots/legacy-reassessment-primary.json",
         ".media/operations/*.json"
       ]
+    },
+    "refresh_work_metadata": {
+      "auto_merge": true,
+      "allowed_paths": [
+        "media/data/works/*.yaml",
+        "media/generated/index.jsonl",
+        ".media/operations/*.json"
+      ]
+    },
+    "record_reassessment_modernization": {
+      "auto_merge": true,
+      "allowed_paths": [
+        "media/pilots/legacy-reassessment-primary.json",
+        ".media/operations/*.json"
+      ]
     }
   }
 }

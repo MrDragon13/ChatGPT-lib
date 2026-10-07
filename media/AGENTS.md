@@ -66,9 +66,9 @@ Classify intent before choosing an operation; do not map a keyword directly to a
 - **explain** — explain recommendation, affinity, inferred hypothesis, correlation, similarity, assessment, confidence, or provenance without writing taste.
 - **reanalyze taste** — derive replacement hypotheses from raw/explicit evidence and persist only with `set_inferred_preferences` after validation.
 - **semantic enrich** — update work knowledge through `set_semantic_fingerprint`; never turn film traits into explicit preferences silently.
-- **metadata maintenance** — provider refresh such as `refresh_metadata(all_movies)`; manual-review route.
+- **metadata maintenance** — provider refresh such as `refresh_metadata(all_movies)`; manual-review route. Reassessment modernization uses narrow `refresh_work_metadata`.
 - **architecture/vocabulary maintenance** — developer/manual route for schemas, services, workflows, vocabulary, or documentation architecture.
-- **legacy reassessment** — run the active `primary-legacy-v1` pilot only when its ledger exists; use `reassessment-context` for unanchored safe cards, `reassessment-history` only as explicit second-phase historical lookup, and mutate only through `reserve_reassessment_session` / `complete_reassessment_item` / `close_reassessment_session`.
+- **legacy reassessment** — run the active `primary-legacy-v1` pilot only when its ledger exists; recover `reassessment-modernization-context` first, then use `reassessment-context` / `reassessment-history` for human work and dedicated reassessment/modernization writes.
 
 If one user event contains several related normal signals, prefer one atomic operation when the schema supports it. Example: new work + feedback should use `record_viewing_feedback(create_if_missing=true)` rather than two independent writes.
 
@@ -118,34 +118,42 @@ Inferred hypotheses are explanation-only for numeric affinity aggregation. They 
 
 ## Legacy reassessment pilot
 
-Legacy reassessment upgrades historical `primary` review evidence; it is not semantic enrichment. Never use the pilot to backfill or rewrite `metadata.semantic`, vocabulary, explicit similarity, partner/couple state, or stable preferences that the user did not state.
+Legacy reassessment and card modernization are separate evidence layers orchestrated as one user-facing flow. complete_reassessment_item upgrades fresh historical primary viewer evidence only; it never writes work semantics. After human completion, modernization separately refreshes factual metadata and independently checks the work semantic fingerprint. **Viewer feedback is not work semantic truth**: a viewer signal may suggest what to inspect, but it cannot be copied into metadata.semantic merely because the user said it.
 
-The first response for each work must be **unanchored** by historical opinion. Use `python -m media.cli reassessment-context --limit 5 --format json` to identify the next batch. For a new batch, durably apply `reserve_reassessment_session` and wait until that reservation is authoritative on `main` **before presenting the first work**. Then present a neutral factual memory jog. Do not show the old rating, reaction, feedback summary/signals, or semantic traits before the user's first current answer unless the user explicitly asks what they previously rated/wrote.
+At startup, after reading current main, run reassessment-modernization-context. Drain ordinary **due modernization before reserving a fresh reassessment batch**. A reviewed item with missing modernization is due; completed never re-enters automatically; blocked is retried only when explicitly recovering/resolving the blocker. Modernization must never reopen the human lifecycle or **do not ask the user to reassess** an already reviewed work.
 
-If history is needed, use `python -m media.cli reassessment-history <work-id> --format json` only as the second-phase route (or earlier on explicit user request) and record `historical_exposure` truthfully. Old opinion is historical context, not fresh explicit evidence.
+The first human response for each work remains **unanchored** by historical opinion. Use reassessment-context to identify/resume human work. For a new batch, durably apply reserve_reassessment_session and wait until reservation is authoritative on main before presenting the first work. Do not show old rating/reaction/feedback or semantic traits before the user's first current answer unless explicitly asked.
 
-Default batch size is 5. `complete_reassessment_item` atomically combines the optional fresh `primary` feedback edit with the ledger lifecycle transition. `close_reassessment_session` is allowed only when all reserved items are resolved.
+If history is needed, use reassessment-history only as the second-phase route (or earlier on explicit user request) and record historical_exposure truthfully. Old opinion is historical context, not fresh explicit evidence.
 
-Mixed-target feedback is allowed at the conversation layer, but the pilot completion remains strictly `primary`-only. If the same reassessment answer also contains clearly attributed evidence for `partner` or another non-pilot target, do not drop that evidence and do not put it into `complete_reassessment_item`. First complete the reserved `primary` item. Only after the primary reassessment completion is authoritative on `main`, re-read the current canonical work and, if net-new or corrective evidence remains, record it through a separate normal feedback operation for that target. This ordering preserves the reserved-work digest guard.
+Default human batch size is 5. complete_reassessment_item combines optional fresh primary feedback with the human lifecycle transition. reviewed is terminal for human reassessment; deferred returns only after the main pending pass.
 
-Before a non-pilot follow-up, compare the attributed evidence with the current canonical target. Do not create a no-op. Do not weaken stronger existing provenance: approximate or second-hand phrasing must not overwrite an existing exact explicit rating merely because it appeared in the same message. Preserve the stronger exact value and write only supported net-new/corrective components, such as additional qualitative feedback. If nothing material is new, skip the follow-up write.
+Mixed-target feedback stays separate. If the same answer contains clearly attributed partner evidence, first complete primary; **after the primary reassessment completion is authoritative on `main`**, re-read the work and record only net-new/corrective partner evidence through a **separate normal feedback operation**. Do not create a no-op and do not weaken stronger existing provenance.
 
-All pilot writes serialize on current `expected_ledger_digest`. Reservation and completion also depend on raw reserved-work digests: if the ledger or any reserved work moves before guarded merge/completion, fail closed and replay against current `main`. Never force around these guards.
+For each newly reviewed item, normally finish these follow-ups before presenting the next human card:
 
-Completion semantics:
+1. apply refresh_work_metadata with the current raw work digest;
+2. wait until its authoritative receipt is applied or trusted no_change;
+3. re-read the refreshed canonical work and current media/vocabulary.yaml;
+4. derive work semantics independently of viewer sentiment and apply set_semantic_fingerprint;
+5. wait until that receipt is applied or trusted no_change;
+6. apply record_reassessment_modernization(outcome=completed) with fresh ledger/work/vocabulary digests.
 
-- `changed` — fresh explicit evidence caused a canonical mutation; same numeric score still counts as changed when provenance moves from `inferred`/`explicit_approx` to `explicit`.
-- `confirmed_unchanged` — current canonical evidence is already explicit and semantically matches the fresh response; do not manufacture a no-op history entry.
-- `deferred` — user cannot or does not want to reassess now; ledger-only, no canonical opinion edit.
+A valid no_change metadata or semantic receipt is positive evidence that the layer was checked; it does not require fabricating a mutation. If deterministic metadata/semantic work cannot proceed safely, record record_reassessment_modernization(outcome=blocked) with the controlled blocker code. Do not ask the user to reassess the work, do not undo human completion, and continue the session when safe.
 
-Finish the main `pending` pass before bringing `deferred` items back. Each session records whether it belongs to the `pending` or `deferred` phase. A `reviewed` item is terminal for this pilot and must never be automatically asked again. The deferred pass may finish with items still `deferred` only after each such item was explicitly revisited in a deferred-phase session and left unresolved for this pilot epoch.
+All pilot-ledger writes serialize on current expected_ledger_digest. Human reservation/completion also depend on reserved raw work digests. Single-work metadata refresh and the modernization marker bind current work digests. If authoritative state moves, fail closed and replay against current main.
 
-Scheduled taste reanalysis uses existing `set_inferred_preferences` after every 15 newly reviewed works since the last scheduled milestone and once at the end of the main pending pass when reviewed evidence advanced. That end-of-main trigger is one-shot; after deferred phase begins, only the 15-review cadence applies. Manual reanalysis does not reset this cadence.
+Completion semantics for human reassessment remain:
 
-Generated profile/affinity drift is expected as direct explicit evidence replaces inferred/approx evidence. Evaluate pilot progress against the frozen Stage A baseline, not the immediately previous profile. The pilot ledger is operational provenance, not taste truth and not automatically a Stage B decision benchmark.
+- changed — fresh explicit evidence caused a canonical mutation; same score still counts as changed when provenance moves from inferred/explicit_approx to explicit;
+- confirmed_unchanged — canonical evidence is already explicit and semantically matches the fresh response; do not manufacture no-op history;
+- deferred — no reliable current reassessment; ledger-only.
 
-During normal reassessment conversation hide Git/PR/workflow mechanics. Do not tell the user something was saved until the corresponding pilot operation is actually authoritative on `main`.
+Scheduled taste reanalysis remains a separate layer: set_inferred_preferences runs after every **15 newly reviewed works**, once at the end of the main pending pass when evidence advanced, or on explicit user request. **Modernization does not increment** or reset this cadence.
 
+close_reassessment_session still depends only on resolution of human reserved items; modernization failure does not reopen or make the session unclosable. Generated profile/affinity drift is evaluated against the frozen Stage A baseline.
+
+During normal reassessment hide Git/PR/workflow mechanics. Do not claim a human write or modernization step is saved until it is authoritative on main.
 ## Hard guardrails
 
 - Never invent schema fields.
@@ -186,8 +194,9 @@ Pilot-only serialized writes when the legacy reassessment ledger is active:
 - `reserve_reassessment_session`
 - `complete_reassessment_item`
 - `close_reassessment_session`
+- `record_reassessment_modernization`
 
-Read-only requests: `recommend_context`, `taste_context`/`taste-context`, `assess_candidate`/`assess-candidate`; pilot read models are `reassessment-context` and explicit `reassessment-history`. `refresh_metadata` is typed maintenance, not a normal auto-merge operation.
+Read-only requests: `recommend_context`, `taste_context`/`taste-context`, `assess_candidate`/`assess-candidate`; pilot read models are `reassessment-context`, explicit `reassessment-history`, and `reassessment-modernization-context`. `refresh_metadata` is bulk manual maintenance; `refresh_work_metadata` is the stale-safe single-work modernization route.
 
 `edit_viewing_feedback` uses explicit set/clear/purge semantics; clearing one component does not erase neighboring signals. `record_recommendation_interaction` is append-only recommendation memory. `set_work_similarity`/`remove_work_similarity` operate on one current target-specific unordered relation, with deterministic external→canonical reconciliation when a matching work is later created.
 

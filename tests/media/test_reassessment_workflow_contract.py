@@ -81,3 +81,14 @@ def test_privileged_pilot_guards_use_shell_and_github_contents_not_pr_head_pytho
     assert "gh api" in pilot_block
     assert "jq" in pilot_block
     assert "python" not in pilot_block.lower()
+
+
+def test_media_command_treats_single_work_refresh_as_provider_dependent():
+    text = _text("media-command.yml")
+    assert "operation == 'refresh_work_metadata'" in text
+
+
+def test_media_check_accepts_only_dedicated_modernization_operation_for_modernization_ledger_transition():
+    text = _text("media-check.yml")
+    assert "record_reassessment_modernization" in text
+    assert "Pilot ledger changed under non-reassessment operation" in text

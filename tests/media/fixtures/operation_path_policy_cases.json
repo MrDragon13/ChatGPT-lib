@@ -1,72 +1,365 @@
 {
   "schema_version": 1,
   "cases": [
-    {"operation":"add_work","pattern":"media/data/works/*.yaml","path":"media/data/works/example.yaml","expected":true},
-    {"operation":"add_work","pattern":"media/generated/index.jsonl","path":"media/generated/index.jsonl","expected":true},
-    {"operation":"add_work","pattern":"media/generated/profiles/*.yaml","path":"media/generated/profiles/primary.yaml","expected":true},
-    {"operation":"add_work","pattern":".media/operations/*.json","path":".media/operations/op-add.json","expected":true},
-    {"operation":"add_work","pattern":"media/data/relations/similarity/*.yaml","path":"media/data/relations/similarity/primary.yaml","expected":true},
-
-    {"operation":"record_viewing_feedback","pattern":"media/data/works/*.yaml","path":"media/data/works/feedback.yaml","expected":true},
-    {"operation":"record_viewing_feedback","pattern":"media/generated/index.jsonl","path":"media/generated/index.jsonl","expected":true},
-    {"operation":"record_viewing_feedback","pattern":"media/generated/profiles/*.yaml","path":"media/generated/profiles/partner.yaml","expected":true},
-    {"operation":"record_viewing_feedback","pattern":".media/operations/*.json","path":".media/operations/op-feedback.json","expected":true},
-    {"operation":"record_viewing_feedback","pattern":"media/data/relations/similarity/*.yaml","path":"media/data/relations/similarity/couple.yaml","expected":true},
-
-    {"operation":"edit_viewing_feedback","pattern":"media/data/works/*.yaml","path":"media/data/works/edit.yaml","expected":true},
-    {"operation":"edit_viewing_feedback","pattern":"media/generated/index.jsonl","path":"media/generated/index.jsonl","expected":true},
-    {"operation":"edit_viewing_feedback","pattern":"media/generated/profiles/*.yaml","path":"media/generated/profiles/couple.yaml","expected":true},
-    {"operation":"edit_viewing_feedback","pattern":".media/operations/*.json","path":".media/operations/op-edit.json","expected":true},
-
-    {"operation":"set_interest","pattern":"media/data/works/*.yaml","path":"media/data/works/interest.yaml","expected":true},
-    {"operation":"set_interest","pattern":"media/generated/index.jsonl","path":"media/generated/index.jsonl","expected":true},
-    {"operation":"set_interest","pattern":"media/generated/profiles/*.yaml","path":"media/generated/profiles/primary.yaml","expected":true},
-    {"operation":"set_interest","pattern":".media/operations/*.json","path":".media/operations/op-interest.json","expected":true},
-
-    {"operation":"set_semantic_fingerprint","pattern":"media/data/works/*.yaml","path":"media/data/works/semantic.yaml","expected":true},
-    {"operation":"set_semantic_fingerprint","pattern":"media/generated/index.jsonl","path":"media/generated/index.jsonl","expected":true},
-    {"operation":"set_semantic_fingerprint","pattern":"media/generated/profiles/*.yaml","path":"media/generated/profiles/primary.yaml","expected":true},
-    {"operation":"set_semantic_fingerprint","pattern":".media/operations/*.json","path":".media/operations/op-semantic.json","expected":true},
-
-    {"operation":"set_inferred_preferences","pattern":"media/preferences/inferred/*.yaml","path":"media/preferences/inferred/primary.yaml","expected":true},
-    {"operation":"set_inferred_preferences","pattern":"media/generated/profiles/*.yaml","path":"media/generated/profiles/primary.yaml","expected":true},
-    {"operation":"set_inferred_preferences","pattern":".media/operations/*.json","path":".media/operations/op-inferred.json","expected":true},
-
-    {"operation":"record_recommendation_interaction","pattern":"media/data/interactions/*.jsonl","path":"media/data/interactions/2026-10.jsonl","expected":true},
-    {"operation":"record_recommendation_interaction","pattern":"media/generated/profiles/*.yaml","path":"media/generated/profiles/primary.yaml","expected":true},
-    {"operation":"record_recommendation_interaction","pattern":".media/operations/*.json","path":".media/operations/op-interaction.json","expected":true},
-
-    {"operation":"set_work_similarity","pattern":"media/data/relations/similarity/*.yaml","path":"media/data/relations/similarity/primary.yaml","expected":true},
-    {"operation":"set_work_similarity","pattern":".media/operations/*.json","path":".media/operations/op-similarity-set.json","expected":true},
-
-    {"operation":"remove_work_similarity","pattern":"media/data/relations/similarity/*.yaml","path":"media/data/relations/similarity/partner.yaml","expected":true},
-    {"operation":"remove_work_similarity","pattern":".media/operations/*.json","path":".media/operations/op-similarity-remove.json","expected":true},
-
-    {"operation":"reserve_reassessment_session","pattern":"media/pilots/legacy-reassessment-primary.json","path":"media/pilots/legacy-reassessment-primary.json","expected":true},
-    {"operation":"reserve_reassessment_session","pattern":".media/operations/*.json","path":".media/operations/op-reassess-reserve.json","expected":true},
-
-    {"operation":"complete_reassessment_item","pattern":"media/pilots/legacy-reassessment-primary.json","path":"media/pilots/legacy-reassessment-primary.json","expected":true},
-    {"operation":"complete_reassessment_item","pattern":"media/data/works/*.yaml","path":"media/data/works/arrival-2016.yaml","expected":true},
-    {"operation":"complete_reassessment_item","pattern":"media/generated/index.jsonl","path":"media/generated/index.jsonl","expected":true},
-    {"operation":"complete_reassessment_item","pattern":"media/generated/profiles/*.yaml","path":"media/generated/profiles/primary.yaml","expected":true},
-    {"operation":"complete_reassessment_item","pattern":".media/operations/*.json","path":".media/operations/op-reassess-complete.json","expected":true},
-
-    {"operation":"close_reassessment_session","pattern":"media/pilots/legacy-reassessment-primary.json","path":"media/pilots/legacy-reassessment-primary.json","expected":true},
-    {"operation":"close_reassessment_session","pattern":".media/operations/*.json","path":".media/operations/op-reassess-close.json","expected":true},
-
-    {"operation":"add_work","pattern":"media/data/works/*.yaml","path":"evil/media/data/works/x.yaml","expected":false},
-    {"operation":"add_work","pattern":"media/data/works/*.yaml","path":"media/data/works/sub/x.yaml","expected":false},
-    {"operation":"add_work","pattern":"media/data/works/*.yaml","path":"media/data/works/x.yaml.bak","expected":false},
-    {"operation":"add_work","pattern":"media/data/works/*.yaml","path":"media/config/operation_path_policy.json","expected":false},
-    {"operation":"add_work","pattern":"media/data/works/*.yaml","path":".github/workflows/media-auto-merge.yml","expected":false},
-    {"operation":"add_work","pattern":"media/data/works/*.yaml","path":"media/service/path_policy.py","expected":false},
-    {"operation":"add_work","pattern":"media/data/works/*.yaml","path":"media/tools/rebuild.py","expected":false},
-    {"operation":"add_work","pattern":"media/data/works/*.yaml","path":"tests/media/test_path_policy.py","expected":false},
-    {"operation":"record_recommendation_interaction","pattern":"media/data/interactions/*.jsonl","path":"media/data/interactions/nested/2026-10.jsonl","expected":false},
-    {"operation":"set_work_similarity","pattern":"media/data/relations/similarity/*.yaml","path":"media/data/relations/similarity/sub/primary.yaml","expected":false},
-    {"operation":"set_inferred_preferences","pattern":"media/preferences/inferred/*.yaml","path":"x/media/preferences/inferred/primary.yaml","expected":false},
-    {"operation":"set_interest","pattern":".media/operations/*.json","path":".media/operations/nested/op.json","expected":false},
-    {"operation":"complete_reassessment_item","pattern":"media/data/works/*.yaml","path":"media/data/works/sub/arrival-2016.yaml","expected":false},
-    {"operation":"reserve_reassessment_session","pattern":"media/pilots/legacy-reassessment-primary.json","path":"media/pilots/legacy-reassessment-primary.json.bak","expected":false}
+    {
+      "operation": "add_work",
+      "pattern": "media/data/works/*.yaml",
+      "path": "media/data/works/example.yaml",
+      "expected": true
+    },
+    {
+      "operation": "add_work",
+      "pattern": "media/generated/index.jsonl",
+      "path": "media/generated/index.jsonl",
+      "expected": true
+    },
+    {
+      "operation": "add_work",
+      "pattern": "media/generated/profiles/*.yaml",
+      "path": "media/generated/profiles/primary.yaml",
+      "expected": true
+    },
+    {
+      "operation": "add_work",
+      "pattern": ".media/operations/*.json",
+      "path": ".media/operations/op-add.json",
+      "expected": true
+    },
+    {
+      "operation": "add_work",
+      "pattern": "media/data/relations/similarity/*.yaml",
+      "path": "media/data/relations/similarity/primary.yaml",
+      "expected": true
+    },
+    {
+      "operation": "record_viewing_feedback",
+      "pattern": "media/data/works/*.yaml",
+      "path": "media/data/works/feedback.yaml",
+      "expected": true
+    },
+    {
+      "operation": "record_viewing_feedback",
+      "pattern": "media/generated/index.jsonl",
+      "path": "media/generated/index.jsonl",
+      "expected": true
+    },
+    {
+      "operation": "record_viewing_feedback",
+      "pattern": "media/generated/profiles/*.yaml",
+      "path": "media/generated/profiles/partner.yaml",
+      "expected": true
+    },
+    {
+      "operation": "record_viewing_feedback",
+      "pattern": ".media/operations/*.json",
+      "path": ".media/operations/op-feedback.json",
+      "expected": true
+    },
+    {
+      "operation": "record_viewing_feedback",
+      "pattern": "media/data/relations/similarity/*.yaml",
+      "path": "media/data/relations/similarity/couple.yaml",
+      "expected": true
+    },
+    {
+      "operation": "edit_viewing_feedback",
+      "pattern": "media/data/works/*.yaml",
+      "path": "media/data/works/edit.yaml",
+      "expected": true
+    },
+    {
+      "operation": "edit_viewing_feedback",
+      "pattern": "media/generated/index.jsonl",
+      "path": "media/generated/index.jsonl",
+      "expected": true
+    },
+    {
+      "operation": "edit_viewing_feedback",
+      "pattern": "media/generated/profiles/*.yaml",
+      "path": "media/generated/profiles/couple.yaml",
+      "expected": true
+    },
+    {
+      "operation": "edit_viewing_feedback",
+      "pattern": ".media/operations/*.json",
+      "path": ".media/operations/op-edit.json",
+      "expected": true
+    },
+    {
+      "operation": "set_interest",
+      "pattern": "media/data/works/*.yaml",
+      "path": "media/data/works/interest.yaml",
+      "expected": true
+    },
+    {
+      "operation": "set_interest",
+      "pattern": "media/generated/index.jsonl",
+      "path": "media/generated/index.jsonl",
+      "expected": true
+    },
+    {
+      "operation": "set_interest",
+      "pattern": "media/generated/profiles/*.yaml",
+      "path": "media/generated/profiles/primary.yaml",
+      "expected": true
+    },
+    {
+      "operation": "set_interest",
+      "pattern": ".media/operations/*.json",
+      "path": ".media/operations/op-interest.json",
+      "expected": true
+    },
+    {
+      "operation": "refresh_work_metadata",
+      "pattern": "media/data/works/*.yaml",
+      "path": "media/data/works/modernize.yaml",
+      "expected": true
+    },
+    {
+      "operation": "refresh_work_metadata",
+      "pattern": "media/generated/index.jsonl",
+      "path": "media/generated/index.jsonl",
+      "expected": true
+    },
+    {
+      "operation": "refresh_work_metadata",
+      "pattern": ".media/operations/*.json",
+      "path": ".media/operations/op-refresh-one.json",
+      "expected": true
+    },
+    {
+      "operation": "set_semantic_fingerprint",
+      "pattern": "media/data/works/*.yaml",
+      "path": "media/data/works/semantic.yaml",
+      "expected": true
+    },
+    {
+      "operation": "set_semantic_fingerprint",
+      "pattern": "media/generated/index.jsonl",
+      "path": "media/generated/index.jsonl",
+      "expected": true
+    },
+    {
+      "operation": "set_semantic_fingerprint",
+      "pattern": "media/generated/profiles/*.yaml",
+      "path": "media/generated/profiles/primary.yaml",
+      "expected": true
+    },
+    {
+      "operation": "set_semantic_fingerprint",
+      "pattern": ".media/operations/*.json",
+      "path": ".media/operations/op-semantic.json",
+      "expected": true
+    },
+    {
+      "operation": "set_inferred_preferences",
+      "pattern": "media/preferences/inferred/*.yaml",
+      "path": "media/preferences/inferred/primary.yaml",
+      "expected": true
+    },
+    {
+      "operation": "set_inferred_preferences",
+      "pattern": "media/generated/profiles/*.yaml",
+      "path": "media/generated/profiles/primary.yaml",
+      "expected": true
+    },
+    {
+      "operation": "set_inferred_preferences",
+      "pattern": ".media/operations/*.json",
+      "path": ".media/operations/op-inferred.json",
+      "expected": true
+    },
+    {
+      "operation": "record_recommendation_interaction",
+      "pattern": "media/data/interactions/*.jsonl",
+      "path": "media/data/interactions/2026-10.jsonl",
+      "expected": true
+    },
+    {
+      "operation": "record_recommendation_interaction",
+      "pattern": "media/generated/profiles/*.yaml",
+      "path": "media/generated/profiles/primary.yaml",
+      "expected": true
+    },
+    {
+      "operation": "record_recommendation_interaction",
+      "pattern": ".media/operations/*.json",
+      "path": ".media/operations/op-interaction.json",
+      "expected": true
+    },
+    {
+      "operation": "set_work_similarity",
+      "pattern": "media/data/relations/similarity/*.yaml",
+      "path": "media/data/relations/similarity/primary.yaml",
+      "expected": true
+    },
+    {
+      "operation": "set_work_similarity",
+      "pattern": ".media/operations/*.json",
+      "path": ".media/operations/op-similarity-set.json",
+      "expected": true
+    },
+    {
+      "operation": "remove_work_similarity",
+      "pattern": "media/data/relations/similarity/*.yaml",
+      "path": "media/data/relations/similarity/partner.yaml",
+      "expected": true
+    },
+    {
+      "operation": "remove_work_similarity",
+      "pattern": ".media/operations/*.json",
+      "path": ".media/operations/op-similarity-remove.json",
+      "expected": true
+    },
+    {
+      "operation": "reserve_reassessment_session",
+      "pattern": "media/pilots/legacy-reassessment-primary.json",
+      "path": "media/pilots/legacy-reassessment-primary.json",
+      "expected": true
+    },
+    {
+      "operation": "reserve_reassessment_session",
+      "pattern": ".media/operations/*.json",
+      "path": ".media/operations/op-reassess-reserve.json",
+      "expected": true
+    },
+    {
+      "operation": "complete_reassessment_item",
+      "pattern": "media/pilots/legacy-reassessment-primary.json",
+      "path": "media/pilots/legacy-reassessment-primary.json",
+      "expected": true
+    },
+    {
+      "operation": "complete_reassessment_item",
+      "pattern": "media/data/works/*.yaml",
+      "path": "media/data/works/arrival-2016.yaml",
+      "expected": true
+    },
+    {
+      "operation": "complete_reassessment_item",
+      "pattern": "media/generated/index.jsonl",
+      "path": "media/generated/index.jsonl",
+      "expected": true
+    },
+    {
+      "operation": "complete_reassessment_item",
+      "pattern": "media/generated/profiles/*.yaml",
+      "path": "media/generated/profiles/primary.yaml",
+      "expected": true
+    },
+    {
+      "operation": "complete_reassessment_item",
+      "pattern": ".media/operations/*.json",
+      "path": ".media/operations/op-reassess-complete.json",
+      "expected": true
+    },
+    {
+      "operation": "record_reassessment_modernization",
+      "pattern": "media/pilots/legacy-reassessment-primary.json",
+      "path": "media/pilots/legacy-reassessment-primary.json",
+      "expected": true
+    },
+    {
+      "operation": "record_reassessment_modernization",
+      "pattern": ".media/operations/*.json",
+      "path": ".media/operations/op-modernization.json",
+      "expected": true
+    },
+    {
+      "operation": "close_reassessment_session",
+      "pattern": "media/pilots/legacy-reassessment-primary.json",
+      "path": "media/pilots/legacy-reassessment-primary.json",
+      "expected": true
+    },
+    {
+      "operation": "close_reassessment_session",
+      "pattern": ".media/operations/*.json",
+      "path": ".media/operations/op-reassess-close.json",
+      "expected": true
+    },
+    {
+      "operation": "add_work",
+      "pattern": "media/data/works/*.yaml",
+      "path": "evil/media/data/works/x.yaml",
+      "expected": false
+    },
+    {
+      "operation": "add_work",
+      "pattern": "media/data/works/*.yaml",
+      "path": "media/data/works/sub/x.yaml",
+      "expected": false
+    },
+    {
+      "operation": "add_work",
+      "pattern": "media/data/works/*.yaml",
+      "path": "media/data/works/x.yaml.bak",
+      "expected": false
+    },
+    {
+      "operation": "add_work",
+      "pattern": "media/data/works/*.yaml",
+      "path": "media/config/operation_path_policy.json",
+      "expected": false
+    },
+    {
+      "operation": "add_work",
+      "pattern": "media/data/works/*.yaml",
+      "path": ".github/workflows/media-auto-merge.yml",
+      "expected": false
+    },
+    {
+      "operation": "add_work",
+      "pattern": "media/data/works/*.yaml",
+      "path": "media/service/path_policy.py",
+      "expected": false
+    },
+    {
+      "operation": "add_work",
+      "pattern": "media/data/works/*.yaml",
+      "path": "media/tools/rebuild.py",
+      "expected": false
+    },
+    {
+      "operation": "add_work",
+      "pattern": "media/data/works/*.yaml",
+      "path": "tests/media/test_path_policy.py",
+      "expected": false
+    },
+    {
+      "operation": "record_recommendation_interaction",
+      "pattern": "media/data/interactions/*.jsonl",
+      "path": "media/data/interactions/nested/2026-10.jsonl",
+      "expected": false
+    },
+    {
+      "operation": "set_work_similarity",
+      "pattern": "media/data/relations/similarity/*.yaml",
+      "path": "media/data/relations/similarity/sub/primary.yaml",
+      "expected": false
+    },
+    {
+      "operation": "set_inferred_preferences",
+      "pattern": "media/preferences/inferred/*.yaml",
+      "path": "x/media/preferences/inferred/primary.yaml",
+      "expected": false
+    },
+    {
+      "operation": "set_interest",
+      "pattern": ".media/operations/*.json",
+      "path": ".media/operations/nested/op.json",
+      "expected": false
+    },
+    {
+      "operation": "complete_reassessment_item",
+      "pattern": "media/data/works/*.yaml",
+      "path": "media/data/works/sub/arrival-2016.yaml",
+      "expected": false
+    },
+    {
+      "operation": "reserve_reassessment_session",
+      "pattern": "media/pilots/legacy-reassessment-primary.json",
+      "path": "media/pilots/legacy-reassessment-primary.json.bak",
+      "expected": false
+    }
   ]
 }

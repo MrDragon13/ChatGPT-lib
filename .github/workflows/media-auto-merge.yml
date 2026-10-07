@@ -160,8 +160,12 @@ jobs:
             echo "::error::Operation marker has no valid operation kind"
             exit 3
           fi
-          if [ "$OP_STATUS" != "applied" ]; then
-            echo "::error::Operation marker is not applied"
+          TRUSTED_NO_CHANGE_OPERATION=false
+          if [ "$OP_KIND" = "refresh_work_metadata" ] || [ "$OP_KIND" = "set_semantic_fingerprint" ]; then
+            TRUSTED_NO_CHANGE_OPERATION=true
+          fi
+          if [ "$OP_STATUS" != "applied" ] && ! { [ "$OP_STATUS" = "no_change" ] && [ "$TRUSTED_NO_CHANGE_OPERATION" = true ]; }; then
+            echo "::error::Operation marker has an ineligible status: $OP_STATUS"
             exit 3
           fi
 
@@ -226,7 +230,8 @@ jobs:
           PILOT_OPERATION=false
           if [ "$OP_KIND" = "reserve_reassessment_session" ] || \
              [ "$OP_KIND" = "complete_reassessment_item" ] || \
-             [ "$OP_KIND" = "close_reassessment_session" ]; then
+             [ "$OP_KIND" = "close_reassessment_session" ] || \
+             [ "$OP_KIND" = "record_reassessment_modernization" ]; then
             PILOT_OPERATION=true
           fi
 
@@ -261,7 +266,11 @@ jobs:
             printf '%s' "$CURRENT_LEDGER_B64" | tr -d '\n' | base64 --decode > /tmp/current-reassessment-ledger.json
             CURRENT_LEDGER_DIGEST="sha256:$(sha256sum /tmp/current-reassessment-ledger.json | awk '{print $1}')"
             if [ "$CURRENT_LEDGER_DIGEST" != "$EXPECTED_LEDGER_DIGEST" ]; then
-              echo "::error::Stale reassessment ledger: planned=$EXPECTED_LEDGER_DIGEST current=$CURRENT_LEDGER_DIGEST"
+              if [ "$OP_KIND" = "record_reassessment_modernization" ]; then
+                echo "::error::Stale reassessment ledger during modernization: planned=$EXPECTED_LEDGER_DIGEST current=$CURRENT_LEDGER_DIGEST"
+              else
+                echo "::error::Stale reassessment ledger: planned=$EXPECTED_LEDGER_DIGEST current=$CURRENT_LEDGER_DIGEST"
+              fi
               exit 3
             fi
 
@@ -328,6 +337,44 @@ jobs:
                 echo "::error::$OP_KIND may not change canonical work files"
                 exit 3
               fi
+            fi
+          fi
+
+          if [ "$OP_KIND" = "refresh_work_metadata" ]; then
+            WORK_ID=$(printf '%s' "$OP_JSON" | jq -er '.details.work_id')
+            EXPECTED_WORK_DIGEST=$(printf '%s' "$OP_JSON" | jq -er '.details.expected_work_digest')
+            if [[ ! "$WORK_ID" =~ ^[a-z0-9][a-z0-9-]*$ ]]; then
+              echo "::error::Invalid work id in metadata modernization receipt: $WORK_ID"
+              exit 3
+            fi
+            if ! CURRENT_WORK_B64=$(gh api "repos/$REPO/contents/media/data/works/$WORK_ID.yaml?ref=main" --jq '.content'); then
+              echo "::error::Current-main work is missing during metadata modernization: $WORK_ID"
+              exit 3
+            fi
+            printf '%s' "$CURRENT_WORK_B64" | tr -d '\n' | base64 --decode > /tmp/current-modernization-work.yaml
+            CURRENT_WORK_DIGEST="sha256:$(sha256sum /tmp/current-modernization-work.yaml | awk '{print $1}')"
+            if [ "$CURRENT_WORK_DIGEST" != "$EXPECTED_WORK_DIGEST" ]; then
+              echo "::error::Stale work during metadata modernization: work=$WORK_ID planned=$EXPECTED_WORK_DIGEST current=$CURRENT_WORK_DIGEST"
+              exit 3
+            fi
+          fi
+
+          if [ "$OP_KIND" = "record_reassessment_modernization" ]; then
+            WORK_ID=$(printf '%s' "$OP_JSON" | jq -er '.details.work_id')
+            EXPECTED_WORK_DIGEST=$(printf '%s' "$OP_JSON" | jq -er '.details.expected_work_digest')
+            if [[ ! "$WORK_ID" =~ ^[a-z0-9][a-z0-9-]*$ ]]; then
+              echo "::error::Invalid work id in modernization marker receipt: $WORK_ID"
+              exit 3
+            fi
+            if ! CURRENT_WORK_B64=$(gh api "repos/$REPO/contents/media/data/works/$WORK_ID.yaml?ref=main" --jq '.content'); then
+              echo "::error::Current-main work is missing during modernization marker: $WORK_ID"
+              exit 3
+            fi
+            printf '%s' "$CURRENT_WORK_B64" | tr -d '\n' | base64 --decode > /tmp/current-modernization-marker-work.yaml
+            CURRENT_WORK_DIGEST="sha256:$(sha256sum /tmp/current-modernization-marker-work.yaml | awk '{print $1}')"
+            if [ "$CURRENT_WORK_DIGEST" != "$EXPECTED_WORK_DIGEST" ]; then
+              echo "::error::Stale work during modernization marker: work=$WORK_ID planned=$EXPECTED_WORK_DIGEST current=$CURRENT_WORK_DIGEST"
+              exit 3
             fi
           fi
 

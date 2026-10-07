@@ -116,3 +116,54 @@ def test_docs_define_expected_profile_drift_against_frozen_stage_a_baseline():
     assert "drift" in combined
     assert "stage a" in combined
     assert "baseline" in combined
+
+
+def test_reassessment_docs_define_end_to_end_card_modernization_without_reprompt():
+    agent = _text("media/AGENTS.md").lower()
+    prompt = _text("media/START_PROMPT.md").lower()
+    runbook = _text("docs/runbooks/media-legacy-reassessment.md").lower()
+
+    for phrase in (
+        "reassessment-modernization-context",
+        "refresh_work_metadata",
+        "record_reassessment_modernization",
+        "do not ask the user to reassess",
+        "viewer feedback is not work semantic truth",
+    ):
+        assert phrase in agent
+    assert "сначала модернизац" in prompt
+    assert "не спрашивай меня повторно" in prompt
+    assert "refresh_work_metadata" in runbook
+    assert "set_semantic_fingerprint" in runbook
+    assert "record_reassessment_modernization" in runbook
+
+
+def test_reassessment_docs_recover_due_modernization_before_fresh_human_batch():
+    combined = "\n".join(
+        _text(path)
+        for path in (
+            "media/AGENTS.md",
+            "docs/runbooks/media-legacy-reassessment.md",
+            "docs/status/current.md",
+        )
+    ).lower()
+    assert "due modernization" in combined
+    assert "before reserving a fresh reassessment batch" in combined
+    assert "blocked" in combined
+    assert "completed" in combined
+
+
+def test_reassessment_docs_keep_modernization_separate_from_taste_cadence():
+    combined = "\n".join(
+        _text(path)
+        for path in (
+            "media/AGENTS.md",
+            "docs/runbooks/media-legacy-reassessment.md",
+            "docs/reference/invariants.md",
+        )
+    ).lower()
+    assert "15" in combined
+    assert "modernization does not increment" in combined
+    assert "no_change" in combined
+    assert "metadata" in combined
+    assert "semantic" in combined

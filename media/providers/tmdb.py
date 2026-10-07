@@ -89,6 +89,20 @@ class TMDBProvider:
                     _year(item.get("release_date")),
                 )
             )
+        for item in payload.get("tv_results") or []:
+            if not isinstance(item.get("id"), int):
+                continue
+            localized = item.get("name")
+            original = item.get("original_name")
+            candidates.append(
+                ProviderCandidate(
+                    "tv",
+                    item["id"],
+                    str(localized or original or ""),
+                    str(original or localized or ""),
+                    _year(item.get("first_air_date")),
+                )
+            )
         return candidates
 
     def fetch_work(self, media_type: str, provider_id: int) -> CanonicalMetadata:

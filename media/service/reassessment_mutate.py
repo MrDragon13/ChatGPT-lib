@@ -10,6 +10,7 @@ from media.domain.changeset import MutationPlan
 from media.domain.commands import (
     CloseReassessmentSessionCommand,
     CompleteReassessmentItemCommand,
+    RecordReassessmentModernizationCommand,
     ReserveReassessmentSessionCommand,
 )
 from media.domain.errors import CommandValidationError, NotFoundError
@@ -560,6 +561,159 @@ def plan_close_reassessment_session(
             "deferred_total": deferred_total,
             "scheduled_reanalysis_due": due,
             "scheduled_reanalysis_operation_id": command.scheduled_reanalysis_operation_id,
+        },
+        json_documents={LEDGER_REL_PATH: ledger},
+    )
+
+
+
+_MODERNIZATION_BLOCKERS = {
+    "provider_identity_missing",
+    "provider_identity_ambiguous",
+    "provider_identity_conflict",
+    "semantic_context_insufficient",
+}
+
+
+def _load_modernization_receipt(
+    repo_root: Path,
+    operation_id: str,
+    *,
+    operation: str,
+    work_id: str,
+    label: str,
+) -> Mapping[str, Any]:
+    path = repo_root / ".media" / "operations" / f"{operation_id}.json"
+    if not path.exists():
+        raise CommandValidationError(f"{label} modernization receipt is not present")
+    try:
+        receipt = json.loads(path.read_text(encoding="utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise CommandValidationError(f"{label} modernization receipt is invalid") from exc
+    if not isinstance(receipt, Mapping):
+        raise CommandValidationError(f"{label} modernization receipt must be an object")
+    if receipt.get("operation") != operation:
+        raise CommandValidationError(f"{label} modernization receipt has wrong operation")
+    if receipt.get("status") not in {"applied", "no_change"}:
+        raise CommandValidationError(f"{label} modernization receipt is not successful")
+    details = receipt.get("details")
+    if not isinstance(details, Mapping) or details.get("work_id") != work_id:
+        raise CommandValidationError(f"{label} modernization receipt is not bound to requested work")
+    if not isinstance(receipt.get("applied_at"), str) or not receipt.get("applied_at"):
+        raise CommandValidationError(f"{label} modernization receipt lacks applied_at")
+    return receipt
+
+
+def plan_record_reassessment_modernization(
+    repo_root: Path,
+    repo: YamlRepository,
+    command: RecordReassessmentModernizationCommand,
+    *,
+    now: datetime | None = None,
+) -> MutationPlan:
+    _, ledger, current_ledger_digest = _load_ledger(
+        repo,
+        pilot_id=command.pilot_id,
+        expected_digest=command.expected_ledger_digest,
+    )
+    frozen = ledger.get("frozen_cohort") or {}
+    if command.work_id not in (frozen.get("work_ids") or []):
+        raise CommandValidationError("modernization work is not in frozen reassessment cohort")
+
+    items = ledger.get("items") or {}
+    lifecycle = items.get(command.work_id)
+    if not isinstance(lifecycle, Mapping) or lifecycle.get("status") != "reviewed":
+        raise CommandValidationError("reassessment modernization requires a human reviewed item")
+
+    existing = lifecycle.get("modernization")
+    if isinstance(existing, Mapping) and existing.get("status") == "completed":
+        raise CommandValidationError("completed reassessment modernization is terminal")
+    if isinstance(existing, Mapping) and existing.get("status") == "blocked" and command.outcome == "blocked":
+        raise CommandValidationError("blocked reassessment modernization cannot be rewritten")
+
+    record = repo.get_work(command.work_id)
+    if record is None:
+        raise NotFoundError(f"reassessment modernization work not found: {command.work_id}")
+    current_work_digest = file_sha256(record.path.read_bytes())
+    if current_work_digest != command.expected_work_digest:
+        raise CommandValidationError(
+            f"work digest mismatch for {command.work_id}: expected {command.expected_work_digest}, current {current_work_digest}"
+        )
+
+    at = _at(now)
+    if command.outcome == "blocked":
+        if command.blocker_code not in _MODERNIZATION_BLOCKERS:
+            raise CommandValidationError("invalid reassessment modernization blocker code")
+        modernization = {
+            "status": "blocked",
+            "blocker_code": command.blocker_code,
+            "recorded_at": at,
+            "work_digest": current_work_digest,
+        }
+    elif command.outcome == "completed":
+        if not command.metadata_operation_id or not command.semantic_operation_id or not command.vocabulary_digest:
+            raise CommandValidationError("completed modernization requires metadata/semantic/vocabulary provenance")
+        metadata_receipt = _load_modernization_receipt(
+            Path(repo_root),
+            command.metadata_operation_id,
+            operation="refresh_work_metadata",
+            work_id=command.work_id,
+            label="metadata",
+        )
+        semantic_receipt = _load_modernization_receipt(
+            Path(repo_root),
+            command.semantic_operation_id,
+            operation="set_semantic_fingerprint",
+            work_id=command.work_id,
+            label="semantic",
+        )
+        reviewed_at = lifecycle.get("reviewed_at")
+        metadata_at = metadata_receipt.get("applied_at")
+        semantic_at = semantic_receipt.get("applied_at")
+        if not isinstance(reviewed_at, str) or not reviewed_at:
+            raise CommandValidationError("reviewed item lacks reviewed_at provenance")
+        if metadata_at <= reviewed_at:
+            raise CommandValidationError("metadata modernization receipt must occur after human reassessment")
+        if semantic_at <= metadata_at:
+            raise CommandValidationError("semantic modernization receipt must occur after metadata refresh")
+
+        vocabulary_path = Path(repo_root) / "media" / "vocabulary.yaml"
+        if not vocabulary_path.exists():
+            raise CommandValidationError("media vocabulary is missing")
+        current_vocabulary_digest = file_sha256(vocabulary_path.read_bytes())
+        if current_vocabulary_digest != command.vocabulary_digest:
+            raise CommandValidationError(
+                f"vocabulary digest mismatch: expected {command.vocabulary_digest}, current {current_vocabulary_digest}"
+            )
+        modernization = {
+            "status": "completed",
+            "metadata_operation_id": command.metadata_operation_id,
+            "semantic_operation_id": command.semantic_operation_id,
+            "completed_at": at,
+            "work_digest": current_work_digest,
+            "vocabulary_digest": current_vocabulary_digest,
+        }
+    else:
+        raise CommandValidationError(f"unsupported reassessment modernization outcome: {command.outcome}")
+
+    updated_item = copy.deepcopy(dict(lifecycle))
+    updated_item["modernization"] = modernization
+    items[command.work_id] = updated_item
+    ledger["items"] = items
+    return MutationPlan(
+        operation_id=command.operation_id,
+        operation="record_reassessment_modernization",
+        changed_entities=(),
+        documents={},
+        rebuild_index=False,
+        rebuild_profile_targets=(),
+        details={
+            "pilot_id": command.pilot_id,
+            "work_id": command.work_id,
+            "outcome": command.outcome,
+            "expected_ledger_digest": current_ledger_digest,
+            "expected_work_digest": current_work_digest,
+            "modernization": copy.deepcopy(modernization),
         },
         json_documents={LEDGER_REL_PATH: ledger},
     )

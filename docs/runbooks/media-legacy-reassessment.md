@@ -67,7 +67,7 @@ All three pilot writes serialize on the current ledger `expected_ledger_digest`.
 
 `deferred` is ledger-only and does not mutate canonical opinion.
 
-Fresh reassessment rating/reaction/feedback signals use explicit provenance. The pilot does not infer semantic traits from reactions and never writes `set_semantic_fingerprint`.
+Fresh reassessment rating/reaction/feedback signals use explicit provenance. `complete_reassessment_item` never writes `set_semantic_fingerprint`; semantic work happens only in the separate modernization follow-up.
 
 ## Mixed-target partner follow-up
 
@@ -75,6 +75,26 @@ Fresh reassessment rating/reaction/feedback signals use explicit provenance. The
 
 After the re-read, use a separate normal feedback operation only for net-new or corrective partner evidence. Do not create a no-op. Do not weaken stronger existing provenance: an approximate second-hand estimate must not replace an existing exact explicit rating. Keep the stronger exact value while adding supported qualitative feedback when that qualitative evidence is genuinely new. If the canonical partner evidence is already equivalent, skip the partner write entirely. The partner follow-up does not alter the pilot ledger or its `primary` lifecycle outcome.
 
+## Card modernization after human reassessment
+
+Human reassessment and work modernization remain separate evidence layers, but operationally they form one end-to-end user flow. Before reserving a fresh reassessment batch, read `reassessment-modernization-context` and drain ordinary **due modernization** from already reviewed items.
+
+For each reviewed work, normally complete the following before presenting the next human card:
+
+1. run `refresh_work_metadata` using the current work digest;
+2. accept an authoritative `applied` or trusted `no_change` metadata receipt;
+3. re-read the canonical work plus current vocabulary and derive work semantics independently of viewer feedback;
+4. run `set_semantic_fingerprint`;
+5. accept an authoritative `applied` or trusted `no_change` semantic receipt;
+6. write `record_reassessment_modernization(outcome=completed)` with fresh ledger/work/vocabulary digests.
+
+Viewer reaction is never proof of work semantics. If provider identity or semantic context is deterministically unsafe/insufficient, record `outcome=blocked` with the controlled blocker instead of fabricating data. A blocked modernization never reopens human `reviewed` state and never asks the user to repeat the review.
+
+The marker lifecycle is monotonic: due → `blocked|completed`, `blocked` → `completed`, and `completed` is terminal for this modernization epoch. Human session close still depends on human item resolution, not modernization success.
+
+Trusted `no_change` is intentionally acceptable for metadata/semantic checks: it proves the current layer was explicitly re-evaluated without manufacturing a fake write.
+
+**Modernization does not increment** the scheduled taste reanalysis counter.
 ## Taste reanalysis cadence
 
 Scheduled inferred-hypothesis replacement is not run after every work or every session. It is due after **15 newly reviewed works** since the previous scheduled pilot reanalysis and once at the end of the main `pending` pass if reviewed evidence advanced.

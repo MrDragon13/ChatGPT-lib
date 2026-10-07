@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from media.commands.schema import load_command
-from media.domain.commands import AddWorkCommand, AssessCandidateRequest, RecommendContextRequest, RecordViewingFeedbackCommand, RefreshMetadataCommand, TasteContextRequest
+from media.domain.commands import AddWorkCommand, AssessCandidateRequest, RecommendContextRequest, RecordViewingFeedbackCommand, RefreshMetadataCommand, RefreshWorkMetadataCommand, TasteContextRequest
 from media.domain.errors import (
     AmbiguousIdentityError,
     CommandValidationError,
@@ -27,6 +27,7 @@ from media.service.reassessment import (
     LEDGER_REL_PATH,
     build_reassessment_context,
     build_reassessment_history,
+    build_reassessment_modernization_context,
     read_ledger,
 )
 from media.service.recommend import build_recommend_context
@@ -64,6 +65,7 @@ def _parser() -> argparse.ArgumentParser:
     assess=sub.add_parser("assess-candidate"); assess.add_argument("--request",required=True); assess.add_argument("--format",choices=("human","json"),default="human")
     reassess_context=sub.add_parser("reassessment-context"); reassess_context.add_argument("--limit",type=int,default=5); reassess_context.add_argument("--format",choices=("human","json"),default="human")
     reassess_history=sub.add_parser("reassessment-history"); reassess_history.add_argument("work_id"); reassess_history.add_argument("--format",choices=("human","json"),default="human")
+    reassess_modernization=sub.add_parser("reassessment-modernization-context"); reassess_modernization.add_argument("--limit",type=int,default=20); reassess_modernization.add_argument("--include-blocked",action="store_true"); reassess_modernization.add_argument("--format",choices=("human","json"),default="human")
     apply=sub.add_parser("apply-command"); apply.add_argument("request"); apply.add_argument("--dry-run",action="store_true"); apply.add_argument("--format",choices=("human","json"),default="human")
     doctor_cmd=sub.add_parser("doctor"); doctor_cmd.add_argument("--format",choices=("human","json"),default="human")
     rebuild=sub.add_parser("rebuild"); rebuild.add_argument("--check",action="store_true")
@@ -95,11 +97,16 @@ def main(argv: list[str] | None = None) -> int:
             _emit(build_reassessment_context(repo,ledger,limit=args.limit),output_format); return 0
         if args.command=="reassessment-history":
             repo=YamlRepository(media_root); _emit(build_reassessment_history(repo,args.work_id),output_format); return 0
+        if args.command=="reassessment-modernization-context":
+            ledger_path=repo_root/LEDGER_REL_PATH
+            if not ledger_path.exists(): raise NotFoundError("reassessment pilot ledger is not active")
+            ledger=read_ledger(ledger_path); repo=YamlRepository(media_root)
+            _emit(build_reassessment_modernization_context(repo,ledger,include_blocked=args.include_blocked,limit=args.limit),output_format); return 0
         if args.command=="apply-command":
             command=load_command(Path(args.request))
             if isinstance(command,(RecommendContextRequest,TasteContextRequest,AssessCandidateRequest)): raise CommandValidationError(f"{command.__class__.__name__} is read-only and cannot be applied")
             provider=None
-            needs_provider=isinstance(command,(AddWorkCommand,RefreshMetadataCommand)) or (isinstance(command,RecordViewingFeedbackCommand) and command.create_if_missing)
+            needs_provider=isinstance(command,(AddWorkCommand,RefreshMetadataCommand,RefreshWorkMetadataCommand)) or (isinstance(command,RecordViewingFeedbackCommand) and command.create_if_missing)
             if needs_provider:
                 token=os.environ.get("TMDB_READ_TOKEN")
                 if token: provider=TMDBProvider(token)

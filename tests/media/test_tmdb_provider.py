@@ -48,7 +48,7 @@ def test_provider_wraps_transport_failure():
         TMDBProvider("token", request_json=broken).search_work("Arrival")
 
 
-def test_find_by_imdb_returns_only_movie_candidates():
+def test_find_by_imdb_returns_movie_and_tv_candidates():
     seen_urls: list[str] = []
 
     def request_json(url, headers):
@@ -74,7 +74,8 @@ def test_find_by_imdb_returns_only_movie_candidates():
 
     provider = TMDBProvider("token", request_json=request_json)
     assert provider.find_by_imdb("tt2543164") == [
-        ProviderCandidate("movie", 329865, "Прибытие", "Arrival", 2016)
+        ProviderCandidate("movie", 329865, "Прибытие", "Arrival", 2016),
+        ProviderCandidate("tv", 123, "Arrival", "Arrival", 2016),
     ]
     assert "/find/tt2543164" in seen_urls[0]
     assert "external_source=imdb_id" in seen_urls[0]

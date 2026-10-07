@@ -77,4 +77,5 @@ def plan_set_semantic_fingerprint(
         {path: doc} if changed else {},
         changed,
         profile_targets,
+        details={"work_id": record.id},
     )

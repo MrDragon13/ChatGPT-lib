@@ -16,8 +16,10 @@ from media.domain.commands import (
     ReadRequest,
     RecommendContextRequest,
     RecordRecommendationInteractionCommand,
+    RecordReassessmentModernizationCommand,
     RecordViewingFeedbackCommand,
     RefreshMetadataCommand,
+    RefreshWorkMetadataCommand,
     RemoveWorkSimilarityCommand,
     ReserveReassessmentSessionCommand,
     SetInferredPreferencesCommand,
@@ -36,6 +38,7 @@ _SCHEMA_BY_OPERATION = {
     "set_interest": "set_interest.schema.json",
     "add_work": "add_work.schema.json",
     "refresh_metadata": "refresh_metadata.schema.json",
+    "refresh_work_metadata": "refresh_work_metadata.schema.json",
     "set_inferred_preferences": "set_inferred_preferences.schema.json",
     "set_semantic_fingerprint": "set_semantic_fingerprint.schema.json",
     "record_recommendation_interaction": "record_recommendation_interaction.schema.json",
@@ -44,6 +47,7 @@ _SCHEMA_BY_OPERATION = {
     "reserve_reassessment_session": "reserve_reassessment_session.schema.json",
     "complete_reassessment_item": "complete_reassessment_item.schema.json",
     "close_reassessment_session": "close_reassessment_session.schema.json",
+    "record_reassessment_modernization": "record_reassessment_modernization.schema.json",
     "recommend_context": "recommend_context.schema.json",
     "taste_context": "taste_context.schema.json",
     "assess_candidate": "assess_candidate.schema.json",
@@ -87,6 +91,10 @@ def parse_command(data: Mapping[str, Any], schema_dir: Path | None = None) -> Me
         _validate_uuid(str(data["session_id"]), "session_id")
     if operation == "close_reassessment_session" and data.get("scheduled_reanalysis_operation_id") is not None:
         _validate_uuid(str(data["scheduled_reanalysis_operation_id"]), "scheduled_reanalysis_operation_id")
+    if operation == "record_reassessment_modernization":
+        for key in ("metadata_operation_id", "semantic_operation_id"):
+            if data.get(key) is not None:
+                _validate_uuid(str(data[key]), key)
     if operation == "record_viewing_feedback":
         updates = tuple(
             TargetUpdate(
@@ -119,6 +127,13 @@ def parse_command(data: Mapping[str, Any], schema_dir: Path | None = None) -> Me
     if operation == "refresh_metadata":
         overrides = {work_id: ProviderWorkRef(value["media_type"], value["id"]) for work_id, value in (data.get("tmdb_overrides") or {}).items()}
         return RefreshMetadataCommand(data["schema_version"], data["operation_id"], data["scope"], overrides, dict(data.get("year_overrides") or {}))
+    if operation == "refresh_work_metadata":
+        return RefreshWorkMetadataCommand(
+            data["schema_version"],
+            data["operation_id"],
+            _work_ref(data["work_ref"]),
+            data["expected_work_digest"],
+        )
     if operation == "set_inferred_preferences":
         return SetInferredPreferencesCommand(data["schema_version"], data["operation_id"], data["target"], tuple(dict(item) for item in data["hypotheses"]))
     if operation == "set_semantic_fingerprint":
@@ -172,6 +187,20 @@ def parse_command(data: Mapping[str, Any], schema_dir: Path | None = None) -> Me
             data["session_id"],
             data["expected_ledger_digest"],
             data.get("scheduled_reanalysis_operation_id"),
+        )
+    if operation == "record_reassessment_modernization":
+        return RecordReassessmentModernizationCommand(
+            data["schema_version"],
+            data["operation_id"],
+            data["pilot_id"],
+            data["work_id"],
+            data["outcome"],
+            data["expected_ledger_digest"],
+            data["expected_work_digest"],
+            data.get("metadata_operation_id"),
+            data.get("semantic_operation_id"),
+            data.get("vocabulary_digest"),
+            data.get("blocker_code"),
         )
     if operation == "taste_context":
         return TasteContextRequest(data["schema_version"], data["target"], data.get("recent_limit", 10), data.get("representative_limit", 10))

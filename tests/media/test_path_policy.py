@@ -5,7 +5,7 @@ import pytest
 
 from media.domain.errors import PathPolicyError
 import media.service.path_policy as path_policy
-from media.service.path_policy import allowed_paths_for_operation, verify_changed_paths
+from media.service.path_policy import allowed_paths_for_operation, verify_changed_paths, verify_operation_specific_paths
 
 
 EXPECTED_POLICY = {
@@ -53,6 +53,14 @@ EXPECTED_POLICY = {
             "media/data/works/*.yaml",
             "media/generated/index.jsonl",
             "media/generated/profiles/*.yaml",
+            ".media/operations/*.json",
+        ],
+    },
+    "refresh_work_metadata": {
+        "auto_merge": True,
+        "allowed_paths": [
+            "media/data/works/*.yaml",
+            "media/generated/index.jsonl",
             ".media/operations/*.json",
         ],
     },
@@ -109,6 +117,13 @@ EXPECTED_POLICY = {
             "media/data/works/*.yaml",
             "media/generated/index.jsonl",
             "media/generated/profiles/*.yaml",
+            ".media/operations/*.json",
+        ],
+    },
+    "record_reassessment_modernization": {
+        "auto_merge": True,
+        "allowed_paths": [
+            "media/pilots/legacy-reassessment-primary.json",
             ".media/operations/*.json",
         ],
     },
@@ -302,3 +317,24 @@ def test_work_creation_paths_allow_similarity_reconciliation_but_regular_edits_d
     for operation in ("edit_viewing_feedback", "set_interest", "set_semantic_fingerprint"):
         with pytest.raises(PathPolicyError):
             verify_changed_paths(operation, [relation_path])
+
+
+def test_refresh_work_metadata_shape_guard_allows_only_receipt_or_selected_work_outputs():
+    receipt = ".media/operations/123e4567-e89b-42d3-a456-426614174099.json"
+    verify_changed_paths("refresh_work_metadata", [receipt])
+    verify_operation_specific_paths("refresh_work_metadata", [receipt], {"work_id": "arrival-2016"})
+    allowed = ["media/data/works/arrival-2016.yaml", "media/generated/index.jsonl", receipt]
+    verify_changed_paths("refresh_work_metadata", allowed)
+    verify_operation_specific_paths("refresh_work_metadata", allowed, {"work_id": "arrival-2016"})
+    with pytest.raises(PathPolicyError, match="selected work"):
+        verify_operation_specific_paths(
+            "refresh_work_metadata",
+            ["media/data/works/batman-2022.yaml", receipt],
+            {"work_id": "arrival-2016"},
+        )
+    with pytest.raises(PathPolicyError, match="at most one"):
+        verify_operation_specific_paths(
+            "refresh_work_metadata",
+            ["media/data/works/arrival-2016.yaml", "media/data/works/batman-2022.yaml", receipt],
+            {"work_id": "arrival-2016"},
+        )

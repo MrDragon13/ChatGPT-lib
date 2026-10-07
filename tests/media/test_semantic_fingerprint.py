@@ -10,12 +10,13 @@ from media.tools.rebuild import check_generated, rebuild_generated
 from tests.media.fixture_repo import copy_fixture_repo
 
 UUID1 = "123e4567-e89b-42d3-a456-426614174010"
+UUID2 = "123e4567-e89b-42d3-a456-426614174011"
 
 
-def fingerprint(*traits):
+def fingerprint(*traits, operation_id=UUID1):
     return parse_command({
         "schema_version": 1,
-        "operation_id": UUID1,
+        "operation_id": operation_id,
         "operation": "set_semantic_fingerprint",
         "work_ref": {"id": "arrival-2016"},
         "traits": list(traits),
@@ -80,3 +81,17 @@ def test_set_semantic_fingerprint_allows_empty_replacement(tmp_path):
     execute_command(root, fingerprint(), now=datetime(2026,10,3,tzinfo=timezone.utc))
     work = load_yaml(root / "media/data/works/arrival-2016.yaml")
     assert work["metadata"]["semantic"]["traits"] == []
+
+
+def test_semantic_fingerprint_receipt_details_bind_work_for_changed_and_no_change(tmp_path):
+    from media.service.transaction import preview_command
+
+    root = copy_fixture_repo(tmp_path)
+    traits = ({"term":"story.intrigue","source":"llm_inferred","confidence":"high"},)
+    changed = preview_command(root, fingerprint(*traits, operation_id=UUID1), now=datetime(2026,10,3,tzinfo=timezone.utc))
+    assert changed.details["work_id"] == "arrival-2016"
+
+    execute_command(root, fingerprint(*traits, operation_id=UUID1), now=datetime(2026,10,3,tzinfo=timezone.utc))
+    no_change = preview_command(root, fingerprint(*traits, operation_id=UUID2), now=datetime(2026,10,3,tzinfo=timezone.utc))
+    assert no_change.status == "no_change"
+    assert no_change.details["work_id"] == "arrival-2016"
