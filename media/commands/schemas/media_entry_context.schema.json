@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chatgpt-lib.local/commands/media_entry_context.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "operation",
+    "work_ref",
+    "target"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "operation": {
+      "const": "media_entry_context"
+    },
+    "work_ref": {
+      "$ref": "https://chatgpt-lib.local/commands/common.schema.json#/$defs/workRef"
+    },
+    "target": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}
