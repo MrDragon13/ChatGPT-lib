@@ -4,6 +4,8 @@ import argparse
 from pathlib import Path
 from typing import Any
 
+from media.domain.digests import compute_viewer_digest
+
 from .common import iter_yaml_files, load_yaml, write_jsonl
 from .model import compact_signal, effective_metadata
 
@@ -24,6 +26,11 @@ def _collection_memberships(media_root: Path) -> dict[str, list[str]]:
 
 def build_index_rows(media_root: Path) -> list[dict[str, Any]]:
     memberships = _collection_memberships(media_root)
+    viewers_doc = load_yaml(media_root / "config/viewers.yaml") or {}
+    groups_doc = load_yaml(media_root / "config/groups.yaml") or {}
+    viewers = set((viewers_doc.get("viewers") or {}).keys())
+    groups = set((groups_doc.get("groups") or {}).keys())
+    digest_targets = sorted(viewers | groups)
     rows: list[dict[str, Any]] = []
     for path in iter_yaml_files(media_root / 'data/works'):
         work = load_yaml(path) or {}
@@ -43,6 +50,10 @@ def build_index_rows(media_root: Path) -> list[dict[str, Any]]:
             'traits': sorted({x.get('term') for x in semantic.get('traits') or [] if x.get('term')}),
             'viewer': {},
             'groups': {},
+            'viewer_digests': {
+                target: compute_viewer_digest(work, target)
+                for target in digest_targets
+            },
             'interest': {},
             'collections': memberships.get(work.get('id'), []),
         }
