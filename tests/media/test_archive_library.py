@@ -4,7 +4,7 @@ from pathlib import Path
 
 import yaml
 
-from media.tools.archive_library import render_library_archive, verify_library_archive, write_library_archive
+from media.tools.archive_library import main as archive_main, render_library_archive, verify_library_archive, write_library_archive
 
 
 def _dump(path: Path, payload: dict) -> None:
@@ -220,3 +220,20 @@ def test_verify_reports_missing_archive(tmp_path):
     errors=verify_library_archive(root,output)
     assert errors
     assert any("не найден" in error.lower() for error in errors)
+
+
+def test_archive_cli_write_and_verify(tmp_path, capsys):
+    root=_repo(tmp_path)
+    relative=Path("docs/archive/review.md")
+
+    assert archive_main(["--repo-root",str(root),"--output",str(relative)])==0
+    written=root/relative
+    assert written.exists()
+    capsys.readouterr()
+
+    assert archive_main(["--repo-root",str(root),"--output",str(relative),"--verify"])==0
+    assert "точно совпадает" in capsys.readouterr().out.lower()
+
+    written.write_text(written.read_text(encoding="utf-8")+"\ncorruption\n",encoding="utf-8")
+    assert archive_main(["--repo-root",str(root),"--output",str(relative),"--verify"])==1
+    assert "не совпадает" in capsys.readouterr().out.lower()
