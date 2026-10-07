@@ -7,6 +7,7 @@ from media.domain.commands import TasteContextRequest
 from media.domain.errors import UnknownTargetError
 from media.repository.index_repo import IndexRepository
 from media.repository.yaml_repo import YamlRepository
+from media.service.reanalysis_status import build_reanalysis_context
 from media.service.similarity import similarity_context
 from media.tools.build_profiles import build_profile
 
@@ -122,6 +123,7 @@ def build_taste_context(media_root: Path, request: TasteContextRequest) -> dict[
     if request.target not in viewers and request.target not in groups:
         raise UnknownTargetError(f"unknown target: {request.target}")
     members=list(groups.get(request.target, [])); profile=build_profile(media_root, request.target)
+    reanalysis=build_reanalysis_context(media_root,request.target)
     rows=IndexRepository(media_root/"generated"/"index.jsonl").rows()
     high=[]; low=[]; watched=[]; not_interested=[]; agreements=[]; disagreements=[]
     for row in rows:
@@ -177,7 +179,10 @@ def build_taste_context(media_root: Path, request: TasteContextRequest) -> dict[
         "similarities":similarity_context(media_root,request.target),
         "exclusions":{"watched":sorted(watched),"not_interested":sorted(not_interested)},
         "limitations":[],
+        "reanalysis":reanalysis,
     }
+    if reanalysis["due"]:
+        result["limitations"].append("taste_reanalysis_due")
     if members:
         agreements.sort(key=lambda item:item["id"]); disagreements.sort(key=lambda item:item["id"])
         term_signals = _couple_term_signals(media_root, members)

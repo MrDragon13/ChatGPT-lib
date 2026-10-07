@@ -13,11 +13,6 @@ from media.repository.yaml_repo import YamlRepository
 from media.service.resolve import normalize_title, resolve_work
 
 
-def _all_profile_targets(repo: YamlRepository) -> tuple[str, ...]:
-    viewers, groups = repo.configured_targets()
-    return tuple(sorted(viewers | set(groups)))
-
-
 def select_provider_candidate(ref: WorkRef, candidates: list[ProviderCandidate]) -> ProviderCandidate:
     if ref.title is None:
         raise NotFoundError("provider search requires a title")
@@ -74,7 +69,7 @@ def plan_add_work_resolved(
 ) -> tuple[MutationPlan, str]:
     try:
         record = resolve_work(repo, command.work_ref)
-        return MutationPlan(command.operation_id, "add_work", (), {}, False, ()), record.id
+        return MutationPlan(command.operation_id, "add_work", (), {}, ()), record.id
     except NotFoundError:
         pass
     if provider is None:
@@ -95,7 +90,7 @@ def plan_add_work_resolved(
     metadata = provider.fetch_work(candidate.media_type, candidate.provider_id)
     existing = _existing_from_metadata(repo, metadata)
     if existing is not None:
-        return MutationPlan(command.operation_id, "add_work", (), {}, False, ()), existing.id
+        return MutationPlan(command.operation_id, "add_work", (), {}, ()), existing.id
     work_id = make_work_id(repo, metadata, candidate)
     value = now or datetime.now(timezone.utc)
     day = value.date().isoformat()
@@ -113,8 +108,7 @@ def plan_add_work_resolved(
         "add_work",
         (work_id,),
         {path: document},
-        True,
-        _all_profile_targets(repo),
+        ("work.created", "work.identity", "work.metadata"),
     )
     return plan, work_id
 

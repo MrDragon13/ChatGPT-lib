@@ -16,7 +16,7 @@ from media.domain.commands import (
 from media.domain.errors import CommandValidationError, NotFoundError
 from media.domain.types import TargetEdit
 from media.repository.yaml_repo import YamlRepository
-from media.service.mutate import apply_feedback_edits, profile_targets_for
+from media.service.mutate import apply_feedback_edits
 from media.service.reassessment import (
     LEDGER_REL_PATH,
     PILOT_ID,
@@ -324,8 +324,7 @@ def plan_reserve_reassessment_session(
         operation="reserve_reassessment_session",
         changed_entities=(),
         documents={},
-        rebuild_index=False,
-        rebuild_profile_targets=(),
+        changed_domains=(),
         details={
             "pilot_id": command.pilot_id,
             "session_id": command.session_id,
@@ -378,8 +377,7 @@ def plan_complete_reassessment_item(
     at = _at(now)
     documents: dict[str, Mapping[str, Any]] = {}
     changed_entities: tuple[str, ...] = ()
-    rebuild_index = False
-    rebuild_targets: tuple[str, ...] = ()
+    changed_domains: tuple[str, ...] = ()
 
     if command.outcome == "changed":
         if command.feedback_edit is None:
@@ -403,8 +401,7 @@ def plan_complete_reassessment_item(
             raise CommandValidationError("reassessment completion may mutate only primary feedback")
         documents[_work_rel_path(repo, record)] = updated
         changed_entities = (command.work_id,)
-        rebuild_index = True
-        rebuild_targets = profile_targets_for(repo, touched_targets)
+        changed_domains = ("viewer:primary",)
     elif command.outcome == "confirmed_unchanged":
         if not _current_evidence_is_explicit(current_signal):
             raise CommandValidationError(
@@ -432,8 +429,7 @@ def plan_complete_reassessment_item(
         operation="complete_reassessment_item",
         changed_entities=changed_entities,
         documents=documents,
-        rebuild_index=rebuild_index,
-        rebuild_profile_targets=rebuild_targets,
+        changed_domains=changed_domains,
         details={
             "pilot_id": command.pilot_id,
             "session_id": command.session_id,
@@ -551,8 +547,7 @@ def plan_close_reassessment_session(
         operation="close_reassessment_session",
         changed_entities=(),
         documents={},
-        rebuild_index=False,
-        rebuild_profile_targets=(),
+        changed_domains=(),
         details={
             "pilot_id": command.pilot_id,
             "session_id": command.session_id,
@@ -705,8 +700,7 @@ def plan_record_reassessment_modernization(
         operation="record_reassessment_modernization",
         changed_entities=(),
         documents={},
-        rebuild_index=False,
-        rebuild_profile_targets=(),
+        changed_domains=(),
         details={
             "pilot_id": command.pilot_id,
             "work_id": command.work_id,

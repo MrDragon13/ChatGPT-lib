@@ -145,3 +145,29 @@ def test_couple_inferred_hypothesis_does_not_change_numeric_affinity(tmp_path: P
 
 def test_write_profiles_outputs_all_configured_targets_deterministically(tmp_path: Path):
     media=seed(tmp_path); paths=write_profiles(media); assert sorted(p.stem for p in paths)==['couple','partner','primary']; before={p.name:p.read_bytes() for p in paths}; paths2=write_profiles(media); assert {p.name:p.read_bytes() for p in paths2}==before; assert load_yaml(media/'generated/profiles/couple.yaml')['target']=='couple'
+
+
+def test_viewer_profile_caches_reanalysis_status_without_group_counter(tmp_path: Path):
+    media=seed(tmp_path)
+    path=media/"data/works/a.yaml"
+    work=load_yaml(path)
+    signal=work["viewer_signals"]["primary"]
+    previous={"rating":dict(signal["rating"])}
+    rating={"score":8.0,"source":"explicit","confidence":"exact"}
+    signal["rating"]=rating
+    signal.setdefault("history",[]).append({
+        "at":"2026-10-07T12:00:00Z",
+        "event_id":"123e4567-e89b-42d3-a456-426614174700",
+        "material_evidence":True,
+        "previous":previous,
+        "current":{"rating":dict(rating)},
+    })
+    dump_yaml(path,work)
+
+    primary=build_profile(media,"primary")
+    couple=build_profile(media,"couple")
+
+    assert primary["reanalysis"]["target"]=="primary"
+    assert primary["reanalysis"]["outstanding_count"]==1
+    assert primary["reanalysis"]["due"] is False
+    assert "reanalysis" not in couple

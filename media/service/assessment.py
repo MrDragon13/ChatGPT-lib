@@ -181,6 +181,9 @@ def build_candidate_assessment_context(media_root: Path, request: AssessCandidat
         candidate=candidate,
         taste_context=taste_context,
     )
+    reanalysis = dict(taste_context["reanalysis"])
+    if reanalysis["due"]:
+        limitations.append("taste_reanalysis_due")
     return {
         "schema_version": 1,
         "target": request.target,
@@ -190,4 +193,5 @@ def build_candidate_assessment_context(media_root: Path, request: AssessCandidat
         "similarities": similarities,
         "assessment_coverage": assessment_coverage,
         "limitations": limitations,
+        "reanalysis": reanalysis,
     }

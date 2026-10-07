@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from media.tools.common import dump_yaml, load_yaml
-from tests.media.fixture_repo import copy_fixture_repo, prepare_derived
+from tests.media.fixture_repo import append_material_rating_event, copy_fixture_repo, prepare_derived
 
 
 def _web_export_module():
@@ -226,3 +226,28 @@ def test_export_is_read_only_and_does_not_serialize_secret_keys(tmp_path):
     manifest = module.build_web_manifest(media_root)
     suspicious = ("token", "secret", "credential", "password")
     assert not [key for key in _all_keys(manifest) if any(part in key.lower() for part in suspicious)]
+
+def test_manifest_v3_does_not_publish_v6_reanalysis_fields_before_cutover(tmp_path):
+    root=copy_fixture_repo(tmp_path)
+    for index in range(5):
+        append_material_rating_event(
+            root,
+            score=7.0 + index / 2,
+            event_id=f"123e4567-e89b-42d3-a456-4266141749{index:02d}",
+            at=f"2026-10-07T16:0{index}:00Z",
+        )
+    prepare_derived(root)
+    manifest=_web_export_module().build_web_manifest(root/"media")
+
+    for context in manifest["taste_contexts"].values():
+        assert "reanalysis" not in context
+        assert "taste_reanalysis_due" not in (context.get("limitations") or [])
+    for context in manifest["recommendations"].values():
+        assert "reanalysis" not in context
+        assert "taste_reanalysis_due" not in context["limitations"]
+
+
+def test_manifest_never_exports_internal_viewer_digests(tmp_path):
+    root=copy_fixture_repo(tmp_path); prepare_derived(root)
+    manifest=_web_export_module().build_web_manifest(root/"media")
+    assert "viewer_digests" not in _all_keys(manifest)

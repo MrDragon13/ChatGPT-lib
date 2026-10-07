@@ -6,6 +6,7 @@ from typing import Any
 from media.domain.commands import RecommendContextRequest
 from media.domain.errors import UnknownTargetError
 from media.repository.yaml_repo import YamlRepository
+from media.service.reanalysis_status import build_reanalysis_context
 from media.service.recommendation_pool import eligible_local_candidates
 from media.service.semantic_evidence import classify_candidate_traits
 from media.service.similarity import similarity_context
@@ -137,6 +138,10 @@ def build_recommend_context(media_root: Path, request: RecommendContextRequest) 
     returned_ranked = ranked[: request.limit]
     returned_internal = [item[2] for item in returned_ranked]
     coverage = _coverage(classified_pool, returned_internal)
+    reanalysis = build_reanalysis_context(media_root, request.target)
+    limitations = _limitations(coverage)
+    if reanalysis["due"]:
+        limitations.append("taste_reanalysis_due")
     return {
         "target": request.target,
         "request": {
@@ -146,6 +151,7 @@ def build_recommend_context(media_root: Path, request: RecommendContextRequest) 
             "include_not_interested": request.include_not_interested,
         },
         "coverage": coverage,
-        "limitations": _limitations(coverage),
+        "limitations": limitations,
+        "reanalysis": reanalysis,
         "candidates": [item[1] for item in returned_ranked],
     }

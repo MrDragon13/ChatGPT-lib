@@ -152,7 +152,7 @@ def plan_set_work_similarity(
     output = {"schema_version": 1, "target": command.target, "relations": relations}
     _, rel_path = _relation_path(repo, command.target)
     entity_id = _entity_id(command.target, left, right)
-    return MutationPlan(command.operation_id, "set_work_similarity", (entity_id,), {rel_path: output}, False, ())
+    return MutationPlan(command.operation_id, "set_work_similarity", (entity_id,), {rel_path: output}, (f"similarity:{command.target}",))
 
 
 def plan_remove_work_similarity(
@@ -179,11 +179,11 @@ def plan_remove_work_similarity(
         else:
             kept.append(relation)
     if not removed:
-        return MutationPlan(command.operation_id, "remove_work_similarity", (), {}, False, ())
+        return MutationPlan(command.operation_id, "remove_work_similarity", (), {}, ())
     output = {"schema_version": 1, "target": command.target, "relations": kept}
     _, rel_path = _relation_path(repo, command.target)
     entity_id = _entity_id(command.target, left, right)
-    return MutationPlan(command.operation_id, "remove_work_similarity", (entity_id,), {rel_path: output}, False, ())
+    return MutationPlan(command.operation_id, "remove_work_similarity", (entity_id,), {rel_path: output}, (f"similarity:{command.target}",))
 
 
 def _work_external_aliases(work_document: dict[str, Any]) -> set[str]:

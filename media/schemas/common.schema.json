@@ -2,20 +2,435 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://chatgpt-lib.local/schemas/common.schema.json",
   "$defs": {
-    "confidence": {"enum": ["exact", "high", "medium", "low", "none"]},
-    "rating": {"type": "object", "additionalProperties": false, "required": ["score", "source", "confidence"], "properties": {"score": {"anyOf": [{"type": "null"}, {"type": "number", "minimum": 1, "maximum": 10, "multipleOf": 0.5}]}, "source": {"enum": ["explicit", "explicit_approx", "inferred", "none"]}, "confidence": {"$ref": "#/$defs/confidence"}}},
-    "reaction": {"type": "object", "additionalProperties": false, "required": ["value", "source", "confidence"], "properties": {"value": {"enum": ["liked", "disliked", "neutral", "mixed", "unknown"]}, "source": {"enum": ["explicit", "inferred"]}, "confidence": {"$ref": "#/$defs/confidence"}}},
-    "feedbackSignal": {"type": "object", "additionalProperties": false, "required": ["term", "sentiment", "strength", "source", "confidence"], "properties": {"term": {"type": "string", "minLength": 3}, "sentiment": {"enum": ["positive", "negative", "mixed", "neutral"]}, "strength": {"type": "integer", "minimum": 1, "maximum": 3}, "source": {"enum": ["explicit", "inferred"]}, "confidence": {"$ref": "#/$defs/confidence"}}},
-    "feedback": {"type": "object", "additionalProperties": false, "properties": {"summary": {"type": ["string", "null"]}, "signals": {"type": "array", "items": {"$ref": "#/$defs/feedbackSignal"}}}},
-    "progress": {"type": "object", "additionalProperties": false, "properties": {"season": {"type": "integer", "minimum": 0}, "episode": {"type": "integer", "minimum": 0}}, "minProperties": 1},
-    "viewing": {"type": "object", "additionalProperties": false, "required": ["status"], "properties": {"status": {"enum": ["unwatched", "watched", "partial", "dropped", "forgotten"]}, "times_watched": {"type": ["integer", "null"], "minimum": 0}, "times_watched_approximate": {"type": "boolean"}, "first_watched_at": {"type": ["string", "null"]}, "last_watched_at": {"type": ["string", "null"]}, "progress": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/progress"}]}}},
-    "rewatch": {"type": "object", "additionalProperties": false, "required": ["intent"], "properties": {"intent": {"enum": ["none", "low", "medium", "high", "unknown"]}}},
-    "relation": {"type": "object", "additionalProperties": false, "required": ["target_id", "type", "source", "confidence"], "properties": {"target_id": {"type": "string", "minLength": 1}, "type": {"enum": ["similar_to", "reminds_of", "preferred_over"]}, "strength": {"type": "integer", "minimum": 1, "maximum": 3}, "dimensions": {"type": "array", "uniqueItems": true, "items": {"type": "string"}}, "note": {"type": ["string", "null"]}, "source": {"enum": ["explicit", "inferred"]}, "confidence": {"$ref": "#/$defs/confidence"}}},
-    "historyEntry": {"type": "object", "additionalProperties": false, "required": ["at"], "properties": {"at": {"type": "string", "minLength": 4}, "previous": {"type": "object"}, "current": {"type": "object"}, "note": {"type": ["string", "null"]}}},
-    "viewerSignal": {"type": "object", "additionalProperties": false, "properties": {"viewing": {"$ref": "#/$defs/viewing"}, "reaction": {"$ref": "#/$defs/reaction"}, "rating": {"$ref": "#/$defs/rating"}, "feedback": {"$ref": "#/$defs/feedback"}, "rewatch": {"$ref": "#/$defs/rewatch"}, "relations": {"type": "array", "items": {"$ref": "#/$defs/relation"}}, "history": {"type": "array", "items": {"$ref": "#/$defs/historyEntry"}}}, "minProperties": 1},
-    "groupSignal": {"type": "object", "additionalProperties": false, "properties": {"reaction": {"$ref": "#/$defs/reaction"}, "rating": {"$ref": "#/$defs/rating"}, "feedback": {"$ref": "#/$defs/feedback"}, "suitability": {"type": "object", "additionalProperties": false, "required": ["strength"], "properties": {"strength": {"type": "integer", "minimum": 1, "maximum": 3}}}, "relations": {"type": "array", "items": {"$ref": "#/$defs/relation"}}, "history": {"type": "array", "items": {"$ref": "#/$defs/historyEntry"}}}, "minProperties": 1},
-    "interest": {"type": "object", "additionalProperties": false, "required": ["state"], "properties": {"state": {"enum": ["unknown", "candidate", "shortlist", "not_interested"]}, "priority": {"type": ["integer", "null"], "minimum": 1, "maximum": 5}}},
-    "targetState": {"type": "object", "additionalProperties": false, "properties": {"interest": {"$ref": "#/$defs/interest"}}, "minProperties": 1},
-    "semanticTrait": {"type": "object", "additionalProperties": false, "required": ["term", "source", "confidence"], "properties": {"term": {"type": "string"}, "source": {"enum": ["external_source", "llm_inferred", "user_explicit"]}, "confidence": {"$ref": "#/$defs/confidence"}}}
+    "confidence": {
+      "enum": [
+        "exact",
+        "high",
+        "medium",
+        "low",
+        "none"
+      ]
+    },
+    "rating": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "score",
+        "source",
+        "confidence"
+      ],
+      "properties": {
+        "score": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 10,
+              "multipleOf": 0.5
+            }
+          ]
+        },
+        "source": {
+          "enum": [
+            "explicit",
+            "explicit_approx",
+            "inferred",
+            "none"
+          ]
+        },
+        "confidence": {
+          "$ref": "#/$defs/confidence"
+        }
+      }
+    },
+    "reaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "source",
+        "confidence"
+      ],
+      "properties": {
+        "value": {
+          "enum": [
+            "liked",
+            "disliked",
+            "neutral",
+            "mixed",
+            "unknown"
+          ]
+        },
+        "source": {
+          "enum": [
+            "explicit",
+            "inferred"
+          ]
+        },
+        "confidence": {
+          "$ref": "#/$defs/confidence"
+        }
+      }
+    },
+    "feedbackSignal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "term",
+        "sentiment",
+        "strength",
+        "source",
+        "confidence"
+      ],
+      "properties": {
+        "term": {
+          "type": "string",
+          "minLength": 3
+        },
+        "sentiment": {
+          "enum": [
+            "positive",
+            "negative",
+            "mixed",
+            "neutral"
+          ]
+        },
+        "strength": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "source": {
+          "enum": [
+            "explicit",
+            "inferred"
+          ]
+        },
+        "confidence": {
+          "$ref": "#/$defs/confidence"
+        }
+      }
+    },
+    "feedback": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "summary": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "signals": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/feedbackSignal"
+          }
+        }
+      }
+    },
+    "progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "season": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "episode": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "minProperties": 1
+    },
+    "viewing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "unwatched",
+            "watched",
+            "partial",
+            "dropped",
+            "forgotten"
+          ]
+        },
+        "times_watched": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "times_watched_approximate": {
+          "type": "boolean"
+        },
+        "first_watched_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "last_watched_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "progress": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/progress"
+            }
+          ]
+        }
+      }
+    },
+    "rewatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "intent"
+      ],
+      "properties": {
+        "intent": {
+          "enum": [
+            "none",
+            "low",
+            "medium",
+            "high",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "relation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target_id",
+        "type",
+        "source",
+        "confidence"
+      ],
+      "properties": {
+        "target_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "enum": [
+            "similar_to",
+            "reminds_of",
+            "preferred_over"
+          ]
+        },
+        "strength": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "dimensions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "note": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source": {
+          "enum": [
+            "explicit",
+            "inferred"
+          ]
+        },
+        "confidence": {
+          "$ref": "#/$defs/confidence"
+        }
+      }
+    },
+    "historyEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "at"
+      ],
+      "properties": {
+        "at": {
+          "type": "string",
+          "minLength": 4
+        },
+        "previous": {
+          "type": "object"
+        },
+        "current": {
+          "type": "object"
+        },
+        "note": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "event_id": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+        },
+        "material_evidence": {
+          "type": "boolean"
+        }
+      }
+    },
+    "viewerSignal": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "viewing": {
+          "$ref": "#/$defs/viewing"
+        },
+        "reaction": {
+          "$ref": "#/$defs/reaction"
+        },
+        "rating": {
+          "$ref": "#/$defs/rating"
+        },
+        "feedback": {
+          "$ref": "#/$defs/feedback"
+        },
+        "rewatch": {
+          "$ref": "#/$defs/rewatch"
+        },
+        "relations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/relation"
+          }
+        },
+        "history": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/historyEntry"
+          }
+        }
+      },
+      "minProperties": 1
+    },
+    "groupSignal": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "reaction": {
+          "$ref": "#/$defs/reaction"
+        },
+        "rating": {
+          "$ref": "#/$defs/rating"
+        },
+        "feedback": {
+          "$ref": "#/$defs/feedback"
+        },
+        "suitability": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "strength"
+          ],
+          "properties": {
+            "strength": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 3
+            }
+          }
+        },
+        "relations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/relation"
+          }
+        },
+        "history": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/historyEntry"
+          }
+        }
+      },
+      "minProperties": 1
+    },
+    "interest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state"
+      ],
+      "properties": {
+        "state": {
+          "enum": [
+            "unknown",
+            "candidate",
+            "shortlist",
+            "not_interested"
+          ]
+        },
+        "priority": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 5
+        }
+      }
+    },
+    "targetState": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "interest": {
+          "$ref": "#/$defs/interest"
+        }
+      },
+      "minProperties": 1
+    },
+    "semanticTrait": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "term",
+        "source",
+        "confidence"
+      ],
+      "properties": {
+        "term": {
+          "type": "string"
+        },
+        "source": {
+          "enum": [
+            "external_source",
+            "llm_inferred",
+            "user_explicit"
+          ]
+        },
+        "confidence": {
+          "$ref": "#/$defs/confidence"
+        }
+      }
+    }
   }
 }

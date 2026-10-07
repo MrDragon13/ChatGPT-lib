@@ -8,7 +8,6 @@ from media.domain.changeset import MutationPlan
 from media.domain.commands import SetSemanticFingerprintCommand
 from media.domain.errors import CommandValidationError
 from media.repository.yaml_repo import YamlRepository
-from media.service.mutate import profile_targets_for
 from media.service.resolve import resolve_work
 from media.tools.common import load_yaml
 
@@ -68,14 +67,12 @@ def plan_set_semantic_fingerprint(
         semantic["traits"] = traits
         doc.setdefault("provenance", {})["updated_at"] = _date(now)
 
-    profile_targets = profile_targets_for(repo, _rating_targets(doc)) if changed else ()
     path = str(record.path.relative_to(repo.media_root.parent)).replace("\\", "/")
     return MutationPlan(
         command.operation_id,
         "set_semantic_fingerprint",
         (record.id,) if changed else (),
         {path: doc} if changed else {},
-        changed,
-        profile_targets,
+        ("work.semantics",) if changed else (),
         details={"work_id": record.id},
     )

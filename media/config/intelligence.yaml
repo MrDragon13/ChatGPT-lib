@@ -1,0 +1,3 @@
+taste_reanalysis_threshold: 5
+semantic_algorithm_version: media-semantic-v1
+taste_algorithm_version: media-taste-v1

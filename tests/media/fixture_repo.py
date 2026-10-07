@@ -25,3 +25,30 @@ def prepare_derived(repo_root: Path) -> None:
             row=json.loads(line); con.execute("INSERT INTO works VALUES (?,?,?,?,?,?)",(row["id"],row["title_original"],row["title_ru"],json.dumps(row["alternate_titles"],ensure_ascii=False),row["year"],row["runtime_min"]))
         con.commit()
     finally: con.close()
+
+
+def append_material_rating_event(
+    repo_root: Path,
+    *,
+    target: str = "primary",
+    work_id: str = "arrival-2016",
+    score: float = 8.0,
+    event_id: str = "123e4567-e89b-42d3-a456-426614174500",
+    at: str = "2026-10-07T12:00:00Z",
+) -> None:
+    path=repo_root/f"media/data/works/{work_id}.yaml"
+    doc=yaml.safe_load(path.read_text(encoding="utf-8"))
+    signal=doc.setdefault("viewer_signals",{}).setdefault(target,{})
+    previous={}
+    if "rating" in signal:
+        previous["rating"]=dict(signal["rating"])
+    rating={"score":score,"source":"explicit","confidence":"exact"}
+    signal["rating"]=rating
+    signal.setdefault("history",[]).append({
+        "at":at,
+        "event_id":event_id,
+        "material_evidence":True,
+        "previous":previous,
+        "current":{"rating":dict(rating)},
+    })
+    path.write_text(yaml.safe_dump(doc,sort_keys=False,allow_unicode=True),encoding="utf-8")

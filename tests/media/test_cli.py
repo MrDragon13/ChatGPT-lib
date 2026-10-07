@@ -60,3 +60,116 @@ def test_refresh_work_metadata_cli_dry_run_initializes_provider(tmp_path, monkey
     result=json.loads(capsys.readouterr().out)
     assert result["status"] in {"planned","no_change"}
     assert result["operation"]=="refresh_work_metadata"
+
+
+def test_record_media_entry_existing_work_cli_needs_no_tmdb_token(tmp_path, monkeypatch, capsys):
+    from media.domain.digests import compute_viewer_digest
+    from media.tools.common import load_yaml
+
+    root=copy_fixture_repo(tmp_path); rebuild_generated(root/"media")
+    work=load_yaml(root/"media/data/works/arrival-2016.yaml")
+    request=_write_json(root/"entry.json",{
+        "schema_version":1,
+        "operation_id":"123e4567-e89b-42d3-a456-426614174301",
+        "idempotency_key":"123e4567-e89b-42d3-a456-426614174399",
+        "operation":"record_media_entry",
+        "work_ref":{"id":"arrival-2016"},
+        "create_if_missing":False,
+        "target_updates":[{"target":"primary","rating":{"score":9.0,"source":"explicit","confidence":"exact"}}],
+        "preconditions":{"expected_viewer_digests":{"primary":compute_viewer_digest(work,"primary")}},
+    })
+    monkeypatch.chdir(root); monkeypatch.delenv("TMDB_READ_TOKEN",raising=False)
+    assert main(["apply-command",str(request),"--dry-run","--format","json"])==0
+    result=json.loads(capsys.readouterr().out)
+    assert result["operation"]=="record_media_entry"
+    assert result["status"] in {"planned","no_change"}
+
+
+def test_record_media_entry_new_work_cli_initializes_provider(tmp_path, monkeypatch, capsys):
+    from media.domain.digests import compute_semantic_input_digest, compute_vocabulary_digest
+    from media.providers.base import CanonicalMetadata
+
+    root=copy_fixture_repo(tmp_path); rebuild_generated(root/"media")
+    metadata=CanonicalMetadata(
+        identity={
+            "format":"movie",
+            "title_original":"New Film",
+            "title_ru":"Новый фильм",
+            "year":2024,
+            "release_date":"2024-05-10",
+            "external_ids":{"tmdb":{"media_type":"movie","id":987654},"imdb":"tt9876543"},
+        },
+        external={
+            "genres":["genre.drama"],
+            "runtime_min":121,
+            "original_language":"en",
+            "synopsis_short":"A carefully verified new film.",
+            "provenance":{"provider":"tmdb","provider_id":987654,"fetched_at":"2026-10-07T00:00:00Z"},
+        },
+    )
+    vocabulary_digest=compute_vocabulary_digest(root/"media")
+    work_for_digest={
+        "schema_version":4,
+        "id":"placeholder",
+        "entity_type":"work",
+        "identity":dict(metadata.identity),
+        "metadata":{"external":dict(metadata.external)},
+    }
+    semantic_digest=compute_semantic_input_digest(work_for_digest,vocabulary_digest,"media-semantic-v1")
+    request=_write_json(root/"entry-new.json",{
+        "schema_version":1,
+        "operation_id":"123e4567-e89b-42d3-a456-426614174302",
+        "idempotency_key":"123e4567-e89b-42d3-a456-426614174398",
+        "operation":"record_media_entry",
+        "work_ref":{"tmdb_media_type":"movie","tmdb_id":987654,"title":"New Film","year":2024},
+        "create_if_missing":True,
+        "target_updates":[{"target":"primary","viewing":{"status":"watched"}}],
+        "creation_context":{
+            "resolved_identity":dict(metadata.identity),
+            "provider_identity":{"media_type":"movie","id":987654},
+            "minimum_metadata":{
+                "genres":["genre.drama"],
+                "runtime_min":121,
+                "original_language":"en",
+                "synopsis_short":"A carefully verified new film.",
+            },
+        },
+        "semantic_snapshot":{
+            "traits":[{"term":"story.intrigue","source":"llm_inferred","confidence":"high"}],
+            "semantic_input_digest":semantic_digest,
+            "vocabulary_digest":vocabulary_digest,
+            "algorithm_version":"media-semantic-v1",
+        },
+        "preconditions":{"expected_viewer_digests":{}},
+    })
+
+    class Provider:
+        def __init__(self, token): assert token=="token"
+        def fetch_work(self, media_type, provider_id):
+            assert (media_type,provider_id)==("movie",987654)
+            return metadata
+        def search_work(self, *args, **kwargs): raise AssertionError("stable identity must not search")
+        def find_by_imdb(self, *args, **kwargs): raise AssertionError("stable identity must not search")
+
+    monkeypatch.chdir(root); monkeypatch.setenv("TMDB_READ_TOKEN","token"); monkeypatch.setattr("media.cli.TMDBProvider",Provider)
+    assert main(["apply-command",str(request),"--dry-run","--format","json"])==0
+    result=json.loads(capsys.readouterr().out)
+    assert result["operation"]=="record_media_entry"
+    assert result["status"]=="planned"
+
+
+def test_media_entry_context_cli_returns_compact_json(tmp_path, monkeypatch, capsys):
+    root=copy_fixture_repo(tmp_path)
+    request=_write_json(root/"entry-context.json",{
+        "schema_version":1,
+        "operation":"media_entry_context",
+        "work_ref":{"id":"arrival-2016"},
+        "target":"primary",
+    })
+    monkeypatch.chdir(root)
+    assert main(["media-entry-context","--request",str(request),"--format","json"])==0
+    result=json.loads(capsys.readouterr().out)
+    assert result["exists"] is True
+    assert result["target"]=="primary"
+    assert "history" not in result["viewer"]["state"]
+    assert len(json.dumps(result,ensure_ascii=False,separators=(",",":")).encode("utf-8")) < 6000

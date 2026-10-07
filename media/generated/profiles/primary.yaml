@@ -455,3 +455,10 @@ inferred_preferences:
   - entity_id: game-night-2018
     kind: explicit_feedback
     source_target: primary
+reanalysis:
+  target: primary
+  threshold: 5
+  outstanding_count: 0
+  due: false
+  checkpoint_valid: true
+  current_evidence_digest: sha256:2cdb30d461c7b1d2452e0b66afd98f9fe2d8c98c7abb3cc01e0191a1c7267c99

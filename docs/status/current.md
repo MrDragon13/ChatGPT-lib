@@ -28,6 +28,12 @@ Guarded auto-merge теперь использует единый declarative `m
 
 Read-only context routes включают `recommend_context`, `taste_context` и `assess_candidate`.
 
+### Спящее ядро Media Intelligence v6
+
+В коде уже присутствует выключенная основа v6: атомарная операция `record_media_entry`, точечный план пересборки производных данных, контрольные точки повторного анализа вкусов и компактный `media_entry_context`. Для существующего произведения обычный отзыв не требует обращения к провайдеру метаданных или повторного вычисления семантики; локальный CLI поддерживает тот же контракт записи и проверки.
+
+Это **ещё не переход на v6**. Текущая capability line остаётся Media Intelligence v5.1: агентские правила, Broker/Web-запись, GitHub Actions fast path, reset старой библиотеки и удаление legacy reassessment будут переключены только в последующих PR согласно утверждённому плану. Публичный web manifest пока остаётся v3 и не публикует внутренние viewer digests или служебный статус повторного анализа.
+
 ### Candidate assessment
 
 `assess_candidate` поддерживает qualitative ответ на вопрос «понравится ли мне X?» для canonical или external candidate. Он использует target taste context, concrete evidence works, semantic information и explicit similarity, но не сохраняет prediction и не создаёт fake precise match probability.

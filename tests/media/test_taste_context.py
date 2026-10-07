@@ -4,7 +4,7 @@ from media.commands.schema import parse_command
 from media.tools.build_profiles import build_profile
 from media.tools.common import dump_yaml, load_yaml
 from media.tools.rebuild import rebuild_generated
-from tests.media.fixture_repo import copy_fixture_repo
+from tests.media.fixture_repo import append_material_rating_event, copy_fixture_repo
 
 
 def request(target="primary", recent_limit=3, representative_limit=3):
@@ -202,3 +202,40 @@ def test_couple_term_signals_expose_member_directions_without_changing_aggregati
     assert result["limitations"]==["couple_term_disagreement"]
     assert build_profile(root/"media","couple")==before_profile
     assert _file_map(root)==before_files
+
+
+def test_taste_context_exposes_due_reanalysis_gate(tmp_path):
+    root=copy_fixture_repo(tmp_path)
+    for index in range(5):
+        append_material_rating_event(
+            root,
+            score=7.0 + index / 2,
+            event_id=f"123e4567-e89b-42d3-a456-4266141745{index:02d}",
+            at=f"2026-10-07T12:0{index}:00Z",
+        )
+    rebuild_generated(root/"media")
+    from media.service.taste_context import build_taste_context
+    result=build_taste_context(root/"media",request("primary"))
+    assert result["reanalysis"]["target"]=="primary"
+    assert result["reanalysis"]["due"] is True
+    assert result["reanalysis"]["outstanding_count"]==5
+    assert "taste_reanalysis_due" in result["limitations"]
+
+
+def test_couple_taste_context_exposes_member_reanalysis_statuses(tmp_path):
+    root=copy_fixture_repo(tmp_path); rebuild_generated(root/"media")
+    for index in range(5):
+        append_material_rating_event(
+            root,
+            target="partner",
+            score=6.0 + index / 2,
+            event_id=f"123e4567-e89b-42d3-a456-4266141746{index:02d}",
+            at=f"2026-10-07T13:0{index}:00Z",
+        )
+    rebuild_generated(root/"media")
+    from media.service.taste_context import build_taste_context
+    result=build_taste_context(root/"media",request("couple"))
+    assert result["reanalysis"]["due"] is True
+    assert set(result["reanalysis"]["members"])=={"primary","partner"}
+    assert result["reanalysis"]["members"]["partner"]["due"] is True
+    assert "outstanding_count" not in result["reanalysis"]

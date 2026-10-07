@@ -1,7 +1,8 @@
 from pathlib import Path
 
+from media.domain.digests import compute_viewer_digest
 from media.tools.build_index import build_index_rows, write_index
-from media.tools.common import dump_yaml, iter_jsonl
+from media.tools.common import dump_yaml, iter_jsonl, load_yaml
 
 
 def work(work_id, year=2020):
@@ -15,8 +16,10 @@ def work(work_id, year=2020):
 
 def seed(tmp_path: Path) -> Path:
     media = tmp_path / 'media'
-    for d in ['data/works', 'data/collections', 'data/tombstones', 'generated']:
+    for d in ['data/works', 'data/collections', 'data/tombstones', 'config', 'generated']:
         (media / d).mkdir(parents=True, exist_ok=True)
+    dump_yaml(media / 'config/viewers.yaml', {'schema_version':4,'viewers':{'primary':{},'partner':{}}})
+    dump_yaml(media / 'config/groups.yaml', {'schema_version':4,'groups':{'couple':{'members':['primary','partner']}}})
     a = work('a-2020')
     a['metadata'] = {
         'external': {'genres': ['genre.drama'], 'runtime_min': 100},
@@ -71,3 +74,15 @@ def test_write_index_is_deterministic_jsonl(tmp_path: Path):
     write_index(media, out)
     assert out.read_bytes() == first
     assert [row['id'] for _, row in iter_jsonl(out)] == ['a-2020', 'b-2021']
+
+
+def test_index_exposes_digest_for_every_configured_target_even_when_signal_is_absent(tmp_path: Path):
+    media = seed(tmp_path)
+    rows = {row["id"]: row for row in build_index_rows(media)}
+    a_doc = load_yaml(media / "data/works/a-2020.yaml")
+    b_doc = load_yaml(media / "data/works/b-2021.yaml")
+
+    assert set(rows["a-2020"]["viewer_digests"]) == {"primary", "partner", "couple"}
+    for target in ("primary", "partner", "couple"):
+        assert rows["a-2020"]["viewer_digests"][target] == compute_viewer_digest(a_doc, target)
+        assert rows["b-2021"]["viewer_digests"][target] == compute_viewer_digest(b_doc, target)

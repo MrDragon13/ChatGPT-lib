@@ -146,3 +146,11 @@ def test_pages_deploy_remains_independent_of_cloudflare_credentials():
     text=_text("media-pages.yml")
     assert "CLOUDFLARE_API_TOKEN" not in text
     assert "CLOUDFLARE_ACCOUNT_ID" not in text
+
+
+def test_record_media_entry_provider_secret_is_gated_by_creation():
+    text=_text("media-command.yml")
+    assert "'record_media_entry'" in text
+    assert "create_if_missing" in text
+    assert "needs_provider" in text
+    assert "steps.operation.outputs.needs_provider == 'true'" in text

@@ -10,8 +10,7 @@ class MutationPlan:
     operation: str
     changed_entities: tuple[str, ...]
     documents: Mapping[str, Mapping[str, Any]]
-    rebuild_index: bool
-    rebuild_profile_targets: tuple[str, ...]
+    changed_domains: tuple[str, ...]
     details: Mapping[str, Any] = field(default_factory=dict)
     jsonl_appends: Mapping[str, tuple[Mapping[str, Any], ...]] = field(default_factory=dict)
     json_documents: Mapping[str, Mapping[str, Any]] = field(default_factory=dict)

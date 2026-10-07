@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import argparse
 from collections import defaultdict
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Iterable
+
+from media.service.reanalysis_status import get_reanalysis_status_for_documents
 
 from .common import dump_yaml, iter_jsonl, iter_yaml_files, load_yaml
 
@@ -103,7 +106,8 @@ def build_profile(media_root: Path, target: str) -> dict[str, Any]:
     viewers,groups=_configured(media_root)
     if target not in viewers and target not in groups: raise ValueError(f'unknown target: {target}')
     members=groups.get(target,[]); evidence=defaultdict(list); summary=defaultdict(int)
-    for entity in _entities(media_root):
+    entities=list(_entities(media_root))
+    for entity in entities:
         eid=entity.get('id'); viewer_signals=entity.get('viewer_signals') or {}; group_signals=entity.get('group_signals') or {}
         if target in viewers:
             sig=viewer_signals.get(target)
@@ -128,8 +132,11 @@ def build_profile(media_root: Path, target: str) -> dict[str, Any]:
         abs_weight=sum(abs(x['weight']) for x in items); confidence='high' if abs_weight>=5 else ('medium' if abs_weight>=2 else 'low')
         affinities[term]={'score':round(score,6),'confidence':confidence,'evidence_count':len(items),'evidence':public}
     summary.update(_interaction_counts(media_root,target))
-    result={'schema_version':4,'target':target,'generated_from':'canonical-v4','affinities':affinities,'explicit_preferences':explicit['preferences'],'rules':explicit['rules'],'constraints':explicit['constraints'],'summary':dict(sorted(summary.items())),'evidence':{'entity_count':sum(1 for _ in _entities(media_root))}}
+    result={'schema_version':4,'target':target,'generated_from':'canonical-v4','affinities':affinities,'explicit_preferences':explicit['preferences'],'rules':explicit['rules'],'constraints':explicit['constraints'],'summary':dict(sorted(summary.items())),'evidence':{'entity_count':len(entities)}}
     if inferred is not None: result['inferred_preferences']=list(inferred.get('hypotheses') or [])
+    if target in viewers:
+        work_documents=[entity for entity in entities if entity.get('entity_type')=='work']
+        result['reanalysis']=asdict(get_reanalysis_status_for_documents(media_root,target,work_documents))
     return result
 
 

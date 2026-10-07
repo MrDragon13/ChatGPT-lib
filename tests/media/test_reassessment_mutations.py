@@ -183,8 +183,7 @@ def test_complete_changed_reuses_feedback_history_and_promotes_inferred_score_to
     assert signal["rating"]["source"] == "explicit"
     assert signal["history"][-1]["previous"]["rating"]["source"] == "inferred"
     assert signal["history"][-1]["current"]["rating"]["source"] == "explicit"
-    assert plan.rebuild_index is True
-    assert "primary" in plan.rebuild_profile_targets
+    assert plan.changed_domains == ("viewer:primary",)
 
     ledger = plan.json_documents["media/pilots/legacy-reassessment-primary.json"]
     lifecycle = ledger["items"][WORK_ID]
@@ -296,4 +295,4 @@ def test_close_requires_resolved_session_and_appends_canonical_audit_snapshot(tm
     assert session["snapshot"]["reviewed_total"] >= 1
     assert session["snapshot"]["baseline_path"] == ledger["baseline_path"]
     assert plan.documents == {}
-    assert plan.rebuild_index is False
+    assert plan.changed_domains == ()

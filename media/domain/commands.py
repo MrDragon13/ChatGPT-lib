@@ -3,7 +3,20 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Literal, Mapping, TypeAlias
 
-from .types import TargetEdit, TargetUpdate, WorkRef
+from .types import CreationContext, MediaEntryPreconditions, SemanticSnapshot, TargetEdit, TargetUpdate, WorkRef
+
+
+@dataclass(frozen=True)
+class RecordMediaEntryCommand:
+    schema_version: int
+    operation_id: str
+    idempotency_key: str
+    work_ref: WorkRef
+    create_if_missing: bool
+    target_updates: tuple[TargetUpdate, ...]
+    creation_context: CreationContext | None
+    semantic_snapshot: SemanticSnapshot | None
+    preconditions: MediaEntryPreconditions
 
 
 @dataclass(frozen=True)
@@ -69,6 +82,7 @@ class SetInferredPreferencesCommand:
     operation_id: str
     target: str
     hypotheses: tuple[Mapping[str, Any], ...]
+    analysis: Mapping[str, Any] | None = None
 
 
 @dataclass(frozen=True)
@@ -165,6 +179,13 @@ class RecordReassessmentModernizationCommand:
 
 
 @dataclass(frozen=True)
+class MediaEntryContextRequest:
+    schema_version: int
+    work_ref: WorkRef
+    target: str
+
+
+@dataclass(frozen=True)
 class RecommendContextRequest:
     schema_version: int
     target: str
@@ -192,7 +213,8 @@ class AssessCandidateRequest:
 
 
 MediaCommand: TypeAlias = (
-    RecordViewingFeedbackCommand
+    RecordMediaEntryCommand
+    | RecordViewingFeedbackCommand
     | EditViewingFeedbackCommand
     | SetInterestCommand
     | AddWorkCommand
@@ -209,4 +231,4 @@ MediaCommand: TypeAlias = (
     | RecordReassessmentModernizationCommand
 )
 
-ReadRequest: TypeAlias = RecommendContextRequest | TasteContextRequest | AssessCandidateRequest
+ReadRequest: TypeAlias = MediaEntryContextRequest | RecommendContextRequest | TasteContextRequest | AssessCandidateRequest
