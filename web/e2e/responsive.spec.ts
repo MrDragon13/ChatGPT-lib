@@ -41,7 +41,7 @@ test("mobile empty and populated pages do not overflow", async ({ page }) => {
   expect(historyOverflow).toBeLessThanOrEqual(1);
 
   await page.goto("#/library?target=couple");
-  await expect(page.getByRole("heading", { name: "Медиатека" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Медиатека", exact: true })).toBeVisible();
   const libraryOverflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(libraryOverflow).toBeLessThanOrEqual(1);
 
@@ -72,7 +72,7 @@ test("mobile empty and populated pages do not overflow", async ({ page }) => {
 test("site header stays pinned to the top while scrolling", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 700 });
   await page.goto("#/library?target=primary");
-  await expect(page.getByRole("heading", { name: "Медиатека" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Медиатека", exact: true })).toBeVisible();
 
   const header = page.locator(".site-header");
   await expect(header).toBeVisible();
