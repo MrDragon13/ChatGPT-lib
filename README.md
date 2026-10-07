@@ -16,7 +16,7 @@
 
 ## Архитектура в одном абзаце
 
-`media/data/` и другие canonical YAML/config источники — source of truth. Python domain/service/repository слой применяет typed operations, валидирует данные и пересобирает derived artifacts. `web/` не читает canonical YAML напрямую: он получает versioned manifest и остаётся read-model surface. Записи из LLM/CLI/web используют один и тот же command contract; normal data operations идут через operation PR + exact-head checks, а architecture/schema/vocabulary/workflow changes остаются manual developer work. Historical design specs объясняют решения, но текущее поведение описывается living docs и проверяется code/schemas/tests.
+`media/data/` и другие canonical YAML/config источники — source of truth. Python domain/service/repository слой применяет typed operations, валидирует данные и пересобирает derived artifacts. `web/` не читает canonical YAML напрямую: он получает versioned manifest и остаётся read-model surface. Записи из LLM/CLI/web используют один и тот же command contract; normal data operations идут через request-only operation PR, один `Media Command` runner и exact-head merge, а architecture/schema/vocabulary/workflow changes остаются manual developer work. Historical design specs объясняют решения, но текущее поведение описывается living docs и проверяется code/schemas/tests.
 
 ## Куда идти дальше
 
@@ -24,7 +24,7 @@
 - [Как пользоваться медиатекой](docs/guides/media-usage.md) — пользовательские сценарии.
 - [Как разрабатывать](docs/guides/development.md) — developer workflow, TDD и ownership документации.
 - [Архитектура системы](docs/architecture/overview.md) — компоненты, data flow и security boundaries.
-- [Personal Media Library v5](media/README.md) — локальная точка входа в `media/` и compatibility entry path для subsystem docs.
+- [Personal Media Library v6](media/README.md) — локальная точка входа в `media/` и compatibility entry path для subsystem docs.
 - [Старт нового киноассистента](media/START_PROMPT.md) — human-facing launcher.
 - [`AGENTS.md`](AGENTS.md) — router для LLM/agent workflows.
 
