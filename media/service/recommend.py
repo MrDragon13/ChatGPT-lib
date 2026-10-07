@@ -140,6 +140,11 @@ def build_recommend_context(media_root: Path, request: RecommendContextRequest) 
     coverage = _coverage(classified_pool, returned_internal)
     reanalysis = build_reanalysis_context(media_root, request.target)
     limitations = _limitations(coverage)
+    if coverage["pool_total"] == 0:
+        limitations.append("empty_library")
+    profile_entity_count = int(((_profile(media_root, request.target).get("evidence") or {}).get("entity_count")) or 0)
+    if profile_entity_count == 0:
+        limitations.append("cold_start_no_work_evidence")
     if reanalysis["due"]:
         limitations.append("taste_reanalysis_due")
     return {
