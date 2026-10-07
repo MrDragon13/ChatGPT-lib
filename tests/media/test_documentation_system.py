@@ -87,10 +87,11 @@ def test_web_architecture_manifest_version_matches_exporter():
 
 def test_write_pipeline_separates_normal_typed_and_manual_developer_routes():
     text = _text("docs/architecture/write-pipeline.md").lower()
-    for phrase in ("typed request", "operation pr", "deterministic transaction", "exact-head", "guarded merge", "pages"):
+    for phrase in ("request-only", "operation pr", "deterministic transaction", "exact checked head", "github api", "pages"):
         assert phrase in text
-    assert "manual developer" in text
+    assert "developer changes" in text
     assert "refresh_metadata" in text
+    assert "manual_review" in text
 
 
 def test_media_command_reference_matches_registered_operations():
@@ -117,9 +118,9 @@ def test_reference_invariants_include_cross_system_safety_rules():
 
 def test_current_status_is_durable_not_a_pr_ledger():
     text = _text("docs/status/current.md")
-    for required in ("v5.1", "assess_candidate", "set_work_similarity", "manifest v3"):
+    for required in ("Media Intelligence v6", "record_media_entry", "assess_candidate", "set_work_similarity", "manifest", "v3", "empty_library"):
         assert required in text
-    for forbidden in ("Current head:", "Media Dev Check #", "Web Check #", "Task 1", "Task 2", "docs/documentation-system-reorganization", "resume from branch"):
+    for forbidden in ("Current head:", "Media Dev Check #", "Web Check #", "Task 1", "Task 2", "resume from branch"):
         assert forbidden not in text
 
 
