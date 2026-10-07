@@ -213,3 +213,48 @@ describe("FeedbackEditor", () => {
     expect(screen.getByText(/Опубликовано сейчас: 8.5\/10/)).toBeInTheDocument();
   });
 });
+
+it("keeps a second local draft while the first operation is pending and does not submit twice", async () => {
+  const operationId = "cccccccc-dddd-4eee-8fff-111111111111";
+  const submitFeedback = vi.fn(async () => ({
+    operation_id: operationId,
+    pr_number: 42,
+    status: "submitted" as const,
+  }));
+  const getOperationStatus = vi.fn(async () => ({
+    status: "published" as const,
+    pr_number: 42,
+    merge_sha: "merge-sha",
+  }));
+  const brokerValue = broker({ submitFeedback, getOperationStatus });
+  const refreshManifest = vi.fn(async () => undefined);
+  const rendered = renderEditor({
+    broker: brokerValue,
+    refreshManifest,
+    pollIntervalMs: 60_000,
+  });
+
+  fireEvent.click(screen.getByRole("button", { name: "Изменить впечатление" }));
+  fireEvent.change(screen.getByLabelText("Оценка"), { target: { value: "9" } });
+  fireEvent.click(screen.getByRole("button", { name: "Сохранить" }));
+  await waitFor(() => expect(screen.getByText("Изменение отправлено")).toBeInTheDocument());
+
+  const rating = screen.getByLabelText("Оценка");
+  expect(rating).toBeEnabled();
+  fireEvent.change(rating, { target: { value: "9.5" } });
+  expect(screen.getByRole("button", { name: "Сохранить" })).toBeDisabled();
+  expect(submitFeedback).toHaveBeenCalledTimes(1);
+
+  fireEvent.focus(window);
+  await waitFor(() => expect(refreshManifest).toHaveBeenCalledWith(operationId));
+
+  rendered.rerender(<FeedbackEditor
+    {...rendered.props}
+    signal={{ ...baseSignal, rating: 9 }}
+  />);
+
+  await waitFor(() => expect(screen.queryByText("Опубликовано")).not.toBeInTheDocument());
+  expect(screen.getByLabelText("Оценка")).toHaveValue(9.5);
+  expect(screen.getByRole("button", { name: "Сохранить" })).toBeEnabled();
+  expect(submitFeedback).toHaveBeenCalledTimes(1);
+});
