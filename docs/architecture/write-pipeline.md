@@ -55,7 +55,7 @@ Normal write создаётся на свежей same-repo `media/op-*` вет�
 
 Для legacy operations authoritative `Media Check` запускается для точного resulting head SHA. Это исключает ситуацию, когда зелёный check относится к предыдущему commit.
 
-Для dormant v6 `record_media_entry` действует отдельный быстрый путь. Один `Media Command` runner:
+Для dormant v6 `record_media_entry` и checkpointed `set_inferred_preferences` действует отдельный быстрый путь. Один `Media Command` runner:
 
 1. сериализуется через общую группу `media-data-pipeline` без отмены ожидающих запусков;
 2. заново накладывает исходный typed request на свежий `main`;
@@ -72,7 +72,7 @@ Normal write создаётся на свежей same-repo `media/op-*` вет�
 
 ### 7. Guarded merge
 
-Auto-merge разрешён только allowlisted normal data operations и только для operation-specific path set. `record_media_entry` выполняет этот guarded merge внутри `Media Command`; legacy normal operations временно получают тот же trust boundary через успешный `Media Check -> Media Auto Merge`. **Guarded merge** не распространяется на architecture/schema/vocabulary/workflow changes.
+Auto-merge разрешён только allowlisted normal data operations и только для operation-specific path set. `record_media_entry` и checkpointed `set_inferred_preferences` выполняют этот guarded merge внутри `Media Command`; legacy normal operations временно получают тот же trust boundary через успешный `Media Check -> Media Auto Merge`. **Guarded merge** не распространяется на architecture/schema/vocabulary/workflow changes.
 
 Canonical policy — declarative `media/config/operation_path_policy.json`. Runtime transaction проверяет локальную копию policy, а privileged auto-merge **не доверяет PR checkout**: он получает policy из trusted `main` через GitHub Contents API и список changed filenames через GitHub PR files API. PR-head operation marker читается только как JSON data. Privileged workflow не должен импортировать или исполнять PR-head Python.
 
@@ -80,7 +80,7 @@ Path patterns используют один и тот же узкий grammar в
 
 Для legacy operations trust-модель privileged `Media Auto Merge` опирается на trigger `workflow_run`: исполняемое определение workflow существует на default branch, а PR-head Python с write-capable token там не запускается.
 
-Dormant v6 `record_media_entry` использует другой, более узкий контракт same-runner merge: только same-repo `media/op-*` PR, до исполнения разрешён ровно один request-файл, затем рабочее дерево строится заново от свежего `main` и в него возвращается только сохранённый JSON request. Этот путь рассчитан на текущий персональный репозиторий, где `main` не защищён branch protection/ruleset и same-repo writers уже являются доверенными. Это **не** общий механизм для недоверенных contributor/fork PR. Изменение collaborator-модели, branch protection или event model требует отдельного security review.
+Dormant v6 `record_media_entry` и checkpointed `set_inferred_preferences` используют другой, более узкий контракт same-runner merge: только same-repo `media/op-*` PR, до исполнения разрешён ровно один request-файл, затем рабочее дерево строится заново от свежего `main` и в него возвращается только сохранённый JSON request. Этот путь рассчитан на текущий персональный репозиторий, где `main` не защищён branch protection/ruleset и same-repo writers уже являются доверенными. Это **не** общий механизм для недоверенных contributor/fork PR. Изменение collaborator-модели, branch protection или event model требует отдельного security review.
 
 Любая ошибка fetch/decode/JSON parsing, неизвестная operation, `auto_merge: false`, unsupported matcher grammar, пустой/invalid allowlist или path вне trusted policy приводит к fail closed.
 
