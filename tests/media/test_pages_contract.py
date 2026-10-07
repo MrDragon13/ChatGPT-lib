@@ -73,3 +73,11 @@ def test_pages_final_production_build_happens_after_browser_checks() -> None:
     scan = text.index("npm run scan:dist")
     upload = text.index("actions/upload-pages-artifact@v4")
     assert browser < build < scan < upload, "browser webServer must not overwrite the publishable dist"
+
+
+def test_media_publish_is_post_merge_and_sha_gated() -> None:
+    text=_workflow_text()
+    assert "expected_sha:" in text
+    assert "publish_mode:" in text
+    assert "inputs.expected_sha" in text
+    assert "inputs.publish_mode != 'media'" in text
