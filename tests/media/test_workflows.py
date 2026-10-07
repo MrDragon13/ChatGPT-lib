@@ -154,3 +154,58 @@ def test_record_media_entry_provider_secret_is_gated_by_creation():
     assert "create_if_missing" in text
     assert "needs_provider" in text
     assert "steps.operation.outputs.needs_provider == 'true'" in text
+
+
+def test_v6_media_data_pipeline_is_serialized_without_cancelling_pending_runs():
+    text=_text("media-command.yml")
+    concurrency=text.split("concurrency:",1)[1].split("jobs:",1)[0]
+    assert "group: media-data-pipeline" in concurrency
+    assert "cancel-in-progress: false" in concurrency
+    assert "queue: max" in concurrency
+
+
+def test_record_media_entry_uses_single_runner_execution_class():
+    policy=_policy()["operations"]["record_media_entry"]
+    assert policy["execution_class"]=="v6_single_runner"
+
+
+def test_v6_fast_path_merges_exact_checked_head_without_direct_main_push():
+    text=_text("media-command.yml")
+    assert "Merge checked v6 operation" in text
+    assert 'pulls/$PR_NUMBER/merge' in text
+    assert '"sha": "$HEAD_SHA"' in text or "'sha': head_sha" in text
+    assert "merged" in text
+    assert "git push origin HEAD:main" not in text
+    assert "gh pr merge --auto" not in text
+
+
+def test_v6_fast_path_replays_when_main_moves_before_merge():
+    text=_text("media-command.yml")
+    assert "Replay v6 operation on latest main" in text
+    assert "MAX_ATTEMPTS" in text
+    assert "git fetch origin main" in text
+    assert "origin/main" in text
+    assert "base_sha" in text
+    assert "current_main" in text
+    assert "retry" in text.lower()
+
+
+def test_v6_fast_path_dispatches_pages_for_exact_merge_sha_not_media_check():
+    text=_text("media-command.yml")
+    fast=text.split("- name: Replay v6 operation on latest main",1)[1]
+    assert "media-pages.yml" in fast
+    assert "expected_sha" in fast
+    assert "publish_mode=media" in fast
+    legacy=text.split("- name: Dispatch read-only check for exact new head",1)[1]
+    assert "media-check.yml" in legacy
+    assert "steps.operation.outputs.execution_class != 'v6_single_runner'" in legacy
+
+
+def test_v6_fast_path_uses_targeted_authoritative_gate_not_full_pytest_or_doctor():
+    text=_text("media-command.yml")
+    fast=text.split("- name: Replay v6 operation on latest main",1)[1].split("- name: Dispatch read-only check for exact new head",1)[0]
+    assert "python -m media.tools.validate ." in fast
+    assert "python -m media.cli rebuild --check" in fast
+    assert "tests/media/test_record_media_entry.py" in fast
+    assert "python -m pytest -q" not in fast
+    assert "media.cli doctor" not in fast
