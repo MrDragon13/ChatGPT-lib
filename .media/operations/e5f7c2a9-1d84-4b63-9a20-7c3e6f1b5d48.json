@@ -1,0 +1,26 @@
+{
+  "applied_at": "2026-10-07T13:06:34.472569+00:00",
+  "changed_entities": [],
+  "changed_files": [
+    "media/pilots/legacy-reassessment-primary.json",
+    ".media/operations/e5f7c2a9-1d84-4b63-9a20-7c3e6f1b5d48.json"
+  ],
+  "details": {
+    "expected_ledger_digest": "sha256:c4c00cd70716efc479ac36c1f5ea7d0045a970a71bcc52780056e3ad81ddbec8",
+    "expected_work_digest": "sha256:27ae754018b7dcd8c094042d91d0ca5f1c48e6c5a82bc23d88062ec92f45aa0a",
+    "modernization": {
+      "completed_at": "2026-10-07T13:06:29.469535Z",
+      "metadata_operation_id": "c2a9f5d8-47be-4b10-8e63-9a1f2d6c7b35",
+      "semantic_operation_id": "d4e8a1c6-39f7-4b25-8c10-6a2e5f9d3b71",
+      "status": "completed",
+      "vocabulary_digest": "sha256:523339428874178b77f5fb6bec5b4d0ef3bf2415d666c1a064f1b19d31651378",
+      "work_digest": "sha256:27ae754018b7dcd8c094042d91d0ca5f1c48e6c5a82bc23d88062ec92f45aa0a"
+    },
+    "outcome": "completed",
+    "pilot_id": "primary-legacy-v1",
+    "work_id": "source-code-2011"
+  },
+  "operation": "record_reassessment_modernization",
+  "operation_id": "e5f7c2a9-1d84-4b63-9a20-7c3e6f1b5d48",
+  "status": "applied"
+}
