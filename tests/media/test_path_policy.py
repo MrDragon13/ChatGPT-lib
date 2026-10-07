@@ -9,6 +9,16 @@ from media.service.path_policy import allowed_paths_for_operation, verify_change
 
 
 EXPECTED_POLICY = {
+    "record_media_entry": {
+        "auto_merge": True,
+        "allowed_paths": [
+            "media/data/works/*.yaml",
+            "media/generated/index.jsonl",
+            "media/generated/profiles/*.yaml",
+            ".media/operations/*.json",
+            "media/data/relations/similarity/*.yaml",
+        ],
+    },
     "add_work": {
         "auto_merge": True,
         "allowed_paths": [
