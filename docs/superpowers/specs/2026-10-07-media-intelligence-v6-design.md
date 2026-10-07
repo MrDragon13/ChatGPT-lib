@@ -40,7 +40,7 @@ v6 сохраняет сильные стороны v5.1:
 
 ### 3.1 Человекочитаемый архив
 
-До destructive reset создаётся один MD-архив всей текущей медиатеки.
+До destructive reset создаётся один MD-архив всей текущей медиатеки: `docs/archive/media-library-before-v6-reset-2026-10-07.md`.
 
 Архив содержит все существующие произведения. Для каждого произведения сохраняются только человечески полезные данные:
 
@@ -118,7 +118,7 @@ Stage A baselines перестают быть live/runtime input. Если от�
 
 ## 5. Главная aggregate operation
 
-v6 вводит новый рекомендованный normal write route, условно `record_media_entry`.
+v6 вводит новый рекомендованный normal write route, `record_media_entry`.
 
 Операция соответствует одному естественному человеческому событию о конкретном произведении.
 
@@ -397,7 +397,7 @@ Pending overlay:
 
 ## 17. Compact read context
 
-Добавляется компактный read-only context route, условно `media-entry-context`.
+Добавляется компактный read-only route `media_entry_context`.
 
 Он возвращает минимум для решения normal feedback:
 
