@@ -24,6 +24,34 @@
         "pre_pilot_feedback_digest": {"$ref": "#/$defs/digest"}
       }
     },
+    "modernization": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "blocker_code", "recorded_at", "work_digest"],
+          "properties": {
+            "status": {"const": "blocked"},
+            "blocker_code": {"enum": ["provider_identity_missing", "provider_identity_ambiguous", "provider_identity_conflict", "semantic_context_insufficient"]},
+            "recorded_at": {"type": "string", "minLength": 1},
+            "work_digest": {"$ref": "#/$defs/digest"}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "metadata_operation_id", "semantic_operation_id", "completed_at", "work_digest", "vocabulary_digest"],
+          "properties": {
+            "status": {"const": "completed"},
+            "metadata_operation_id": {"type": "string", "minLength": 36, "maxLength": 36},
+            "semantic_operation_id": {"type": "string", "minLength": 36, "maxLength": 36},
+            "completed_at": {"type": "string", "minLength": 1},
+            "work_digest": {"$ref": "#/$defs/digest"},
+            "vocabulary_digest": {"$ref": "#/$defs/digest"}
+          }
+        }
+      ]
+    },
     "lifecycleItem": {
       "type": "object",
       "additionalProperties": false,
@@ -37,7 +65,8 @@
         "outcome": {"enum": ["changed", "confirmed_unchanged", "deferred"]},
         "historical_exposure": {"$ref": "#/$defs/historicalExposure"},
         "reviewed_at": {"type": "string", "minLength": 1},
-        "operation_id": {"type": "string", "minLength": 36, "maxLength": 36}
+        "operation_id": {"type": "string", "minLength": 36, "maxLength": 36},
+        "modernization": {"$ref": "#/$defs/modernization"}
       }
     },
     "session": {
