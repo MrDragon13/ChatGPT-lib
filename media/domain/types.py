@@ -32,3 +32,29 @@ class TargetEdit:
     set_values: Mapping[str, Any]
     clear: tuple[FeedbackComponent, ...] = ()
     purge: bool = False
+
+
+@dataclass(frozen=True)
+class ProviderIdentity:
+    media_type: Literal["movie", "tv"]
+    id: int
+
+
+@dataclass(frozen=True)
+class CreationContext:
+    resolved_identity: Mapping[str, Any]
+    provider_identity: ProviderIdentity
+    minimum_metadata: Mapping[str, Any]
+
+
+@dataclass(frozen=True)
+class SemanticSnapshot:
+    traits: tuple[Mapping[str, Any], ...]
+    semantic_input_digest: str
+    vocabulary_digest: str
+    algorithm_version: str
+
+
+@dataclass(frozen=True)
+class MediaEntryPreconditions:
+    expected_viewer_digests: Mapping[str, str]
