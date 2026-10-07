@@ -96,7 +96,8 @@ function mockScenario(scenario: Scenario): string[] {
     if (url.pathname.includes("/actions/workflows/media-pages.yml/runs")) {
       return json({ workflow_runs: scenario.pagesRuns ?? [] });
     }
-    if (scenario.receiptOperation && url.pathname.includes(`/contents/.media/operations/${operationId}.json`)) {
+    if (url.pathname.includes(`/contents/.media/operations/${operationId}.json`)) {
+      if (!scenario.receiptOperation) return json({ message: "not found" }, 404);
       const payload = JSON.stringify({ operation_id: operationId, operation: scenario.receiptOperation, status: "applied" });
       const bytes = new TextEncoder().encode(payload);
       let binary = "";
