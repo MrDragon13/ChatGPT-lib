@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from media.domain.digests import material_evidence_projection
+from media.domain.errors import UnknownTargetError
 from media.repository.yaml_repo import YamlRepository
 from media.tools.common import load_yaml
 
@@ -240,3 +241,33 @@ def get_reanalysis_status(media_root: Path, target: str) -> ReanalysisStatus:
         checkpoint_valid=valid,
         current_evidence_digest=current_digest,
     )
+
+
+def _status_payload(status: ReanalysisStatus) -> dict[str, Any]:
+    return {
+        "target": status.target,
+        "threshold": status.threshold,
+        "outstanding_count": status.outstanding_count,
+        "due": status.due,
+        "checkpoint_valid": status.checkpoint_valid,
+        "current_evidence_digest": status.current_evidence_digest,
+    }
+
+
+def build_reanalysis_context(media_root: Path, target: str) -> dict[str, Any]:
+    media_root = Path(media_root)
+    repo = YamlRepository(media_root)
+    viewers, groups = repo.configured_targets()
+    if target in viewers:
+        return _status_payload(get_reanalysis_status(media_root, target))
+    if target in groups:
+        members = {
+            member: _status_payload(get_reanalysis_status(media_root, member))
+            for member in groups[target]
+        }
+        return {
+            "target": target,
+            "due": any(status["due"] for status in members.values()),
+            "members": members,
+        }
+    raise UnknownTargetError(f"unknown target: {target}")
