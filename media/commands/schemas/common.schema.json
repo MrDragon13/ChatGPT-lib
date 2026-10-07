@@ -355,7 +355,7 @@
         "traits": {
           "type": "array",
           "items": {
-            "$ref": "https://chatgpt-lib.local/schemas/common.schema.json#/$defs/semanticTrait"
+            "$ref": "#/$defs/semanticTrait"
           }
         },
         "semantic_input_digest": {
@@ -385,6 +385,31 @@
           "additionalProperties": {
             "$ref": "#/$defs/digest"
           }
+        }
+      }
+    },
+    "semanticTrait": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "term",
+        "source",
+        "confidence"
+      ],
+      "properties": {
+        "term": {
+          "type": "string",
+          "minLength": 3
+        },
+        "source": {
+          "enum": [
+            "external_source",
+            "llm_inferred",
+            "user_explicit"
+          ]
+        },
+        "confidence": {
+          "$ref": "#/$defs/confidence"
         }
       }
     }
