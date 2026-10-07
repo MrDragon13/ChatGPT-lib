@@ -184,3 +184,20 @@ def test_pages_deploy_remains_independent_of_cloudflare_credentials():
     text=_text("media-pages.yml")
     assert "CLOUDFLARE_API_TOKEN" not in text
     assert "CLOUDFLARE_ACCOUNT_ID" not in text
+
+def test_single_runner_replay_shell_is_syntax_valid():
+    import subprocess
+    import yaml
+
+    workflow = yaml.safe_load(_text("media-command.yml"))
+    steps = workflow["jobs"]["apply"]["steps"]
+    replay = next(step for step in steps if step.get("name") == "Replay v6 operation on latest main")
+    result = subprocess.run(
+        ["bash", "-n"],
+        input=replay["run"],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+
