@@ -293,3 +293,10 @@ inferred_preferences:
   - entity_id: grand-budapest-hotel-2014
     kind: rating_correlation
     source_target: partner
+reanalysis:
+  target: partner
+  threshold: 5
+  outstanding_count: 0
+  due: false
+  checkpoint_valid: true
+  current_evidence_digest: sha256:6fd765f35f6ab260d9dddc5cc7fdafd797be58b4a49f91d3621a84eb1b790894
