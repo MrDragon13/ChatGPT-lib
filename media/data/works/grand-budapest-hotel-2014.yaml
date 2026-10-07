@@ -169,6 +169,12 @@ metadata:
       fetched_at: '2026-10-07T09:35:45.240279Z'
   semantic:
     traits:
+    - term: genre.comedy
+      source: external_source
+      confidence: high
+    - term: genre.drama
+      source: external_source
+      confidence: high
     - term: visuals.strong
       source: llm_inferred
       confidence: high
@@ -189,7 +195,7 @@ metadata:
       confidence: medium
     - term: pacing.fast
       source: llm_inferred
-      confidence: medium
+      confidence: high
     - term: tone.light
       source: llm_inferred
       confidence: medium
