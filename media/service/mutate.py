@@ -6,6 +6,7 @@ from typing import Any, Mapping
 
 from media.domain.changeset import MutationPlan
 from media.domain.commands import EditViewingFeedbackCommand, RecordViewingFeedbackCommand, SetInterestCommand
+from media.domain.digests import is_material_evidence_change
 from media.domain.errors import CommandValidationError
 from media.domain.types import TargetEdit, TargetUpdate
 from media.repository.yaml_repo import YamlRepository
@@ -23,13 +24,20 @@ def _date(now: datetime | None) -> str:
     return (now or datetime.now(timezone.utc)).date().isoformat()
 
 
-def apply_feedback_updates(repo: YamlRepository, document: Mapping[str, Any], updates: tuple[TargetUpdate, ...], *, now: datetime | None = None) -> tuple[dict[str, Any], bool, set[str]]:
+def apply_feedback_updates(
+    repo: YamlRepository,
+    document: Mapping[str, Any],
+    updates: tuple[TargetUpdate, ...],
+    *,
+    now: datetime | None = None,
+    event_id: str | None = None,
+) -> tuple[dict[str, Any], bool, set[str]]:
     doc=copy.deepcopy(dict(document)); changed=False; touched_targets:set[str]=set()
     for update in updates:
         kind=resolve_target_kind(repo,update.target)
         if kind=="group" and update.viewing is not None: raise CommandValidationError("group targets cannot carry viewing state")
         container_key="viewer_signals" if kind=="viewer" else "group_signals"; signals=doc.setdefault(container_key,{})
-        signal=copy.deepcopy(signals.get(update.target) or {}); previous={}; current={}; component_changed=False
+        signal=copy.deepcopy(signals.get(update.target) or {}); before_signal=copy.deepcopy(signal); previous={}; current={}; component_changed=False
         for key in ("viewing","rating","reaction","feedback"):
             value=getattr(update,key)
             if value is None: continue
@@ -38,7 +46,11 @@ def apply_feedback_updates(repo: YamlRepository, document: Mapping[str, Any], up
             current[key]=incoming
             if signal.get(key)!=incoming: signal[key]=incoming; component_changed=True
         if component_changed:
-            signal.setdefault("history",[]).append({"at":_at(now),"previous":previous,"current":current}); signals[update.target]=signal; changed=True; touched_targets.add(update.target)
+            history_entry={"at":_at(now),"previous":previous,"current":current}
+            if event_id is not None:
+                history_entry["event_id"]=event_id
+                history_entry["material_evidence"]=is_material_evidence_change(before_signal,signal)
+            signal.setdefault("history",[]).append(history_entry); signals[update.target]=signal; changed=True; touched_targets.add(update.target)
     if changed: doc.setdefault("provenance",{})["updated_at"]=_date(now)
     return doc,changed,touched_targets
 
