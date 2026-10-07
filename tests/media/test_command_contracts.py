@@ -409,3 +409,84 @@ def test_modernization_operation_ids_are_canonical_lowercase_uuids():
         bad = valid_record_modernization_dict("completed"); bad[key] = "not-a-uuid"
         with pytest.raises(CommandValidationError):
             parse_command(bad)
+
+
+def valid_record_media_entry_dict(create_if_missing: bool = False) -> dict:
+    data = {
+        "schema_version": 1,
+        "operation_id": "123e4567-e89b-42d3-a456-426614174301",
+        "idempotency_key": "123e4567-e89b-42d3-a456-426614174399",
+        "operation": "record_media_entry",
+        "work_ref": {"id": "arrival-2016"},
+        "create_if_missing": create_if_missing,
+        "target_updates": [{"target": "primary", "viewing": {"status": "watched"}}],
+        "preconditions": {"expected_viewer_digests": {"primary": "sha256:" + "1" * 64}},
+    }
+    if create_if_missing:
+        data["work_ref"] = {"tmdb_media_type": "movie", "tmdb_id": 329865}
+        data["creation_context"] = {
+            "resolved_identity": {
+                "format": "movie",
+                "title_original": "Arrival",
+                "title_ru": "Прибытие",
+                "year": 2016,
+                "external_ids": {"tmdb": {"media_type": "movie", "id": 329865}},
+            },
+            "provider_identity": {"media_type": "movie", "id": 329865},
+            "minimum_metadata": {"runtime_min": 116},
+        }
+        data["semantic_snapshot"] = {
+            "traits": [{"term": "story.intrigue", "source": "llm_inferred", "confidence": "high"}],
+            "semantic_input_digest": "sha256:" + "2" * 64,
+            "vocabulary_digest": "sha256:" + "3" * 64,
+            "algorithm_version": "media-semantic-v1",
+        }
+        data["preconditions"] = {"expected_viewer_digests": {}}
+    return data
+
+
+def test_record_media_entry_parses_existing_and_new_work_variants():
+    existing = parse_command(valid_record_media_entry_dict())
+    assert type(existing).__name__ == "RecordMediaEntryCommand"
+    assert existing.idempotency_key.endswith("4399")
+    assert existing.preconditions.expected_viewer_digests["primary"].startswith("sha256:")
+
+    created = parse_command(valid_record_media_entry_dict(create_if_missing=True))
+    assert created.create_if_missing is True
+    assert created.creation_context.provider_identity.id == 329865
+    assert created.semantic_snapshot.algorithm_version == "media-semantic-v1"
+
+
+def test_record_media_entry_requires_creation_and_semantics_only_for_creation():
+    for missing in ("creation_context", "semantic_snapshot"):
+        bad = valid_record_media_entry_dict(create_if_missing=True)
+        bad.pop(missing)
+        with pytest.raises(CommandValidationError):
+            parse_command(bad)
+
+    bad = valid_record_media_entry_dict()
+    bad["creation_context"] = valid_record_media_entry_dict(True)["creation_context"]
+    with pytest.raises(CommandValidationError):
+        parse_command(bad)
+
+
+def test_record_media_entry_existing_work_requires_digest_for_each_target():
+    bad = valid_record_media_entry_dict()
+    bad["preconditions"]["expected_viewer_digests"] = {}
+    with pytest.raises(CommandValidationError, match="expected viewer digest"):
+        parse_command(bad)
+
+
+def test_record_media_entry_operation_and_idempotency_ids_are_canonical_uuid_text():
+    for key in ("operation_id", "idempotency_key"):
+        bad = valid_record_media_entry_dict()
+        bad[key] = "NOT-A-UUID"
+        with pytest.raises(CommandValidationError):
+            parse_command(bad)
+
+
+def test_record_media_entry_rejects_unknown_fields():
+    bad = valid_record_media_entry_dict()
+    bad["unexpected"] = True
+    with pytest.raises(CommandValidationError):
+        parse_command(bad)
