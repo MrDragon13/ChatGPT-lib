@@ -2,6 +2,8 @@
 
 This Cloudflare Worker is the protected write bridge for the static media site. It authenticates one GitHub owner, creates one typed `record_viewing_feedback` operation PR, and reports that operation's GitHub/Pages status. It never edits canonical media YAML directly.
 
+> Переходное состояние v6: код Broker уже содержит протестированный helper для `record_media_entry`, который читает viewer digest на exact `main` SHA, но production `POST /v1/feedback` пока намеренно использует `record_viewing_feedback`. Переключать live route до атомарного v6 cutover нельзя.
+
 ## 1. Create the GitHub App
 
 Create one GitHub App and install it **only** on `MrDragon13/ChatGPT-lib`.
