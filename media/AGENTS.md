@@ -10,7 +10,7 @@
 2. `docs/status/current.md`;
 3. нужного документа из `docs/architecture/` или `docs/reference/`, только если запрос требует архитектурных деталей.
 
-Исторические спецификации под `docs/superpowers/` нужны только для разбора причин старых решений. Они не заменяют текущий код и живую документацию.
+Исторические спецификации под `docs/superpowers/` нужны только для разбора причин старых решений. Они не заменяют текущий код и живую документацию. Текущие пользовательские сценарии v6 собраны в `docs/superpowers/specs/2026-10-07-media-v6-agent-scenario-catalog.md`; обращайся к нему, когда нужен конкретный end-to-end сценарий.
 
 ## Пользовательский договор
 
@@ -98,15 +98,15 @@
 
 ## Семантика и пользовательский вкус
 
-Film fingerprint описывает произведение, never the viewer reaction.
+Семантический отпечаток описывает произведение, а не реакцию зрителя.
 
 - Оценка, реакция и отзыв пользователя не являются объективными traits произведения.
-- Controlled vocabulary обязателен для semantic fingerprint.
+- Для семантического отпечатка обязателен контролируемый словарь.
 - Если semantic input digest и версия алгоритма не изменились, fingerprint переиспользуется без нового LLM-прохода.
-- Explicit evidence важнее inferred interpretation.
-- Inferred output is not independent evidence for another inferred output.
-- Similarity is evidence for recommendations and explanations, not a stable preference by itself.
-- External similarity endpoints do not create canonical works.
+- Явные пользовательские данные важнее выведенной интерпретации.
+- Выведенный результат не является независимым доказательством для следующего вывода.
+- Явно заданное сходство помогает рекомендациям и объяснениям, но само по себе не является устойчивым предпочтением.
+- Внешняя сторона связи сходства не создаёт произведение в медиатеке.
 
 ## Повторный анализ вкуса
 
@@ -129,13 +129,13 @@ Film fingerprint описывает произведение, never the viewer r
 ## Рекомендации и честные ограничения
 
 - Не выдавай qualitative assessment за точную вероятность.
-- `ranking_basis=none` не является personalized semantic evidence.
-- Partial `assessment_coverage` must not be described as fully grounded certainty.
-- Active `limitations` are material context: учти их в выводе один раз, succinctly; do not mechanically repeat the same warning.
-- Inferred hypotheses are explanation-only for numeric affinity aggregation.
+- `ranking_basis=none` не является персональным семантическим основанием.
+- Неполное `assessment_coverage` нельзя описывать как полностью обоснованную уверенность.
+- Активные `limitations` важны для вывода: учти их один раз и кратко, не повторяй одно и то же предупреждение механически.
+- Выведенные гипотезы служат для объяснения и сами по себе не усиливают численные affinity.
 - Различия вкусов пары не скрываются усреднением.
 
-Общий запрос на рекомендацию по умолчанию допускает external discovery. Internal-only recommendation выполняй только когда пользователь явно ограничил выбор своей медиатекой.
+Общий запрос на рекомендацию по умолчанию допускает external discovery. Рекомендацию только из медиатеки делай лишь когда пользователь явно ограничил выбор локальной библиотекой.
 
 ## Архив старой медиатеки
 
