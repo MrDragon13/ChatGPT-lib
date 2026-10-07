@@ -27,7 +27,7 @@ test("today, history and library remain accessible before and after repopulation
   await expectNoSeriousA11yViolations(page);
 
   await page.goto("#/library?target=couple");
-  await expect(page.getByRole("heading", { name: "Медиатека" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Медиатека", exact: true })).toBeVisible();
   await expectNoSeriousA11yViolations(page);
 
   const first = page.locator(".library-card").first();
@@ -44,7 +44,7 @@ test("today, history and library remain accessible before and after repopulation
 
 test("empty and missing states remain accessible", async ({ page }) => {
   await page.goto("#/library?target=couple&q=__no_such_title__");
-  const heading = page.getByRole("heading", { level: 2 });
+  const heading = page.getByRole("heading", { name: /^(С такими фильтрами пусто|Медиатека пока пуста)$/ });
   await expect(heading).toBeVisible();
   await expectNoSeriousA11yViolations(page);
 
