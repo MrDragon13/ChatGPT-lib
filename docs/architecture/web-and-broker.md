@@ -1,103 +1,96 @@
-# Web и broker boundaries
+# Web and Broker architecture
 
-Этот документ описывает текущую web surface: статическую GitHub Pages-витрину, versioned manifest и server-side write broker.
+Этот документ описывает текущую границу между static Web, Cloudflare Broker, GitHub и media domain.
 
-Current manifest version: v3
+## Роли
 
-## Static Pages как read surface
+### Web
 
-`web/` — React/Vite application, публикуемое через GitHub Pages. Оно не читает canonical YAML напрямую и не содержит собственного recommendation/taste engine.
+`web/` — статический React/Vite клиент GitHub Pages.
 
-Data flow:
+Он:
 
-```text
-canonical media + derived contexts
-        -> media web exporter
-        -> versioned JSON manifest
-        -> static web build
-        -> GitHub Pages
-```
+- читает versioned derived manifest;
+- показывает library/history/taste/recommendation data;
+- может отправлять разрешённый feedback через Broker;
+- не читает canonical YAML напрямую;
+- не хранит GitHub/provider/model secrets;
+- не является вторым recommendation engine или canonical store.
 
-Manifest является derived read model. Его можно пересобрать; он не становится вторым source of truth.
+Пустая медиатека после v6 reset — нормальный UI state. Home/Library/History должны быть полезными и доступными без фиктивных works.
 
-## Manifest contract
+### Broker
 
-Current exporter выдаёт schema version 3. Manifest включает, среди прочего:
+Cloudflare Worker — stateless защищённая граница browser write.
 
-- configured targets;
-- controlled vocabulary projection;
-- derived profiles/taste contexts;
-- recommendation context;
-- work identity/metadata/user signals;
-- semantic fingerprint;
-- target-keyed explicit similarity projection.
+Production `POST /v1/feedback` использует v6 `record_media_entry`.
 
-Frontend временно умеет читать несколько предыдущих manifest versions для безопасного staged static deploy overlap, но **current write/export contract** определяется exporter/schema code.
+Broker:
 
-## Similarity projection
+1. проверяет owner session;
+2. получает exact SHA текущего `main`;
+3. читает `media/generated/index.jsonl` на этом же SHA;
+4. извлекает viewer digest нужного `work/target`;
+5. строит `record_media_entry(create_if_missing=false)` с `expected_viewer_digests`;
+6. создаёт `media/op-*` branch и request-only PR от того же SHA;
+7. возвращает operation status.
 
-Canonical explicit similarity хранится как одна undirected relation. Web read model может развернуть её для удобного чтения:
+Browser не получает и не вычисляет viewer digest.
 
-- canonical↔canonical relation появляется на обеих локальных work pages;
-- canonical↔external relation показывается только на локальной canonical page;
-- external endpoint отображается как lightweight identity card без выдуманного local route;
-- projection фильтруется по active target;
-- UI не выдаёт derived semantic similarity за explicit пользовательское мнение.
+## Почему Broker не хранит состояние
 
-## Web target semantics
+Broker не использует D1/KV/Durable Objects как source of truth.
 
-`primary` — default context. Явно выбранные `partner`/`couple` сохраняются через navigation. UI меняет foregrounded subjective signals, но не создаёт отдельные каталоги произведений.
+Pending status восстанавливается из GitHub operation PR/workflow/merge/Pages state. Это сохраняет один долговременный источник данных и не создаёт отдельную синхронизацию.
 
-Write destination всегда видим. Web не должен молча сохранять `couple` edit в `primary` или подставлять чужой target как будто это canonical signal выбранного target.
+## Browser feedback contract
 
-## Broker boundary
+Browser отправляет только human-facing поля, например:
 
-Статический browser не может безопасно владеть GitHub write token, provider secret или model credential. Поэтому поддерживаемые lightweight edits отправляются через authenticated broker.
+- `work_id`;
+- `target`;
+- rating;
+- reaction;
+- feedback summary.
 
-Broker отвечает за:
+Internal preconditions добавляет Broker.
 
-1. authentication/authorization request;
-2. разрешённый набор browser write intents;
-3. перевод запроса в existing strict typed operation;
-4. передачу mutation в тот же repository/PR pipeline;
-5. возврат operation/result status без раскрытия secrets.
+Если по тому же work/target уже есть активная operation, Broker/Web не создают второй параллельный request. Web сохраняет следующий local draft и разрешает submit после authoritative первой операции и refresh manifest.
 
-Broker не должен создавать параллельную browser-only data model или bypass validation.
+## Status lifecycle
 
-## Что browser никогда не получает
+Основные user-facing состояния:
 
-В static bundle запрещены:
+- `submitted` / `checking` — операция ещё не authoritative;
+- `merged` — canonical data уже в `main`, Pages ещё может обновляться;
+- `published` — Pages для merge SHA завершены;
+- `failed` — operation не стала authoritative.
 
-- GitHub repository write credentials;
-- `TMDB_READ_TOKEN` и другие provider secrets;
-- OpenAI/model credentials;
-- server-side signing/authentication secrets;
-- произвольный доступ к repository write API.
+Для v6 status не требуется ожидать удалённые `Media Check`/`Media Auto Merge` workflows.
 
-Публичность Pages и confidentiality пользовательских movie ratings/comments — отдельный product decision; отсутствие секретов в bundle остаётся обязательным независимо от публичности content.
+## Web manifest
 
-## Read vs write
+Current manifest version: v3.
 
-Read:
+Manifest строится только из canonical/derived media data.
 
-```text
-Pages -> exported manifest -> rendered UI
-```
+Он включает публичные viewer/group signals, taste/recommendation read models, semantics и explicit similarity, но не публикует внутренние viewer digests или GitHub operation bookkeeping.
 
-Write:
+Пустая библиотека экспортируется как валидный manifest с `works: []` и пустыми recommendation candidate sets.
 
-```text
-browser -> broker -> typed command -> operation PR -> deterministic validation/merge pipeline
-```
+## Security boundaries
 
-Browser никогда не мутирует canonical YAML напрямую.
+- GitHub App private key и session secret живут только в Worker.
+- `TMDB_READ_TOKEN` живёт только в trusted server/Actions context.
+- Browser bundle содержит только public Broker URL.
+- Broker создаёт только typed request PR и не патчит canonical YAML напрямую.
+- Media Command применяет operation path policy и exact-head/base guard.
+- Fork/untrusted PR не получает secret-bearing normal data execution.
 
-## Product и visual contracts
+## Deploy
 
-Root `PRODUCT.md` — media-web product brief. Root `DESIGN.md` — current media-web visual/design-system contract. Они определяют product/design surface, но не заменяют system architecture или canonical media contracts.
+Broker Deploy остаётся manual и SHA-gated.
 
-## Deployment
+Media Pages строит Web для exact merge SHA.
 
-Publishable artifact строится из exact repository revision после media export и web checks. Pages deployment должен соответствовать exact merge SHA, чтобы UI и manifest не расходились с `main`.
-
-Web-related verification включает unit tests, TypeScript typecheck, production build, static credential scan и browser/accessibility/responsive checks, как закреплено текущими workflows.
+Если `MEDIA_BROKER_URL` отсутствует, Web должен сохранять read-only функциональность.
