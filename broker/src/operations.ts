@@ -24,6 +24,19 @@ export type FeedbackCommand = {
   target_updates: Array<Record<string, unknown>>;
 };
 
+export type MediaEntryCommand = {
+  schema_version: 1;
+  operation_id: string;
+  idempotency_key: string;
+  operation: "record_media_entry";
+  work_ref: { id: string };
+  create_if_missing: false;
+  target_updates: Array<Record<string, unknown>>;
+  preconditions: {
+    expected_viewer_digests: Record<string, string>;
+  };
+};
+
 export type SubmittedOperation = {
   operation_id: string;
   pr_number: number;
@@ -144,7 +157,7 @@ async function findOperationPull(
   return pulls.find((pull) => pull.head?.ref === branch) ?? null;
 }
 
-export function buildFeedbackCommand(input: FeedbackInput, operationId: string): FeedbackCommand {
+function buildTargetUpdate(input: FeedbackInput): Record<string, unknown> {
   const update: Record<string, unknown> = { target: input.target };
   if (Object.hasOwn(input, "rating")) {
     update.rating = { score: input.rating, source: "explicit", confidence: "exact" };
@@ -155,15 +168,72 @@ export function buildFeedbackCommand(input: FeedbackInput, operationId: string):
   if (Object.hasOwn(input, "feedback_summary")) {
     update.feedback = { summary: input.feedback_summary };
   }
+  return update;
+}
+
+export function buildFeedbackCommand(input: FeedbackInput, operationId: string): FeedbackCommand {
   return {
     schema_version: 1,
     operation_id: operationId,
     operation: "record_viewing_feedback",
     work_ref: { id: input.work_id },
     create_if_missing: false,
-    target_updates: [update],
+    target_updates: [buildTargetUpdate(input)],
   };
 }
+
+export function buildMediaEntryCommand(
+  input: FeedbackInput,
+  operationId: string,
+  idempotencyKey: string,
+  viewerDigest: string,
+): MediaEntryCommand {
+  return {
+    schema_version: 1,
+    operation_id: operationId,
+    idempotency_key: idempotencyKey,
+    operation: "record_media_entry",
+    work_ref: { id: input.work_id },
+    create_if_missing: false,
+    target_updates: [buildTargetUpdate(input)],
+    preconditions: {
+      expected_viewer_digests: { [input.target]: viewerDigest },
+    },
+  };
+}
+
+async function viewerDigestAtRef(
+  input: FeedbackInput,
+  mainSha: string,
+  env: BrokerEnv,
+  token: string,
+): Promise<string> {
+  const file = await getRepoJson<{ encoding?: unknown; content?: unknown }>(
+    env,
+    token,
+    `/contents/media/generated/index.jsonl?${query({ ref: mainSha })}`,
+    "failed to read media index",
+  );
+  if (file.encoding !== "base64" || typeof file.content !== "string") {
+    throw new Error("media index response is not base64 content");
+  }
+  const text = decodeBase64Utf8(file.content);
+  for (const line of text.split("\n")) {
+    if (!line.trim()) continue;
+    const row = JSON.parse(line) as {
+      id?: unknown;
+      viewer_digests?: Record<string, unknown>;
+    };
+    if (row.id !== input.work_id) continue;
+    const digest = row.viewer_digests?.[input.target];
+    if (typeof digest !== "string" || !digest.startsWith("sha256:")) {
+      throw new Error(`viewer digest is missing for ${input.work_id}/${input.target}`);
+    }
+    return digest;
+  }
+  throw new Error(`work is missing from generated index: ${input.work_id}`);
+}
+
 
 function submissionError(error: unknown, operationId: string): OperationSubmissionError {
   if (error instanceof GitHubApiError) {
@@ -204,6 +274,39 @@ export async function submitFeedback(input: FeedbackInput, env: BrokerEnv): Prom
     throw submissionError(error, operationId);
   }
 }
+
+export async function submitFeedbackV6(input: FeedbackInput, env: BrokerEnv): Promise<SubmittedOperation> {
+  const operationId = crypto.randomUUID();
+  const idempotencyKey = crypto.randomUUID();
+  const branch = `media/op-${operationId}`;
+  let token: string;
+  let branchCreated = false;
+
+  try {
+    token = await mintInstallationToken(env);
+    const mainSha = await getMainSha(env, token);
+    const viewerDigest = await viewerDigestAtRef(input, mainSha, env, token);
+    await createBranch(env, token, branch, mainSha);
+    branchCreated = true;
+
+    const command = buildMediaEntryCommand(input, operationId, idempotencyKey, viewerDigest);
+    const requestPath = `.media/requests/${operationId}.json`;
+    const content = utf8Base64(`${JSON.stringify(command)}\n`);
+    await putRequestFile(env, token, branch, requestPath, content, operationId);
+    const prNumber = await createOperationPullRequest(env, token, branch, operationId, input.work_id);
+    return { operation_id: operationId, pr_number: prNumber, status: "submitted" };
+  } catch (error) {
+    if (branchCreated && token!) {
+      try {
+        await deleteBranch(env, token, branch);
+      } catch {
+        // The original failure is authoritative; cleanup is best-effort.
+      }
+    }
+    throw submissionError(error, operationId);
+  }
+}
+
 
 export async function findActiveOperation(
   workId: string,
@@ -262,6 +365,29 @@ export async function findActiveOperation(
   return null;
 }
 
+async function appliedOperationKind(
+  operationId: string,
+  headSha: string,
+  env: BrokerEnv,
+  token: string,
+): Promise<string | null> {
+  try {
+    const file = await getRepoJson<{ encoding?: unknown; content?: unknown }>(
+      env,
+      token,
+      `/contents/.media/operations/${operationId}.json?${query({ ref: headSha })}`,
+      "failed to read applied operation receipt",
+    );
+    if (file.encoding !== "base64" || typeof file.content !== "string") return null;
+    const receipt = JSON.parse(decodeBase64Utf8(file.content)) as { operation?: unknown };
+    return typeof receipt.operation === "string" ? receipt.operation : null;
+  } catch (error) {
+    if (error instanceof GitHubApiError && error.status === 404) return null;
+    throw error;
+  }
+}
+
+
 export async function getOperationStatus(
   operationId: string,
   env: BrokerEnv,
@@ -293,6 +419,11 @@ export async function getOperationStatus(
   if (!commandRun) return { ...base, status: "submitted" };
   if (activeRun(commandRun)) return { ...base, status: "applying", actions_url: commandRun.html_url };
   if (failedConclusion(commandRun)) return { ...base, status: "failed", reason: "command_failed", actions_url: commandRun.html_url };
+
+  const operationKind = await appliedOperationKind(operationId, pull.head.sha, env, token);
+  if (operationKind === "record_media_entry") {
+    return { ...base, status: "checking", actions_url: commandRun.html_url };
+  }
 
   const checkRuns = await listWorkflowRuns(env, token, "media-check.yml", { branch, event: "workflow_dispatch" });
   const checkRun = checkRuns.find((run) => run.head_sha === pull.head.sha);
