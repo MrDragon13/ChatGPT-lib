@@ -60,3 +60,26 @@ def test_refresh_work_metadata_cli_dry_run_initializes_provider(tmp_path, monkey
     result=json.loads(capsys.readouterr().out)
     assert result["status"] in {"planned","no_change"}
     assert result["operation"]=="refresh_work_metadata"
+
+
+def test_record_media_entry_existing_work_cli_needs_no_tmdb_token(tmp_path, monkeypatch, capsys):
+    from media.domain.digests import compute_viewer_digest
+    from media.tools.common import load_yaml
+
+    root=copy_fixture_repo(tmp_path); rebuild_generated(root/"media")
+    work=load_yaml(root/"media/data/works/arrival-2016.yaml")
+    request=_write_json(root/"entry.json",{
+        "schema_version":1,
+        "operation_id":"123e4567-e89b-42d3-a456-426614174301",
+        "idempotency_key":"123e4567-e89b-42d3-a456-426614174399",
+        "operation":"record_media_entry",
+        "work_ref":{"id":"arrival-2016"},
+        "create_if_missing":False,
+        "target_updates":[{"target":"primary","rating":{"score":9.0,"source":"explicit","confidence":"exact"}}],
+        "preconditions":{"expected_viewer_digests":{"primary":compute_viewer_digest(work,"primary")}},
+    })
+    monkeypatch.chdir(root); monkeypatch.delenv("TMDB_READ_TOKEN",raising=False)
+    assert main(["apply-command",str(request),"--dry-run","--format","json"])==0
+    result=json.loads(capsys.readouterr().out)
+    assert result["operation"]=="record_media_entry"
+    assert result["status"] in {"planned","no_change"}
