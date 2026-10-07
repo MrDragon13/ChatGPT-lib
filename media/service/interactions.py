@@ -74,8 +74,7 @@ def plan_record_recommendation_interaction(
         "record_recommendation_interaction",
         (f"interaction:{command.operation_id}",),
         {},
-        False,
-        (command.target,),
+        (f"interaction:{command.target}",),
         {"event_type":command.event,"session_id":command.session_id},
         {rel:(event,)},
     )
