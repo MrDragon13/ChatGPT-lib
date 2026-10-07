@@ -22,6 +22,7 @@ from media.domain.errors import (
 from media.providers.tmdb import TMDBProvider
 from media.repository.yaml_repo import YamlRepository
 from media.service.assessment import build_candidate_assessment_context
+from media.service.media_entry_context import build_media_entry_context
 from media.service.query import search_works, show_work
 from media.service.reassessment import (
     LEDGER_REL_PATH,
@@ -58,6 +59,7 @@ def _doctor_result(report: Any) -> dict[str, Any]:
 
 def _parser() -> argparse.ArgumentParser:
     parser=argparse.ArgumentParser(prog="media",description="Personal media library tooling"); sub=parser.add_subparsers(dest="command",required=True)
+    entry_context=sub.add_parser("media-entry-context"); entry_context.add_argument("--request",required=True); entry_context.add_argument("--format",choices=("human","json"),default="human")
     search=sub.add_parser("search"); search.add_argument("query"); search.add_argument("--limit",type=int,default=20); search.add_argument("--format",choices=("human","json"),default="human")
     show=sub.add_parser("show"); show.add_argument("work_ref"); show.add_argument("--format",choices=("human","json"),default="human")
     recommend=sub.add_parser("recommend-context"); recommend.add_argument("--request",required=True); recommend.add_argument("--format",choices=("human","json"),default="human")
@@ -76,6 +78,10 @@ def _parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     args=_parser().parse_args(argv); repo_root=Path.cwd(); media_root=repo_root/"media"; output_format=getattr(args,"format","human")
     try:
+        if args.command=="media-entry-context":
+            request=load_command(Path(args.request))
+            if not isinstance(request,MediaEntryContextRequest): raise CommandValidationError("media-entry-context request must use operation=media_entry_context")
+            _emit(build_media_entry_context(media_root,request),output_format); return 0
         if args.command=="search": _emit(search_works(media_root,args.query,limit=args.limit),output_format); return 0
         if args.command=="show": _emit(show_work(media_root,args.work_ref),output_format); return 0
         if args.command=="recommend-context":
@@ -104,7 +110,7 @@ def main(argv: list[str] | None = None) -> int:
             _emit(build_reassessment_modernization_context(repo,ledger,include_blocked=args.include_blocked,limit=args.limit),output_format); return 0
         if args.command=="apply-command":
             command=load_command(Path(args.request))
-            if isinstance(command,(RecommendContextRequest,TasteContextRequest,AssessCandidateRequest)): raise CommandValidationError(f"{command.__class__.__name__} is read-only and cannot be applied")
+            if isinstance(command,(MediaEntryContextRequest,RecommendContextRequest,TasteContextRequest,AssessCandidateRequest)): raise CommandValidationError(f"{command.__class__.__name__} is read-only and cannot be applied")
             provider=None
             needs_provider=isinstance(command,(AddWorkCommand,RefreshMetadataCommand,RefreshWorkMetadataCommand)) or (isinstance(command,(RecordMediaEntryCommand,RecordViewingFeedbackCommand)) and command.create_if_missing)
             if needs_provider:
