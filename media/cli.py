@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from media.commands.schema import load_command
-from media.domain.commands import AddWorkCommand, AssessCandidateRequest, RecommendContextRequest, RecordMediaEntryCommand, RecordViewingFeedbackCommand, RefreshMetadataCommand, RefreshWorkMetadataCommand, TasteContextRequest
+from media.domain.commands import AddWorkCommand, AssessCandidateRequest, MediaEntryContextRequest, RecommendContextRequest, RecordMediaEntryCommand, RecordViewingFeedbackCommand, RefreshMetadataCommand, RefreshWorkMetadataCommand, TasteContextRequest
 from media.domain.errors import (
     AmbiguousIdentityError,
     CommandValidationError,
