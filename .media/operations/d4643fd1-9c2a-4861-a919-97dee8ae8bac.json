@@ -1,0 +1,26 @@
+{
+  "applied_at": "2026-10-07T09:16:52.923987+00:00",
+  "changed_entities": [],
+  "changed_files": [
+    "media/pilots/legacy-reassessment-primary.json",
+    ".media/operations/d4643fd1-9c2a-4861-a919-97dee8ae8bac.json"
+  ],
+  "details": {
+    "expected_ledger_digest": "sha256:4448c391c57661dc74d4db8aa385de4813e9d488bcbbb7856d7d24715e54d5b4",
+    "expected_work_digest": "sha256:170dee00c006ddb2c2c92d4c6e5eb7f95719330f4ec465084a01297e362b1b27",
+    "modernization": {
+      "completed_at": "2026-10-07T09:16:48.637126Z",
+      "metadata_operation_id": "81a3147e-c334-400f-bec7-8762273e51c6",
+      "semantic_operation_id": "c7537ded-c1de-4789-bd3f-84472eda1f6a",
+      "status": "completed",
+      "vocabulary_digest": "sha256:523339428874178b77f5fb6bec5b4d0ef3bf2415d666c1a064f1b19d31651378",
+      "work_digest": "sha256:170dee00c006ddb2c2c92d4c6e5eb7f95719330f4ec465084a01297e362b1b27"
+    },
+    "outcome": "completed",
+    "pilot_id": "primary-legacy-v1",
+    "work_id": "gattaca-1997"
+  },
+  "operation": "record_reassessment_modernization",
+  "operation_id": "d4643fd1-9c2a-4861-a919-97dee8ae8bac",
+  "status": "applied"
+}
