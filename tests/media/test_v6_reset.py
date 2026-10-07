@@ -12,6 +12,7 @@ from media.service.assessment import build_candidate_assessment_context
 from media.service.media_entry_context import build_media_entry_context
 from media.service.recommend import build_recommend_context
 from media.service.taste_context import build_taste_context
+from media.service.web_export import build_web_manifest
 from media.tools.archive_library import write_library_archive
 from media.tools.build_profiles import build_profile
 from media.tools.common import dump_yaml, load_yaml
@@ -182,7 +183,11 @@ def test_successful_reset_clears_active_v5_state_and_preserves_explicit_rules(tm
     assert (root/"media/generated/index.jsonl").read_bytes()==b""
 
     primary=load_yaml(root/"media/generated/profiles/primary.yaml")
+    partner=load_yaml(root/"media/generated/profiles/partner.yaml")
+    couple=load_yaml(root/"media/generated/profiles/couple.yaml")
     assert primary["evidence"]["entity_count"]==0
+    assert partner["evidence"]["entity_count"]==0
+    assert couple["evidence"]["entity_count"]==0
     assert primary["explicit_preferences"][0]["id"]=="execution-over-genre"
     assert "inferred_preferences" not in primary
 
@@ -200,6 +205,12 @@ def test_empty_library_tooling_and_read_contexts_are_deterministic(tmp_path):
 
     assert validate_repository(root)==[]
     assert doctor(root).ok is True
+
+    manifest_first=build_web_manifest(media)
+    manifest_second=build_web_manifest(media)
+    assert manifest_first==manifest_second
+    assert manifest_first["works"]==[]
+    assert all(context["candidates"]==[] for context in manifest_first["recommendations"].values())
 
     missing=build_media_entry_context(media,MediaEntryContextRequest(
         schema_version=1,
