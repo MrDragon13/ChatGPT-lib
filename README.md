@@ -13,6 +13,7 @@
 - отвечает на «понравится ли мне X?» через read-only `assess_candidate` без fake precise score;
 - хранит explicit work similarity как target-specific evidence/hint, но не превращает её автоматически в preference;
 - принимает normal media mutations только через strict typed operations и deterministic validation pipeline;
+- использует `record_media_entry` как основной маршрут для нового просмотра, оценки, реакции или отзыва;
 - публикует русскоязычную GitHub Pages-витрину поверх derived manifest;
 - отправляет поддерживаемые browser edits через защищённый typed-command broker без выдачи браузеру GitHub/provider/model secrets.
 
