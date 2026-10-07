@@ -88,6 +88,13 @@ describe("broker diagnostics", () => {
       if (url.pathname.endsWith("/git/ref/heads/main") && method === "GET") {
         return json({ object: { sha: "main-sha" } });
       }
+      if (url.pathname.endsWith("/contents/media/generated/index.jsonl") && method === "GET") {
+        const row = JSON.stringify({
+          id: "arrival-2016",
+          viewer_digests: { primary: "sha256:" + "1".repeat(64) },
+        }) + "\n";
+        return json({ encoding: "base64", content: btoa(row) });
+      }
       if (url.pathname.endsWith("/git/refs") && method === "POST") {
         return json({ message: "Validation Failed" }, 422);
       }
