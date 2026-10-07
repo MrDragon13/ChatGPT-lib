@@ -8,6 +8,7 @@ from media.domain.changeset import MutationPlan
 from media.domain.commands import SetInferredPreferencesCommand
 from media.domain.errors import CommandValidationError
 from media.repository.yaml_repo import YamlRepository
+from media.service.reanalysis_status import EvidenceCheckpoint, checkpoint_matches_current_evidence
 from media.tools.common import iter_jsonl, load_yaml
 from media.tools.schema_utils import validate_against_schema
 
@@ -39,6 +40,45 @@ def _interaction_ids(repo: YamlRepository) -> set[str]:
                 if event.get("id"):
                     result.add(str(event["id"]))
     return result
+
+
+def _taste_algorithm_version(repo: YamlRepository) -> str:
+    path = repo.media_root / "config" / "intelligence.yaml"
+    document = load_yaml(path) if path.exists() else {}
+    value = (document or {}).get("taste_algorithm_version", "media-taste-v1")
+    return str(value)
+
+
+def _validate_analysis(
+    repo: YamlRepository,
+    target: str,
+    analysis: Any,
+) -> dict[str, Any] | None:
+    if analysis is None:
+        return None
+    payload = copy.deepcopy(dict(analysis))
+    expected_algorithm = _taste_algorithm_version(repo)
+    if payload.get("algorithm_version") != expected_algorithm:
+        raise CommandValidationError(
+            f"taste algorithm mismatch: expected {expected_algorithm}, got {payload.get('algorithm_version')}"
+        )
+    raw_checkpoint = payload.get("evidence_checkpoint") or {}
+    try:
+        checkpoint = EvidenceCheckpoint(
+            material_event_count=int(raw_checkpoint["material_event_count"]),
+            material_event_prefix_digest=str(raw_checkpoint["material_event_prefix_digest"]),
+        )
+        evidence_digest = str(payload["evidence_digest"])
+    except (KeyError, TypeError, ValueError) as exc:
+        raise CommandValidationError("invalid evidence checkpoint") from exc
+    if not checkpoint_matches_current_evidence(
+        repo.media_root,
+        target,
+        checkpoint,
+        evidence_digest,
+    ):
+        raise CommandValidationError("evidence checkpoint does not match canonical explicit evidence")
+    return payload
 
 
 def _validate_hypotheses(repo: YamlRepository, target: str, hypotheses: tuple[Any, ...]) -> None:
@@ -84,12 +124,15 @@ def plan_set_inferred_preferences(
 ) -> MutationPlan:
     hypotheses = tuple(copy.deepcopy(dict(item)) for item in command.hypotheses)
     _validate_hypotheses(repo, command.target, hypotheses)
+    analysis = _validate_analysis(repo, command.target, command.analysis)
     payload = {
         "schema_version": 1,
         "target": command.target,
         "hypotheses": list(hypotheses),
         "updated_at": _at(now),
     }
+    if analysis is not None:
+        payload["analysis"] = analysis
     errors = validate_against_schema(payload, "inferred-preferences.schema.json", repo.media_root / "schemas")
     if errors:
         raise CommandValidationError("; ".join(errors))
