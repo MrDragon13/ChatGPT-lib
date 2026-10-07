@@ -23,16 +23,6 @@ def _date(now: datetime | None) -> str:
     return (now or datetime.now(timezone.utc)).date().isoformat()
 
 
-def profile_targets_for(repo: YamlRepository, targets: set[str]) -> tuple[str, ...]:
-    viewers,groups=repo.configured_targets()
-    result=set(targets)
-    for target in list(targets):
-        if target in viewers:
-            for group_id,members in groups.items():
-                if target in members: result.add(group_id)
-    return tuple(sorted(result))
-
-
 def apply_feedback_updates(repo: YamlRepository, document: Mapping[str, Any], updates: tuple[TargetUpdate, ...], *, now: datetime | None = None) -> tuple[dict[str, Any], bool, set[str]]:
     doc=copy.deepcopy(dict(document)); changed=False; touched_targets:set[str]=set()
     for update in updates:
@@ -91,12 +81,12 @@ def apply_feedback_edits(repo: YamlRepository, document: Mapping[str, Any], edit
 
 def plan_record_viewing_feedback(repo: YamlRepository, command: RecordViewingFeedbackCommand, *, now: datetime | None = None) -> MutationPlan:
     record=resolve_work(repo,command.work_ref); doc,changed,touched_targets=apply_feedback_updates(repo,record.data,command.target_updates,now=now); path=str(record.path.relative_to(repo.media_root.parent)).replace("\\","/")
-    return MutationPlan(command.operation_id,"record_viewing_feedback",(record.id,) if changed else (),{path:doc} if changed else {},changed,profile_targets_for(repo,touched_targets))
+    return MutationPlan(command.operation_id,"record_viewing_feedback",(record.id,) if changed else (),{path:doc} if changed else {},tuple(sorted(f"viewer:{target}" for target in touched_targets)) if changed else ())
 
 
 def plan_edit_viewing_feedback(repo: YamlRepository, command: EditViewingFeedbackCommand, *, now: datetime | None = None) -> MutationPlan:
     record=resolve_work(repo,command.work_ref); doc,changed,touched_targets=apply_feedback_edits(repo,record.data,command.target_edits,now=now); path=str(record.path.relative_to(repo.media_root.parent)).replace("\\","/")
-    return MutationPlan(command.operation_id,"edit_viewing_feedback",(record.id,) if changed else (),{path:doc} if changed else {},changed,profile_targets_for(repo,touched_targets) if changed else ())
+    return MutationPlan(command.operation_id,"edit_viewing_feedback",(record.id,) if changed else (),{path:doc} if changed else {},tuple(sorted(f"viewer:{target}" for target in touched_targets)) if changed else ())
 
 
 def plan_set_interest(repo: YamlRepository, command: SetInterestCommand, *, now: datetime | None = None) -> MutationPlan:
@@ -105,4 +95,4 @@ def plan_set_interest(repo: YamlRepository, command: SetInterestCommand, *, now:
     states=doc.setdefault("target_states",{}); target_state=copy.deepcopy(states.get(command.target) or {}); changed=target_state.get("interest")!=interest
     if changed: target_state["interest"]=interest; states[command.target]=target_state; doc.setdefault("provenance",{})["updated_at"]=_date(now)
     path=str(record.path.relative_to(repo.media_root.parent)).replace("\\","/")
-    return MutationPlan(command.operation_id,"set_interest",(record.id,) if changed else (),{path:doc} if changed else {},changed,profile_targets_for(repo,{command.target}) if changed else ())
+    return MutationPlan(command.operation_id,"set_interest",(record.id,) if changed else (),{path:doc} if changed else {},(f"interest:{command.target}",) if changed else ())
