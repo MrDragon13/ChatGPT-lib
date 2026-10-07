@@ -198,11 +198,13 @@ Work
 
 Изменение одного слоя не инвалидирует остальные автоматически.
 
-## 7. Granular concurrency
+## 7. Защита от устаревшего состояния
 
-Normal feedback больше не должен зависеть от digest всего work-файла.
+Для реального сценария использования v6 принимается важное ограничение: независимые отзывы не поступают одновременно из нескольких LLM, из LLM и сайта или из других клиентов. Поэтому система не проектируется вокруг параллельной очереди пользовательских записей.
 
-Основной optimistic precondition:
+При этом normal feedback больше не должен зависеть от digest всего work-файла.
+
+Основная проверка перед записью:
 
 ```text
 work identity
@@ -210,14 +212,11 @@ work identity
 + expected_viewer_digest(target)
 ```
 
-Следствия:
+Она нужна не для поддержки одновременного редактирования, а как защита от случайно устаревшего запроса, повторного запуска или изменения состояния между чтением и применением.
 
-- metadata change не конфликтует с primary feedback;
-- semantic refresh не конфликтует с viewer feedback;
-- partner feedback не конфликтует с primary feedback;
-- реальный конфликт возникает только при конкурентном изменении того же viewer evidence.
+Typed intent при применении всегда сверяется со свежим `main`; старый готовый YAML patch не применяется напрямую.
 
-Typed intent при применении replay'ится относительно свежего `main`; не применяется старый готовый YAML patch.
+Idempotency и digest-проверки остаются обязательными как дешёвая защита от повторной отправки, сбоя сети и ручного повторного запуска.
 
 ## 8. Idempotency
 
@@ -459,29 +458,49 @@ Lookup/factual queries reanalysis не запускают.
 
 Если outstanding material evidence достигло threshold, LLM обязана сначала сделать fresh reanalysis, а затем строить taste-dependent ответ.
 
-Новый inferred result может использоваться как session-local overlay до merge. Canonical checkpoint продвигается только после authoritative persistence.
+Новый inferred result может использоваться как временное состояние текущего разговора до merge. Canonical checkpoint продвигается только после authoritative persistence.
+
+Сохранение результата reanalysis выполняется отдельной typed operation `set_inferred_preferences`, а не через `record_media_entry`. Команда должна сохранять сам inferred profile и checkpoint того набора explicit evidence, на котором анализ был построен.
+
+Минимальный логический контракт:
+
+```text
+set_inferred_preferences
+  target
+  hypotheses
+  analysis
+    evidence_checkpoint
+    evidence_digest
+    algorithm_version
+```
 
 Если после snapshot появился новый feedback, он остаётся outstanding; нельзя слепо сбрасывать counter в ноль.
 
-## 19. Single-runner data pipeline
+## 19. Один основной Actions runner для записи данных
 
-Обычный data write в v6 проходит один основной Actions runner:
+Обычная запись данных в v6 проходит один основной Actions runner:
 
 ```text
-typed request PR
-→ checkout/replay latest main
-→ validate request/preconditions
-→ apply transaction
-→ derive/rebuild dirty outputs once
-→ authoritative data validation
-→ commit verified result
+request PR
+→ checkout latest main
+→ проверить, что PR до исполнения содержит только один .media/requests/<id>.json
+→ применить typed request к свежему main
+→ проверить запрос и preconditions
+→ выполнить transaction
+→ определить и один раз пересобрать только нужные derived outputs
+→ выполнить authoritative data validation
+→ закоммитить проверенный результат
 → push
-→ guarded auto-merge
+→ guarded merge того же проверенного head
 ```
 
-Цель — один provisioning, один checkout, один Python setup и один dependency install.
+Ветка request PR до исполнения не должна содержать заранее подготовленные изменения canonical YAML или `media/generated/**`; только файл запроса. Это уже соответствует сильной стороне текущего pipeline и становится явным инвариантом v6.
 
-Отдельный exact-head/full developer gate остаётся для изменений executable logic, где это оправдано.
+Так как одновременные независимые пользовательские записи в реальном сценарии отсутствуют, отдельная сложная глобальная очередь для нескольких отзывов не требуется. При этом merge normal data operation должен по возможности оставаться в том же основном workflow, чтобы не тратить отдельный Actions cold start только на merge.
+
+Цель — один запуск runner, один checkout, одна установка Python-зависимостей и один цикл применения/проверки для нормальной операции.
+
+Отдельная полная проверка остаётся для изменений исполняемой логики, schemas, workflows и других архитектурных контрактов.
 
 ## 20. Data CI vs Dev CI
 
@@ -508,11 +527,11 @@ typed request PR
 - web checks;
 - architecture/docs contract checks.
 
-Bot-generated data result не должен запускать overlapping Dev CI.
+Результат обычной операции с данными не должен запускать несвязанные тяжёлые проверки разработки. При реализации обязателен аудит всех GitHub Actions triggers, включая Media Check, Media Dev Check, Web Check и Media Pages. Нельзя добавлять `paths-ignore` механически: правило должно соответствовать фактическим triggers каждого workflow.
 
 ## 21. GitHub PR и merge
 
-PR-модель сохраняется ради audit, branch safety, path policy, observability и Broker compatibility.
+PR-модель сохраняется ради понятной истории изменений, проверки разрешённых путей, возможности диагностики и совместимости с Broker.
 
 Норма:
 
@@ -525,7 +544,7 @@ PR-модель сохраняется ради audit, branch safety, path polic
 
 Количество технических commits внутри branch не является performance KPI.
 
-Auto-merge остаётся fail-closed и разрешается только при:
+Автоматический merge остаётся fail-closed и разрешается только при:
 
 - permitted operation class;
 - valid path policy;
@@ -550,7 +569,7 @@ LLM и Web — два клиента одного Media Domain.
 ```text
 Media Domain:
 - validation
-- concurrency
+- защита от устаревшего состояния
 - history semantics
 - idempotency
 - canonical mutation
@@ -580,7 +599,7 @@ Web feedback использует те же viewer digests, idempotency и domai
 
 Web read model остаётся authoritative-only; собственный pending status может отображаться как UX, но не становится canonical state.
 
-## 24. Code boundaries
+## 24. Границы кода
 
 `transaction.py` должен стать тонким coordinator.
 
@@ -613,6 +632,31 @@ command
 ```
 
 Основной path должен быть понятен без чтения половины `media/`.
+
+### 24.1 Локальный запуск тех же операций
+
+Любая v6 write-operation, включая `record_media_entry` и `set_inferred_preferences`, должна полностью выполняться локально через общий command loader и существующий CLI:
+
+```bash
+python -m media.cli apply-command request.json
+python -m media.cli apply-command request.json --dry-run
+```
+
+GitHub Actions не должны содержать отдельную бизнес-логику, которой нет в локальном пути. Отдельная удобная команда вида `media entry` может быть добавлена позже только если она реально нужна.
+
+### 24.2 Хранение данных и SQLite
+
+v6 не добавляет `db.sqlite` ни как canonical storage, ни как versioned generated artifact.
+
+Для текущего масштаба медиатеки YAML + небольшие детерминированные generated projections дают более подходящие свойства:
+
+- человекочитаемый diff в Git;
+- простой review и восстановление;
+- отсутствие бинарного файла, меняющегося при многих записях;
+- прямая совместимость с GitHub Pages и текущим Web;
+- отсутствие дополнительной синхронизации между YAML и базой.
+
+SQLite может быть рассмотрен позже только как локальный или CI-кэш, если измерения покажут, что реальные запросы по медиатеке стали bottleneck. Такой кэш не должен становиться source of truth и не должен versioned храниться в Git.
 
 ## 25. Backward compatibility
 
@@ -713,14 +757,13 @@ Wall-clock time является diagnostic metric, а не хрупким CI as
 6. new work — viewing only;
 7. new work — rating + rich feedback;
 8. partner feedback;
-9. concurrent primary vs partner;
-10. true same-target conflict;
-11. idempotent retry;
-12. no_change;
-13. taste threshold < 5;
-14. taste threshold == 5;
-15. couple recommendation with one due member;
-16. equivalent LLM/Broker viewer mutation.
+9. stale viewer digest;
+10. idempotent retry;
+11. no_change;
+12. taste threshold < 5;
+13. taste threshold == 5;
+14. couple recommendation with one due member;
+15. equivalent LLM/Broker viewer mutation.
 
 Каждый scenario проверяет canonical result, dirty domains, rebuild set, allowed external I/O и CI class.
 
@@ -739,12 +782,18 @@ Wall-clock time является diagnostic metric, а не хрупким CI as
 
 Regression tests защищают качественные invariants, а не старый персональный dataset.
 
-## 31. Documentation contract
+## 31. Требования к документации
 
-Documentation является частью executable/operational contract.
+Документация является частью рабочего контракта системы.
 
 До cutover должны быть синхронизированы:
 
+- `README.md`;
+- `.media/README.md`;
+- `media/README.md`;
+- `docs/README.md`;
+- `broker/README.md`;
+- `web/README.md`;
 - `media/AGENTS.md`;
 - `media/START_PROMPT.md`;
 - `docs/architecture/media-model.md`;
@@ -755,15 +804,31 @@ Documentation является частью executable/operational contract.
 - `docs/reference/invariants.md`;
 - `docs/status/current.md`;
 - current scenario catalog / его преемник;
-- Broker README;
-- релевантные Web docs;
-- migration/reset runbook.
+- migration/reset runbook;
+- другие README и living docs, если затронутые изменения делают их устаревшими.
 
 Правило:
 
-> Code, schemas, tests, living docs, agent routing и Web/Broker contract должны описывать одну и ту же v6 semantics.
+> Код, schemas, tests, living docs, agent routing и Web/Broker contract должны описывать одну и ту же v6 semantics.
 
-Historical v5/v5.1 specs не переписываются задним числом. Этот design явно supersede'ит active legacy reassessment lifecycle после cutover; living docs меняются только вместе с работающим v6 runtime.
+В пользовательской и архитектурной документации по возможности используются простые русские формулировки. Английские термины сохраняются, когда это имя конкретного API, файла, команды, класса или когда русский перевод делает смысл менее точным. При первом использовании сложного термина нужно кратко объяснять его простыми словами.
+
+Historical v5/v5.1 specs не переписываются задним числом. Этот design явно заменяет active legacy reassessment lifecycle после cutover; living docs меняются только вместе с работающим v6 runtime.
+
+### 31.1 Контрольные точки разработки в PR
+
+Во время реализации каждый крупный PR должен регулярно сохранять понятную контрольную точку, чтобы работу можно было безопасно продолжить после паузы или в другой сессии.
+
+После каждого значимого этапа и обязательно перед паузой в PR обновляется текущий статус — в описании PR или в отдельном верхнеуровневом комментарии:
+
+- что уже сделано;
+- какой commit/head является текущей контрольной точкой;
+- какие проверки уже прошли;
+- что сейчас не закончено или известно как риск;
+- следующий конкретный шаг;
+- краткий план оставшейся работы.
+
+Контрольная точка не заменяет небольшие логические commits. Её задача — оставить достаточно контекста для точного возобновления работы без повторного исследования всего PR.
 
 ## 32. Atomic cutover
 
@@ -829,6 +894,7 @@ Git history остаётся техническим backup.
 - arbitrary bundle transaction engine;
 - автоматическое восстановление старых inferred preferences;
 - автоматический импорт MD-архива обратно в intelligence;
+- пакетное восстановление старых viewer signals из MD-архива как shortcut полного reset;
 - сохранение legacy reassessment subsystem как production path.
 
 ## 36. Release Definition of Done
