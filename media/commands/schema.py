@@ -99,6 +99,53 @@ def parse_command(data: Mapping[str, Any], schema_dir: Path | None = None) -> Me
         for key in ("metadata_operation_id", "semantic_operation_id"):
             if data.get(key) is not None:
                 _validate_uuid(str(data[key]), key)
+    if operation == "record_media_entry":
+        updates = tuple(
+            TargetUpdate(
+                target=item["target"],
+                viewing=item.get("viewing"),
+                rating=item.get("rating"),
+                reaction=item.get("reaction"),
+                feedback=item.get("feedback"),
+            )
+            for item in data["target_updates"]
+        )
+        expected = dict(data["preconditions"].get("expected_viewer_digests") or {})
+        if not data["create_if_missing"]:
+            missing = sorted({update.target for update in updates} - set(expected))
+            if missing:
+                raise CommandValidationError(
+                    "expected viewer digest is required for target(s): " + ", ".join(missing)
+                )
+        creation_context = None
+        raw_creation = data.get("creation_context")
+        if raw_creation is not None:
+            raw_provider = raw_creation["provider_identity"]
+            creation_context = CreationContext(
+                resolved_identity=dict(raw_creation["resolved_identity"]),
+                provider_identity=ProviderIdentity(raw_provider["media_type"], raw_provider["id"]),
+                minimum_metadata=dict(raw_creation["minimum_metadata"]),
+            )
+        semantic_snapshot = None
+        raw_semantic = data.get("semantic_snapshot")
+        if raw_semantic is not None:
+            semantic_snapshot = SemanticSnapshot(
+                traits=tuple(dict(item) for item in raw_semantic["traits"]),
+                semantic_input_digest=raw_semantic["semantic_input_digest"],
+                vocabulary_digest=raw_semantic["vocabulary_digest"],
+                algorithm_version=raw_semantic["algorithm_version"],
+            )
+        return RecordMediaEntryCommand(
+            data["schema_version"],
+            data["operation_id"],
+            data["idempotency_key"],
+            _work_ref(data["work_ref"]),
+            data["create_if_missing"],
+            updates,
+            creation_context,
+            semantic_snapshot,
+            MediaEntryPreconditions(expected),
+        )
     if operation == "record_viewing_feedback":
         updates = tuple(
             TargetUpdate(
