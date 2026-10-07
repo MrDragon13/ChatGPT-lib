@@ -12,6 +12,7 @@ from media.domain.commands import (
     CompleteReassessmentItemCommand,
     EditViewingFeedbackCommand,
     MediaCommand,
+    MediaEntryContextRequest,
     ProviderWorkRef,
     ReadRequest,
     RecommendContextRequest,
@@ -34,6 +35,7 @@ from media.domain.types import CreationContext, MediaEntryPreconditions, Provide
 from media.tools.schema_utils import validate_against_schema
 
 _SCHEMA_BY_OPERATION = {
+    "media_entry_context": "media_entry_context.schema.json",
     "record_media_entry": "record_media_entry.schema.json",
     "record_viewing_feedback": "record_viewing_feedback.schema.json",
     "edit_viewing_feedback": "edit_viewing_feedback.schema.json",
@@ -55,7 +57,7 @@ _SCHEMA_BY_OPERATION = {
     "assess_candidate": "assess_candidate.schema.json",
 }
 
-_READ_ONLY_OPERATIONS = {"recommend_context", "taste_context", "assess_candidate"}
+_READ_ONLY_OPERATIONS = {"media_entry_context", "recommend_context", "taste_context", "assess_candidate"}
 
 
 def _work_ref(data: Mapping[str, Any]) -> WorkRef:
@@ -258,6 +260,12 @@ def parse_command(data: Mapping[str, Any], schema_dir: Path | None = None) -> Me
             data.get("semantic_operation_id"),
             data.get("vocabulary_digest"),
             data.get("blocker_code"),
+        )
+    if operation == "media_entry_context":
+        return MediaEntryContextRequest(
+            data["schema_version"],
+            _work_ref(data["work_ref"]),
+            data["target"],
         )
     if operation == "taste_context":
         return TasteContextRequest(data["schema_version"], data["target"], data.get("recent_limit", 10), data.get("representative_limit", 10))
