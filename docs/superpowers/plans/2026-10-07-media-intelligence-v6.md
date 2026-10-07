@@ -78,7 +78,7 @@ assert compute_semantic_input_digest(work, vocab_digest, "media-semantic-v1") ==
 assert compute_semantic_input_digest(work, vocab_digest, "media-semantic-v1") != compute_semantic_input_digest(static_fact_change, vocab_digest, "media-semantic-v1")
 ```
 
-Also assert summary-only typo correction is not material when structured rating/reaction/viewing/feedback signals are unchanged.
+Also assert summary-only typo correction is not material when structured rating/reaction/viewing/feedback signals are unchanged. In v6, substantive textual taste evidence must be normalized by the LLM into `feedback.signals`; `feedback.summary` by itself is display/history text and does not advance the automatic taste-reanalysis checkpoint.
 
 - [ ] **Step 2: Run the focused tests and verify failure**
 
@@ -211,7 +211,8 @@ Update the PR checkpoint comment.
   - `target_updates: tuple[TargetUpdate, ...]`
   - `creation_context: CreationContext | None`
   - `semantic_snapshot: SemanticSnapshot | None`
-  - `expected_viewer_digests: Mapping[str, str]`
+  - `preconditions: MediaEntryPreconditions` with `expected_viewer_digests: Mapping[str, str]`
+- The JSON schema keeps these digests nested under `preconditions.expected_viewer_digests`; the typed command preserves the same nested meaning instead of inventing a second flat wire format.
 - Produces `plan_record_media_entry(repo, command, provider, now=None) -> MutationPlan`.
 - `idempotency_key` is a canonical lowercase UUID identifying the human event; `operation_id` identifies one execution attempt.
 
@@ -261,7 +262,7 @@ Resolve existing work first. Existing work must never require provider setup. Fo
 
 - [ ] **Step 7: Implement receipt-level idempotency**
 
-Persist `idempotency_key` and a deterministic normalized request digest in the operation receipt. Lookup of an already-applied human event must occur before planning side effects.
+Persist `idempotency_key` and a deterministic normalized request digest in the operation receipt. Before planning side effects, search existing operation receipts for the key: same key + same request digest returns `already_applied`; same key + different request digest fails closed. Keep this as a simple local receipt scan in v6; add a separate index only if measurements later prove the scan material.
 
 - [ ] **Step 8: Wire provider detection and path policy**
 
