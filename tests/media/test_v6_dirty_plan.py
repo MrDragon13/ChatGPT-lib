@@ -101,3 +101,12 @@ def test_similarity_domain_has_no_generated_dependency(tmp_path):
         YamlRepository(root / "media"),
         plan("similarity:primary"),
     ) == DirtyPlan(False, ())
+
+
+def test_work_created_rebuilds_index_and_all_profiles_due_to_global_entity_count(tmp_path):
+    root = copy_fixture_repo(tmp_path)
+
+    assert derive_dirty_plan(
+        YamlRepository(root / "media"),
+        plan("work.created"),
+    ) == DirtyPlan(True, ("couple", "partner", "primary"))
