@@ -25,23 +25,16 @@ def test_feedback_write_does_not_require_second_confirmation():
     assert "Never say that data was saved until it is actually present on `main`" in text
 
 
-def test_normal_data_write_has_guarded_merge_paths():
+def test_normal_data_write_has_one_guarded_v6_merge_path():
     command = _text(".github/workflows/media-command.yml")
-    legacy = _text(".github/workflows/media-auto-merge.yml")
     assert "v6_single_runner" in command
     assert "Merge checked v6 operation" in command
     assert "media-pages.yml" in command
-    assert "workflow_run:" in legacy
-    assert "workflows: [Media Check]" in legacy
-    assert "github.event.workflow_run.conclusion == 'success'" in legacy
-    assert "github.event.workflow_run.event == 'workflow_dispatch'" in legacy
-    assert "startsWith(github.event.workflow_run.head_branch, 'media/op-')" in legacy
-    assert "github.event.workflow_run.head_sha" in legacy
-    assert "base.ref" in legacy
-    assert "media/config/operation_path_policy.json?ref=main" in legacy
-    assert 'pulls/$PR_NUMBER/files?per_page=100' in legacy
-    assert ".media/operations/" in legacy
-    assert "merge" in legacy
+    assert "media-check.yml" not in command
+    assert "media-auto-merge.yml" not in command
+    assert "Leave manual operation ready for review" in command
+    assert not (ROOT / ".github/workflows/media-check.yml").exists()
+    assert not (ROOT / ".github/workflows/media-auto-merge.yml").exists()
 
 
 def test_starter_prompt_is_human_first_and_reuses_repository_rules():
