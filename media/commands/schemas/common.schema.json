@@ -6,55 +6,387 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "id": {"type": "string", "minLength": 1},
-        "title": {"type": "string", "minLength": 1},
-        "year": {"type": "integer", "minimum": 1880},
-        "tmdb_media_type": {"enum": ["movie", "tv"]},
-        "tmdb_id": {"type": "integer", "minimum": 1},
-        "imdb_id": {"type": "string", "pattern": "^tt[0-9]+$"}
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "year": {
+          "type": "integer",
+          "minimum": 1880
+        },
+        "tmdb_media_type": {
+          "enum": [
+            "movie",
+            "tv"
+          ]
+        },
+        "tmdb_id": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "imdb_id": {
+          "type": "string",
+          "pattern": "^tt[0-9]+$"
+        }
       },
-      "anyOf": [{"required": ["id"]}, {"required": ["title"]}, {"required": ["tmdb_media_type", "tmdb_id"]}, {"required": ["imdb_id"]}],
-      "dependentRequired": {"tmdb_media_type": ["tmdb_id"], "tmdb_id": ["tmdb_media_type"]}
+      "anyOf": [
+        {
+          "required": [
+            "id"
+          ]
+        },
+        {
+          "required": [
+            "title"
+          ]
+        },
+        {
+          "required": [
+            "tmdb_media_type",
+            "tmdb_id"
+          ]
+        },
+        {
+          "required": [
+            "imdb_id"
+          ]
+        }
+      ],
+      "dependentRequired": {
+        "tmdb_media_type": [
+          "tmdb_id"
+        ],
+        "tmdb_id": [
+          "tmdb_media_type"
+        ]
+      }
     },
     "persistentWorkRef": {
       "oneOf": [
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["id"],
+          "required": [
+            "id"
+          ],
           "properties": {
-            "id": {"type": "string", "minLength": 1}
+            "id": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         },
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["tmdb_media_type", "tmdb_id"],
+          "required": [
+            "tmdb_media_type",
+            "tmdb_id"
+          ],
           "properties": {
-            "title": {"type": "string", "minLength": 1},
-            "year": {"type": "integer", "minimum": 1880},
-            "tmdb_media_type": {"enum": ["movie", "tv"]},
-            "tmdb_id": {"type": "integer", "minimum": 1}
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "year": {
+              "type": "integer",
+              "minimum": 1880
+            },
+            "tmdb_media_type": {
+              "enum": [
+                "movie",
+                "tv"
+              ]
+            },
+            "tmdb_id": {
+              "type": "integer",
+              "minimum": 1
+            }
           }
         },
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["imdb_id"],
+          "required": [
+            "imdb_id"
+          ],
           "properties": {
-            "title": {"type": "string", "minLength": 1},
-            "year": {"type": "integer", "minimum": 1880},
-            "imdb_id": {"type": "string", "pattern": "^tt[0-9]+$"}
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "year": {
+              "type": "integer",
+              "minimum": 1880
+            },
+            "imdb_id": {
+              "type": "string",
+              "pattern": "^tt[0-9]+$"
+            }
           }
         }
       ]
     },
-    "confidence": {"enum": ["exact", "high", "medium", "low", "none"]},
-    "rating": {"type": "object", "additionalProperties": false, "required": ["score", "source", "confidence"], "properties": {"score": {"type": "number", "minimum": 1, "maximum": 10, "multipleOf": 0.5}, "source": {"enum": ["explicit", "explicit_approx", "inferred"]}, "confidence": {"$ref": "#/$defs/confidence"}}},
-    "viewing": {"type": "object", "additionalProperties": false, "required": ["status"], "properties": {"status": {"enum": ["unwatched", "watched", "partial", "dropped", "forgotten"]}}},
-    "reaction": {"type": "object", "additionalProperties": false, "required": ["value", "source", "confidence"], "properties": {"value": {"enum": ["liked", "disliked", "neutral", "mixed", "unknown"]}, "source": {"enum": ["explicit", "inferred"]}, "confidence": {"$ref": "#/$defs/confidence"}}},
-    "feedbackSignal": {"type": "object", "additionalProperties": false, "required": ["term", "sentiment", "strength", "source", "confidence"], "properties": {"term": {"type": "string", "minLength": 3}, "sentiment": {"enum": ["positive", "negative", "mixed", "neutral"]}, "strength": {"type": "integer", "minimum": 1, "maximum": 3}, "source": {"enum": ["explicit", "inferred"]}, "confidence": {"$ref": "#/$defs/confidence"}}},
-    "feedback": {"type": "object", "additionalProperties": false, "properties": {"summary": {"type": ["string", "null"]}, "signals": {"type": "array", "items": {"$ref": "#/$defs/feedbackSignal"}}}},
-    "targetUpdate": {"type": "object", "additionalProperties": false, "required": ["target"], "minProperties": 2, "properties": {"target": {"type": "string", "minLength": 1}, "viewing": {"$ref": "#/$defs/viewing"}, "rating": {"$ref": "#/$defs/rating"}, "reaction": {"$ref": "#/$defs/reaction"}, "feedback": {"$ref": "#/$defs/feedback"}}}
+    "confidence": {
+      "enum": [
+        "exact",
+        "high",
+        "medium",
+        "low",
+        "none"
+      ]
+    },
+    "rating": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "score",
+        "source",
+        "confidence"
+      ],
+      "properties": {
+        "score": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 10,
+          "multipleOf": 0.5
+        },
+        "source": {
+          "enum": [
+            "explicit",
+            "explicit_approx",
+            "inferred"
+          ]
+        },
+        "confidence": {
+          "$ref": "#/$defs/confidence"
+        }
+      }
+    },
+    "viewing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "unwatched",
+            "watched",
+            "partial",
+            "dropped",
+            "forgotten"
+          ]
+        }
+      }
+    },
+    "reaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "source",
+        "confidence"
+      ],
+      "properties": {
+        "value": {
+          "enum": [
+            "liked",
+            "disliked",
+            "neutral",
+            "mixed",
+            "unknown"
+          ]
+        },
+        "source": {
+          "enum": [
+            "explicit",
+            "inferred"
+          ]
+        },
+        "confidence": {
+          "$ref": "#/$defs/confidence"
+        }
+      }
+    },
+    "feedbackSignal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "term",
+        "sentiment",
+        "strength",
+        "source",
+        "confidence"
+      ],
+      "properties": {
+        "term": {
+          "type": "string",
+          "minLength": 3
+        },
+        "sentiment": {
+          "enum": [
+            "positive",
+            "negative",
+            "mixed",
+            "neutral"
+          ]
+        },
+        "strength": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "source": {
+          "enum": [
+            "explicit",
+            "inferred"
+          ]
+        },
+        "confidence": {
+          "$ref": "#/$defs/confidence"
+        }
+      }
+    },
+    "feedback": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "summary": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "signals": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/feedbackSignal"
+          }
+        }
+      }
+    },
+    "targetUpdate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target"
+      ],
+      "minProperties": 2,
+      "properties": {
+        "target": {
+          "type": "string",
+          "minLength": 1
+        },
+        "viewing": {
+          "$ref": "#/$defs/viewing"
+        },
+        "rating": {
+          "$ref": "#/$defs/rating"
+        },
+        "reaction": {
+          "$ref": "#/$defs/reaction"
+        },
+        "feedback": {
+          "$ref": "#/$defs/feedback"
+        }
+      }
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "providerIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "media_type",
+        "id"
+      ],
+      "properties": {
+        "media_type": {
+          "enum": [
+            "movie",
+            "tv"
+          ]
+        },
+        "id": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "creationContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "resolved_identity",
+        "provider_identity",
+        "minimum_metadata"
+      ],
+      "properties": {
+        "resolved_identity": {
+          "type": "object",
+          "minProperties": 1
+        },
+        "provider_identity": {
+          "$ref": "#/$defs/providerIdentity"
+        },
+        "minimum_metadata": {
+          "type": "object"
+        }
+      }
+    },
+    "semanticSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "traits",
+        "semantic_input_digest",
+        "vocabulary_digest",
+        "algorithm_version"
+      ],
+      "properties": {
+        "traits": {
+          "type": "array",
+          "items": {
+            "$ref": "https://chatgpt-lib.local/schemas/common.schema.json#/$defs/semanticTrait"
+          }
+        },
+        "semantic_input_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "vocabulary_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "algorithm_version": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "mediaEntryPreconditions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expected_viewer_digests"
+      ],
+      "properties": {
+        "expected_viewer_digests": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9_-]*$"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/digest"
+          }
+        }
+      }
+    }
   }
 }
