@@ -10,6 +10,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-07-media-intelligence-v6-design.md`
 
+**Status:** утверждён для исполнения по PR-этапам; пользовательский cutover выполняется только в PR 4.
+
 ## Global Constraints
 
 - `main` + canonical Git/YAML остаются единственным долговременным источником состояния; `media/generated/**` — только производные данные.
@@ -20,6 +22,7 @@
 - Для `primary` и `partner` контрольные точки анализа вкусов независимы; у `couple` нет отдельного автоматического счётчика.
 - Если по тому же произведению уже есть pending write, разговор может учитывать новое уточнение локально, но второй Git write отправляется только после подтверждения первой операции и чтения свежего `viewer_digest`.
 - До исполнения request PR содержит только `.media/requests/<operation-id>.json`; canonical/generated diff строит доверенный runner на свежем `main`.
+- Обычные media data operations сериализуются встроенной очередью GitHub Actions: `concurrency.group=media-data-pipeline`, `cancel-in-progress=false`, `queue=max`. Exact-base guard остаётся обязательным для изменений `main` вне этого pipeline.
 - Обычная операция с данными должна сливаться через GitHub API; прямой push результата в `main` запрещён. Перед merge повторно проверяется base SHA; при изменившемся `main` запрос заново накладывается и валидируется.
 - SQLite не становится canonical или versioned generated storage. Существующие `build_db.py`/`SQLiteRepository` допустимы только как невёрсионируемый производный инструмент диагностики/тестов и не входят в v6 critical path.
 - Reset выполняется только после детерминированной генерации MD-архива и точной проверки `committed archive == regenerated archive` из того же состояния, которое будет сброшено.
@@ -243,14 +246,21 @@ Assert:
 - retry with same `idempotency_key` and same normalized command returns `already_applied` without history/rebuild duplication;
 - same `idempotency_key` with different normalized command raises `CommandValidationError`.
 
-- [ ] **Step 4: Write failing new-work atomicity tests**
+- [ ] **Step 4: Write failing new-work and misclassified-existing-work tests**
 
-With a fake TMDB provider, assert:
+With a fake TMDB provider, assert for a genuinely new work:
 - one provider fetch using stable provider identity;
 - provider identity/minimum static facts are checked against `creation_context`;
 - current vocabulary digest and semantic input digest must match `semantic_snapshot`;
 - invalid vocabulary/reaction trait or provider mismatch leaves repository byte-identical;
 - valid new work + semantic traits + viewer feedback commit as one plan/transaction.
+
+Also cover `create_if_missing=true` when the work already exists by stable identity:
+- provider calls == 0;
+- `creation_context.resolved_identity` may only confirm the existing stable identity and must fail closed on contradiction;
+- existing metadata and semantic fingerprint are not overwritten by the creation payload;
+- `expected_viewer_digest` is checked against the actual existing viewer state;
+- absent viewer state accepts the new signal, while a changed/nonmatching viewer state returns a conflict.
 
 - [ ] **Step 5: Implement command dataclasses and schema parsing**
 
@@ -258,7 +268,7 @@ With a fake TMDB provider, assert:
 
 - [ ] **Step 6: Implement `plan_record_media_entry`**
 
-Resolve existing work first. Existing work must never require provider setup. For a missing work, fetch by the stable provider ID, verify identity/factual projection, build canonical work, validate semantic snapshot, apply viewer updates, and return one `MutationPlan`.
+Resolve existing work first, including reconciliation by stable external identity when `create_if_missing=true`. Existing work must never require provider setup. If a work already exists, use `creation_context` only to verify that the submitted stable identity does not contradict canonical identity; do not overwrite canonical metadata or semantic fingerprint from the creation payload. Validate `expected_viewer_digest` against the existing target state before applying viewer updates. For a genuinely missing work, fetch by the stable provider ID, verify identity/factual projection, build canonical work, validate semantic snapshot, apply viewer updates, and return one `MutationPlan`.
 
 - [ ] **Step 7: Implement receipt-level idempotency**
 
@@ -470,12 +480,14 @@ PR checkpoint must state that v6 core exists but agent/Broker cutover has not ha
 - Test: `tests/media/test_review_regressions.py`
 
 **Interfaces:**
-- v6 normal data operations: request-only PR → replay on latest `main` → apply → targeted authoritative gate → commit/push exact head → recheck `main` base → GitHub API merge exact head → dispatch Pages for merge SHA.
+- v6 normal data operations: request-only PR → serialized start in GitHub Actions → replay on latest `main` → apply → targeted authoritative gate → commit/push exact head → recheck `main` base → GitHub API merge exact head → dispatch Pages for merge SHA.
+- Workflow concurrency for normal media data operations is `group: media-data-pipeline`, `cancel-in-progress: false`, `queue: max`; this queue prevents overlap but does not replace the exact-base guard.
 - Legacy reassessment may temporarily keep the old check/auto-merge route until PR 4; v6 normal operations must not pay that extra cold-start cost.
 
 - [ ] **Step 1: Write failing workflow contract tests**
 
 Assert for v6 operation kinds:
+- workflow-level concurrency uses `group: media-data-pipeline`, `cancel-in-progress: false`, `queue: max`;
 - PR pre-execution diff contains exactly one request file;
 - no `media-check.yml` dispatch;
 - no separate `media-auto-merge.yml` dependency;
@@ -489,11 +501,13 @@ Test the workflow/script text or extracted helper so that a changed `origin/main
 
 - [ ] **Step 3: Refactor `Media Command` v6 branch**
 
-Keep the request bytes in trusted temp storage, rebuild the operation branch from the latest `main`, restore only the request, apply/validate, and push the checked result. If `main` moves before merge, repeat the replay/validation cycle; cap retries and fail closed rather than looping indefinitely.
+Replace the current per-PR concurrency key for normal v6 data writes with the shared `media-data-pipeline` group and `queue: max`. Keep the request bytes in trusted temp storage, rebuild the operation branch from the latest `main`, restore only the request, apply/validate, and push the checked result. If `main` still moves before merge because of a developer/manual change outside the serialized pipeline, repeat the replay/validation cycle; cap retries and fail closed rather than looping indefinitely.
 
 - [ ] **Step 4: Move guarded v6 merge into the same workflow**
 
 Use GitHub API PR merge with expected head SHA. Do not require repository auto-merge settings and do not bypass PR semantics by pushing directly to `main`.
+
+Before implementing this step, read the current `main` branch protection/ruleset configuration. The present design assumes there is no required status check that waits for this same workflow to finish before merge. Record that preflight result in the PR checkpoint. If repository protection changes and creates that dependency, stop and revise the merge mechanism instead of adding a bypass token silently.
 
 - [ ] **Step 5: Keep Pages post-merge and outside save latency**
 
@@ -501,7 +515,7 @@ Dispatch `media-pages.yml` for the exact merge SHA. `published` is a website sta
 
 - [ ] **Step 6: Audit every workflow trigger**
 
-Verify data-result commits do not trigger unrelated full Dev/Web checks. Preserve full gates for code/schema/workflow/vocabulary changes. Do not add broad `paths-ignore` where current event type already makes them unnecessary.
+Verify data-result commits do not trigger unrelated full Dev/Web checks. In the current repository, `media-dev-check.yml` and `web-check.yml` are PR-path based, so do not add broad `paths-ignore` unless their event model changes. Keep `media-pages.yml` as the intended post-merge publication path and explicitly dispatch it for the exact merge SHA when needed. Preserve full gates for code/schema/workflow/vocabulary changes.
 
 - [ ] **Step 7: Run workflow tests**
 
@@ -612,7 +626,7 @@ Generate twice and assert byte equality. Corrupt one archived work while keeping
 
 - [ ] **Step 3: Implement renderer and CLI**
 
-Do not include a current timestamp or any non-deterministic value in rendered content. Sort entries deterministically by human title/year with a stable fallback.
+Do not include a current timestamp or any non-deterministic value in rendered content. Sort entries deterministically by `(normalized human title, year, work_id)`; `work_id` is only an internal tie-breaker and must not be rendered into the human archive.
 
 - [ ] **Step 4: Generate a review snapshot**
 
@@ -654,9 +668,11 @@ Checkpoint explicitly says the final archive will be regenerated and reverified 
 
 Convert only meaningful behavioral assertions into compact synthetic fixtures: strong positive intrigue/problem-solving, mixed evidence, couple disagreement, sparse semantics, explicit similarity without preference, stale inferred vs fresh explicit.
 
-- [ ] **Step 2: Write failing reset safety tests**
+- [ ] **Step 2: Write failing reset safety and empty-library tooling tests**
 
 Assert reset refuses when archive verify reports any mismatch. Assert a successful reset removes active works/collections/similarity/interactions/inferred/pilot/baselines but preserves explicit preferences and vocabulary.
+
+Add an isolated empty-repository integration fixture (`works=[]`) and prove that `build_index`, `build_profiles`, `web_export`, `validate`, `doctor`, `media_entry_context`, taste/recommendation context all complete deterministically. Do not invent a new profile status solely for this test: require `entity_count=0`, no legacy inferred evidence, preserved explicit global preferences/rules, reproducible generated files and honest cold-start limitations.
 
 - [ ] **Step 3: Implement `migrate_v6_reset.py` as one-time migration tooling**
 
@@ -664,7 +680,7 @@ Support a dry-run/plan mode and an apply mode. The tool must call archive verifi
 
 - [ ] **Step 4: Run fixture/reset tests**
 
-Run: `python -m pytest tests/media/test_v6_reset.py tests/media/test_build_profiles.py tests/media/test_recommend_context.py tests/media/test_candidate_assessment.py -q`
+Run: `python -m pytest tests/media/test_v6_reset.py tests/media/test_build_index.py tests/media/test_build_profiles.py tests/media/test_web_export.py tests/media/test_doctor.py tests/media/test_media_entry_context.py tests/media/test_recommend_context.py tests/media/test_candidate_assessment.py -q`
 
 Expected: PASS.
 
@@ -786,7 +802,7 @@ Preserve exact command/file/API names in code formatting. Explain technical term
 
 - [ ] **Step 3: Update agent scenario catalog and runbook**
 
-Include scenarios for: existing work feedback, new work atomic add, same-work pending correction, partner feedback, taste threshold 4→5, couple member reanalysis, provider ambiguity, idempotent retry, archive-driven neutral-first old-work recovery, Web feedback.
+Include scenarios for: existing work feedback, new work atomic add, same-work pending correction, partner feedback, taste threshold 4→5, couple member reanalysis, provider ambiguity, idempotent retry, archive-driven neutral-first old-work recovery, Web feedback. The same-work pending scenario must explicitly prove: the second clarification is retained in the current LLM session overlay, no second request PR is submitted while the first is pending, and after the first becomes authoritative the agent reloads the fresh viewer digest before submitting the accumulated clarification.
 
 - [ ] **Step 4: Run Python full gate**
 
@@ -859,5 +875,5 @@ Do not merge while any required test/doc contract is red.
 - **Spec coverage:** Tasks 1–6 cover domain/digests/invalidation/aggregate command/reanalysis/read context/local parity. Tasks 7–8 cover single-runner CI, exact-base merge, Broker/Web. Task 9 covers deterministic archive. Tasks 10–12 cover regression fixtures, reset, legacy removal, documentation, final cutover and full validation.
 - **Atomic cutover:** PRs 1–3 may add dormant/backward-compatible infrastructure, but only PR 4 removes old data/runtime and switches agent/Broker documentation to v6.
 - **SQLite:** existing temporary SQLite tooling is retained only for diagnostics/tests; no task introduces a tracked `database.sqlite`.
-- **No hidden parallelism:** no global multi-writer queue is added. Stale/base guards remain as defensive correctness checks.
+- **Controlled serialization:** normal v6 media data writes use GitHub Actions `queue: max` in one shared concurrency group. No custom queue service or multi-writer coordination layer is added; stale/base guards remain as defensive correctness checks for changes outside that queue.
 - **Documentation:** all known README/living docs from the design are included in Task 12; each earlier PR updates only docs needed to truthfully describe already-merged dormant/tooling behavior.
