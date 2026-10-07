@@ -1,0 +1,19 @@
+{
+  "applied_at": "2026-10-07T12:58:13.697532+00:00",
+  "changed_entities": [
+    "source-code-2011"
+  ],
+  "changed_files": [
+    "media/data/works/source-code-2011.yaml",
+    ".media/operations/c2a9f5d8-47be-4b10-8e63-9a1f2d6c7b35.json"
+  ],
+  "details": {
+    "expected_work_digest": "sha256:53a1d529ac3113eb455c8160c21042bf8e56dddc366dd9cccba212796150f3f7",
+    "unmapped_genre_ids": [],
+    "work_digest": "sha256:bb69655046e9b4f96f92c288c787e1b8d169a3ffd2b526508e83c3d4ec1c5543",
+    "work_id": "source-code-2011"
+  },
+  "operation": "refresh_work_metadata",
+  "operation_id": "c2a9f5d8-47be-4b10-8e63-9a1f2d6c7b35",
+  "status": "applied"
+}
