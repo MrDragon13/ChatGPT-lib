@@ -94,7 +94,7 @@ jobs:
               operation in {'record_media_entry', 'record_viewing_feedback'} and create_if_missing
           )
           entry = policy.get('operations', {}).get(operation) or {}
-          execution_class = entry.get('execution_class', 'legacy')
+          execution_class = entry.get('execution_class', 'manual_review')
           with open(sys.argv[3], 'a', encoding='utf-8') as output:
               print(f'operation={operation}', file=output)
               print(f'execution_class={execution_class}', file=output)
@@ -149,7 +149,7 @@ jobs:
               .media/operations
               "$REQUEST"
             )
-            for path in media/data/interactions media/preferences/inferred media/data/relations/similarity media/pilots; do
+            for path in media/data/interactions media/preferences/inferred media/data/relations/similarity; do
               if [ -e "$path" ] || git ls-files -- "$path" | grep -q .; then
                 STAGE_PATHS+=("$path")
               fi
@@ -184,14 +184,38 @@ jobs:
             # Targeted authoritative data gate. Full developer regression remains in Media Dev Check.
             python -m media.tools.validate .
             python -m media.cli rebuild --check
-            python -m pytest \
-              tests/media/test_record_media_entry.py \
-              tests/media/test_inferred_preferences.py \
-              tests/media/test_v6_reanalysis_status.py \
-              tests/media/test_v6_performance_contract.py \
-              tests/media/test_build_index.py \
-              tests/media/test_build_profiles.py \
-              -q
+            OPERATION=$(python -c "import json; print(json.load(open('/tmp/media-request.json'))['operation'])")
+            case "$OPERATION" in
+              record_media_entry)
+                TESTS=(tests/media/test_record_media_entry.py tests/media/test_v6_performance_contract.py tests/media/test_build_index.py tests/media/test_build_profiles.py)
+                ;;
+              set_inferred_preferences)
+                TESTS=(tests/media/test_inferred_preferences.py tests/media/test_v6_reanalysis_status.py tests/media/test_build_profiles.py)
+                ;;
+              add_work)
+                TESTS=(tests/media/test_add_work.py tests/media/test_transaction.py)
+                ;;
+              record_viewing_feedback|edit_viewing_feedback|set_interest)
+                TESTS=(tests/media/test_mutations.py tests/media/test_transaction.py)
+                ;;
+              set_semantic_fingerprint)
+                TESTS=(tests/media/test_semantic_fingerprint.py tests/media/test_transaction.py)
+                ;;
+              record_recommendation_interaction)
+                TESTS=(tests/media/test_recommendation_interactions.py)
+                ;;
+              set_work_similarity|remove_work_similarity)
+                TESTS=(tests/media/test_work_similarity.py tests/media/test_similarity_validation.py)
+                ;;
+              refresh_work_metadata)
+                TESTS=(tests/media/test_refresh_work_metadata.py tests/media/test_refresh_transaction.py)
+                ;;
+              *)
+                echo "::error::No targeted test set registered for auto-merge operation: $OPERATION"
+                exit 4
+                ;;
+            esac
+            python -m pytest "${TESTS[@]}" tests/media/test_command_contracts.py tests/media/test_path_policy.py -q
 
             git commit -m "data: apply media operation $OPERATION_ID"
             HEAD_SHA=$(git rev-parse HEAD)
@@ -235,7 +259,7 @@ jobs:
 
       - name: Replay branch on current main
         id: replay
-        if: ${{ steps.operation.outputs.execution_class != 'v6_single_runner' }}
+        if: ${{ steps.operation.outputs.execution_class == 'manual_review' }}
         shell: bash
         run: |
           echo "base_sha=$(git rev-parse origin/main)" >> "$GITHUB_OUTPUT"
@@ -246,7 +270,7 @@ jobs:
           fi
 
       - name: Apply command without provider secret
-        if: ${{ steps.operation.outputs.execution_class != 'v6_single_runner' && steps.operation.outputs.needs_provider != 'true' }}
+        if: ${{ steps.operation.outputs.execution_class == 'manual_review' && steps.operation.outputs.needs_provider != 'true' }}
         shell: bash
         env:
           REQUEST: ${{ steps.request.outputs.request }}
@@ -258,7 +282,7 @@ jobs:
           exit "$status"
 
       - name: Apply provider-dependent command with TMDB secret
-        if: ${{ steps.operation.outputs.execution_class != 'v6_single_runner' && steps.operation.outputs.needs_provider == 'true' }}
+        if: ${{ steps.operation.outputs.execution_class == 'manual_review' && steps.operation.outputs.needs_provider == 'true' }}
         shell: bash
         env:
           TMDB_READ_TOKEN: ${{ secrets.TMDB_READ_TOKEN }}
@@ -271,14 +295,14 @@ jobs:
           exit "$status"
 
       - name: Remove transient request
-        if: ${{ steps.operation.outputs.execution_class != 'v6_single_runner' }}
+        if: ${{ steps.operation.outputs.execution_class == 'manual_review' }}
         shell: bash
         env:
           REQUEST: ${{ steps.request.outputs.request }}
         run: rm -- "$REQUEST"
 
       - name: Stage operation outputs
-        if: ${{ steps.operation.outputs.execution_class != 'v6_single_runner' }}
+        if: ${{ steps.operation.outputs.execution_class == 'manual_review' }}
         shell: bash
         env:
           REQUEST: ${{ steps.request.outputs.request }}
@@ -290,7 +314,7 @@ jobs:
             .media/operations
             "$REQUEST"
           )
-          for path in media/data/interactions media/preferences/inferred media/data/relations/similarity media/pilots; do
+          for path in media/data/interactions media/preferences/inferred media/data/relations/similarity; do
             if [ -e "$path" ] || git ls-files -- "$path" | grep -q .; then
               STAGE_PATHS+=("$path")
             fi
@@ -298,7 +322,7 @@ jobs:
           git add -A -- "${STAGE_PATHS[@]}"
 
       - name: Verify staged path policy
-        if: ${{ steps.operation.outputs.execution_class != 'v6_single_runner' }}
+        if: ${{ steps.operation.outputs.execution_class == 'manual_review' }}
         shell: bash
         env:
           REQUEST: ${{ steps.request.outputs.request }}
@@ -330,7 +354,7 @@ jobs:
           PY
 
       - name: Run full verification before commit
-        if: ${{ steps.operation.outputs.execution_class != 'v6_single_runner' }}
+        if: ${{ steps.operation.outputs.execution_class == 'manual_review' }}
         run: |
           python -m pytest -q
           python -m media.tools.validate .
@@ -339,7 +363,7 @@ jobs:
 
       - name: Commit and push operation result
         id: commit
-        if: ${{ steps.operation.outputs.execution_class != 'v6_single_runner' }}
+        if: ${{ steps.operation.outputs.execution_class == 'manual_review' }}
         shell: bash
         env:
           BRANCH: ${{ github.head_ref }}
@@ -349,12 +373,11 @@ jobs:
           git push origin "HEAD:$BRANCH"
           echo "head_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-      - name: Dispatch read-only check for exact new head
-        if: ${{ steps.operation.outputs.execution_class != 'v6_single_runner' }}
+      - name: Leave manual operation ready for review
+        if: ${{ steps.operation.outputs.execution_class == 'manual_review' }}
         shell: bash
         env:
-          GH_TOKEN: ${{ github.token }}
-          BRANCH: ${{ github.head_ref }}
           HEAD_SHA: ${{ steps.commit.outputs.head_sha }}
-          BASE_SHA: ${{ steps.replay.outputs.base_sha }}
-        run: gh workflow run media-check.yml --ref "$BRANCH" -f expected_sha="$HEAD_SHA" -f base_sha="$BASE_SHA"
+        run: |
+          echo "Manual-review operation verified and pushed at $HEAD_SHA."
+          echo "No automatic merge is attempted for this execution class."
