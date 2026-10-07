@@ -89,6 +89,8 @@ def parse_command(data: Mapping[str, Any], schema_dir: Path | None = None) -> Me
         raise CommandValidationError("; ".join(errors))
     if operation not in _READ_ONLY_OPERATIONS:
         _validate_uuid(str(data["operation_id"]))
+    if operation == "record_media_entry":
+        _validate_uuid(str(data["idempotency_key"]), "idempotency_key")
     if operation in {"reserve_reassessment_session", "complete_reassessment_item", "close_reassessment_session"}:
         _validate_uuid(str(data["session_id"]), "session_id")
     if operation == "close_reassessment_session" and data.get("scheduled_reanalysis_operation_id") is not None:
