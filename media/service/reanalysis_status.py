@@ -75,11 +75,16 @@ def _threshold(media_root: Path) -> int:
     return int(value) if isinstance(value, int) and value > 0 else 5
 
 
-def _material_events(media_root: Path, target: str) -> list[_MaterialEvent]:
-    repo = YamlRepository(Path(media_root))
+def _material_events_from_documents(
+    documents: list[Mapping[str, Any]],
+    target: str,
+) -> list[_MaterialEvent]:
     events: list[_MaterialEvent] = []
-    for record in repo.iter_works():
-        signal = ((record.data.get("viewer_signals") or {}).get(target) or {})
+    for document in documents:
+        work_id = document.get("id")
+        if not isinstance(work_id, str):
+            continue
+        signal = ((document.get("viewer_signals") or {}).get(target) or {})
         for index, entry in enumerate(signal.get("history") or []):
             if not isinstance(entry, Mapping) or entry.get("material_evidence") is not True:
                 continue
@@ -88,7 +93,7 @@ def _material_events(media_root: Path, target: str) -> list[_MaterialEvent]:
                 continue
             events.append(
                 _MaterialEvent(
-                    work_id=record.id,
+                    work_id=work_id,
                     history_index=index,
                     at=str(entry.get("at") or ""),
                     event_id=event_id,
@@ -100,19 +105,36 @@ def _material_events(media_root: Path, target: str) -> list[_MaterialEvent]:
     return events
 
 
+def _material_events(media_root: Path, target: str) -> list[_MaterialEvent]:
+    repo = YamlRepository(Path(media_root))
+    documents = [record.data for record in repo.iter_works()]
+    return _material_events_from_documents(documents, target)
+
+
 def _prefix_digest(events: list[_MaterialEvent], count: int) -> str:
     return _digest([event.digest_value() for event in events[:count]])
 
 
-def _current_material_state(media_root: Path, target: str) -> dict[str, dict[str, Any]]:
-    repo = YamlRepository(Path(media_root))
+def _current_material_state_from_documents(
+    documents: list[Mapping[str, Any]],
+    target: str,
+) -> dict[str, dict[str, Any]]:
     state: dict[str, dict[str, Any]] = {}
-    for record in repo.iter_works():
-        signal = ((record.data.get("viewer_signals") or {}).get(target) or {})
+    for document in documents:
+        work_id = document.get("id")
+        if not isinstance(work_id, str):
+            continue
+        signal = ((document.get("viewer_signals") or {}).get(target) or {})
         projected = dict(material_evidence_projection(signal))
         if projected:
-            state[record.id] = projected
+            state[work_id] = projected
     return state
+
+
+def _current_material_state(media_root: Path, target: str) -> dict[str, dict[str, Any]]:
+    repo = YamlRepository(Path(media_root))
+    documents = [record.data for record in repo.iter_works()]
+    return _current_material_state_from_documents(documents, target)
 
 
 def _state_digest(state: Mapping[str, Mapping[str, Any]]) -> str:
@@ -198,11 +220,16 @@ def checkpoint_matches_current_evidence(
     return _state_digest(reconstructed) == evidence_digest
 
 
-def get_reanalysis_status(media_root: Path, target: str) -> ReanalysisStatus:
+def get_reanalysis_status_for_documents(
+    media_root: Path,
+    target: str,
+    documents: list[Mapping[str, Any]],
+) -> ReanalysisStatus:
     media_root = Path(media_root)
     threshold = _threshold(media_root)
-    events = _material_events(media_root, target)
-    current_digest = _state_digest(_current_material_state(media_root, target))
+    events = _material_events_from_documents(documents, target)
+    current_state = _current_material_state_from_documents(documents, target)
+    current_digest = _state_digest(current_state)
     analysis = _stored_analysis(media_root, target)
 
     if analysis is None:
@@ -226,13 +253,17 @@ def get_reanalysis_status(media_root: Path, target: str) -> ReanalysisStatus:
     except (KeyError, TypeError, ValueError):
         return ReanalysisStatus(target, threshold, len(events), True, False, current_digest)
 
-    valid = checkpoint_matches_current_evidence(
-        media_root,
-        target,
-        checkpoint,
-        stored_evidence_digest,
-    )
-    outstanding = max(0, len(events) - checkpoint.material_event_count) if valid else len(events)
+    count = checkpoint.material_event_count
+    valid = 0 <= count <= len(events)
+    if valid:
+        valid = _prefix_digest(events, count) == checkpoint.material_event_prefix_digest
+    if valid:
+        reconstructed = copy.deepcopy(current_state)
+        for event in reversed(events[count:]):
+            _undo_event(reconstructed, event)
+        valid = _state_digest(reconstructed) == stored_evidence_digest
+
+    outstanding = max(0, len(events) - count) if valid else len(events)
     return ReanalysisStatus(
         target=target,
         threshold=threshold,
@@ -241,6 +272,13 @@ def get_reanalysis_status(media_root: Path, target: str) -> ReanalysisStatus:
         checkpoint_valid=valid,
         current_evidence_digest=current_digest,
     )
+
+
+def get_reanalysis_status(media_root: Path, target: str) -> ReanalysisStatus:
+    media_root = Path(media_root)
+    repo = YamlRepository(media_root)
+    documents = [record.data for record in repo.iter_works()]
+    return get_reanalysis_status_for_documents(media_root, target, documents)
 
 
 def _status_payload(status: ReanalysisStatus) -> dict[str, Any]:
@@ -254,15 +292,33 @@ def _status_payload(status: ReanalysisStatus) -> dict[str, Any]:
     }
 
 
+def _cached_status_payload(media_root: Path, target: str) -> dict[str, Any] | None:
+    path = Path(media_root) / "generated" / "profiles" / f"{target}.yaml"
+    if not path.exists():
+        return None
+    document = load_yaml(path) or {}
+    status = document.get("reanalysis") if isinstance(document, Mapping) else None
+    if not isinstance(status, Mapping) or status.get("target") != target:
+        return None
+    return copy.deepcopy(dict(status))
+
+
+def _viewer_status_payload(media_root: Path, target: str) -> dict[str, Any]:
+    cached = _cached_status_payload(media_root, target)
+    if cached is not None:
+        return cached
+    return _status_payload(get_reanalysis_status(media_root, target))
+
+
 def build_reanalysis_context(media_root: Path, target: str) -> dict[str, Any]:
     media_root = Path(media_root)
     repo = YamlRepository(media_root)
     viewers, groups = repo.configured_targets()
     if target in viewers:
-        return _status_payload(get_reanalysis_status(media_root, target))
+        return _viewer_status_payload(media_root, target)
     if target in groups:
         members = {
-            member: _status_payload(get_reanalysis_status(media_root, member))
+            member: _viewer_status_payload(media_root, member)
             for member in groups[target]
         }
         return {
