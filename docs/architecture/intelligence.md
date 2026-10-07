@@ -176,3 +176,12 @@ Uncertainty выражается через coverage и limitations. Unknown л�
 - stale inferred interpretation против fresh explicit evidence.
 
 Это защищает поведение, не превращая старую персональную базу в скрытый runtime input.
+
+
+## Диагностика качества
+
+`python -m media.tools.audit_intelligence . --format json` остаётся воспроизводимой диагностикой текущего canonical состояния.
+
+`canonical_input_digest` позволяет проверить, что два запуска аудита относятся к одному набору входных данных. Старый Stage A baseline больше не является активным runtime-файлом после reset; исторические измерения остаются в Git history.
+
+Регрессии поведения v6 защищаются небольшими синтетическими/reference fixtures, а не старой персональной библиотекой. Это отделяет проверку алгоритма от пользовательских данных.
