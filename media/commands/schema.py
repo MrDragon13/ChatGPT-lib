@@ -8,8 +8,6 @@ from uuid import UUID
 from media.domain.commands import (
     AddWorkCommand,
     AssessCandidateRequest,
-    CloseReassessmentSessionCommand,
-    CompleteReassessmentItemCommand,
     EditViewingFeedbackCommand,
     MediaCommand,
     MediaEntryContextRequest,
@@ -18,12 +16,10 @@ from media.domain.commands import (
     RecommendContextRequest,
     RecordMediaEntryCommand,
     RecordRecommendationInteractionCommand,
-    RecordReassessmentModernizationCommand,
     RecordViewingFeedbackCommand,
     RefreshMetadataCommand,
     RefreshWorkMetadataCommand,
     RemoveWorkSimilarityCommand,
-    ReserveReassessmentSessionCommand,
     SetInferredPreferencesCommand,
     SetInterestCommand,
     SetSemanticFingerprintCommand,
@@ -48,10 +44,6 @@ _SCHEMA_BY_OPERATION = {
     "record_recommendation_interaction": "record_recommendation_interaction.schema.json",
     "set_work_similarity": "set_work_similarity.schema.json",
     "remove_work_similarity": "remove_work_similarity.schema.json",
-    "reserve_reassessment_session": "reserve_reassessment_session.schema.json",
-    "complete_reassessment_item": "complete_reassessment_item.schema.json",
-    "close_reassessment_session": "close_reassessment_session.schema.json",
-    "record_reassessment_modernization": "record_reassessment_modernization.schema.json",
     "recommend_context": "recommend_context.schema.json",
     "taste_context": "taste_context.schema.json",
     "assess_candidate": "assess_candidate.schema.json",
@@ -93,14 +85,6 @@ def parse_command(data: Mapping[str, Any], schema_dir: Path | None = None) -> Me
         _validate_uuid(str(data["operation_id"]))
     if operation == "record_media_entry":
         _validate_uuid(str(data["idempotency_key"]), "idempotency_key")
-    if operation in {"reserve_reassessment_session", "complete_reassessment_item", "close_reassessment_session"}:
-        _validate_uuid(str(data["session_id"]), "session_id")
-    if operation == "close_reassessment_session" and data.get("scheduled_reanalysis_operation_id") is not None:
-        _validate_uuid(str(data["scheduled_reanalysis_operation_id"]), "scheduled_reanalysis_operation_id")
-    if operation == "record_reassessment_modernization":
-        for key in ("metadata_operation_id", "semantic_operation_id"):
-            if data.get(key) is not None:
-                _validate_uuid(str(data[key]), key)
     if operation == "record_media_entry":
         updates = tuple(
             TargetUpdate(
@@ -216,50 +200,6 @@ def parse_command(data: Mapping[str, Any], schema_dir: Path | None = None) -> Me
             data["target"],
             _work_ref(data["left"]),
             _work_ref(data["right"]),
-        )
-    if operation == "reserve_reassessment_session":
-        return ReserveReassessmentSessionCommand(
-            data["schema_version"],
-            data["operation_id"],
-            data["pilot_id"],
-            data["session_id"],
-            tuple(data["work_ids"]),
-            data["expected_ledger_digest"],
-        )
-    if operation == "complete_reassessment_item":
-        return CompleteReassessmentItemCommand(
-            data["schema_version"],
-            data["operation_id"],
-            data["pilot_id"],
-            data["session_id"],
-            data["work_id"],
-            data["expected_ledger_digest"],
-            data["outcome"],
-            dict(data["historical_exposure"]) if data.get("historical_exposure") is not None else None,
-            dict(data["feedback_edit"]) if data.get("feedback_edit") is not None else None,
-        )
-    if operation == "close_reassessment_session":
-        return CloseReassessmentSessionCommand(
-            data["schema_version"],
-            data["operation_id"],
-            data["pilot_id"],
-            data["session_id"],
-            data["expected_ledger_digest"],
-            data.get("scheduled_reanalysis_operation_id"),
-        )
-    if operation == "record_reassessment_modernization":
-        return RecordReassessmentModernizationCommand(
-            data["schema_version"],
-            data["operation_id"],
-            data["pilot_id"],
-            data["work_id"],
-            data["outcome"],
-            data["expected_ledger_digest"],
-            data["expected_work_digest"],
-            data.get("metadata_operation_id"),
-            data.get("semantic_operation_id"),
-            data.get("vocabulary_digest"),
-            data.get("blocker_code"),
         )
     if operation == "media_entry_context":
         return MediaEntryContextRequest(
