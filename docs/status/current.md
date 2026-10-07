@@ -132,6 +132,8 @@ Generated viewer profiles кэшируют reanalysis status, поэтому rec
 
 `assess_candidate`, `recommend_context`, `taste_context` и `media_entry_context` остаются read-only.
 
+Явно заданное сходство сохраняется через `set_work_similarity` и удаляется через `remove_work_similarity`; оно остаётся evidence/hint и не превращается само по себе в preference.
+
 ## Recommendation cold start
 
 После reset локальный recommendation pool пуст. Это не ошибка.
