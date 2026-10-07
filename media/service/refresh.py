@@ -255,6 +255,15 @@ def _refreshed_document(
     return document
 
 
+def _changed_metadata_domains(before: Mapping[str, Any], after: Mapping[str, Any]) -> tuple[str, ...]:
+    domains: list[str] = []
+    if before.get("identity") != after.get("identity"):
+        domains.append("work.identity")
+    if before.get("metadata") != after.get("metadata"):
+        domains.append("work.metadata")
+    return tuple(domains)
+
+
 def plan_refresh_metadata(
     repo: YamlRepository,
     command: RefreshMetadataCommand,
@@ -316,13 +325,20 @@ def plan_refresh_metadata(
         "changed_work_ids": list(changed_entities),
         "unmapped_genre_ids": sorted(unmapped_genres),
     }
+    changed_domains = sorted({
+        domain
+        for record, metadata, year_override in resolved
+        for domain in _changed_metadata_domains(
+            record.data,
+            _refreshed_document(record, metadata, day=day, year_override=year_override),
+        )
+    })
     return MutationPlan(
         command.operation_id,
         "refresh_metadata",
         tuple(changed_entities),
         documents,
-        bool(documents),
-        (),
+        tuple(changed_domains),
         details,
     )
 
@@ -376,7 +392,6 @@ def plan_refresh_work_metadata(
         "refresh_work_metadata",
         (record.id,) if changed else (),
         {path: document} if changed else {},
-        changed,
-        (),
+        _changed_metadata_domains(record.data, document) if changed else (),
         details,
     )
