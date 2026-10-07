@@ -178,11 +178,13 @@ def test_record_media_entry_cli_dry_run_and_apply_have_local_parity(tmp_path, mo
     )
     monkeypatch.chdir(root)
     monkeypatch.delenv("TMDB_READ_TOKEN",raising=False)
+    before=_media_snapshot(root)
 
     assert main(["apply-command",str(request),"--dry-run","--format","json"])==0
     dry=json.loads(capsys.readouterr().out)
     assert dry["operation"]=="record_media_entry"
     assert dry["status"]=="planned"
+    assert _media_snapshot(root)==before
 
     assert main(["apply-command",str(request),"--format","json"])==0
     applied=json.loads(capsys.readouterr().out)
@@ -215,11 +217,14 @@ def test_v6_inferred_preferences_cli_dry_run_and_apply_have_local_parity(tmp_pat
         },
     })
     monkeypatch.chdir(root)
+    before=_media_snapshot(root)
 
     assert main(["apply-command",str(request),"--dry-run","--format","json"])==0
     dry=json.loads(capsys.readouterr().out)
     assert dry["operation"]=="set_inferred_preferences"
     assert dry["status"]=="planned"
+    assert _media_snapshot(root)==before
+    assert not (root/"media/preferences/inferred/primary.yaml").exists()
 
     assert main(["apply-command",str(request),"--format","json"])==0
     applied=json.loads(capsys.readouterr().out)
