@@ -182,3 +182,73 @@ def test_refresh_work_metadata_no_change_still_binds_current_digest(tmp_path):
     assert plan.changed_entities == ()
     assert plan.details["work_id"] == "movie-a-2020"
     assert plan.details["work_digest"] == _digest(record.path)
+
+
+def test_refresh_work_metadata_supports_series_without_touching_viewer_or_semantic_data(tmp_path):
+    work = {
+        "schema_version": 4,
+        "id": "sherlock-bbc",
+        "entity_type": "work",
+        "identity": {
+            "format": "series",
+            "title_original": "Sherlock",
+            "title_ru": "Шерлок",
+            "year": 2010,
+        },
+        "metadata": {
+            "semantic": {
+                "traits": [
+                    {"term": "story.intrigue", "source": "llm_inferred", "confidence": "high"}
+                ]
+            }
+        },
+        "viewer_signals": {
+            "primary": {
+                "viewing": {"status": "watched"},
+                "rating": {"score": 9.5, "source": "inferred", "confidence": "high"},
+            }
+        },
+        "provenance": {"created_at": "2026-01-01", "updated_at": "2026-01-01"},
+    }
+    metadata = CanonicalMetadata(
+        identity={
+            "format": "series",
+            "title_original": "Sherlock",
+            "title_ru": "Шерлок",
+            "year": 2010,
+            "release_date": "2010-07-25",
+            "external_ids": {
+                "tmdb": {"media_type": "tv", "id": 19885},
+                "imdb": "tt1475582",
+            },
+        },
+        external={
+            "runtime_min": 90,
+            "genres": ["genre.crime", "genre.mystery"],
+            "provenance": {
+                "provider": "tmdb",
+                "provider_id": 19885,
+                "fetched_at": "2026-10-07T00:00:00Z",
+            },
+        },
+    )
+    repo = _repo(tmp_path, work)
+    record = repo.get_work("sherlock-bbc")
+    provider = FakeProvider(
+        fetched={19885: metadata},
+        searched={
+            ("Sherlock", 2010): [
+                ProviderCandidate("tv", 19885, "Шерлок", "Sherlock", 2010)
+            ]
+        },
+    )
+
+    plan = plan_refresh_work_metadata(repo, _command(record), provider, now=NOW)
+
+    assert ("search", "Sherlock", 2010) in provider.calls
+    assert ("fetch", "tv", 19885) in provider.calls
+    updated = plan.documents["media/data/works/sherlock-bbc.yaml"]
+    assert updated["identity"]["external_ids"]["tmdb"] == {"media_type": "tv", "id": 19885}
+    assert updated["identity"]["external_ids"]["imdb"] == "tt1475582"
+    assert updated["viewer_signals"] == work["viewer_signals"]
+    assert updated["metadata"]["semantic"] == work["metadata"]["semantic"]
