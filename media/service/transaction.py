@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 import tempfile
-from dataclasses import replace
+from dataclasses import asdict, replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -14,6 +15,7 @@ from media.domain.commands import (
     CloseReassessmentSessionCommand,
     CompleteReassessmentItemCommand,
     EditViewingFeedbackCommand,
+    RecordMediaEntryCommand,
     RecordRecommendationInteractionCommand,
     RecordReassessmentModernizationCommand,
     RecordViewingFeedbackCommand,
@@ -33,6 +35,7 @@ from media.service.enrich import plan_add_work_resolved
 from media.service.intelligence import plan_set_semantic_fingerprint
 from media.service.derived import derive_dirty_plan
 from media.service.interactions import plan_record_recommendation_interaction
+from media.service.media_entry import plan_record_media_entry
 from media.service.mutate import apply_feedback_updates, plan_edit_viewing_feedback, plan_record_viewing_feedback, plan_set_interest
 from media.service.path_policy import verify_changed_paths, verify_operation_specific_paths
 from media.service.preferences import plan_set_inferred_preferences
@@ -50,7 +53,8 @@ from media.tools.common import dump_yaml, iter_jsonl, write_jsonl
 from media.tools.validate import validate_repository
 
 MutableCommand = (
-    RecordViewingFeedbackCommand
+    RecordMediaEntryCommand
+    | RecordViewingFeedbackCommand
     | EditViewingFeedbackCommand
     | SetInterestCommand
     | AddWorkCommand
@@ -74,6 +78,36 @@ def _receipt_path(repo_root: Path, operation_id: str) -> Path:
 
 def _load_receipt(path: Path) -> OperationResult:
     data=json.loads(path.read_text(encoding="utf-8")); return OperationResult("already_applied",data["operation_id"],data["operation"],tuple(data.get("changed_entities") or ()),tuple(data.get("changed_files") or ()),data.get("details") or {})
+
+
+def _record_media_entry_request_digest(command: RecordMediaEntryCommand) -> str:
+    payload = asdict(command)
+    payload.pop("operation_id", None)
+    payload.pop("preconditions", None)
+    payload["operation"] = "record_media_entry"
+    encoded = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return "sha256:" + hashlib.sha256(encoded).hexdigest()
+
+
+def _find_idempotent_media_entry(
+    repo_root: Path,
+    command: RecordMediaEntryCommand,
+) -> OperationResult | None:
+    operations = repo_root / ".media" / "operations"
+    if not operations.exists():
+        return None
+    request_digest = _record_media_entry_request_digest(command)
+    for path in sorted(operations.glob("*.json")):
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if data.get("idempotency_key") != command.idempotency_key:
+            continue
+        if data.get("request_digest") != request_digest:
+            raise CommandValidationError("idempotency key is already used for a different media entry")
+        return _load_receipt(path)
+    return None
 
 
 def _with_similarity_reconciliation(repo: YamlRepository, plan: MutationPlan, work_id: str) -> MutationPlan:
@@ -137,6 +171,11 @@ def _plan(
     *,
     repo_root: Path | None = None,
 ) -> MutationPlan:
+    if isinstance(command,RecordMediaEntryCommand):
+        plan = plan_record_media_entry(repo,command,provider,now=now)
+        if plan.details.get("created") and plan.details.get("work_id"):
+            return _with_similarity_reconciliation(repo,plan,str(plan.details["work_id"]))
+        return plan
     if isinstance(command,RecordViewingFeedbackCommand): return _plan_record_feedback(repo,command,now,provider)
     if isinstance(command,EditViewingFeedbackCommand): return plan_edit_viewing_feedback(repo,command,now=now)
     if isinstance(command,SetInterestCommand): return plan_set_interest(repo,command,now=now)
@@ -160,6 +199,10 @@ def _plan(
 def preview_command(repo_root: Path, command: MutableCommand, *, now: datetime | None = None, provider: Any = None) -> OperationResult:
     repo_root=Path(repo_root); receipt=_receipt_path(repo_root,command.operation_id)
     if receipt.exists(): return _load_receipt(receipt)
+    if isinstance(command, RecordMediaEntryCommand):
+        existing = _find_idempotent_media_entry(repo_root, command)
+        if existing is not None:
+            return existing
     plan=_plan(YamlRepository(repo_root/"media"),command,now,provider,repo_root=repo_root)
     paths=tuple(sorted(set(plan.documents)|set(plan.json_documents)|set(plan.jsonl_appends)))
     return OperationResult("planned" if plan.has_changes else "no_change",plan.operation_id,plan.operation,plan.changed_entities,paths,plan.details)
@@ -210,6 +253,10 @@ def _write_json_document(path: Path, document: Any) -> None:
 def execute_command(repo_root: Path, command: MutableCommand, *, now: datetime | None = None, provider: Any = None) -> OperationResult:
     repo_root=Path(repo_root); receipt=_receipt_path(repo_root,command.operation_id)
     if receipt.exists(): return _load_receipt(receipt)
+    if isinstance(command, RecordMediaEntryCommand):
+        existing = _find_idempotent_media_entry(repo_root, command)
+        if existing is not None:
+            return existing
     with tempfile.TemporaryDirectory(prefix="media-op-") as tmpdir:
         temp_root=Path(tmpdir)/"repo"; temp_root.mkdir(parents=True); shutil.copytree(repo_root/"media",temp_root/"media")
         if (repo_root/".media").exists(): shutil.copytree(repo_root/".media",temp_root/".media")
@@ -225,6 +272,9 @@ def execute_command(repo_root: Path, command: MutableCommand, *, now: datetime |
         media_paths=_changed_paths(repo_root,temp_root) if plan.has_changes else []; status="applied" if plan.has_changes else "no_change"
         receipt_rel=str(receipt.relative_to(repo_root)).replace("\\","/"); changed_files=tuple(media_paths+[receipt_rel]); applied_at=(now or datetime.now(timezone.utc)).isoformat()
         payload={"operation_id":plan.operation_id,"operation":plan.operation,"status":status,"changed_entities":list(plan.changed_entities),"changed_files":list(changed_files),"applied_at":applied_at}
+        if isinstance(command, RecordMediaEntryCommand):
+            payload["idempotency_key"] = command.idempotency_key
+            payload["request_digest"] = _record_media_entry_request_digest(command)
         if plan.details: payload["details"]=dict(plan.details)
         temp_receipt=temp_root/receipt_rel; temp_receipt.parent.mkdir(parents=True,exist_ok=True); temp_receipt.write_text(json.dumps(payload,ensure_ascii=False,sort_keys=True,indent=2)+"\n",encoding="utf-8")
         sync_paths=media_paths+[receipt_rel]
