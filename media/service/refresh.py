@@ -13,7 +13,7 @@ from media.domain.errors import CommandValidationError, MetadataRefreshPreflight
 from media.providers.base import CanonicalMetadata, MetadataProvider, ProviderCandidate
 from media.repository.canonical import WorkRecord
 from media.repository.yaml_repo import YamlRepository
-from media.service.reassessment import file_sha256
+from media.tools.common import file_sha256
 from media.service.resolve import normalize_title, resolve_work
 
 
