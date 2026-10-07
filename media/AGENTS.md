@@ -1,258 +1,207 @@
-# Media Intelligence v5 agent contract
+# Media Intelligence v6 — правила агента
 
-This directory is the canonical personal media library. Git/YAML is source of truth; `generated/` is derived. The normal LLM write path is a typed media command processed by deterministic Python, never a free-form YAML patch.
+Этот файл — рабочий договор для LLM, которая помогает пользователю с медиатекой. Git/YAML в актуальном `main` остаётся единственным долговременным источником состояния. Производные файлы можно пересобрать; они не являются самостоятельной истиной.
 
-## Operating model
+## Что читать перед работой
 
-Use the shortest sufficient route for every media task:
+Для обычного запроса достаточно:
 
-1. Work from the current `main` state and read this contract first.
-2. Use `docs/architecture/` for current system semantics and `docs/reference/` for compact operation/invariant definitions only when the selected route needs them. `docs/status/current.md` is durable capability/limitation context, not mandatory pre-reading for routine operations.
-3. Use `docs/superpowers/specs/2026-10-03-media-v5-agent-scenario-catalog.md` **only when** the user intent is unusual, ambiguous, destructive, or needs an edge-case routing example. Do not preload it for routine lookup, feedback, or recommendation requests.
-4. Read the relevant command schema before a structured write, and read `media/vocabulary.yaml` before semantic/taste writes that reference vocabulary terms.
-5. Treat `docs/superpowers/specs/` and `docs/superpowers/plans/` as historical rationale. Current code, schemas, workflows, living docs, and this operating contract define the route that actually exists.
+1. этого файла;
+2. `docs/status/current.md`;
+3. нужного документа из `docs/architecture/` или `docs/reference/`, только если запрос требует архитектурных деталей.
 
-Useful living references:
+Исторические спецификации под `docs/superpowers/` нужны только для разбора причин старых решений. Они не заменяют текущий код и живую документацию.
 
-- `docs/architecture/media-model.md` — canonical/derived data, targets, WorkRef, similarity and reconciliation;
-- `docs/architecture/intelligence.md` — taste/recommendations/candidate assessment;
-- `docs/architecture/write-pipeline.md` — typed operation lifecycle and merge boundaries;
-- `docs/architecture/web-and-broker.md` — manifest/browser/broker security boundaries;
-- `docs/reference/media-commands.md` — registered operation catalog;
-- `docs/reference/invariants.md` — cross-system safety rules.
+## Пользовательский договор
 
-## User experience contract
+- Не пересказывай пользователю обычную механику GitHub, PR, Actions и generated-файлов.
+- Технические детали — информация для исключений, ошибок и явных технических вопросов.
+- Если пользователь ясно попросил записать просмотр, оценку, реакцию или отзыв, это уже разрешение довести обычную запись до конца. Не проси второго подтверждения.
+- Один короткий необязательный вопрос допустим, если он заметно улучшит будущие рекомендации, но он не должен блокировать уже понятную запись.
+- Обязательное уточнение нужно только при реальном риске выбрать неверное произведение, зрителя или смысл.
+- Никогда не говори «сохранено», пока результат не присутствует в актуальном `main`.
+- После отправки корректной операции разговор можно продолжать сразу: долговременное сохранение не должно быть границей задержки диалога.
 
-The user is here to choose, discuss, and remember movies and shows. Act first as a polite personal cinema assistant, not as a GitHub/operator interface. Keep routine infrastructure behind the scenes.
+## Источник данных и временное состояние разговора
 
-- Default to natural, concise conversation in the user's language. Answer the movie/recommendation/feedback need first.
-- Technical details are exception-path information. Do not mention YAML, JSON, branches, PRs, Actions, SHAs, schemas, generated artifacts, internal command names, validators, or provider plumbing during a normal successful interaction unless the user asks.
-- Do not narrate routine GitHub or workflow progress. If a short progress update is genuinely useful, phrase it in user terms.
-- On success, summarize the user-visible result, not the implementation.
-- When something blocks the request, explain the problem in plain language first and ask only for the minimum user action or clarification needed.
-- For recommendations, do not turn movie choice into a questionnaire. If stored/request context is sufficient, recommend immediately. Ask at most one short blocking question when the answer would materially change the result. If the user says to choose for them, choose.
-- For candidate assessment, answer with a qualitative assessment and explain the strongest supporting/contradicting evidence. Use no fake precise percentage and do not invent a deterministic match score.
-- Active `limitations` are material context. Surface a material active limitation once, succinctly, when it changes the strength or basis of a recommendation/assessment claim; do not mechanically repeat the same warning.
-- `ranking_basis=none` is not personalized semantic evidence. A fallback candidate may still fit request-local constraints, but do not attribute that fallback to taste-profile matching.
-- Partial `assessment_coverage` must not be described as fully grounded certainty. Keep qualitative confidence visibly constrained by missing candidate/support/profile semantic evidence.
-- For feedback, record everything already clear. When an extra detail would materially improve future recommendations, you may occasionally ask one short optional follow-up question. The optional question must not block recording the parts of the feedback that are already clear.
-- A clear request to record or save media feedback is authorization to complete the normal data write.
-- Do not ask for a second confirmation just to merge or finalize that same normal data operation. If one blocking clarification only resolves the work, target, or meaning, continue the already-authorized write unless the user explicitly asked to preview, defer, or not save yet.
-- Never say that data was saved until it is actually present on `main`.
+`main` — единственная долговременная истина.
 
-## Read path
+Пока запись ещё не подтверждена в `main`, текущая LLM-сессия может учитывать временный слой из **явных** пользовательских сигналов:
 
-1. For broad lookup, read `media/generated/index.jsonl` first.
-2. For taste reasoning, use `python -m media.cli taste-context --request <request.json> --format json` or the equivalent `taste-context` service contract before opening many canonical files.
-3. For “will I like X?” use read-only `assess_candidate` / `assess-candidate` to assemble candidate, taste-context and explicit-similarity evidence.
-4. Load selected canonical works only when full detail is required.
-5. Read `media/vocabulary.yaml` and the relevant schema before structured semantic/similarity writes.
+- статус просмотра;
+- оценку;
+- реакцию;
+- текстовый отзыв и явно нормализованные сигналы.
 
-## Intent router
+Этот слой не является второй базой данных и не превращается автоматически в новый глобальный профиль вкуса.
 
-Classify intent before choosing an operation; do not map a keyword directly to a patch.
+Если пользователь уточняет тот же фильм, пока первая запись ещё сохраняется:
 
-- **read / lookup** — show/search current canonical or derived information; no write.
-- **record** — save viewing/rating/reaction/feedback with `record_viewing_feedback`.
-- **correct** — replace a wrong/current component with `edit_viewing_feedback` or an explicit supported upsert.
-- **clear** — remove only named current components with `edit_viewing_feedback.clear`; absence never means deletion.
-- **purge** — explicit destructive target-signal/history removal only when purge semantics match the request.
-- **interest** — update shortlist/candidate/not_interested state with `set_interest`, independently of viewing or rating.
-- **similarity write** — save explicit “A is similar to B” with `set_work_similarity`; identity is undirected and endpoint order is irrelevant.
-- **similarity remove** — remove the current unordered pair with `remove_work_similarity`; do not create a negative relation.
-- **assess candidate** — answer “will I like X?” through read-only `assess_candidate`; assemble evidence, then produce a qualitative assessment rather than a synthetic probability.
-- **recommend internal** — internal-only candidates when the user explicitly says “из моей медиатеки”, “из сохранённого”, or equivalent.
-- **recommend external** — external discovery for a general recommendation request; local media is memory, exclusion, and evidence, not the candidate boundary.
-- **explain** — explain recommendation, affinity, inferred hypothesis, correlation, similarity, assessment, confidence, or provenance without writing taste.
-- **reanalyze taste** — derive replacement hypotheses from raw/explicit evidence and persist only with `set_inferred_preferences` after validation.
-- **semantic enrich** — update work knowledge through `set_semantic_fingerprint`; never turn film traits into explicit preferences silently.
-- **metadata maintenance** — provider refresh such as `refresh_metadata(all_movies)`; manual-review route. Reassessment modernization uses narrow `refresh_work_metadata`.
-- **architecture/vocabulary maintenance** — developer/manual route for schemas, services, workflows, vocabulary, or documentation architecture.
-- **legacy reassessment** — run the active `primary-legacy-v1` pilot only when its ledger exists; recover `reassessment-modernization-context` first, then use `reassessment-context` / `reassessment-history` for human work and dedicated reassessment/modernization writes.
+1. сразу учти уточнение в текущем разговоре;
+2. не создавай второй параллельный request PR по тому же произведению;
+3. дождись подтверждения первой операции;
+4. перечитай свежий `media_entry_context` и его viewer digest;
+5. отправь накопленное уточнение обычной следующей операцией.
 
-If one user event contains several related normal signals, prefer one atomic operation when the schema supports it. Example: new work + feedback should use `record_viewing_feedback(create_if_missing=true)` rather than two independent writes.
+Если первая операция завершилась ошибкой или конфликтом, временный слой не считается сохранённым.
 
-## Recommendation routes
+## Маршрутизация намерений
 
-### Internal-only recommendation
+- **read / lookup** — поиск и показ существующих данных; ничего не записывает.
+- **record** — новый просмотр, оценка, реакция или отзыв; основной путь — `record_media_entry`.
+- **correct / clear / purge** — точечное исправление или удаление сохранённого сигнала; используй узкую подходящую команду.
+- **interest** — устойчивое состояние интереса через `set_interest`.
+- **recommend internal** — рекомендация только из текущей canonical медиатеки.
+- **recommend external** — общий запрос на рекомендацию; внешнее обнаружение допустимо, а локальная медиатека служит памятью, исключениями и evidence anchors.
+- **assess candidate** — качественная оценка «понравится ли мне X?» через `assess_candidate`.
+- **similarity write / similarity remove** — явное сходство через `set_work_similarity` / `remove_work_similarity`.
+- **reanalyze taste** — свежий анализ вкуса и сохранение результата через `set_inferred_preferences`.
+- **semantic enrich** — семантика произведения через `set_semantic_fingerprint` или semantic snapshot нового `record_media_entry`.
+- **metadata maintenance** — `refresh_work_metadata` для одного произведения; bulk `refresh_metadata(all_movies)` остаётся manual-review операцией.
+- **architecture / vocabulary maintenance** — отдельный developer PR, не обычная пользовательская запись.
 
-Use the local index, relevant taste context, viewing/interest state, explicit similarity evidence and interactions. Candidates must come from the local library. For `couple`, expose agreement/disagreement rather than silently averaging viewers.
+Активного legacy reassessment pilot больше нет.
 
-When `recommend_context.limitations` is non-empty, reflect material limitations once in the user-facing explanation. A candidate with `ranking_basis=none` is fallback, not proof that the semantic profile predicts a match.
+## Обычная запись: `record_media_entry`
 
-### External recommendation
+Один человеческий эпизод про одно произведение должен по возможности соответствовать одной операции.
 
-External discovery is the default for a general recommendation request. Build compact taste context first, use concrete liked/disliked anchors and explicit similarity hints, then discover current external candidates. Exclude watched/not_interested items using local memory. A recommended external work does not need to be added to the library.
+### Уже известное произведение
 
-Mood/runtime/“не сегодня” are ephemeral request context unless the user states a stable preference. `not_tonight` remains an interaction, not `not_interested`. Record meaningful lifecycle events with `record_recommendation_interaction` when useful.
+Быстрый путь:
 
-### Candidate assessment
+1. прочитать компактный `media_entry_context`;
+2. сформировать target update и `expected_viewer_digest`;
+3. отправить один `record_media_entry`;
+4. сразу продолжать разговор с временным слоем текущей сессии.
 
-`assess_candidate` is read-only. It validates target/candidate identity and assembles candidate facts, compact taste context and matching explicit similarities. Canonical and external candidates are valid; assessment itself never creates or mutates a work.
+Для существующего произведения обычный отзыв **не должен**:
 
-The agent gives a qualitative assessment with confidence wording, concrete anchors and risks/contradictions. There is no opaque deterministic score and no fake precise percentage. Read top-level `assessment_coverage` and `limitations` before making the confidence claim; incomplete coverage is evidence about uncertainty, not a hidden verdict formula.
+- обращаться к TMDB или другому provider;
+- обновлять metadata;
+- повторно вычислять semantic fingerprint;
+- запускать глобальный reanalysis вкуса;
+- пересобирать незатронутые производные данные.
 
-## Explicit work similarity
+### Новое произведение
 
-Explicit work similarity is target-specific subjective knowledge stored separately from factual `work.canonical_relations`.
+Если произведения нет:
 
-- The relation is undirected: A↔B and B↔A are one canonical identity, not mirrored records.
-- `primary`, `partner`, and `couple` assertions are independent.
-- `terms` use existing canonical vocabulary; optional `note` preserves nuance.
-- Persistent external identity requires a stable provider ID; when identity is ambiguous, ask at most one short blocking clarification rather than saving a title-only guess.
-- External similarity endpoints do not create canonical works. They also do not create viewing, rating, reaction, or interest state.
-- Repeating an assertion is an upsert; removing it uses `remove_work_similarity`.
-- Derived/system semantic similarity stays derived unless explicitly asserted by the user.
+1. надёжно определить его по устойчивой внешней идентичности;
+2. получить только минимум фактических данных, нужных для идентичности и качественной семантики;
+3. сделать один semantic reasoning pass;
+4. отправить один `record_media_entry(create_if_missing=true)`, который атомарно создаёт work, semantics и viewer evidence.
 
-Similarity is evidence for recommendations and explanations, not a stable preference by itself. One similarity relation alone must not manufacture an inferred preference or affinity.
+Не используй обычную цепочку `add_work → reread → semantics → feedback`.
 
-## Taste learning and semantic knowledge
+Если идентичность нельзя надёжно подтвердить, запись не создаётся. Необязательные динамические metadata не должны блокировать человеческий отзыв.
 
-Evidence hierarchy is explicit user evidence > repeated independent correlations > one rating-derived correlation. A single rating cannot manufacture a high-confidence preference.
+## Семантика и пользовательский вкус
 
-`set_inferred_preferences` replaces inferred hypotheses for one target. Explicit similarity may support reasoning only together with independent evidence. Inferred output is not independent evidence for another inferred output; do not self-reinforce previous inference merely because it exists.
+Film fingerprint описывает произведение, never the viewer reaction.
 
-Inferred hypotheses are explanation-only for numeric affinity aggregation. They remain available through `inferred_preferences`, but must not change affinity `score`, `confidence`, or `evidence_count`.
+- Оценка, реакция и отзыв пользователя не являются объективными traits произведения.
+- Controlled vocabulary обязателен для semantic fingerprint.
+- Если semantic input digest и версия алгоритма не изменились, fingerprint переиспользуется без нового LLM-прохода.
+- Explicit evidence важнее inferred interpretation.
+- Inferred output is not independent evidence for another inferred output.
+- Similarity is evidence for recommendations and explanations, not a stable preference by itself.
+- External similarity endpoints do not create canonical works.
 
-`set_semantic_fingerprint` describes the work, never the viewer. Film fingerprint describes the work, never the viewer reaction. Reaction-kind terms are invalid for work fingerprinting. Unknown vocabulary terms are not invented; vocabulary maintenance is a separate developer task.
+## Повторный анализ вкуса
 
-## Legacy reassessment pilot
+Глубокий reanalysis не выполняется после каждого фильма.
 
-Legacy reassessment and card modernization are separate evidence layers orchestrated as one user-facing flow. complete_reassessment_item upgrades fresh historical primary viewer evidence only; it never writes work semantics. After human completion, modernization separately refreshes factual metadata and independently checks the work semantic fingerprint. **Viewer feedback is not work semantic truth**: a viewer signal may suggest what to inspect, but it cannot be copied into metadata.semantic merely because the user said it.
+Для `primary` и `partner` отдельно считается число новых **содержательных** explicit events после последнего полного checkpoint. Порог по умолчанию — **5**.
 
-At startup, after reading current main, run reassessment-modernization-context. Drain ordinary **due modernization before reserving a fresh reassessment batch**. A reviewed item with missing modernization is due; completed never re-enters automatically; blocked is retried only when explicitly recovering/resolving the blocker. Modernization must never reopen the human lifecycle or **do not ask the user to reassess** an already reviewed work.
+Одно событие даёт максимум +1 независимо от числа изменённых полей. Retry, `no_change`, metadata-only и косметическая правка summary без изменения нормализованных explicit signals не считаются.
 
-The first human response for each work remains **unanchored** by historical opinion. Use reassessment-context to identify/resume human work. For a new batch, durably apply reserve_reassessment_session and wait until reservation is authoritative on main before presenting the first work. Do not show old rating/reaction/feedback or semantic traits before the user's first current answer unless explicitly asked.
+Перед любым taste-dependent ответом — рекомендацией, сравнением, выбором «что сегодня», рекомендацией для пары или `assess_candidate` — проверь статус:
 
-If history is needed, use reassessment-history only as the second-phase route (or earlier on explicit user request) and record historical_exposure truthfully. Old opinion is historical context, not fresh explicit evidence.
+- если порог не достигнут, свежие explicit signals всё равно имеют приоритет над старым inferred profile;
+- если порог достигнут, сначала сделай свежий reanalysis, затем отвечай;
+- сохрани результат отдельной `set_inferred_preferences` с evidence checkpoint/digest;
+- свежий результат можно использовать в текущем разговоре сразу, не ожидая merge;
+- canonical checkpoint продвигается только после подтверждённого сохранения.
 
-Default human batch size is 5. complete_reassessment_item combines optional fresh primary feedback with the human lifecycle transition. reviewed is terminal for human reassessment; deferred returns only after the main pending pass.
+`couple` не имеет собственного третьего счётчика. Для пары проверяются `primary` и `partner`; переанализируется только тот участник, которому это требуется.
 
-Mixed-target feedback stays separate. If the same answer contains clearly attributed partner evidence, first complete primary; **after the primary reassessment completion is authoritative on `main`**, re-read the work and record only net-new/corrective partner evidence through a **separate normal feedback operation**. Do not create a no-op and do not weaken stronger existing provenance.
+## Рекомендации и честные ограничения
 
-For each newly reviewed item, normally finish these follow-ups before presenting the next human card:
+- Не выдавай qualitative assessment за точную вероятность.
+- `ranking_basis=none` не является personalized semantic evidence.
+- Partial `assessment_coverage` must not be described as fully grounded certainty.
+- Active `limitations` are material context: учти их в выводе один раз, succinctly; do not mechanically repeat the same warning.
+- Inferred hypotheses are explanation-only for numeric affinity aggregation.
+- Различия вкусов пары не скрываются усреднением.
 
-1. apply refresh_work_metadata with the current raw work digest;
-2. wait until its authoritative receipt is applied or trusted no_change;
-3. re-read the refreshed canonical work and current media/vocabulary.yaml;
-4. derive work semantics independently of viewer sentiment and apply set_semantic_fingerprint;
-5. wait until that receipt is applied or trusted no_change;
-6. apply record_reassessment_modernization(outcome=completed) with fresh ledger/work/vocabulary digests.
+Общий запрос на рекомендацию по умолчанию допускает external discovery. Internal-only recommendation выполняй только когда пользователь явно ограничил выбор своей медиатекой.
 
-A valid no_change metadata or semantic receipt is positive evidence that the layer was checked; it does not require fabricating a mutation. If deterministic metadata/semantic work cannot proceed safely, record record_reassessment_modernization(outcome=blocked) with the controlled blocker code. Do not ask the user to reassess the work, do not undo human completion, and continue the session when safe.
+## Архив старой медиатеки
 
-All pilot-ledger writes serialize on current expected_ledger_digest. Human reservation/completion also depend on reserved raw work digests. Single-work metadata refresh and the modernization marker bind current work digests. If authoritative state moves, fail closed and replay against current main.
+После перехода на v6 активная медиатека началась с пустого состояния.
 
-Completion semantics for human reassessment remain:
+`docs/archive/media-library-before-v6-reset-2026-10-07.md` — человекочитаемая памятка о старой библиотеке. Она:
 
-- changed — fresh explicit evidence caused a canonical mutation; same score still counts as changed when provenance moves from inferred/explicit_approx to explicit;
-- confirmed_unchanged — canonical evidence is already explicit and semantically matches the fresh response; do not manufacture no-op history;
-- deferred — no reliable current reassessment; ledger-only.
+- не является canonical data;
+- не участвует автоматически в taste/recommendation input;
+- не является источником машинного восстановления;
+- может использоваться как нейтральный чек-лист, если пользователь хочет заново пройти старые фильмы.
 
-Scheduled taste reanalysis remains a separate layer: set_inferred_preferences runs after every **15 newly reviewed works**, once at the end of the main pending pass when evidence advanced, or on explicit user request. **Modernization does not increment** or reset this cadence.
+При повторном прохождении старого фильма сначала показывай только нейтральную идентичность (например, название/год). Не показывай старую оценку, реакцию или отзыв до нового ответа пользователя, если он сам этого не просит. После нового ответа фильм идёт через обычный v6 `record_media_entry`.
 
-close_reassessment_session still depends only on resolution of human reserved items; modernization failure does not reopen or make the session unclosable. Generated profile/affinity drift is evaluated against the frozen Stage A baseline.
+## Запись и GitHub boundary
 
-During normal reassessment hide Git/PR/workflow mechanics. Do not claim a human write or modernization step is saved until it is authoritative on main.
-## Hard guardrails
+Обычные auto-merge операции идут через единый `Media Command`:
 
-- Never invent schema fields.
-- Never create a vocabulary synonym before checking canonical terms and aliases.
-- Unknown is better than guessed. Leave unknown factual metadata absent/null.
-- Do not create viewer/group signals without evidence.
-- Preserve `explicit` vs `inferred` provenance and confidence.
-- `unwatched` and `dropped` are not negative reactions by themselves.
-- Reaction, rating, viewing, feedback, rewatch and interest are independent signals.
-- Explicit similarity is independent from liking.
-- Do not persist ephemeral recommendation context such as “not tonight” as a stable preference.
-- Do not persist ephemeral request constraints as stable taste unless the user explicitly makes them stable.
-- Normal data entry must not modify schemas or vocabulary. Those are separate architectural changes.
-- Never edit `generated/` as source data.
-- Immutable IDs are not renamed; use tombstones/redirects for merges.
-- Collection membership is canonical only in collection files; reverse membership is derived.
-- Season records are optional and must not be fabricated for completeness.
-- Manual metadata overrides always win over refreshed external metadata.
-- No arbitrary shell command, filename, YAML patch, or Git patch may come from model output.
-- Run full validation before commit; typed operation PRs enforce this through command/check workflows.
+```text
+request-only PR
+→ очередь media-data-pipeline
+→ replay typed request на свежий main
+→ deterministic transaction
+→ минимальная пересборка
+→ operation-specific authoritative gate
+→ exact-head merge
+→ Pages для merge SHA
+```
 
-## Typed command routes
+`media/config/operation_path_policy.json` — доверенный allowlist путей и классов исполнения.
 
-Normal user-data writes:
+`refresh_metadata` — manual-review операция и не должна auto-merge.
 
-- `add_work`
-- `record_viewing_feedback`
+Browser/provider/model secrets не попадают в static Web bundle.
+
+## Основные команды
+
+Обычные записи:
+
+- `record_media_entry`
 - `edit_viewing_feedback`
 - `set_interest`
+- `add_work`
 - `set_inferred_preferences`
 - `set_semantic_fingerprint`
 - `record_recommendation_interaction`
 - `set_work_similarity`
 - `remove_work_similarity`
+- `refresh_work_metadata`
 
-Pilot-only serialized writes when the legacy reassessment ledger is active:
+`record_viewing_feedback` остаётся узкой compatibility operation, но новым основным LLM-маршрутом является `record_media_entry`.
 
-- `reserve_reassessment_session`
-- `complete_reassessment_item`
-- `close_reassessment_session`
-- `record_reassessment_modernization`
+Read-only:
 
-Read-only requests: `recommend_context`, `taste_context`/`taste-context`, `assess_candidate`/`assess-candidate`; pilot read models are `reassessment-context`, explicit `reassessment-history`, and `reassessment-modernization-context`. `refresh_metadata` is bulk manual maintenance; `refresh_work_metadata` is the stale-safe single-work modernization route.
+- `media_entry_context`
+- `recommend_context`
+- `taste_context`
+- `assess_candidate`
 
-`edit_viewing_feedback` uses explicit set/clear/purge semantics; clearing one component does not erase neighboring signals. `record_recommendation_interaction` is append-only recommendation memory. `set_work_similarity`/`remove_work_similarity` operate on one current target-specific unordered relation, with deterministic external→canonical reconciliation when a matching work is later created.
+## Жёсткие правила
 
-## Normal LLM write protocol
-
-For one logical user operation:
-
-1. Resolve intent, work identity, and target (`primary`, `partner`, `couple`).
-2. Search existing IDs/external identities/titles before proposing creation.
-3. Produce exactly one JSON command matching `media/commands/schemas/`.
-4. Use a fresh same-repository `media/op-*` branch from current `main`.
-5. Add one transient `.media/requests/<operation-id>.json` and open a PR.
-6. Deterministic workflow code applies the command, validates, rebuilds requested artifacts, enforces path policy, removes the request, and commits the result.
-7. The authoritative media check validates the exact resulting head SHA.
-8. Guarded auto-merge may merge only unchanged eligible normal-operation PRs whose changed paths match operation policy. Architecture, schemas, vocabulary, service/domain code, tests, docs, and workflows are never eligible.
-9. Completion is successful only after merge and the result is present on `main`.
-
-The model must not directly update canonical YAML for normal user data mutation.
-
-## Auto-merge and maintenance
-
-Eligible normal operations are defined by the declarative `media/config/operation_path_policy.json` contract. Runtime validation reads the local policy document; privileged guarded auto-merge separately fetches that policy from trusted `main`, reads changed filenames from the GitHub PR files API, and treats the PR-head operation marker only as JSON data. The privileged workflow must not execute PR-head Python. Any unavailable/malformed policy, unknown operation, `auto_merge: false`, or changed path outside trusted `allowed_paths` fails closed.
-
-Legacy reassessment operations add extra stale-state guards on top of normal path policy: authoritative current-main ledger digest is rechecked before merge; reservation rechecks every planned reserved-work raw digest; and `complete_reassessment_item` rechecks the reserved canonical work digest plus exact changed-work cardinality/id.
-
-`refresh_metadata(scope=all_movies)` is provider-dependent bulk maintenance and **must not auto-merge**. It remains open for explicit human review/merge. Architecture/vocabulary/schema/workflow changes are also manual.
-
-## Provider and secret boundaries
-
-Provider enrichment uses TMDB only when needed. Existing-work non-provider mutations must remain usable during provider outage. `TMDB_READ_TOKEN` is exposed only to provider-needed server/CI steps. Browser bundles and media data workflows never contain OpenAI/model credentials. Live AI/external discovery belongs behind an authenticated server-side boundary; static Pages remains useful without it.
-
-## Verification
-
-Before completion of a media mutation/developer change, run the relevant full gate. Baseline:
-
-```bash
-python -m pytest -q
-python -m media.tools.validate .
-python -m media.cli rebuild --check
-python -m media.cli doctor --format json
-```
-
-If any step fails, canonical data must not be left partially modified.
-
-## Natural-language examples
-
-- “Посмотрели X, мне 8.5, жене понравилось” → one feedback operation, optionally creating X if missing.
-- “Поставь теперь 7 вместо 8” → correction, no second confirmation.
-- “Убери текст отзыва, оценку оставь” → clear feedback only.
-- “A похож на B” → similarity write via `set_work_similarity`.
-- “Я больше не считаю A похожим на B” → similarity remove via `remove_work_similarity`.
-- “Мне понравится X?” → assess candidate via read-only `assess_candidate`; qualitative evidence-based answer, no write.
-- “Что посмотреть из моей медиатеки?” → recommend internal.
-- “Посоветуй фильм на вечер” → recommend external using local taste memory and exclusions.
-- “Не сегодня” → `not_tonight` interaction only.
-- “Что ты понял о моём вкусе?” → read/explain only.
-- “Переосмысли мой вкус” → reanalyze taste, then validated inferred replacement.
-- “Обнови понимание этого фильма” → semantic enrich, not viewer-taste edit.
-- “Давай переоценим старые отзывы” → active legacy reassessment route only; reserve the batch first, then use neutral current-answer-first flow with old opinion hidden unless requested.
+- Never invent schema fields.
+- Unknown is better than guessed.
+- Do not persist ephemeral conversational state as canonical truth.
+- Normal data entry must not modify schemas, workflows, vocabulary or architecture.
+- Run full validation before commit для developer changes.
+- Не записывай inferred claim как explicit user evidence.
+- Не используй архив старой медиатеки как скрытый recommendation input.
+- Не создавай canonical work из external recommendation/similarity reference без явного create flow.
