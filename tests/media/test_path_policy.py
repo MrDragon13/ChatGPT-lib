@@ -338,3 +338,16 @@ def test_refresh_work_metadata_shape_guard_allows_only_receipt_or_selected_work_
             ["media/data/works/arrival-2016.yaml", "media/data/works/batman-2022.yaml", receipt],
             {"work_id": "arrival-2016"},
         )
+
+
+def test_record_media_entry_policy_allows_atomic_work_and_generated_outputs():
+    allowed = [
+        "media/data/works/arrival-2016.yaml",
+        "media/generated/index.jsonl",
+        "media/generated/profiles/primary.yaml",
+        "media/data/relations/similarity/primary.yaml",
+        ".media/operations/123e4567-e89b-42d3-a456-426614174301.json",
+    ]
+    verify_changed_paths("record_media_entry", allowed)
+    with pytest.raises(PathPolicyError):
+        verify_changed_paths("record_media_entry", ["media/preferences/inferred/primary.yaml"])
