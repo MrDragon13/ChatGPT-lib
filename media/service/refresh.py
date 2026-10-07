@@ -46,6 +46,35 @@ def _movie_candidates(
     ]
 
 
+def _provider_media_type(record: WorkRecord) -> str | None:
+    identity = record.data.get("identity") or {}
+    fmt = identity.get("format")
+    if fmt == "movie":
+        return "movie"
+    if fmt in {"series", "miniseries"}:
+        return "tv"
+    return None
+
+
+def _work_candidates(
+    record: WorkRecord,
+    candidates: list[ProviderCandidate],
+    *,
+    expected_year: int | None = None,
+) -> list[ProviderCandidate]:
+    identity = record.data.get("identity") or {}
+    expected_media_type = _provider_media_type(record)
+    title = normalize_title(str(identity.get("title_original") or ""))
+    year = expected_year if expected_year is not None else identity.get("year")
+    return [
+        candidate
+        for candidate in candidates
+        if candidate.media_type == expected_media_type
+        and title in {normalize_title(candidate.title), normalize_title(candidate.original_title)}
+        and (year is None or candidate.year == year)
+    ]
+
+
 def _canonical_tmdb(record: WorkRecord) -> Mapping[str, Any] | None:
     identity = record.data.get("identity") or {}
     external_ids = identity.get("external_ids") or {}
@@ -55,8 +84,10 @@ def _canonical_tmdb(record: WorkRecord) -> Mapping[str, Any] | None:
 
 def _resolve_candidate(
     record: WorkRecord,
-    command: RefreshMetadataCommand,
+    command: RefreshMetadataCommand | RefreshWorkMetadataCommand,
     provider: MetadataProvider,
+    *,
+    allow_tv: bool = False,
 ) -> tuple[ProviderCandidate | None, dict[str, Any] | None]:
     identity = record.data.get("identity") or {}
     external_ids = identity.get("external_ids") or {}
@@ -65,22 +96,34 @@ def _resolve_candidate(
     year_overrides = getattr(command, "year_overrides", {})
     override = tmdb_overrides.get(record.id)
     expected_year = year_overrides.get(record.id, identity.get("year"))
+    expected_media_type = _provider_media_type(record)
+    allowed_media_types = {"movie", "tv"} if allow_tv else {"movie"}
+    if expected_media_type not in allowed_media_types:
+        return None, _blocker(record.id, "identity_conflict")
 
     if canonical_tmdb is not None:
         canonical_type = canonical_tmdb.get("media_type")
         canonical_id = canonical_tmdb.get("id")
         if override is not None and (override.media_type != canonical_type or override.id != canonical_id):
             return None, _blocker(record.id, "override_conflict")
-        if canonical_type != "movie" or not isinstance(canonical_id, int):
+        if (
+            canonical_type not in allowed_media_types
+            or canonical_type != expected_media_type
+            or not isinstance(canonical_id, int)
+        ):
             return None, _blocker(record.id, "identity_conflict")
-        return ProviderCandidate("movie", canonical_id, str(identity.get("title_ru") or ""), str(identity.get("title_original") or ""), expected_year), None
+        return ProviderCandidate(canonical_type, canonical_id, str(identity.get("title_ru") or ""), str(identity.get("title_original") or ""), expected_year), None
 
     if override is not None:
         return ProviderCandidate("movie", override.id, str(identity.get("title_ru") or ""), str(identity.get("title_original") or ""), expected_year), None
 
     imdb_id = external_ids.get("imdb")
     if isinstance(imdb_id, str) and imdb_id:
-        candidates = [candidate for candidate in provider.find_by_imdb(imdb_id) if candidate.media_type == "movie"]
+        candidates = [
+            candidate
+            for candidate in provider.find_by_imdb(imdb_id)
+            if candidate.media_type == expected_media_type
+        ]
         if not candidates:
             return None, _blocker(record.id, "not_found")
         if len(candidates) > 1:
@@ -88,10 +131,11 @@ def _resolve_candidate(
         return candidates[0], None
 
     title = str(identity.get("title_original") or "")
-    candidates = _movie_candidates(
-        record,
-        provider.search_work(title, expected_year),
-        expected_year=expected_year,
+    candidate_pool = provider.search_work(title, expected_year)
+    candidates = (
+        _work_candidates(record, candidate_pool, expected_year=expected_year)
+        if allow_tv
+        else _movie_candidates(record, candidate_pool, expected_year=expected_year)
     )
     if not candidates:
         return None, _blocker(record.id, "not_found")
@@ -107,10 +151,22 @@ def _identity_compatible(
     *,
     allow_title_mismatch: bool = False,
     expected_year: int | None = None,
+    allow_tv: bool = False,
 ) -> bool:
     canonical = record.data.get("identity") or {}
     provider_identity = metadata.identity
-    if provider_identity.get("format") != "movie":
+    canonical_format = canonical.get("format")
+    provider_format = provider_identity.get("format")
+    expected_media_type = _provider_media_type(record)
+    if candidate.media_type != expected_media_type:
+        return False
+    if candidate.media_type == "movie":
+        if canonical_format != "movie" or provider_format != "movie":
+            return False
+    elif candidate.media_type == "tv":
+        if not allow_tv or canonical_format not in {"series", "miniseries"} or provider_format not in {"series", "miniseries"}:
+            return False
+    else:
         return False
 
     canonical_year = canonical.get("year")
@@ -292,15 +348,15 @@ def plan_refresh_work_metadata(
         )
     if provider is None:
         raise ProviderUnavailableError("metadata provider is required for refresh_work_metadata")
-    if (record.data.get("identity") or {}).get("format") != "movie":
+    if (record.data.get("identity") or {}).get("format") not in {"movie", "series", "miniseries"}:
         raise MetadataRefreshPreflightError((_blocker(record.id, "identity_conflict"),))
 
-    candidate, blocker = _resolve_candidate(record, command, provider)
+    candidate, blocker = _resolve_candidate(record, command, provider, allow_tv=True)
     if blocker is not None:
         raise MetadataRefreshPreflightError((blocker,))
     assert candidate is not None
     metadata = provider.fetch_work(candidate.media_type, candidate.provider_id)
-    if not _identity_compatible(record, candidate, metadata):
+    if not _identity_compatible(record, candidate, metadata, allow_tv=True):
         raise MetadataRefreshPreflightError((_blocker(record.id, "identity_conflict"),))
 
     value = now or datetime.now(timezone.utc)
