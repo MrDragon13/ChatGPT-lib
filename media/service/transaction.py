@@ -170,12 +170,6 @@ def _plan(
     if isinstance(command,RecordRecommendationInteractionCommand): return plan_record_recommendation_interaction(repo,command,now=now)
     if isinstance(command,SetWorkSimilarityCommand): return plan_set_work_similarity(repo,command,now=now)
     if isinstance(command,RemoveWorkSimilarityCommand): return plan_remove_work_similarity(repo,command,now=now)
-    if isinstance(command,ReserveReassessmentSessionCommand): return plan_reserve_reassessment_session(repo,command,now=now)
-    if isinstance(command,CompleteReassessmentItemCommand): return plan_complete_reassessment_item(repo,command,now=now)
-    if isinstance(command,CloseReassessmentSessionCommand): return plan_close_reassessment_session(repo,command,now=now)
-    if isinstance(command,RecordReassessmentModernizationCommand):
-        root = Path(repo_root) if repo_root is not None else repo.media_root.parent
-        return plan_record_reassessment_modernization(root,repo,command,now=now)
     if isinstance(command,AddWorkCommand): return _plan_add_work(repo,command,now,provider)
     if isinstance(command,RefreshMetadataCommand): return plan_refresh_metadata(repo,command,provider,now=now)
     if isinstance(command,RefreshWorkMetadataCommand): return plan_refresh_work_metadata(repo,command,provider,now=now)
