@@ -426,6 +426,7 @@ jobs:
             exit 3
           fi
 
+
           COMMIT_ACTOR=$(gh api "repos/$REPO/commits/$PR_HEAD_SHA" --jq '.author.login // empty')
           if [ "$COMMIT_ACTOR" != "github-actions[bot]" ]; then
             echo "::error::Operation head was not produced by the trusted command workflow"
