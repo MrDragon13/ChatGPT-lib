@@ -8,145 +8,124 @@ import media.service.path_policy as path_policy
 from media.service.path_policy import allowed_paths_for_operation, verify_changed_paths, verify_operation_specific_paths
 
 
-EXPECTED_POLICY = {
-    "record_media_entry": {
-        "auto_merge": True,
-        "execution_class": "v6_single_runner",
-        "allowed_paths": [
-            "media/data/works/*.yaml",
-            "media/generated/index.jsonl",
-            "media/generated/profiles/*.yaml",
-            ".media/operations/*.json",
-            "media/data/relations/similarity/*.yaml",
-        ],
-    },
-    "add_work": {
-        "auto_merge": True,
-        "allowed_paths": [
-            "media/data/works/*.yaml",
-            "media/generated/index.jsonl",
-            "media/generated/profiles/*.yaml",
-            ".media/operations/*.json",
-            "media/data/relations/similarity/*.yaml",
-        ],
-    },
-    "record_viewing_feedback": {
-        "auto_merge": True,
-        "allowed_paths": [
-            "media/data/works/*.yaml",
-            "media/generated/index.jsonl",
-            "media/generated/profiles/*.yaml",
-            ".media/operations/*.json",
-            "media/data/relations/similarity/*.yaml",
-        ],
-    },
-    "edit_viewing_feedback": {
-        "auto_merge": True,
-        "allowed_paths": [
-            "media/data/works/*.yaml",
-            "media/generated/index.jsonl",
-            "media/generated/profiles/*.yaml",
-            ".media/operations/*.json",
-        ],
-    },
-    "set_interest": {
-        "auto_merge": True,
-        "allowed_paths": [
-            "media/data/works/*.yaml",
-            "media/generated/index.jsonl",
-            "media/generated/profiles/*.yaml",
-            ".media/operations/*.json",
-        ],
-    },
-    "refresh_metadata": {
-        "auto_merge": False,
-        "allowed_paths": [
-            "media/data/works/*.yaml",
-            "media/generated/index.jsonl",
-            "media/generated/profiles/*.yaml",
-            ".media/operations/*.json",
-        ],
-    },
-    "refresh_work_metadata": {
-        "auto_merge": True,
-        "allowed_paths": [
-            "media/data/works/*.yaml",
-            "media/generated/index.jsonl",
-            ".media/operations/*.json",
-        ],
-    },
-    "set_semantic_fingerprint": {
-        "auto_merge": True,
-        "allowed_paths": [
-            "media/data/works/*.yaml",
-            "media/generated/index.jsonl",
-            "media/generated/profiles/*.yaml",
-            ".media/operations/*.json",
-        ],
-    },
-    "set_inferred_preferences": {
-        "auto_merge": True,
-        "execution_class": "v6_single_runner",
-        "allowed_paths": [
-            "media/preferences/inferred/*.yaml",
-            "media/generated/profiles/*.yaml",
-            ".media/operations/*.json",
-        ],
-    },
-    "record_recommendation_interaction": {
-        "auto_merge": True,
-        "allowed_paths": [
-            "media/data/interactions/*.jsonl",
-            "media/generated/profiles/*.yaml",
-            ".media/operations/*.json",
-        ],
-    },
-    "set_work_similarity": {
-        "auto_merge": True,
-        "allowed_paths": [
-            "media/data/relations/similarity/*.yaml",
-            ".media/operations/*.json",
-        ],
-    },
-    "remove_work_similarity": {
-        "auto_merge": True,
-        "allowed_paths": [
-            "media/data/relations/similarity/*.yaml",
-            ".media/operations/*.json",
-        ],
-    },
-    "reserve_reassessment_session": {
-        "auto_merge": True,
-        "allowed_paths": [
-            "media/pilots/legacy-reassessment-primary.json",
-            ".media/operations/*.json",
-        ],
-    },
-    "complete_reassessment_item": {
-        "auto_merge": True,
-        "allowed_paths": [
-            "media/pilots/legacy-reassessment-primary.json",
-            "media/data/works/*.yaml",
-            "media/generated/index.jsonl",
-            "media/generated/profiles/*.yaml",
-            ".media/operations/*.json",
-        ],
-    },
-    "record_reassessment_modernization": {
-        "auto_merge": True,
-        "allowed_paths": [
-            "media/pilots/legacy-reassessment-primary.json",
-            ".media/operations/*.json",
-        ],
-    },
-    "close_reassessment_session": {
-        "auto_merge": True,
-        "allowed_paths": [
-            "media/pilots/legacy-reassessment-primary.json",
-            ".media/operations/*.json",
-        ],
-    },
-}
+EXPECTED_POLICY = json.loads(r'''{
+  "add_work": {
+    "auto_merge": true,
+    "allowed_paths": [
+      "media/data/works/*.yaml",
+      "media/generated/index.jsonl",
+      "media/generated/profiles/*.yaml",
+      ".media/operations/*.json",
+      "media/data/relations/similarity/*.yaml"
+    ],
+    "execution_class": "v6_single_runner"
+  },
+  "record_media_entry": {
+    "auto_merge": true,
+    "allowed_paths": [
+      "media/data/works/*.yaml",
+      "media/generated/index.jsonl",
+      "media/generated/profiles/*.yaml",
+      ".media/operations/*.json",
+      "media/data/relations/similarity/*.yaml"
+    ],
+    "execution_class": "v6_single_runner"
+  },
+  "record_viewing_feedback": {
+    "auto_merge": true,
+    "allowed_paths": [
+      "media/data/works/*.yaml",
+      "media/generated/index.jsonl",
+      "media/generated/profiles/*.yaml",
+      ".media/operations/*.json",
+      "media/data/relations/similarity/*.yaml"
+    ],
+    "execution_class": "v6_single_runner"
+  },
+  "edit_viewing_feedback": {
+    "auto_merge": true,
+    "allowed_paths": [
+      "media/data/works/*.yaml",
+      "media/generated/index.jsonl",
+      "media/generated/profiles/*.yaml",
+      ".media/operations/*.json"
+    ],
+    "execution_class": "v6_single_runner"
+  },
+  "set_interest": {
+    "auto_merge": true,
+    "allowed_paths": [
+      "media/data/works/*.yaml",
+      "media/generated/index.jsonl",
+      "media/generated/profiles/*.yaml",
+      ".media/operations/*.json"
+    ],
+    "execution_class": "v6_single_runner"
+  },
+  "refresh_metadata": {
+    "auto_merge": false,
+    "allowed_paths": [
+      "media/data/works/*.yaml",
+      "media/generated/index.jsonl",
+      "media/generated/profiles/*.yaml",
+      ".media/operations/*.json"
+    ],
+    "execution_class": "manual_review"
+  },
+  "set_semantic_fingerprint": {
+    "auto_merge": true,
+    "allowed_paths": [
+      "media/data/works/*.yaml",
+      "media/generated/index.jsonl",
+      "media/generated/profiles/*.yaml",
+      ".media/operations/*.json"
+    ],
+    "execution_class": "v6_single_runner"
+  },
+  "set_inferred_preferences": {
+    "auto_merge": true,
+    "allowed_paths": [
+      "media/preferences/inferred/*.yaml",
+      "media/generated/profiles/*.yaml",
+      ".media/operations/*.json"
+    ],
+    "execution_class": "v6_single_runner"
+  },
+  "record_recommendation_interaction": {
+    "auto_merge": true,
+    "allowed_paths": [
+      "media/data/interactions/*.jsonl",
+      "media/generated/profiles/*.yaml",
+      ".media/operations/*.json"
+    ],
+    "execution_class": "v6_single_runner"
+  },
+  "set_work_similarity": {
+    "auto_merge": true,
+    "allowed_paths": [
+      "media/data/relations/similarity/*.yaml",
+      ".media/operations/*.json"
+    ],
+    "execution_class": "v6_single_runner"
+  },
+  "remove_work_similarity": {
+    "auto_merge": true,
+    "allowed_paths": [
+      "media/data/relations/similarity/*.yaml",
+      ".media/operations/*.json"
+    ],
+    "execution_class": "v6_single_runner"
+  },
+  "refresh_work_metadata": {
+    "auto_merge": true,
+    "allowed_paths": [
+      "media/data/works/*.yaml",
+      "media/generated/index.jsonl",
+      ".media/operations/*.json"
+    ],
+    "execution_class": "v6_single_runner"
+  }
+}''')
 
 CASES_PATH = Path(__file__).parent / "fixtures" / "operation_path_policy_cases.json"
 
