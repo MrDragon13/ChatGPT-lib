@@ -128,3 +128,32 @@ metadata:
       provider: tmdb
       provider_id: 782
       fetched_at: '2026-10-07T09:00:42.414075Z'
+  semantic:
+    traits:
+    - term: genre.science_fiction
+      source: external_source
+      confidence: high
+    - term: genre.drama
+      source: external_source
+      confidence: high
+    - term: story.intrigue
+      source: llm_inferred
+      confidence: high
+    - term: worldbuilding.strong
+      source: llm_inferred
+      confidence: high
+    - term: tone.serious
+      source: llm_inferred
+      confidence: high
+    - term: characters.depth
+      source: llm_inferred
+      confidence: high
+    - term: atmosphere.immersive
+      source: llm_inferred
+      confidence: medium
+    - term: visuals.strong
+      source: llm_inferred
+      confidence: medium
+    - term: pacing.moderate
+      source: llm_inferred
+      confidence: medium

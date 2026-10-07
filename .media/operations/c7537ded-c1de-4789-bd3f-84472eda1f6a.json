@@ -1,0 +1,17 @@
+{
+  "applied_at": "2026-10-07T09:05:21.307428+00:00",
+  "changed_entities": [
+    "gattaca-1997"
+  ],
+  "changed_files": [
+    "media/data/works/gattaca-1997.yaml",
+    "media/generated/index.jsonl",
+    ".media/operations/c7537ded-c1de-4789-bd3f-84472eda1f6a.json"
+  ],
+  "details": {
+    "work_id": "gattaca-1997"
+  },
+  "operation": "set_semantic_fingerprint",
+  "operation_id": "c7537ded-c1de-4789-bd3f-84472eda1f6a",
+  "status": "applied"
+}
