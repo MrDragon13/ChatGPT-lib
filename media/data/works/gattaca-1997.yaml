@@ -34,7 +34,7 @@ viewer_signals:
         feedback: null
 provenance:
   created_at: '2026-10-01'
-  updated_at: '2026-10-05'
+  updated_at: '2026-10-07'
 metadata:
   external:
     genres:
@@ -121,10 +121,10 @@ metadata:
         path: /hPsCR1ny6GnctJkWqeJwihTDD7T.jpg
     external_metrics:
       tmdb:
-        score: 7.567
-        votes: 7171
-        observed_at: '2026-10-01'
+        score: 7.566
+        votes: 7185
+        observed_at: '2026-10-07'
     provenance:
       provider: tmdb
       provider_id: 782
-      fetched_at: '2026-10-01T11:51:00.096593Z'
+      fetched_at: '2026-10-07T09:00:42.414075Z'
