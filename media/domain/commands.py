@@ -125,58 +125,6 @@ class RemoveWorkSimilarityCommand:
     right: WorkRef
 
 
-@dataclass(frozen=True)
-class ReserveReassessmentSessionCommand:
-    schema_version: int
-    operation_id: str
-    pilot_id: str
-    session_id: str
-    work_ids: tuple[str, ...]
-    expected_ledger_digest: str
-
-
-@dataclass(frozen=True)
-class CompleteReassessmentItemCommand:
-    schema_version: int
-    operation_id: str
-    pilot_id: str
-    session_id: str
-    work_id: str
-    expected_ledger_digest: str
-    outcome: Literal["changed", "confirmed_unchanged", "deferred"]
-    historical_exposure: Mapping[str, Any] | None = None
-    feedback_edit: Mapping[str, Any] | None = None
-
-
-@dataclass(frozen=True)
-class CloseReassessmentSessionCommand:
-    schema_version: int
-    operation_id: str
-    pilot_id: str
-    session_id: str
-    expected_ledger_digest: str
-    scheduled_reanalysis_operation_id: str | None = None
-
-
-@dataclass(frozen=True)
-class RecordReassessmentModernizationCommand:
-    schema_version: int
-    operation_id: str
-    pilot_id: str
-    work_id: str
-    outcome: Literal["completed", "blocked"]
-    expected_ledger_digest: str
-    expected_work_digest: str
-    metadata_operation_id: str | None = None
-    semantic_operation_id: str | None = None
-    vocabulary_digest: str | None = None
-    blocker_code: Literal[
-        "provider_identity_missing",
-        "provider_identity_ambiguous",
-        "provider_identity_conflict",
-        "semantic_context_insufficient",
-    ] | None = None
-
 
 @dataclass(frozen=True)
 class MediaEntryContextRequest:
@@ -225,10 +173,6 @@ MediaCommand: TypeAlias = (
     | RecordRecommendationInteractionCommand
     | SetWorkSimilarityCommand
     | RemoveWorkSimilarityCommand
-    | ReserveReassessmentSessionCommand
-    | CompleteReassessmentItemCommand
-    | CloseReassessmentSessionCommand
-    | RecordReassessmentModernizationCommand
 )
 
 ReadRequest: TypeAlias = MediaEntryContextRequest | RecommendContextRequest | TasteContextRequest | AssessCandidateRequest
