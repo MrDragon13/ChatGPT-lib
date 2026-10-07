@@ -2,7 +2,7 @@ from pathlib import Path
 
 from media.domain.digests import compute_viewer_digest
 from media.tools.build_index import build_index_rows, write_index
-from media.tools.common import dump_yaml, iter_jsonl
+from media.tools.common import dump_yaml, iter_jsonl, load_yaml
 
 
 def work(work_id, year=2020):
