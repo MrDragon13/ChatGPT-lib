@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from collections.abc import Iterable, Iterator, Mapping
 from pathlib import Path
@@ -45,3 +46,7 @@ def write_jsonl(path: Path, rows: Iterable[Mapping[str, Any]]) -> None:
         for row in rows:
             f.write(json.dumps(dict(row), ensure_ascii=False, separators=(",", ":")))
             f.write("\n")
+
+
+def file_sha256(payload: bytes) -> str:
+    return "sha256:" + hashlib.sha256(payload).hexdigest()
