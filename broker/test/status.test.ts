@@ -52,6 +52,7 @@ type Scenario = {
   checkRuns?: Array<Record<string, unknown>>;
   mergeRuns?: Array<Record<string, unknown>>;
   pagesRuns?: Array<Record<string, unknown>>;
+  receiptOperation?: string;
 };
 
 function openPr(overrides: Record<string, unknown> = {}): Record<string, unknown> {
@@ -67,9 +68,11 @@ function openPr(overrides: Record<string, unknown> = {}): Record<string, unknown
   };
 }
 
-function mockScenario(scenario: Scenario): void {
+function mockScenario(scenario: Scenario): string[] {
+  const seen: string[] = [];
   vi.spyOn(globalThis, "fetch").mockImplementation(async (request) => {
     const url = new URL(String(request));
+    seen.push(url.pathname + url.search);
     if (url.pathname.endsWith("/app/installations/67890/access_tokens")) {
       return json({ token: "installation-token" }, 201);
     }
@@ -93,8 +96,16 @@ function mockScenario(scenario: Scenario): void {
     if (url.pathname.includes("/actions/workflows/media-pages.yml/runs")) {
       return json({ workflow_runs: scenario.pagesRuns ?? [] });
     }
+    if (scenario.receiptOperation && url.pathname.includes(`/contents/.media/operations/${operationId}.json`)) {
+      const payload = JSON.stringify({ operation_id: operationId, operation: scenario.receiptOperation, status: "applied" });
+      const bytes = new TextEncoder().encode(payload);
+      let binary = "";
+      for (const byte of bytes) binary += String.fromCharCode(byte);
+      return json({ encoding: "base64", content: btoa(binary) });
+    }
     throw new Error(`unexpected GitHub call: ${url}`);
   });
+  return seen;
 }
 
 beforeAll(async () => {
@@ -232,4 +243,25 @@ describe("feedback operation status", () => {
     expect(brokerEnv.AUTH_RATE_LIMITER.limit).toHaveBeenCalledWith({ key: "status:197501470" });
     expect(brokerEnv.WRITE_RATE_LIMITER.limit).not.toHaveBeenCalled();
   });
+});
+
+
+it("does not wait for legacy check or auto-merge workflows for a v6 single-runner operation", async () => {
+  const seen = mockScenario({
+    pr: openPr(),
+    commandRuns: [{
+      status: "completed",
+      conclusion: "success",
+      head_sha: "operation-head",
+      html_url: "https://github.com/actions/runs/command-v6",
+    }],
+    receiptOperation: "record_media_entry",
+  });
+
+  await expect(getOperationStatus(operationId, env())).resolves.toMatchObject({
+    status: "checking",
+    actions_url: "https://github.com/actions/runs/command-v6",
+  });
+  expect(seen.some((url) => url.includes("/actions/workflows/media-check.yml/runs"))).toBe(false);
+  expect(seen.some((url) => url.includes("/actions/workflows/media-auto-merge.yml/runs"))).toBe(false);
 });
