@@ -54,8 +54,7 @@ def _plan(*, json_documents=None):
         operation="record_viewing_feedback",
         changed_entities=(),
         documents={},
-        rebuild_index=False,
-        rebuild_profile_targets=(),
+        changed_domains=(),
         json_documents=json_documents or {},
     )
 
