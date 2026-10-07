@@ -186,7 +186,13 @@ def parse_command(data: Mapping[str, Any], schema_dir: Path | None = None) -> Me
             data["expected_work_digest"],
         )
     if operation == "set_inferred_preferences":
-        return SetInferredPreferencesCommand(data["schema_version"], data["operation_id"], data["target"], tuple(dict(item) for item in data["hypotheses"]))
+        return SetInferredPreferencesCommand(
+            data["schema_version"],
+            data["operation_id"],
+            data["target"],
+            tuple(dict(item) for item in data["hypotheses"]),
+            dict(data["analysis"]) if data.get("analysis") is not None else None,
+        )
     if operation == "set_semantic_fingerprint":
         return SetSemanticFingerprintCommand(data["schema_version"], data["operation_id"], _work_ref(data["work_ref"]), tuple(dict(item) for item in data["traits"]))
     if operation == "record_recommendation_interaction":
