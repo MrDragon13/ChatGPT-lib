@@ -202,11 +202,21 @@ export function HomePage() {
   const reduceMotion = useReducedMotion();
 
   if (!model.hero) {
+    const libraryIsEmpty = manifest.works.length === 0;
     return (
-      <section className="home-empty" aria-labelledby="home-empty-title">
+      <section
+        className="home-empty"
+        aria-labelledby="home-empty-title"
+        data-testid="home-empty"
+        data-motion={reduceMotion ? "reduced" : "full"}
+      >
         <p className="eyebrow">Сегодня</p>
         <h1 id="home-empty-title">Пока без готовой рекомендации</h1>
-        <p>Медиатека на месте — можно выбрать фильм вручную и вернуться сюда позже.</p>
+        <p>
+          {libraryIsEmpty
+            ? "Медиатека пока пуста. Добавьте первый фильм через ChatGPT — после сохранения он появится здесь."
+            : "Подходящего кандидата сейчас нет. Можно открыть медиатеку и выбрать вручную."}
+        </p>
         <a className="text-link" href={`#/library?target=${encodeURIComponent(target)}`}>
           Открыть медиатеку <ArrowRight aria-hidden="true" weight="bold" />
         </a>

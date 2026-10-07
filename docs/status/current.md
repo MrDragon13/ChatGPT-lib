@@ -1,114 +1,188 @@
 # Current status
 
-Текущая capability line: **Media Intelligence v5.1**.
+Текущая capability line: **Media Intelligence v6**.
 
-Этот файл описывает устойчивое текущее состояние проекта. Временный progress конкретной разработки хранится в active PR, а historical rationale — в `docs/superpowers/`.
+Этот файл описывает устойчивое текущее состояние проекта после атомарного перехода на v6. Временный прогресс разработки хранится в активных PR, а исторические причины решений — в `docs/superpowers/` и Git history.
 
-## Реализовано
+## Текущее состояние данных
 
-### Canonical и derived media
+- Git/YAML в `main` остаётся canonical source of truth.
+- Активная медиатека после v6 reset начинается с пустого набора works.
+- Collections, explicit work similarity, interactions и inferred preferences после reset пусты.
+- Глобальные explicit preferences пользователя сохранены.
+- Controlled vocabulary, schemas, code, Broker и Web сохранены.
+- `docs/archive/media-library-before-v6-reset-2026-10-07.md` хранит человекочитаемый снимок старой медиатеки, но **не участвует автоматически** в рекомендациях, анализе вкусов или восстановлении canonical data.
+- Legacy reassessment pilot/runtime удалён.
 
-- Git/YAML остаётся canonical source of truth для media data, preferences, relations и configuration.
-- Retrieval index, profiles, taste contexts, runtime database и web manifest являются derived и rebuildable.
-- `primary`, `partner` и `couple` остаются независимыми subjective contexts; couple disagreement не скрывается автоматическим усреднением.
+Пустая библиотека — ожидаемое валидное состояние. Index, profiles, web manifest, doctor, validate и read-contexts должны работать детерминированно и без специальных ручных обходов.
 
-### Measurement foundation
+## Запись данных
 
-Media Intelligence имеет read-only deterministic audit: `python -m media.tools.audit_intelligence . --format json`. Он отделяет works от collections, считает explicit coverage denominators, semantic/profile/similarity/interaction/recommendation-pool coverage и маркирует входное состояние через `canonical_input_digest`.
+Основной LLM/browser маршрут для нового человеческого события — `record_media_entry`.
 
-Audit считает runtime-relevant pool из canonical works в памяти и не использует generated profile/index bytes как источник истины. Historical snapshots хранятся под `media/baselines/`: deterministic payload отдельно от git/time provenance metadata. Snapshot является точкой сравнения, а не lockfile текущих данных.
+### Существующее произведение
 
-### Typed operations
+Обычный отзыв о существующем work:
 
-Normal media writes проходят через strict typed operations, deterministic transaction, validation/rebuild и operation-scoped GitHub workflow policy.
+- не обращается к metadata provider;
+- не запускает metadata refresh;
+- не пересчитывает semantic fingerprint при неизменном semantic input;
+- выполняет одну typed operation;
+- пересобирает каждый затронутый derived output максимум один раз.
 
-Поддерживаются viewing feedback, corrections, interest, inferred preferences, semantic fingerprints, recommendation interactions и explicit work similarity. Bulk `refresh_metadata` остаётся manual-review maintenance operation.
+### Новое произведение
 
-Guarded auto-merge теперь использует единый declarative `media/config/operation_path_policy.json`. Runtime проверяет локальный policy, а privileged workflow получает policy только из trusted `main`, changed-file inventory — через GitHub PR files API, и не исполняет PR-head Python для принятия решения о разрешениях. Policy/workflow/guard/executable-semantics changes поэтому остаются normal human-review developer PR.
+Новый work создаётся одной атомарной `record_media_entry(create_if_missing=true)`:
 
-Read-only context routes включают `recommend_context`, `taste_context` и `assess_candidate`.
+1. подтверждается устойчивая identity;
+2. provider даёт минимальные необходимые factual data;
+3. LLM один раз подготавливает semantic snapshot;
+4. work + semantics + viewer evidence применяются одной transaction.
 
-### Спящее ядро Media Intelligence v6
+Старая последовательность `add → reread → semantics → feedback` не является normal path.
 
-В коде уже присутствует выключенная основа v6: атомарная операция `record_media_entry`, точечный план пересборки производных данных, контрольные точки повторного анализа вкусов и компактный `media_entry_context`. Для существующего произведения обычный отзыв не требует обращения к провайдеру метаданных или повторного вычисления семантики; локальный CLI поддерживает тот же контракт записи и проверки.
+## GitHub write pipeline
 
-Это **ещё не переход на v6**. Текущая capability line остаётся Media Intelligence v5.1. Для `record_media_entry` и checkpointed `set_inferred_preferences` уже существует отдельный быстрый GitHub Actions path: операции сериализуются встроенной очередью, накладываются на свежий `main`, проходят точечную итоговую проверку и сливаются в том же runner с проверкой exact head/base. Старые операции до cutover продолжают использовать `Media Check -> Media Auto Merge`.
+Обычные auto-merge операции проходят один основной `Media Command` runner:
 
-Broker уже содержит протестированное v6-преобразование browser feedback в `record_media_entry` с viewer digest, прочитанным на том же SHA `main`, но production route `POST /v1/feedback` **по-прежнему отправляет `record_viewing_feedback`**. Переключение этого маршрута выполняется только при атомарном cutover. Web при незавершённой записи блокирует второй submit того же изменения, но может сохранить следующий локальный черновик и предложить его к отправке после обновления canonical состояния.
+```text
+request-only PR
+→ очередь media-data-pipeline
+→ replay typed intent на свежий main
+→ transaction
+→ dependency-driven rebuild
+→ operation-specific authoritative gate
+→ exact-head/base check
+→ merge через GitHub API
+→ Media Pages для merge SHA
+```
 
-Агентские правила, production Broker route, reset старой библиотеки и удаление legacy reassessment будут переключены только в последующих PR согласно утверждённому плану. Публичный web manifest пока остаётся v3 и не публикует внутренние viewer digests или служебный статус повторного анализа.
+Очередь использует одну concurrency-group, не отменяет ожидающие записи и не заменяет final base/head guard.
 
-### Candidate assessment
+`media/config/operation_path_policy.json` задаёт разрешённые пути и execution class.
 
-`assess_candidate` поддерживает qualitative ответ на вопрос «понравится ли мне X?» для canonical или external candidate. Он использует target taste context, concrete evidence works, semantic information и explicit similarity, но не сохраняет prediction и не создаёт fake precise match probability.
+- Все normal auto-merge операции используют `v6_single_runner`.
+- Bulk `refresh_metadata` остаётся `manual_review`.
+- Старые `Media Check` и `Media Auto Merge` удалены.
 
-Assessment теперь возвращает top-level `assessment_coverage`: наличие candidate fingerprint, число directional candidate matches, request-local supporting-work fingerprint coverage и отдельный stable denominator по всем rated canonical works target. Для group target rated set учитывает member ratings и direct group rating как fallback, если member rating для work отсутствует. Top-level `limitations` остаётся fact-only (`no_candidate_semantic_fingerprint`, `no_candidate_personalized_basis`, `partial_semantic_coverage`) и не является deterministic verdict.
+Для developer changes по Python, schemas, workflows, vocabulary, architecture/config, Web/Broker logic остаются полные PR-проверки.
 
-External candidate может быть оценён без добавления в canonical library; отсутствие его semantic fingerprint и personalized basis сообщается явно через limitations.
+## LLM-first UX и pending state
 
-### Explicit work similarity
+GitHub — граница долговременного сохранения, но не граница задержки разговора.
 
-`set_work_similarity` хранит target-specific undirected user assertion между двумя works/references. `remove_work_similarity` удаляет ту же logical relation независимо от порядка endpoints.
+После отправки корректной операции текущая LLM-сессия может сразу учитывать свежие явные пользовательские сигналы. Слово «сохранено» допустимо только после появления результата в `main`.
 
-Similarity может связывать canonical work и stable external identity. External endpoint не создаёт viewing/rating/interest или canonical work автоматически. Когда соответствующий work позже добавляется, deterministic reconciliation нормализует relation к canonical ID и устраняет duplicate/self-link состояния.
+Если по тому же work уже есть pending write, следующее уточнение можно держать локально в текущем разговоре, но новый Git-write отправляется только после authoritative первой операции и повторного чтения свежего viewer digest.
 
-Explicit similarity используется как recommendation/explanation evidence и hint, но не является stable preference сама по себе.
+Web использует тот же принцип: второй submit по тому же work/target блокируется, а локальный черновик пользователя сохраняется.
 
-### Taste и recommendations
+## Broker и Web
 
-Taste reasoning сохраняет provenance между explicit evidence, inferred hypotheses и semantic work knowledge. Inferred output не является independent evidence для последующего вывода. Generated profile хранит inferred hypotheses отдельно и не включает их в численные affinity `score`, `confidence` или `evidence_count`.
+Cloudflare Broker остаётся stateless write bridge.
 
-Internal recommendation request ограничивает candidate set локальной библиотекой. Его Stage A ranking сначала отделяет candidates с personalized semantic basis от fallback: `trait_overlap` всегда идёт раньше `none`. Personalized candidates сортируются по directional balance (`strengths - concerns`), затем по меньшему числу concerns, `interest.priority` и стабильному ID; fallback — только по priority и ID. Confidence и magnitude affinity пока не являются ranking weights, публичного numeric match score нет.
+Production `POST /v1/feedback` теперь преобразует browser feedback в `record_media_entry`:
 
-`recommend_context` сохраняет legacy strengths/concerns и добавляет structured evidence details, `ranking_basis`/`fallback_reason`, top-level pool-vs-returned `coverage` и top-level deterministic `limitations`. Эта policy является correctness/observability baseline, а не доказанной quality-optimal моделью.
+- читает viewer digest из `media/generated/index.jsonl` на exact SHA текущего `main`;
+- создаёт request-only operation PR от того же SHA;
+- не передаёт browser-клиенту внутреннюю логику digest/precondition;
+- не хранит GitHub/provider/model secrets в static Web bundle.
 
-Для group target `taste_context.couple.term_signals` отдельно показывает signed semantic direction каждого member по term и status `agreement`/`disagreement`/`insufficient`. Projection строится из индивидуальных member profiles, confidence не влияет на status, существующие rating-based couple agreements/disagreements сохраняются. Semantic disagreement не меняет couple aggregate; он только добавляет top-level limitation `couple_term_disagreement`.
+Web manifest остаётся **v3**. Внутренние viewer digests не публикуются в browser manifest.
 
-General recommendation request допускает external discovery; library при этом служит памятью о вкусах, exclusions и evidence anchors.
+Пустая Web-медиатека показывает честный empty state вместо выдуманного кандидата.
 
-### Legacy reassessment pilot
+## Derived state
 
-Pilot переоценки legacy `primary` reviews **активирован** отдельным manual PR B. Frozen Stage A revision: `35afaca898eae6937066f230906b41af0e1f6690`; frozen cohort содержит **55 works**: `23 central`, `10 high`, `10 low`, `9 medium_low`, `3 special`. На старте все 55 items имеют `pending`, sessions пусты.
+Versioned derived state остаётся в Git:
 
-Runtime foundation включает neutral/unanchored `reassessment-context`, отдельный opt-in `reassessment-history`, typed `reserve_reassessment_session` / `complete_reassessment_item` / `close_reassessment_session`, atomic feedback+ledger completion, current-ledger/work digests, monotonic transition validation и trusted workflow guards. Default session size — 5; scheduled inferred-hypothesis reanalysis — каждые 15 newly reviewed works и в конце main pending pass.
+- `media/generated/index.jsonl`;
+- `media/generated/profiles/*.yaml`;
+- static web manifest в Pages build.
 
-Legacy reassessment human completion обновляет explicit user evidence отдельно от work semantics. Card modernization теперь является resumable follow-up: `reassessment-modernization-context` обнаруживает **due modernization**; `refresh_work_metadata` обновляет одну карточку; `set_semantic_fingerprint` независимо перепроверяет work semantics; `record_reassessment_modernization` фиксирует `completed`/`blocked`. Due modernization восстанавливается **before reserving a fresh reassessment batch**. `media/pilots/` остаётся operational provenance и исключён из Stage A `canonical_input_digest`.
+Пересборка строится из `changed_domains → DirtyPlan`. Каждый нужный output перестраивается максимум один раз за transaction.
 
-### Web
+SQLite не является canonical storage и не хранится в Git. Существующий `build_db.py` / `SQLiteRepository` можно использовать как временный локальный/диагностический read model; `doctor` строит SQLite только во временном каталоге.
 
-Текущий exporter выдаёт **manifest v3**. Static GitHub Pages читает versioned derived manifest, а не canonical YAML.
+## Taste reanalysis
 
-Manifest v3 включает target-aware taste/recommendation data, semantic fingerprints и explicit similarity projection. Additive recommendation observability (`coverage`, `limitations`, candidate basis/reason) и couple term observability (`term_signals`) остаются в manifest v3, поскольку не меняют meaning существующих полей. Canonical↔canonical similarity проецируется на обе локальные work pages; canonical↔external отображается как lightweight external endpoint без выдуманного local route.
+Deep taste reanalysis не входит в critical path каждого отзыва.
 
-Поддерживаемые browser edits идут через protected broker и тот же typed-command boundary. GitHub/provider/model secrets не попадают в browser bundle.
+Для `primary` и `partner` отдельно хранится evidence checkpoint. Default threshold — **5** новых содержательных explicit events.
+
+- Retry, `no_change`, metadata-only и косметическая правка summary не считаются новым событием.
+- Свежие explicit signals всегда имеют приоритет над stale inferred interpretation.
+- Перед taste-dependent decision при достигнутом threshold LLM сначала выполняет fresh reanalysis.
+- Результат сохраняется отдельной `set_inferred_preferences` вместе с evidence checkpoint/digest и algorithm version.
+- `couple` не имеет отдельного счётчика; проверяются его участники.
+
+Generated viewer profiles кэшируют reanalysis status, поэтому recommendation read-path не сканирует всю canonical библиотеку.
+
+## Intelligence invariants
+
+- Explicit user evidence важнее inferred evidence.
+- Inferred output не становится самостоятельным evidence для следующего inference.
+- Film semantic fingerprint описывает work, а не viewer sentiment.
+- Rating/reaction не являются factual work traits.
+- Controlled vocabulary обязателен для semantic fingerprint.
+- Explicit similarity — evidence/hint, а не preference.
+- Couple disagreement остаётся видимым.
+- Candidate assessment остаётся qualitative: никакой fake precise probability или opaque match score.
+- Неполное semantic/evidence coverage отражается через limitations.
+
+`assess_candidate`, `recommend_context`, `taste_context` и `media_entry_context` остаются read-only.
+
+Явно заданное сходство сохраняется через `set_work_similarity` и удаляется через `remove_work_similarity`; оно остаётся evidence/hint и не превращается само по себе в preference.
+
+## Recommendation cold start
+
+После reset локальный recommendation pool пуст. Это не ошибка.
+
+- `recommend_context` сообщает `empty_library`.
+- `taste_context` при отсутствии work evidence сообщает `cold_start_no_work_evidence`.
+- Сохранённые global explicit preferences остаются доступными.
+- General recommendation request может использовать external discovery; локальная медиатека по мере нового заполнения снова становится памятью, evidence и exclusion layer.
+
+## Архив старой библиотеки
+
+Pre-v6 archive — только человеческая памятка и чек-лист.
+
+При повторном прохождении старого фильма agent не должен до нового ответа автоматически показывать старый rating/reaction/feedback. После fresh ответа work добавляется обычным v6 flow.
+
+Техническая история остаётся в Git. Quality regression защищается synthetic/reference fixtures, а не старой активной персональной библиотекой.
 
 ## Известные ограничения
 
-- Evidence для `partner` заметно менее насыщен, чем для `primary`; confidence reasoning должен отражать эту разницу.
-- Current Stage A ranking исправляет directional correctness, но ещё не benchmarked как оптимальная модель качества; fingerprint length и alternative ordering policy остаются предметом будущего evaluation.
-- Assessment coverage наблюдаема, но Stage A по-прежнему не вычисляет deterministic `likely/mixed/unlikely`, probability или opaque score; qualitative вывод остаётся agent responsibility с обязательным учётом active limitations.
-- Couple term disagreement наблюдаем, но Stage A не меняет формулу couple aggregation и не вводит confidence threshold для direction/status.
-- Derived semantic similarity не сохраняется как explicit user assertion и не показывается как пользовательское мнение без подтверждения.
-- External discovery/live model reasoning находится на agent/server boundary; static Pages остаётся работоспособным без live model.
-- Bulk provider metadata refresh требует manual review и не относится к normal auto-merge path.
-- Controlled vocabulary расширяется только отдельным developer/architecture change, а не автоматически из обычного feedback.
-- Legacy reassessment pilot активен; already reviewed карточки без modernization marker считаются due. Modernization не повторяет human reassessment, не превращает viewer feedback в semantic truth и не меняет 15-review taste cadence.
+- В первые дни после reset personalized work evidence мало; confidence reasoning обязан отражать cold start.
+- Evidence партнёра может накапливаться медленнее, чем `primary`.
+- Internal recommendations ограничены текущей локальной библиотекой; при пустом pool они честно пусты.
+- External discovery/live model reasoning остаётся на agent/server boundary.
+- Bulk provider metadata refresh требует manual review.
+- Controlled vocabulary меняется только отдельным developer/architecture PR.
+- Public Web manifest пока остаётся v3; внутренние v6 bookkeeping fields не обязаны быть browser-visible.
 
 ## Verification model
 
-Developer changes считаются проверенными только после релевантного полного gate: pytest, canonical validation, generated rebuild consistency и doctor; web-impacting changes дополнительно проходят web tests, typecheck/build и browser/static security checks.
+Developer changes считаются проверенными только после релевантного полного gate:
 
-Для публикации важна exact revision: Pages build/deploy должен соответствовать merge revision, а не более раннему зелёному commit.
+- pytest;
+- canonical validation;
+- generated rebuild consistency;
+- doctor;
+- для Broker: tests + typecheck;
+- для Web: manifest export, tests, typecheck, build и browser/a11y checks.
+
+Для публикации важна exact revision: Pages соответствует merge SHA, а не более раннему зелёному commit.
 
 ## Где читать подробнее
 
-- `docs/architecture/overview.md` — system boundaries;
-- `docs/architecture/media-model.md` — canonical/derived domain model;
-- `docs/architecture/intelligence.md` — taste/recommendations/assessment;
-- `docs/architecture/write-pipeline.md` — typed mutation lifecycle;
-- `docs/architecture/web-and-broker.md` — manifest, Pages и security boundary;
-- `docs/reference/media-commands.md` — operation catalog;
-- `docs/reference/invariants.md` — cross-system safety rules;
-- `docs/runbooks/media-legacy-reassessment.md` — operational legacy reassessment flow.
+- `docs/architecture/overview.md` — границы системы;
+- `docs/architecture/media-model.md` — canonical/derived модель;
+- `docs/architecture/intelligence.md` — taste, recommendations, assessment;
+- `docs/architecture/write-pipeline.md` — typed write lifecycle;
+- `docs/architecture/web-and-broker.md` — Web/Broker security и write flow;
+- `docs/reference/media-commands.md` — каталог операций;
+- `docs/reference/invariants.md` — обязательные правила;
+- `docs/runbooks/media-v6-reset.md` — одноразовый cutover/reset runbook.
 
-Dated files under `docs/superpowers/specs/` и `docs/superpowers/plans/` сохраняют историю проектных решений, но не заменяют current code, schemas, AGENTS contracts или living docs.
+Dated files под `docs/superpowers/specs/` и `docs/superpowers/plans/` сохраняются как история решений и не заменяют current code, schemas или living docs.

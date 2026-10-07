@@ -1,0 +1,51 @@
+schema_version: 1
+cases:
+  - id: positive-intrigue-problem-solving
+    purpose: Сильный положительный сигнал к интриге и решению задач.
+    primary:
+      rating: 9
+      explicit_signals:
+        - term: story.intrigue
+          sentiment: positive
+          strength: 3
+        - term: story.problem_solving
+          sentiment: positive
+          strength: 3
+
+  - id: mixed-evidence
+    purpose: Смешанные сигналы не должны схлопываться в однозначную любовь или неприязнь.
+    primary:
+      rating: 6
+      explicit_signals:
+        - term: story.intrigue
+          sentiment: positive
+          strength: 2
+        - term: pacing.slow
+          sentiment: negative
+          strength: 2
+
+  - id: couple-disagreement
+    purpose: Разногласие primary/partner должно оставаться видимым в couple-контексте.
+    primary:
+      rating: 9
+    partner:
+      rating: 4
+
+  - id: sparse-semantics
+    purpose: Неполная семантика должна давать честное ограничение, а не выдуманную персонализацию.
+    candidate:
+      traits: []
+
+  - id: explicit-similarity-not-preference
+    purpose: Явное сходство является evidence для объяснения, но не глобальной вкусовой предпочтительностью.
+    similarity:
+      explicit: true
+      term: story.intrigue
+
+  - id: stale-inferred-fresh-explicit
+    purpose: Свежее explicit evidence имеет приоритет над старым inferred profile до следующего reanalysis.
+    inferred:
+      direction: negative
+      stale: true
+    fresh_explicit:
+      direction: positive

@@ -7,13 +7,7 @@ from media.domain.errors import CommandValidationError
 from media.domain.commands import AddWorkCommand, RecommendContextRequest, RecordViewingFeedbackCommand, SetInterestCommand
 
 VALID_UUID = "123e4567-e89b-42d3-a456-426614174000"
-SESSION_UUID = "123e4567-e89b-42d3-a456-426614174001"
-REANALYSIS_UUID = "123e4567-e89b-42d3-a456-426614174002"
-LEDGER_DIGEST = "sha256:" + "a" * 64
 WORK_DIGEST = "sha256:" + "b" * 64
-VOCABULARY_DIGEST = "sha256:" + "c" * 64
-METADATA_UUID = "123e4567-e89b-42d3-a456-426614174003"
-SEMANTIC_UUID = "123e4567-e89b-42d3-a456-426614174004"
 
 
 def valid_record_feedback_dict() -> dict:
@@ -26,52 +20,6 @@ def valid_set_interest_dict(priority: int | None = 3) -> dict:
 
 def valid_refresh_metadata_dict() -> dict:
     return {"schema_version": 1, "operation_id": VALID_UUID, "operation": "refresh_metadata", "scope": "all_movies"}
-
-
-def valid_reserve_reassessment_dict() -> dict:
-    return {
-        "schema_version": 1,
-        "operation_id": VALID_UUID,
-        "operation": "reserve_reassessment_session",
-        "pilot_id": "primary-legacy-v1",
-        "session_id": SESSION_UUID,
-        "work_ids": ["arrival-2016", "batman-2022"],
-        "expected_ledger_digest": LEDGER_DIGEST,
-    }
-
-
-def valid_complete_reassessment_dict(outcome: str = "changed") -> dict:
-    data = {
-        "schema_version": 1,
-        "operation_id": VALID_UUID,
-        "operation": "complete_reassessment_item",
-        "pilot_id": "primary-legacy-v1",
-        "session_id": SESSION_UUID,
-        "work_id": "arrival-2016",
-        "expected_ledger_digest": LEDGER_DIGEST,
-        "outcome": outcome,
-    }
-    if outcome == "changed":
-        data["historical_exposure"] = {"timing": "none", "before_finalization": True}
-        data["feedback_edit"] = {
-            "set": {"rating": {"score": 8.5, "source": "explicit", "confidence": "exact"}},
-            "clear": ["feedback"],
-        }
-    elif outcome == "confirmed_unchanged":
-        data["historical_exposure"] = {"timing": "after_initial_response", "before_finalization": True}
-    return data
-
-
-def valid_close_reassessment_dict() -> dict:
-    return {
-        "schema_version": 1,
-        "operation_id": VALID_UUID,
-        "operation": "close_reassessment_session",
-        "pilot_id": "primary-legacy-v1",
-        "session_id": SESSION_UUID,
-        "expected_ledger_digest": LEDGER_DIGEST,
-        "scheduled_reanalysis_operation_id": REANALYSIS_UUID,
-    }
 
 
 def test_record_feedback_requires_operation_id_and_known_fields():
@@ -262,69 +210,6 @@ def test_record_recommendation_interaction_command_preserves_ephemeral_event_typ
     assert command.work_ref.title == "The Invitation"
 
 
-def test_reassessment_commands_parse_to_narrow_typed_contracts():
-    reserve = parse_command(valid_reserve_reassessment_dict())
-    assert type(reserve).__name__ == "ReserveReassessmentSessionCommand"
-    assert reserve.work_ids == ("arrival-2016", "batman-2022")
-
-    complete = parse_command(valid_complete_reassessment_dict())
-    assert type(complete).__name__ == "CompleteReassessmentItemCommand"
-    assert complete.outcome == "changed"
-    assert complete.feedback_edit["clear"] == ["feedback"]
-
-    close = parse_command(valid_close_reassessment_dict())
-    assert type(close).__name__ == "CloseReassessmentSessionCommand"
-    assert close.scheduled_reanalysis_operation_id == REANALYSIS_UUID
-
-
-def test_reserve_reassessment_enforces_uuid_digest_and_batch_size():
-    for key in ("operation_id", "session_id"):
-        bad = valid_reserve_reassessment_dict(); bad[key] = "not-a-uuid"
-        with pytest.raises(CommandValidationError): parse_command(bad)
-    bad = valid_reserve_reassessment_dict(); bad["expected_ledger_digest"] = "sha256:nope"
-    with pytest.raises(CommandValidationError): parse_command(bad)
-    for work_ids in ([], ["arrival-2016"] * 2, [f"work-{index}" for index in range(6)]):
-        bad = valid_reserve_reassessment_dict(); bad["work_ids"] = work_ids
-        with pytest.raises(CommandValidationError): parse_command(bad)
-
-
-def test_reassessment_commands_reject_unknown_pilot_id():
-    for factory in (valid_reserve_reassessment_dict, valid_complete_reassessment_dict, valid_close_reassessment_dict):
-        bad = factory(); bad["pilot_id"] = "partner-legacy-v1"
-        with pytest.raises(CommandValidationError): parse_command(bad)
-
-
-def test_complete_reassessment_outcome_controls_feedback_and_history_fields():
-    bad = valid_complete_reassessment_dict("changed"); bad.pop("feedback_edit")
-    with pytest.raises(CommandValidationError): parse_command(bad)
-
-    for outcome in ("confirmed_unchanged", "deferred"):
-        bad = valid_complete_reassessment_dict(outcome)
-        bad["feedback_edit"] = {"clear": ["feedback"]}
-        with pytest.raises(CommandValidationError): parse_command(bad)
-
-    deferred = valid_complete_reassessment_dict("deferred")
-    deferred["historical_exposure"] = {"timing": "none", "before_finalization": True}
-    with pytest.raises(CommandValidationError): parse_command(deferred)
-
-
-def test_complete_reassessment_edit_forbids_target_purge_and_unknown_components():
-    for edit in (
-        {"target": "primary", "clear": ["feedback"]},
-        {"purge": True},
-        {"clear": ["everything"]},
-    ):
-        bad = valid_complete_reassessment_dict("changed"); bad["feedback_edit"] = edit
-        with pytest.raises(CommandValidationError): parse_command(bad)
-
-
-def test_reassessment_session_ids_and_optional_reanalysis_id_are_canonical_uuids():
-    bad = valid_complete_reassessment_dict(); bad["session_id"] = "123E4567-E89B-42D3-A456-426614174001"
-    with pytest.raises(CommandValidationError): parse_command(bad)
-    bad = valid_close_reassessment_dict(); bad["scheduled_reanalysis_operation_id"] = "not-a-uuid"
-    with pytest.raises(CommandValidationError): parse_command(bad)
-
-
 def valid_refresh_work_metadata_dict() -> dict:
     return {
         "schema_version": 1,
@@ -333,28 +218,6 @@ def valid_refresh_work_metadata_dict() -> dict:
         "work_ref": {"id": "arrival-2016"},
         "expected_work_digest": WORK_DIGEST,
     }
-
-
-def valid_record_modernization_dict(outcome: str = "completed") -> dict:
-    data = {
-        "schema_version": 1,
-        "operation_id": VALID_UUID,
-        "operation": "record_reassessment_modernization",
-        "pilot_id": "primary-legacy-v1",
-        "work_id": "arrival-2016",
-        "outcome": outcome,
-        "expected_ledger_digest": LEDGER_DIGEST,
-        "expected_work_digest": WORK_DIGEST,
-    }
-    if outcome == "completed":
-        data.update({
-            "metadata_operation_id": METADATA_UUID,
-            "semantic_operation_id": SEMANTIC_UUID,
-            "vocabulary_digest": VOCABULARY_DIGEST,
-        })
-    else:
-        data["blocker_code"] = "provider_identity_ambiguous"
-    return data
 
 
 def test_refresh_work_metadata_requires_one_work_and_digest():
@@ -371,44 +234,10 @@ def test_refresh_work_metadata_requires_one_work_and_digest():
         parse_command(bad)
 
 
-def test_reassessment_modernization_completed_and_blocked_variants_are_typed():
-    completed = parse_command(valid_record_modernization_dict("completed"))
-    assert type(completed).__name__ == "RecordReassessmentModernizationCommand"
-    assert completed.outcome == "completed"
-    assert completed.metadata_operation_id == METADATA_UUID
-    assert completed.semantic_operation_id == SEMANTIC_UUID
-    assert completed.vocabulary_digest == VOCABULARY_DIGEST
-    assert completed.blocker_code is None
-
-    blocked = parse_command(valid_record_modernization_dict("blocked"))
-    assert blocked.outcome == "blocked"
-    assert blocked.blocker_code == "provider_identity_ambiguous"
-    assert blocked.metadata_operation_id is None
-
-
-def test_reassessment_modernization_variant_fields_are_strict():
-    bad = valid_record_modernization_dict("completed"); bad.pop("semantic_operation_id")
-    with pytest.raises(CommandValidationError):
-        parse_command(bad)
-    bad = valid_record_modernization_dict("completed"); bad["blocker_code"] = "provider_identity_conflict"
-    with pytest.raises(CommandValidationError):
-        parse_command(bad)
-    bad = valid_record_modernization_dict("blocked"); bad["metadata_operation_id"] = METADATA_UUID
-    with pytest.raises(CommandValidationError):
-        parse_command(bad)
-    bad = valid_record_modernization_dict("blocked"); bad["blocker_code"] = "whatever"
-    with pytest.raises(CommandValidationError):
-        parse_command(bad)
-
-
-def test_modernization_operation_ids_are_canonical_lowercase_uuids():
+def test_refresh_work_metadata_operation_id_is_canonical_lowercase_uuid():
     bad = valid_refresh_work_metadata_dict(); bad["operation_id"] = "NOT-A-UUID"
     with pytest.raises(CommandValidationError):
         parse_command(bad)
-    for key in ("metadata_operation_id", "semantic_operation_id"):
-        bad = valid_record_modernization_dict("completed"); bad[key] = "not-a-uuid"
-        with pytest.raises(CommandValidationError):
-            parse_command(bad)
 
 
 def valid_record_media_entry_dict(create_if_missing: bool = False) -> dict:

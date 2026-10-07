@@ -76,7 +76,7 @@ def test_baseline_writer_uses_exact_meta_suffix(tmp_path):
     assert not Path(str(output) + ".meta.json").exists()
 
 
-def test_living_docs_and_media_dev_check_expose_audit_baseline_contract():
+def test_living_docs_expose_post_reset_audit_contract():
     intelligence = Path("docs/architecture/intelligence.md").read_text(encoding="utf-8")
     layout = Path("docs/reference/repository-layout.md").read_text(encoding="utf-8")
     status = Path("docs/status/current.md").read_text(encoding="utf-8")
@@ -84,8 +84,10 @@ def test_living_docs_and_media_dev_check_expose_audit_baseline_contract():
 
     assert "audit_intelligence" in intelligence
     assert "canonical_input_digest" in intelligence
-    assert "historical baseline" in intelligence.lower()
-    assert "media/baselines/" in layout
-    assert "Measurement foundation" in status
-    assert "media/baselines/**" in workflow
+    assert "Stage A baseline" in intelligence
+    assert "синтет" in intelligence.lower()
+    assert "Stage A runtime baselines больше не существуют" in layout
+    assert "synthetic/reference fixtures" in status
+    assert not Path("media/baselines/intelligence-stage-a.json").exists()
+    assert not Path("media/baselines/intelligence-stage-a.meta.json").exists()
     assert "python -m media.tools.audit_intelligence . --format json" in workflow

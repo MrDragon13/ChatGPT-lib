@@ -1,68 +1,48 @@
-# Cross-system invariants
+# Media invariants
 
-Короткий список правил, которые должны оставаться истинными независимо от конкретной feature/version. Подробности живут в schemas, code, `media/AGENTS.md` и тематических architecture docs.
+Короткий список обязательных правил, которые должны одинаково соблюдаться domain code, CLI, GitHub Actions, Broker, Web и agent.
 
-## Data ownership
-
-1. **Git/YAML canonical.** Canonical media facts/user-owned state живут в утверждённых repository paths и schemas.
-2. **Generated data rebuildable.** `generated` artifacts не редактируются вручную как источник новых фактов или preference.
-3. **No browser-only truth.** Web manifest/UI state не становится параллельным canonical store.
-
-## Writes
-
-4. **Normal mutations use a typed command.** LLM/CLI/web не применяют произвольный YAML patch вместо существующего operation contract.
-5. **Unknown is better than guessed.** Ambiguous identity/provider result останавливает mutation или требует input; система не угадывает work.
-6. **Operation scope stays narrow.** Auto-merge-eligible operation не получает скрытый доступ к architecture/schema/vocabulary/workflow paths.
-7. **Read-only stays read-only.** `recommend_context`, `taste_context`, `assess_candidate`, `reassessment-context` и `reassessment-history` не мутируют canonical state.
-
-## Targets
-
-8. **Target никогда не меняется молча.** `primary`, `partner` и `couple` — разные destinations/contexts.
-9. **Couple is a group context, not an averaged person.** Disagreement показывается явно; conflicting evidence не усредняется без объяснения.
-10. **Absence is not substitution.** Нет partner/couple signal — значит signal отсутствует; нельзя незаметно копировать другой target.
-
-## Evidence and intelligence
-
-11. **Explicit evidence outranks inferred output.** Inferred hypothesis не является independent evidence для другой inferred hypothesis.
-12. **Inferred hypotheses are explanation-only numerically.** Они могут оставаться в `inferred_preferences`, но не увеличивают affinity `score`, `confidence` или `evidence_count`.
-13. **One rating is not a full taste model.** Нельзя автоматически превращать все traits одного высоко/низко оценённого work в сильную stable preference.
-14. **Semantic fingerprint describes the work.** Он не кодирует viewer reaction.
-15. **Similarity is evidence/hint, not preference.** Одна связь «A похож на B» не создаёт affinity/stable preference сама по себе.
-16. **Fallback is not personalized evidence.** `ranking_basis=none` не выдаётся за semantic taste match; active top-level `limitations` являются частью material context.
-17. **Assessment is qualitative.** Candidate assessment не сохраняет prediction и не изображает fake precise probability/opaque score как знание пользователя; partial `assessment_coverage` не маскируется под fully grounded certainty.
-18. **Couple disagreement stays observable.** Per-term member disagreement может быть показан отдельно, но сама observability projection не меняет couple aggregation.
-19. **Legacy evidence does not become fresh explicit evidence automatically.** Старый review/rating — historical context; новый `explicit` требует current user confirmation.
-20. **Human reassessment is not semantic enrichment.** `complete_reassessment_item` не пишет semantic fingerprint/vocabulary и не превращает reaction в factual work traits; post-review modernization использует отдельные metadata/semantic operations.
-
-## External identity
-
-21. **External mention does not create a canonical work.** Recommendation, candidate assessment или similarity endpoint может ссылаться на внешний work без добавления его в library.
-22. **Persistent external reference requires stable identity.** Для долговременной relation нужен устойчивый provider ID; title/year — display snapshot, не единственный ключ.
-23. **Reconciliation is deterministic.** Когда external identity становится canonical work, relation normalization не должна создавать duplicate/self-link или user signals побочно.
-
-## Vocabulary and schemas
-
-24. **Unknown vocabulary terms are not invented.** Если подходящего controlled vocabulary term нет, normal data entry не создаёт новый term/synonym скрыто.
-25. **Normal data entry cannot change schema.** Schema/vocabulary evolution — manual developer/architecture work с tests/migration policy.
-26. **No invented fields.** Writer использует только fields, разрешённые текущим schema contract.
-
-## Security and pilot monotonicity
-
-27. **Browser never receives write/provider/model secrets.** GitHub write token, provider credentials и model secrets остаются server/CI side.
-28. **Broker reuses typed validation.** Browser write boundary не обходит command schemas, target safety или canonical validation.
-29. **Static Pages remains safe without live model.** Core read surface не зависит от client-side model credentials.
-30. **Privileged auto-merge uses trusted policy.** Declarative operation policy читается из trusted `main`, changed paths — из GitHub PR metadata / files API; PR-head Python не определяет собственные разрешения и не исполняется privileged workflow.
-31. **Trust-policy changes require normal review.** Изменение `media/config/operation_path_policy.json`, workflow/guard или executable media semantics не может само разрешить себе auto-merge в том же PR.
-32. **Reservation precedes reassessment write.** `complete_reassessment_item` не может писать canonical feedback, пока matching `in_progress` reservation не присутствует на authoritative `main`.
-33. **Pilot writes serialize on current state.** Каждый ledger write сверяет `expected_ledger_digest`; completion дополнительно сверяет reserved raw work-file digest.
-34. **Reviewed is terminal within one pilot epoch.** Reviewed item не возвращается автоматически в pending/in_progress/deferred; repeat reassessment требует нового explicit override/epoch design.
-35. **Frozen cohort and closed history are immutable.** Base/frozen metadata, terminal reviewed provenance и closed session snapshots не переписываются operation PR; independent base→head validation проверяет это отдельно от planner.
-36. **Pilot ledger is operational provenance, not taste truth.** Он не входит в Stage A `canonical_input_digest` и не становится benchmark автоматически.
-37. **Modernization never reopens human review.** Reviewed item остаётся terminal; due/blocked/completed modernization меняет только отдельный monotonic sub-state.
-38. **Viewer feedback is not work semantic truth.** Modernization semantic fingerprint выводится независимо; trusted metadata/semantic `no_change` может служить успешным evidence check. **Modernization does not increment** taste-reanalysis cadence.
-
-## Verification
-
-39. **Exact revision matters.** GREEN должен относиться к exact head/merge SHA, который проверяется или публикуется.
-40. **Full validation before completion.** Focused tests недостаточны для финального success claim; выполняется project regression/validate/rebuild/doctor и релевантные web gates.
-41. **Historical spec is rationale, not current authority.** Dated plan/spec не переопределяет реализованный code/schema/operating contract после merge.
+1. **Canonical wins.** Git/YAML в `main` — единственная долговременная истина media state.
+2. **Generated is rebuildable.** Index, profiles, manifest и временный SQLite не становятся canonical user data.
+3. **Typed command boundary.** Обычная mutation проходит через зарегистрированную typed operation; free-form YAML patch не является normal user route.
+4. **Target is explicit.** `primary`, `partner` и `couple` не смешиваются молча.
+5. **Unknown beats guessed.** Неизвестная identity/metadata/vocabulary остаётся неизвестной до надёжной проверки.
+6. **Explicit beats inferred.** Свежий explicit user evidence важнее inferred interpretation.
+7. **Inference does not self-prove.** Inferred output не становится independent evidence для следующего inferred output.
+8. **Work semantics are not sentiment.** Rating/reaction/feedback зрителя не являются factual work traits.
+9. **Vocabulary is controlled.** Неизвестный semantic term не добавляется скрыто обычной data operation.
+10. **Similarity is not preference.** Explicit similarity — evidence/hint, но не стабильная taste preference сама по себе.
+11. **External is not canonical.** External recommendation/candidate/similarity endpoint не создаёт canonical work без явного create flow.
+12. **Read-only stays read-only.** `media_entry_context`, `recommend_context`, `taste_context`, `assess_candidate` не мутируют canonical state.
+13. **One human event, one normal write.** Связанные сигналы одного work по возможности записываются одной `record_media_entry`.
+14. **Existing feedback has zero provider I/O.** Обычный existing-work `record_media_entry` не требует provider, metadata refresh или semantic recomputation.
+15. **New work is atomic.** Identity/minimum metadata/semantic snapshot/viewer evidence нового work применяются одной transaction.
+16. **Viewer digest is target-scoped.** Изменение metadata, semantics или другого target не должно менять digest текущего viewer.
+17. **No-change is real success.** `no_change` не создаёт fake history/evidence и не запускает ненужную пересборку.
+18. **Idempotency is human-event scoped.** Тот же `idempotency_key` + тот же intent не дублирует запись; другой intent с тем же key fail closed.
+19. **Material evidence is bounded.** Один содержательный пользовательский эпизод даёт максимум одно новое taste event.
+20. **Summary text alone is not taste evidence.** Косметическая правка `feedback.summary` без structured explicit signal не продвигает reanalysis checkpoint.
+21. **Taste checkpoint is digest-based.** Outstanding evidence вычисляется относительно prefix/checkpoint, а не самостоятельного mutable counter.
+22. **Threshold gate precedes taste-dependent answer.** При достигнутом threshold fresh reanalysis выполняется до recommendation/comparison/assessment.
+23. **Couple has no third automatic counter.** Couple decision проверяет member statuses `primary`/`partner`.
+24. **Pending is not saved.** Session-local overlay можно использовать сразу, но authoritative claim допустим только после `main`.
+25. **Same-work pending does not fan out.** Второе уточнение того же work не создаёт параллельный request PR до завершения первого.
+26. **Request PR is request-only.** До исполнения normal operation PR содержит ровно один `.media/requests/<id>.json`.
+27. **Path policy is narrow.** Normal data operation не получает права менять schemas, vocabulary, workflows или architecture.
+28. **Auto-merge uses one v6 runner.** Все `auto_merge=true` operations используют `v6_single_runner`; удалённые `Media Check`/`Media Auto Merge` не являются текущим путём.
+29. **Main is rechecked before merge.** GitHub Actions queue не заменяет exact base/head guard.
+30. **Manual maintenance stays manual.** Bulk `refresh_metadata` не auto-merge.
+31. **Each dirty output rebuilds at most once per transaction.** Derived work следует dependency plan, а не числу внутренних mutations.
+32. **Provider failure does not block existing human evidence.** Stale optional metadata не мешает existing-work feedback.
+33. **Archive is historical only.** Pre-v6 MD archive не является canonical, taste input или machine restore source.
+34. **Empty library is valid.** Validate/rebuild/doctor/Web/read contexts обязаны работать при `works=0`.
+35. **Global explicit preferences survive reset.** Reset не удаляет explicit rules/preferences или vocabulary.
+36. **Old inferred state does not survive reset.** Inferred preferences старой библиотеки не восстанавливаются автоматически.
+37. **Browser has no secrets.** GitHub/provider/model credentials не попадают в static bundle.
+38. **Broker uses the same domain semantics.** Browser feedback преобразуется в `record_media_entry`, а не в отдельную бизнес-логику.
+39. **Public manifest hides internal concurrency data.** Viewer digests и internal operation bookkeeping не публикуются в Web manifest.
+40. **Qualitative assessment stays qualitative.** Никаких fake precise probability или opaque match score.
+41. **Limitations are material.** Active limitations учитываются в reasoning и не скрываются ложной уверенностью.
+42. **Full validation before developer completion.** Focused tests недостаточны для финального success claim developer PR.
+43. **Historical specs are rationale, not authority.** Dated v5/v5.1 specs не переопределяют current code, schemas, `AGENTS.md` или living docs.
+44. **Post-cutover rollback protects new evidence.** До появления новых v6 user writes cutover можно revert; после появления нового evidence blind revert запрещён — нужна forward migration.

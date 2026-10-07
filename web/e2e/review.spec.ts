@@ -23,12 +23,28 @@ async function warmLazyArtwork(page: Page) {
   await page.evaluate(() => window.scrollTo(0, 0));
 }
 
-async function openFirstPrimaryDetail(page: Page) {
+async function openFirstPrimaryDetail(page: Page): Promise<boolean> {
   await page.goto("#/library?target=primary");
-  const href = await page.locator(".library-card").first().getAttribute("href");
+  const cards = page.locator(".library-card");
+  if (await cards.count() === 0) {
+    await expect(page.getByRole("heading", { name: "Медиатека пока пуста" })).toBeVisible();
+    return false;
+  }
+  const href = await cards.first().getAttribute("href");
   expect(href).toBeTruthy();
   await page.goto(href ?? "#/library?target=primary");
   await expect(page.locator(".detail-hero")).toHaveAttribute("data-motion", "reduced");
+  return true;
+}
+
+async function expectTodaySurface(page: Page) {
+  const hero = page.getByTestId("cinema-hero");
+  if (await hero.count()) {
+    await expect(hero).toHaveAttribute("data-motion", "reduced");
+    return;
+  }
+  await expect(page.getByTestId("home-empty")).toHaveAttribute("data-motion", "reduced");
+  await expect(page.getByRole("heading", { name: "Пока без готовой рекомендации" })).toBeVisible();
 }
 
 test("capture art-direction review surfaces", async ({ page }) => {
@@ -36,35 +52,45 @@ test("capture art-direction review surfaces", async ({ page }) => {
 
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("#/today");
-  await expect(page.getByTestId("cinema-hero")).toHaveAttribute("data-motion", "reduced");
+  await expectTodaySurface(page);
   await page.screenshot({ path: resolve(reviewDir, "today-desktop.png"), fullPage: true });
 
   await page.goto("#/library?target=couple");
-  await expect(page.getByRole("heading", { name: "Медиатека" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Медиатека", exact: true })).toBeVisible();
   await warmLazyArtwork(page);
   await page.screenshot({ path: resolve(reviewDir, "library-desktop.png"), fullPage: true });
 
-  const firstHref = await page.locator(".library-card").first().getAttribute("href");
-  expect(firstHref).toBeTruthy();
-  await page.goto(firstHref ?? "#/library?target=couple");
-  await expect(page.locator(".detail-hero")).toHaveAttribute("data-motion", "reduced");
-  await page.screenshot({ path: resolve(reviewDir, "detail-desktop.png"), fullPage: true });
+  const desktopCards = page.locator(".library-card");
+  if (await desktopCards.count()) {
+    const firstHref = await desktopCards.first().getAttribute("href");
+    expect(firstHref).toBeTruthy();
+    await page.goto(firstHref ?? "#/library?target=couple");
+    await expect(page.locator(".detail-hero")).toHaveAttribute("data-motion", "reduced");
+    await page.screenshot({ path: resolve(reviewDir, "detail-desktop.png"), fullPage: true });
+  } else {
+    await expect(page.getByRole("heading", { name: "Медиатека пока пуста" })).toBeVisible();
+  }
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("#/today");
-  await expect(page.getByTestId("cinema-hero")).toHaveAttribute("data-motion", "reduced");
+  await expectTodaySurface(page);
   await page.screenshot({ path: resolve(reviewDir, "today-mobile.png"), fullPage: true });
 
   await page.goto("#/library?target=couple");
-  await expect(page.getByRole("heading", { name: "Медиатека" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Медиатека", exact: true })).toBeVisible();
   await warmLazyArtwork(page);
   await page.screenshot({ path: resolve(reviewDir, "library-mobile.png"), fullPage: true });
 
-  const mobileFirstHref = await page.locator(".library-card").first().getAttribute("href");
-  expect(mobileFirstHref).toBeTruthy();
-  await page.goto(mobileFirstHref ?? "#/library?target=couple");
-  await expect(page.locator(".detail-hero")).toHaveAttribute("data-motion", "reduced");
-  await page.screenshot({ path: resolve(reviewDir, "detail-mobile.png"), fullPage: true });
+  const mobileCards = page.locator(".library-card");
+  if (await mobileCards.count()) {
+    const mobileFirstHref = await mobileCards.first().getAttribute("href");
+    expect(mobileFirstHref).toBeTruthy();
+    await page.goto(mobileFirstHref ?? "#/library?target=couple");
+    await expect(page.locator(".detail-hero")).toHaveAttribute("data-motion", "reduced");
+    await page.screenshot({ path: resolve(reviewDir, "detail-mobile.png"), fullPage: true });
+  } else {
+    await expect(page.getByRole("heading", { name: "Медиатека пока пуста" })).toBeVisible();
+  }
 });
 
 test("capture feedback editor review surfaces", async ({ page }) => {
@@ -77,7 +103,8 @@ test("capture feedback editor review surfaces", async ({ page }) => {
   });
 
   await page.setViewportSize({ width: 1440, height: 900 });
-  await openFirstPrimaryDetail(page);
+  const hasWork = await openFirstPrimaryDetail(page);
+  test.skip(!hasWork, "Пустая post-reset медиатека: detail/editor появятся после первого сохранённого фильма.");
 
   const primaryCard = page.locator(".signal-panel").filter({
     has: page.getByRole("heading", { name: "Я", exact: true }),

@@ -9,7 +9,8 @@
         "media/generated/profiles/*.yaml",
         ".media/operations/*.json",
         "media/data/relations/similarity/*.yaml"
-      ]
+      ],
+      "execution_class": "v6_single_runner"
     },
     "record_media_entry": {
       "auto_merge": true,
@@ -30,7 +31,8 @@
         "media/generated/profiles/*.yaml",
         ".media/operations/*.json",
         "media/data/relations/similarity/*.yaml"
-      ]
+      ],
+      "execution_class": "v6_single_runner"
     },
     "edit_viewing_feedback": {
       "auto_merge": true,
@@ -39,7 +41,8 @@
         "media/generated/index.jsonl",
         "media/generated/profiles/*.yaml",
         ".media/operations/*.json"
-      ]
+      ],
+      "execution_class": "v6_single_runner"
     },
     "set_interest": {
       "auto_merge": true,
@@ -48,7 +51,8 @@
         "media/generated/index.jsonl",
         "media/generated/profiles/*.yaml",
         ".media/operations/*.json"
-      ]
+      ],
+      "execution_class": "v6_single_runner"
     },
     "refresh_metadata": {
       "auto_merge": false,
@@ -57,7 +61,8 @@
         "media/generated/index.jsonl",
         "media/generated/profiles/*.yaml",
         ".media/operations/*.json"
-      ]
+      ],
+      "execution_class": "manual_review"
     },
     "set_semantic_fingerprint": {
       "auto_merge": true,
@@ -66,7 +71,8 @@
         "media/generated/index.jsonl",
         "media/generated/profiles/*.yaml",
         ".media/operations/*.json"
-      ]
+      ],
+      "execution_class": "v6_single_runner"
     },
     "set_inferred_preferences": {
       "auto_merge": true,
@@ -83,45 +89,24 @@
         "media/data/interactions/*.jsonl",
         "media/generated/profiles/*.yaml",
         ".media/operations/*.json"
-      ]
+      ],
+      "execution_class": "v6_single_runner"
     },
     "set_work_similarity": {
       "auto_merge": true,
       "allowed_paths": [
         "media/data/relations/similarity/*.yaml",
         ".media/operations/*.json"
-      ]
+      ],
+      "execution_class": "v6_single_runner"
     },
     "remove_work_similarity": {
       "auto_merge": true,
       "allowed_paths": [
         "media/data/relations/similarity/*.yaml",
         ".media/operations/*.json"
-      ]
-    },
-    "reserve_reassessment_session": {
-      "auto_merge": true,
-      "allowed_paths": [
-        "media/pilots/legacy-reassessment-primary.json",
-        ".media/operations/*.json"
-      ]
-    },
-    "complete_reassessment_item": {
-      "auto_merge": true,
-      "allowed_paths": [
-        "media/pilots/legacy-reassessment-primary.json",
-        "media/data/works/*.yaml",
-        "media/generated/index.jsonl",
-        "media/generated/profiles/*.yaml",
-        ".media/operations/*.json"
-      ]
-    },
-    "close_reassessment_session": {
-      "auto_merge": true,
-      "allowed_paths": [
-        "media/pilots/legacy-reassessment-primary.json",
-        ".media/operations/*.json"
-      ]
+      ],
+      "execution_class": "v6_single_runner"
     },
     "refresh_work_metadata": {
       "auto_merge": true,
@@ -129,14 +114,8 @@
         "media/data/works/*.yaml",
         "media/generated/index.jsonl",
         ".media/operations/*.json"
-      ]
-    },
-    "record_reassessment_modernization": {
-      "auto_merge": true,
-      "allowed_paths": [
-        "media/pilots/legacy-reassessment-primary.json",
-        ".media/operations/*.json"
-      ]
+      ],
+      "execution_class": "v6_single_runner"
     }
   }
 }

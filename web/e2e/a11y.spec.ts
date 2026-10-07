@@ -12,12 +12,10 @@ async function expectNoSeriousA11yViolations(page: Page) {
 }
 
 test.beforeEach(async ({ page }) => {
-  // Audit the stable rendered state. Motion behavior, including the full-motion
-  // path, is covered separately in motion.spec.ts.
   await page.emulateMedia({ reducedMotion: "reduce" });
 });
 
-test("today, history, library and detail have no serious WCAG violations", async ({ page }) => {
+test("today, history and library remain accessible before and after repopulation", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
 
   await page.goto("#/today");
@@ -29,19 +27,25 @@ test("today, history, library and detail have no serious WCAG violations", async
   await expectNoSeriousA11yViolations(page);
 
   await page.goto("#/library?target=couple");
-  await expect(page.getByRole("heading", { name: "Медиатека" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Медиатека", exact: true })).toBeVisible();
   await expectNoSeriousA11yViolations(page);
 
-  const firstWorkHref = await page.locator(".library-card").first().getAttribute("href");
-  expect(firstWorkHref).toBeTruthy();
-  await page.goto(firstWorkHref ?? "#/library?target=couple");
-  await expect(page.locator(".detail-page")).toBeVisible();
-  await expectNoSeriousA11yViolations(page);
+  const first = page.locator(".library-card").first();
+  if (await first.count()) {
+    const firstWorkHref = await first.getAttribute("href");
+    expect(firstWorkHref).toBeTruthy();
+    await page.goto(firstWorkHref ?? "#/library?target=couple");
+    await expect(page.locator(".detail-page")).toBeVisible();
+    await expectNoSeriousA11yViolations(page);
+  } else {
+    await expect(page.getByRole("heading", { name: "Медиатека пока пуста" })).toBeVisible();
+  }
 });
 
 test("empty and missing states remain accessible", async ({ page }) => {
   await page.goto("#/library?target=couple&q=__no_such_title__");
-  await expect(page.getByRole("heading", { name: "С такими фильтрами пусто" })).toBeVisible();
+  const heading = page.getByRole("heading", { name: /^(С такими фильтрами пусто|Медиатека пока пуста)$/ });
+  await expect(heading).toBeVisible();
   await expectNoSeriousA11yViolations(page);
 
   await page.goto("#/work/__missing__?target=couple");
@@ -49,7 +53,7 @@ test("empty and missing states remain accessible", async ({ page }) => {
   await expectNoSeriousA11yViolations(page);
 });
 
-test("keyboard path covers profile, history, filters and detail navigation", async ({ page }) => {
+test("keyboard path covers profile and library controls in empty or populated state", async ({ page }) => {
   await page.goto("#/today?target=couple");
 
   const profileNav = page.getByRole("navigation", { name: "Профиль просмотра" });
@@ -61,10 +65,14 @@ test("keyboard path covers profile, history, filters and detail navigation", asy
 
   await page.goto("#/history?target=primary");
   const firstHistoryItem = page.locator(".history-item").first();
-  await firstHistoryItem.focus();
-  await expect(firstHistoryItem).toBeFocused();
-  const historyOutline = await firstHistoryItem.evaluate((element) => getComputedStyle(element).outlineStyle);
-  expect(historyOutline).not.toBe("none");
+  if (await firstHistoryItem.count()) {
+    await firstHistoryItem.focus();
+    await expect(firstHistoryItem).toBeFocused();
+    const historyOutline = await firstHistoryItem.evaluate((element) => getComputedStyle(element).outlineStyle);
+    expect(historyOutline).not.toBe("none");
+  } else {
+    await expect(page.getByRole("heading", { name: "Здесь пока пусто" })).toBeVisible();
+  }
 
   await page.goto("#/library?target=primary");
   const search = page.getByRole("searchbox", { name: "Поиск" });
@@ -72,10 +80,14 @@ test("keyboard path covers profile, history, filters and detail navigation", asy
   await expect(search).toBeFocused();
 
   const firstCard = page.locator(".library-card").first();
-  await firstCard.focus();
-  await expect(firstCard).toBeFocused();
-  const outlineStyle = await firstCard.evaluate((element) => getComputedStyle(element).outlineStyle);
-  expect(outlineStyle).not.toBe("none");
-  await page.keyboard.press("Enter");
-  await expect(page.locator(".detail-page")).toBeVisible();
+  if (await firstCard.count()) {
+    await firstCard.focus();
+    await expect(firstCard).toBeFocused();
+    const outlineStyle = await firstCard.evaluate((element) => getComputedStyle(element).outlineStyle);
+    expect(outlineStyle).not.toBe("none");
+    await page.keyboard.press("Enter");
+    await expect(page.locator(".detail-page")).toBeVisible();
+  } else {
+    await expect(page.getByRole("heading", { name: "Медиатека пока пуста" })).toBeVisible();
+  }
 });

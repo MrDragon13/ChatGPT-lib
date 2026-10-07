@@ -1,8 +1,8 @@
 # Media feedback broker
 
-This Cloudflare Worker is the protected write bridge for the static media site. It authenticates one GitHub owner, creates one typed `record_viewing_feedback` operation PR, and reports that operation's GitHub/Pages status. It never edits canonical media YAML directly.
+This Cloudflare Worker is the protected write bridge for the static media site. It authenticates one GitHub owner, maps browser feedback to typed `record_media_entry`, creates a request-only operation PR, and reports GitHub/Pages status. It never edits canonical media YAML directly.
 
-> Переходное состояние v6: код Broker уже содержит протестированный helper для `record_media_entry`, который читает viewer digest на exact `main` SHA, но production `POST /v1/feedback` пока намеренно использует `record_viewing_feedback`. Переключать live route до атомарного v6 cutover нельзя.
+Production `POST /v1/feedback` использует v6: Broker читает viewer digest из `media/generated/index.jsonl` на exact SHA текущего `main`, строит preconditioned `record_media_entry`, а затем создаёт branch/PR от того же SHA. Browser не знает и не вычисляет digest.
 
 ## 1. Create the GitHub App
 
@@ -98,12 +98,12 @@ Then perform one controlled operation through the deployed broker and confirm th
 
 ```text
 POST /v1/feedback
-  -> media/op-<uuid> PR
-  -> Media Command
-  -> Media Check
-  -> Media Auto Merge
+  -> exact main SHA + viewer digest
+  -> request-only media/op-<uuid> PR
+  -> Media Command single-runner gate
+  -> exact-head merge
   -> Media Pages
   -> GET /v1/operations/<uuid> == published
 ```
 
-Only after that end-to-end check should `MEDIA_BROKER_URL` be supplied to the production Pages build.
+`MEDIA_BROKER_URL` должен указывать только на проверенный production Worker. При его отсутствии static site остаётся read-only.

@@ -12,17 +12,13 @@ from typing import Any
 from media.domain.changeset import MutationPlan, OperationResult
 from media.domain.commands import (
     AddWorkCommand,
-    CloseReassessmentSessionCommand,
-    CompleteReassessmentItemCommand,
     EditViewingFeedbackCommand,
     RecordMediaEntryCommand,
     RecordRecommendationInteractionCommand,
-    RecordReassessmentModernizationCommand,
     RecordViewingFeedbackCommand,
     RefreshMetadataCommand,
     RefreshWorkMetadataCommand,
     RemoveWorkSimilarityCommand,
-    ReserveReassessmentSessionCommand,
     SetInferredPreferencesCommand,
     SetInterestCommand,
     SetSemanticFingerprintCommand,
@@ -39,12 +35,6 @@ from media.service.media_entry import plan_record_media_entry
 from media.service.mutate import apply_feedback_updates, plan_edit_viewing_feedback, plan_record_viewing_feedback, plan_set_interest
 from media.service.path_policy import verify_changed_paths, verify_operation_specific_paths
 from media.service.preferences import plan_set_inferred_preferences
-from media.service.reassessment_mutate import (
-    plan_close_reassessment_session,
-    plan_complete_reassessment_item,
-    plan_record_reassessment_modernization,
-    plan_reserve_reassessment_session,
-)
 from media.service.refresh import plan_refresh_metadata, plan_refresh_work_metadata
 from media.service.similarity import plan_remove_work_similarity, plan_set_work_similarity, reconcile_similarity_for_new_work
 from media.tools.build_index import write_index
@@ -65,10 +55,6 @@ MutableCommand = (
     | RecordRecommendationInteractionCommand
     | SetWorkSimilarityCommand
     | RemoveWorkSimilarityCommand
-    | ReserveReassessmentSessionCommand
-    | CompleteReassessmentItemCommand
-    | CloseReassessmentSessionCommand
-    | RecordReassessmentModernizationCommand
 )
 
 
@@ -184,12 +170,6 @@ def _plan(
     if isinstance(command,RecordRecommendationInteractionCommand): return plan_record_recommendation_interaction(repo,command,now=now)
     if isinstance(command,SetWorkSimilarityCommand): return plan_set_work_similarity(repo,command,now=now)
     if isinstance(command,RemoveWorkSimilarityCommand): return plan_remove_work_similarity(repo,command,now=now)
-    if isinstance(command,ReserveReassessmentSessionCommand): return plan_reserve_reassessment_session(repo,command,now=now)
-    if isinstance(command,CompleteReassessmentItemCommand): return plan_complete_reassessment_item(repo,command,now=now)
-    if isinstance(command,CloseReassessmentSessionCommand): return plan_close_reassessment_session(repo,command,now=now)
-    if isinstance(command,RecordReassessmentModernizationCommand):
-        root = Path(repo_root) if repo_root is not None else repo.media_root.parent
-        return plan_record_reassessment_modernization(root,repo,command,now=now)
     if isinstance(command,AddWorkCommand): return _plan_add_work(repo,command,now,provider)
     if isinstance(command,RefreshMetadataCommand): return plan_refresh_metadata(repo,command,provider,now=now)
     if isinstance(command,RefreshWorkMetadataCommand): return plan_refresh_work_metadata(repo,command,provider,now=now)
