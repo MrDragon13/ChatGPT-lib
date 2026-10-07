@@ -82,6 +82,7 @@ class SetInferredPreferencesCommand:
     operation_id: str
     target: str
     hypotheses: tuple[Mapping[str, Any], ...]
+    analysis: Mapping[str, Any] | None = None
 
 
 @dataclass(frozen=True)
