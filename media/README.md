@@ -48,6 +48,8 @@ python -m media.cli assess-candidate --request assessment.json --format json
 python -m media.cli apply-command request.json --dry-run --format json
 python -m media.cli rebuild --check
 python -m media.cli doctor --format json
+python -m media.tools.archive_library --output docs/archive/media-library-before-v6-reset-2026-10-07.md
+python -m media.tools.archive_library --output docs/archive/media-library-before-v6-reset-2026-10-07.md --verify
 ```
 
 Full verification and explicit build commands live in the [operations runbook](../docs/guides/operations.md).
@@ -61,3 +63,10 @@ Full verification and explicit build commands live in the [operations runbook](.
 - Unknown identity/metadata/vocabulary is not guessed.
 - Architecture, schemas, vocabulary, workflows and bulk maintenance use the manual developer/review route.
 - Browser write/provider/model secrets remain outside the static Pages bundle.
+
+
+## Pre-v6 human archive tool
+
+`media.tools.archive_library` создаёт детерминированный человекочитаемый MD-снимок активной библиотеки и умеет побайтно проверить зафиксированный файл повторной регенерацией из canonical YAML. В архив попадают названия/годы и только человечески полезные пользовательские сигналы; технические ID, provider/provenance, digests, semantic fingerprints и inferred preferences исключены.
+
+Файл `docs/archive/media-library-before-v6-reset-2026-10-07.md`, созданный в PR 3, является **review snapshot**. Перед деструктивным reset в PR 4 он обязательно генерируется заново из точного предсбросового `main` и проходит `--verify`; только после этого разрешён reset.
