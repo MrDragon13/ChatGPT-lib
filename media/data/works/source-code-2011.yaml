@@ -14,18 +14,27 @@ identity:
     imdb: tt0945513
 viewer_signals:
   primary:
-    viewing:
-      status: watched
-    rating:
-      score: 7.0
-      source: inferred
-      confidence: medium
-    feedback:
-      summary: В целом неплохой фильм.
-      signals: []
+    viewing: &id001
+      status: unwatched
+    history:
+    - at: '2026-10-07T12:54:24.714318Z'
+      previous:
+        viewing:
+          status: watched
+        rating:
+          score: 7.0
+          source: inferred
+          confidence: medium
+        feedback:
+          summary: В целом неплохой фильм.
+          signals: []
+      current:
+        viewing: *id001
+        rating: null
+        feedback: null
 provenance:
   created_at: '2026-10-01'
-  updated_at: '2026-10-01'
+  updated_at: '2026-10-07'
 metadata:
   external:
     genres:

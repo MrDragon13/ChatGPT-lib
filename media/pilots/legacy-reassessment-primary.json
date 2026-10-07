@@ -633,11 +633,18 @@
       "status": "pending"
     },
     "source-code-2011": {
+      "historical_exposure": {
+        "before_finalization": false,
+        "timing": "none"
+      },
+      "operation_id": "b7c4e2d1-8a6f-4c31-9d52-1f0e7a3b6c84",
+      "outcome": "changed",
       "pre_review_feedback_digest": "sha256:dd652b9a6b5b497bc01f1de7aee265be5bc1a4184841bfc3ee0b76cbac10b464",
       "pre_review_work_file_digest": "sha256:569bad0e96b83e0f641cf572a42d83c83a111dac8499f1635a3ce1712c7dc326",
       "reserved_at": "2026-10-05T22:29:07.394473Z",
+      "reviewed_at": "2026-10-07T12:54:24.713587Z",
       "session_id": "c11d4269-f116-4748-839c-959f0557e33b",
-      "status": "in_progress"
+      "status": "reviewed"
     },
     "terminal-2004": {
       "status": "pending"
