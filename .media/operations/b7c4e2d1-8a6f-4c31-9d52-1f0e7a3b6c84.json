@@ -1,0 +1,26 @@
+{
+  "applied_at": "2026-10-07T12:54:29.886177+00:00",
+  "changed_entities": [
+    "source-code-2011"
+  ],
+  "changed_files": [
+    "media/data/works/source-code-2011.yaml",
+    "media/generated/index.jsonl",
+    "media/generated/profiles/couple.yaml",
+    "media/generated/profiles/primary.yaml",
+    "media/pilots/legacy-reassessment-primary.json",
+    ".media/operations/b7c4e2d1-8a6f-4c31-9d52-1f0e7a3b6c84.json"
+  ],
+  "details": {
+    "expected_ledger_digest": "sha256:562e74c4a99c24b325a7454bdb0c6d4e149b86027b3d4021be22742e7f960d84",
+    "outcome": "changed",
+    "pilot_id": "primary-legacy-v1",
+    "pre_review_feedback_digest": "sha256:dd652b9a6b5b497bc01f1de7aee265be5bc1a4184841bfc3ee0b76cbac10b464",
+    "pre_review_work_file_digest": "sha256:569bad0e96b83e0f641cf572a42d83c83a111dac8499f1635a3ce1712c7dc326",
+    "session_id": "c11d4269-f116-4748-839c-959f0557e33b",
+    "work_id": "source-code-2011"
+  },
+  "operation": "complete_reassessment_item",
+  "operation_id": "b7c4e2d1-8a6f-4c31-9d52-1f0e7a3b6c84",
+  "status": "applied"
+}
