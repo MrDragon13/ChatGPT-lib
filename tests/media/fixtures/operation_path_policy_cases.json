@@ -2,6 +2,36 @@
   "schema_version": 1,
   "cases": [
     {
+      "operation": "record_media_entry",
+      "pattern": "media/data/works/*.yaml",
+      "path": "media/data/works/media-entry.yaml",
+      "expected": true
+    },
+    {
+      "operation": "record_media_entry",
+      "pattern": "media/generated/index.jsonl",
+      "path": "media/generated/index.jsonl",
+      "expected": true
+    },
+    {
+      "operation": "record_media_entry",
+      "pattern": "media/generated/profiles/*.yaml",
+      "path": "media/generated/profiles/primary.yaml",
+      "expected": true
+    },
+    {
+      "operation": "record_media_entry",
+      "pattern": ".media/operations/*.json",
+      "path": ".media/operations/op-media-entry.json",
+      "expected": true
+    },
+    {
+      "operation": "record_media_entry",
+      "pattern": "media/data/relations/similarity/*.yaml",
+      "path": "media/data/relations/similarity/primary.yaml",
+      "expected": true
+    },
+    {
       "operation": "add_work",
       "pattern": "media/data/works/*.yaml",
       "path": "media/data/works/example.yaml",
