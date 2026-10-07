@@ -1,0 +1,51 @@
+schema_version: 1
+scenarios:
+  strong_positive_intrigue_problem_solving:
+    description: Явные положительные сигналы к интриге и решению задач должны доминировать над слабыми косвенными признаками.
+    explicit_signals:
+      - term: story.intrigue
+        sentiment: positive
+        strength: 3
+      - term: story.problem_solving
+        sentiment: positive
+        strength: 3
+  mixed_evidence:
+    description: Положительные и отрицательные явные сигналы по разным свойствам должны сохраняться раздельно, без ложного усреднения.
+    explicit_signals:
+      - term: story.intrigue
+        sentiment: positive
+        strength: 3
+      - term: pacing.slow
+        sentiment: negative
+        strength: 2
+  couple_disagreement:
+    description: Несогласие участников пары должно оставаться видимым.
+    members:
+      primary:
+        term: story.intrigue
+        direction: positive
+      partner:
+        term: story.intrigue
+        direction: negative
+  sparse_semantics:
+    description: Недостаточная семантическая покрытость должна снижать уверенность, а не порождать выдуманные свойства.
+    fingerprint_terms: []
+    expected_limitation: partial_semantic_coverage
+  explicit_similarity_without_preference:
+    description: Явное сходство является подсказкой для объяснения/поиска, но само по себе не становится предпочтением.
+    relation:
+      source: explicit
+      type: similar
+      terms:
+        - story.intrigue
+    must_not_create_affinity: true
+  stale_inferred_vs_fresh_explicit:
+    description: Свежий явный сигнал важнее устаревшей выведенной гипотезы.
+    stale_inferred:
+      term: pacing.slow
+      direction: negative
+    fresh_explicit:
+      term: pacing.slow
+      sentiment: positive
+      strength: 3
+    expected_priority: explicit
