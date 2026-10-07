@@ -12,8 +12,9 @@ permissions:
   actions: write
 
 concurrency:
-  group: media-command-${{ github.event.pull_request.number }}
+  group: media-data-pipeline
   cancel-in-progress: false
+  queue: max
 
 jobs:
   apply:
@@ -27,12 +28,15 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
+
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
           python-version: '3.12'
+
       - name: Install media dependencies
         run: python -m pip install -r media/requirements.txt
+
       - name: Require exactly one pending request
         id: request
         shell: bash
@@ -43,22 +47,20 @@ jobs:
             exit 2
           fi
           echo "request=${REQUESTS[0]}" >> "$GITHUB_OUTPUT"
+
       - name: Configure bot Git identity
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-      - name: Replay branch on current main
-        id: replay
+
+      - name: Fetch current main
+        id: base
         shell: bash
         run: |
           git fetch origin main
           echo "base_sha=$(git rev-parse origin/main)" >> "$GITHUB_OUTPUT"
-          if ! git merge --no-edit origin/main; then
-            git merge --abort || true
-            echo '{"status":"conflict","reason":"stale_base_merge_conflict"}'
-            exit 3
-          fi
+
       - name: Reject pre-existing non-request branch changes
         shell: bash
         env:
@@ -71,6 +73,7 @@ jobs:
               exit 3
             fi
           done
+
       - name: Inspect operation kind without secrets
         id: operation
         shell: bash
@@ -78,22 +81,165 @@ jobs:
           REQUEST: ${{ steps.request.outputs.request }}
         run: |
           cp -- "$REQUEST" /tmp/media-request.json
-          python - "$REQUEST" "$GITHUB_OUTPUT" <<'PY'
+          git show origin/main:media/config/operation_path_policy.json > /tmp/media-operation-policy.json
+          python - "$REQUEST" /tmp/media-operation-policy.json "$GITHUB_OUTPUT" <<'PY'
           import json
           import sys
 
           command = json.load(open(sys.argv[1], encoding='utf-8'))
+          policy = json.load(open(sys.argv[2], encoding='utf-8'))
           operation = command['operation']
           create_if_missing = bool(command.get('create_if_missing', False))
           needs_provider = operation == 'add_work' or operation == 'refresh_metadata' or operation == 'refresh_work_metadata' or (
               operation in {'record_media_entry', 'record_viewing_feedback'} and create_if_missing
           )
-          with open(sys.argv[2], 'a', encoding='utf-8') as output:
+          entry = policy.get('operations', {}).get(operation) or {}
+          execution_class = entry.get('execution_class', 'legacy')
+          with open(sys.argv[3], 'a', encoding='utf-8') as output:
               print(f'operation={operation}', file=output)
+              print(f'execution_class={execution_class}', file=output)
               print(f"needs_provider={'true' if needs_provider else 'false'}", file=output)
           PY
+
+      - name: Replay v6 operation on latest main
+        if: ${{ steps.operation.outputs.execution_class == 'v6_single_runner' }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          BRANCH: ${{ github.head_ref }}
+          REQUEST: ${{ steps.request.outputs.request }}
+          TMDB_READ_TOKEN: ${{ steps.operation.outputs.needs_provider == 'true' && secrets.TMDB_READ_TOKEN || '' }}
+        run: |
+          set -euo pipefail
+          MAX_ATTEMPTS=3
+          OPERATION_ID=$(python -c "import json; print(json.load(open('/tmp/media-request.json'))['operation_id'])")
+
+          for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
+            echo "v6 replay attempt $attempt/$MAX_ATTEMPTS"
+            git fetch origin main
+            BASE_SHA=$(git rev-parse origin/main)
+            REMOTE_HEAD=$(git ls-remote origin "refs/heads/$BRANCH" | awk '{print $1}')
+            if [ -z "$REMOTE_HEAD" ]; then
+              echo "::error::Operation branch disappeared before replay"
+              exit 3
+            fi
+
+            git reset --hard "$BASE_SHA"
+            git clean -fd -- .media/requests
+            mkdir -p "$(dirname "$REQUEST")"
+            cp /tmp/media-request.json "$REQUEST"
+            git add -- "$REQUEST"
+            git commit -m "data: request media operation $OPERATION_ID"
+
+            set +e
+            python -m media.cli apply-command "$REQUEST" --format json | tee /tmp/media-result.json
+            status=${PIPESTATUS[0]}
+            set -e
+            if [ "$status" -ne 0 ]; then
+              exit "$status"
+            fi
+
+            rm -- "$REQUEST"
+            STAGE_PATHS=(
+              media/data/works
+              media/generated/index.jsonl
+              media/generated/profiles
+              .media/operations
+              "$REQUEST"
+            )
+            for path in media/data/interactions media/preferences/inferred media/data/relations/similarity media/pilots; do
+              if [ -e "$path" ] || git ls-files -- "$path" | grep -q .; then
+                STAGE_PATHS+=("$path")
+              fi
+            done
+            git add -A -- "${STAGE_PATHS[@]}"
+
+            python - "$REQUEST" <<'PY'
+            import json
+            import subprocess
+            import sys
+            from media.service.path_policy import verify_changed_paths, verify_operation_specific_paths
+
+            request_path = sys.argv[1]
+            command = json.load(open('/tmp/media-request.json', encoding='utf-8'))
+            paths = subprocess.check_output(['git', 'diff', '--cached', '--name-only'], text=True).splitlines()
+            if request_path not in paths:
+                raise SystemExit('transient request deletion is not staged')
+            media_paths = [path for path in paths if path != request_path]
+            receipt_path = f".media/operations/{command['operation_id']}.json"
+            if receipt_path not in media_paths:
+                raise SystemExit(f'operation receipt is not staged: {receipt_path}')
+            receipt = json.load(open(receipt_path, encoding='utf-8'))
+            verify_changed_paths(command['operation'], media_paths)
+            verify_operation_specific_paths(command['operation'], media_paths, receipt.get('details') or {})
+            forbidden = ('media/schemas/', 'media/service/', 'media/domain/', '.github/workflows/')
+            forbidden_exact = {'media/vocabulary.yaml', 'media/AGENTS.md'}
+            bad = [path for path in paths if path.startswith(forbidden) or path in forbidden_exact]
+            if bad:
+                raise SystemExit(f'architecture paths rejected: {bad}')
+            PY
+
+            # Targeted authoritative data gate. Full developer regression remains in Media Dev Check.
+            python -m media.tools.validate .
+            python -m media.cli rebuild --check
+            python -m pytest               tests/media/test_record_media_entry.py               tests/media/test_v6_performance_contract.py               tests/media/test_build_index.py               tests/media/test_build_profiles.py               -q
+
+            git commit -m "data: apply media operation $OPERATION_ID"
+            HEAD_SHA=$(git rev-parse HEAD)
+            git push --force-with-lease="refs/heads/$BRANCH:$REMOTE_HEAD" origin "HEAD:$BRANCH"
+
+            git fetch origin main
+            current_main=$(git rev-parse origin/main)
+            if [ "$current_main" != "$BASE_SHA" ]; then
+              echo "Current main changed during validation; retry v6 request replay."
+              continue
+            fi
+
+            echo "Merge checked v6 operation head=$HEAD_SHA base=$BASE_SHA"
+            RESPONSE=$(gh api --method PUT "repos/$REPO/pulls/$PR_NUMBER/merge" --input - <<JSON
+          {"sha": "$HEAD_SHA", "merge_method": "merge"}
+          JSON
+            )
+            printf '%s\n' "$RESPONSE"
+            if ! printf '%s' "$RESPONSE" | jq -e '.merged == true' >/dev/null; then
+              git fetch origin main
+              current_main=$(git rev-parse origin/main)
+              if [ "$current_main" != "$BASE_SHA" ]; then
+                echo "Merge raced with a main update; retry v6 request replay."
+                continue
+              fi
+              echo "::error::GitHub refused exact-head v6 merge without a main change"
+              exit 5
+            fi
+
+            MERGE_SHA=$(printf '%s' "$RESPONSE" | jq -r '.sha // empty')
+            if [ -z "$MERGE_SHA" ]; then
+              echo "::error::Merge response did not contain a merge SHA"
+              exit 5
+            fi
+            gh workflow run media-pages.yml --repo "$REPO" --ref main -f expected_sha="$MERGE_SHA" -f publish_mode=media
+            exit 0
+          done
+
+          echo "::error::v6 operation exceeded replay retry limit"
+          exit 6
+
+      - name: Replay branch on current main
+        id: replay
+        if: ${{ steps.operation.outputs.execution_class != 'v6_single_runner' }}
+        shell: bash
+        run: |
+          echo "base_sha=$(git rev-parse origin/main)" >> "$GITHUB_OUTPUT"
+          if ! git merge --no-edit origin/main; then
+            git merge --abort || true
+            echo '{"status":"conflict","reason":"stale_base_merge_conflict"}'
+            exit 3
+          fi
+
       - name: Apply command without provider secret
-        if: ${{ steps.operation.outputs.needs_provider != 'true' }}
+        if: ${{ steps.operation.outputs.execution_class != 'v6_single_runner' && steps.operation.outputs.needs_provider != 'true' }}
         shell: bash
         env:
           REQUEST: ${{ steps.request.outputs.request }}
@@ -103,8 +249,9 @@ jobs:
           status=${PIPESTATUS[0]}
           set -e
           exit "$status"
+
       - name: Apply provider-dependent command with TMDB secret
-        if: ${{ steps.operation.outputs.needs_provider == 'true' }}
+        if: ${{ steps.operation.outputs.execution_class != 'v6_single_runner' && steps.operation.outputs.needs_provider == 'true' }}
         shell: bash
         env:
           TMDB_READ_TOKEN: ${{ secrets.TMDB_READ_TOKEN }}
@@ -115,12 +262,16 @@ jobs:
           status=${PIPESTATUS[0]}
           set -e
           exit "$status"
+
       - name: Remove transient request
+        if: ${{ steps.operation.outputs.execution_class != 'v6_single_runner' }}
         shell: bash
         env:
           REQUEST: ${{ steps.request.outputs.request }}
         run: rm -- "$REQUEST"
+
       - name: Stage operation outputs
+        if: ${{ steps.operation.outputs.execution_class != 'v6_single_runner' }}
         shell: bash
         env:
           REQUEST: ${{ steps.request.outputs.request }}
@@ -138,7 +289,9 @@ jobs:
             fi
           done
           git add -A -- "${STAGE_PATHS[@]}"
+
       - name: Verify staged path policy
+        if: ${{ steps.operation.outputs.execution_class != 'v6_single_runner' }}
         shell: bash
         env:
           REQUEST: ${{ steps.request.outputs.request }}
@@ -168,14 +321,18 @@ jobs:
           if bad:
               raise SystemExit(f'architecture paths rejected: {bad}')
           PY
+
       - name: Run full verification before commit
+        if: ${{ steps.operation.outputs.execution_class != 'v6_single_runner' }}
         run: |
           python -m pytest -q
           python -m media.tools.validate .
           python -m media.cli rebuild --check
           python -m media.cli doctor --format json
+
       - name: Commit and push operation result
         id: commit
+        if: ${{ steps.operation.outputs.execution_class != 'v6_single_runner' }}
         shell: bash
         env:
           BRANCH: ${{ github.head_ref }}
@@ -184,7 +341,9 @@ jobs:
           git commit -m "data: apply media operation $OPERATION_ID"
           git push origin "HEAD:$BRANCH"
           echo "head_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
       - name: Dispatch read-only check for exact new head
+        if: ${{ steps.operation.outputs.execution_class != 'v6_single_runner' }}
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
