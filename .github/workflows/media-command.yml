@@ -156,30 +156,30 @@ jobs:
             done
             git add -A -- "${STAGE_PATHS[@]}"
 
-            python - "$REQUEST" <<'PY'
-            import json
-            import subprocess
-            import sys
-            from media.service.path_policy import verify_changed_paths, verify_operation_specific_paths
+          python - "$REQUEST" <<'PY'
+          import json
+          import subprocess
+          import sys
+          from media.service.path_policy import verify_changed_paths, verify_operation_specific_paths
 
-            request_path = sys.argv[1]
-            command = json.load(open('/tmp/media-request.json', encoding='utf-8'))
-            paths = subprocess.check_output(['git', 'diff', '--cached', '--name-only'], text=True).splitlines()
-            if request_path not in paths:
-                raise SystemExit('transient request deletion is not staged')
-            media_paths = [path for path in paths if path != request_path]
-            receipt_path = f".media/operations/{command['operation_id']}.json"
-            if receipt_path not in media_paths:
-                raise SystemExit(f'operation receipt is not staged: {receipt_path}')
-            receipt = json.load(open(receipt_path, encoding='utf-8'))
-            verify_changed_paths(command['operation'], media_paths)
-            verify_operation_specific_paths(command['operation'], media_paths, receipt.get('details') or {})
-            forbidden = ('media/schemas/', 'media/service/', 'media/domain/', '.github/workflows/')
-            forbidden_exact = {'media/vocabulary.yaml', 'media/AGENTS.md'}
-            bad = [path for path in paths if path.startswith(forbidden) or path in forbidden_exact]
-            if bad:
-                raise SystemExit(f'architecture paths rejected: {bad}')
-            PY
+          request_path = sys.argv[1]
+          command = json.load(open('/tmp/media-request.json', encoding='utf-8'))
+          paths = subprocess.check_output(['git', 'diff', '--cached', '--name-only'], text=True).splitlines()
+          if request_path not in paths:
+              raise SystemExit('transient request deletion is not staged')
+          media_paths = [path for path in paths if path != request_path]
+          receipt_path = f".media/operations/{command['operation_id']}.json"
+          if receipt_path not in media_paths:
+              raise SystemExit(f'operation receipt is not staged: {receipt_path}')
+          receipt = json.load(open(receipt_path, encoding='utf-8'))
+          verify_changed_paths(command['operation'], media_paths)
+          verify_operation_specific_paths(command['operation'], media_paths, receipt.get('details') or {})
+          forbidden = ('media/schemas/', 'media/service/', 'media/domain/', '.github/workflows/')
+          forbidden_exact = {'media/vocabulary.yaml', 'media/AGENTS.md'}
+          bad = [path for path in paths if path.startswith(forbidden) or path in forbidden_exact]
+          if bad:
+              raise SystemExit(f'architecture paths rejected: {bad}')
+          PY
 
             # Targeted authoritative data gate. Full developer regression remains in Media Dev Check.
             python -m media.tools.validate .
