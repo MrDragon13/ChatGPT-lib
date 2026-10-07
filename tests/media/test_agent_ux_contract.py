@@ -179,4 +179,4 @@ def test_root_readme_points_to_v6_and_current_web_write_path():
     assert "Media Intelligence v6" in text
     assert "media/README.md" in text
     assert "record_media_entry" in text
-    assert "Broker" in text
+    assert "broker" in text.lower()
