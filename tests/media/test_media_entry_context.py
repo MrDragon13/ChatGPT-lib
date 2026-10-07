@@ -3,7 +3,7 @@ from __future__ import annotations
 from media.commands.schema import parse_command
 from media.domain.digests import compute_viewer_digest
 from media.service.media_entry_context import build_media_entry_context
-from media.tools.common import load_yaml
+from media.tools.common import dump_yaml, load_yaml
 from tests.media.fixture_repo import copy_fixture_repo
 
 
@@ -39,7 +39,7 @@ def test_existing_media_entry_context_is_compact_and_target_scoped(tmp_path):
     assert result["identity"]["id"] == "arrival-2016"
     assert result["identity"]["title_original"] == "Arrival"
     assert result["viewer"]["digest"] == compute_viewer_digest(work, "primary")
-    assert result["viewer"]["state"]["viewing"] == {"status": "unwatched"}
+    assert result["viewer"]["state"]["viewing"] == work["viewer_signals"]["primary"]["viewing"]
     assert "history" not in result["viewer"]["state"]
     assert "partner" not in result["viewer"]
     assert "profile" not in result
@@ -48,7 +48,7 @@ def test_existing_media_entry_context_is_compact_and_target_scoped(tmp_path):
     assert result["metadata_freshness"] == {
         "identity": "current",
         "static": "current",
-        "dynamic": "current",
+        "dynamic": "missing",
     }
     assert set(result["semantic"]) == {
         "status",
@@ -61,13 +61,34 @@ def test_existing_media_entry_context_is_compact_and_target_scoped(tmp_path):
 
 def test_media_entry_context_keeps_structured_feedback_but_omits_history(tmp_path):
     root = copy_fixture_repo(tmp_path)
-    result = build_media_entry_context(root / "media", request({"id": "deja-vu-2006"}))
+    path = root / "media/data/works/arrival-2016.yaml"
+    work = load_yaml(path)
+    signal = work["viewer_signals"]["primary"]
+    signal["feedback"] = {
+        "summary": "Сильная интрига.",
+        "signals": [{
+            "term": "story.intrigue",
+            "sentiment": "positive",
+            "strength": 3,
+            "source": "explicit",
+            "confidence": "high",
+        }],
+    }
+    signal["history"] = [{
+        "at": "2026-10-07T12:00:00Z",
+        "event_id": "123e4567-e89b-42d3-a456-426614174777",
+        "material_evidence": True,
+        "previous": {},
+        "current": {"feedback": signal["feedback"]},
+    }]
+    dump_yaml(path, work)
+
+    result = build_media_entry_context(root / "media", request())
 
     state = result["viewer"]["state"]
     assert "history" not in state
-    assert set(state) <= {"viewing", "rating", "reaction", "feedback"}
-    if "feedback" in state:
-        assert set(state["feedback"]) <= {"summary", "signals"}
+    assert state["feedback"]["summary"] == "Сильная интрига."
+    assert state["feedback"]["signals"][0]["term"] == "story.intrigue"
 
 
 def test_missing_stable_work_returns_only_submitted_identity_without_fabricating_provider_facts(tmp_path):
