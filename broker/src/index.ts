@@ -7,7 +7,7 @@ import {
   OperationSubmissionError,
   findActiveOperation,
   getOperationStatus,
-  submitFeedback,
+  submitFeedbackV6,
 } from "./operations";
 
 function responseWithCors(response: Response, origin: string | null, env: BrokerEnv): Response {
@@ -91,7 +91,7 @@ const worker = {
             pr_number: active.pr_number,
           }, 409), origin, env);
         }
-        const result = await submitFeedback(input, env);
+        const result = await submitFeedbackV6(input, env);
         return responseWithCors(jsonResponse(result, 202), origin, env);
       } catch (error) {
         if (error instanceof RequestBodyError || error instanceof FeedbackValidationError) {
