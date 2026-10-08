@@ -35,6 +35,7 @@ def audit_input_paths(repo_root: Path) -> tuple[Path, ...]:
     for path in (
         media / "config/viewers.yaml",
         media / "config/groups.yaml",
+        media / "config/intelligence.yaml",
         media / "vocabulary.yaml",
     ):
         if path.is_file():

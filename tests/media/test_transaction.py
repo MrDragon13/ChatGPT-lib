@@ -123,7 +123,7 @@ def test_path_policy_rejects_schema_and_service_paths():
     with pytest.raises(PathPolicyError):
         verify_changed_paths("record_media_entry", ["media/service/mutate.py"])
     verify_changed_paths(
-        "record_viewing_feedback",
+        "record_media_entry",
         [
             "media/data/works/arrival-2016.yaml",
             "media/generated/index.jsonl",
