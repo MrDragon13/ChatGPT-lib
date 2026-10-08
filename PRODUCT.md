@@ -1,5 +1,9 @@
 # Media Web: продукт
 
+<!-- impeccable:product-schema 1 -->
+
+Технические метки: `Scope: media-web`, `Platform: web`, стек — React + Vite + TypeScript + Motion.
+
 Область документа: `media-web`. Это описание продукта, а не архитектуры всего репозитория.
 
 ## Для кого
