@@ -16,7 +16,7 @@
 12. **Read-only stays read-only.** `media_entry_context`, `recommend_context`, `taste_context`, `assess_candidate` не мутируют canonical state.
 13. **One human event, one normal write.** Связанные сигналы одного work по возможности записываются одной `record_media_entry`.
 14. **Existing feedback has zero provider I/O.** Обычный existing-work `record_media_entry` не требует provider, metadata refresh или semantic recomputation.
-15. **New work is atomic.** Identity/minimum metadata/semantic snapshot/viewer evidence нового work применяются одной transaction.
+15. **New work is atomic and provider-owned.** Stable provider identity, trusted provider metadata, semantic traits и viewer evidence нового work применяются одной transaction; технические semantic digests вычисляет runtime.
 16. **Viewer digest is target-scoped.** Изменение metadata, semantics или другого target не должно менять digest текущего viewer.
 17. **No-change is real success.** `no_change` не создаёт fake history/evidence и не запускает ненужную пересборку.
 18. **Idempotency is human-event scoped.** Тот же `idempotency_key` + тот же intent не дублирует запись; другой intent с тем же key fail closed.
@@ -29,7 +29,7 @@
 25. **Same-work pending does not fan out.** Второе уточнение того же work не создаёт параллельный request PR до завершения первого.
 26. **Request PR is request-only.** До исполнения normal operation PR содержит ровно один `.media/requests/<id>.json`.
 27. **Path policy is narrow.** Normal data operation не получает права менять schemas, vocabulary, workflows или architecture.
-28. **Auto-merge uses one v6 runner.** Все `auto_merge=true` operations используют `v6_single_runner`; удалённые `Media Check`/`Media Auto Merge` не являются текущим путём.
+28. **Auto-merge uses one v6 runner.** Все `auto_merge=true` operations используют `v6_single_runner`; старый раздельный validation/merge path не является текущим путём.
 29. **Main is rechecked before merge.** GitHub Actions queue не заменяет exact base/head guard.
 30. **Manual maintenance stays manual.** Bulk `refresh_metadata` не auto-merge.
 31. **Each dirty output rebuilds at most once per transaction.** Derived work следует dependency plan, а не числу внутренних mutations.

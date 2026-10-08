@@ -21,7 +21,7 @@ const validManifestV2 = {
 
 const validManifestV3 = {
   ...validManifestV2,
-  schema_version: 3,
+  schema_version: 4,
 };
 
 afterEach(() => {
@@ -39,7 +39,7 @@ describe("loadManifest", () => {
     await expect(loadManifest()).resolves.toEqual(validManifestV2);
   });
 
-  it("loads the current manifest v3", async () => {
+  it("loads the current manifest v4", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => validManifestV3 }));
     await expect(loadManifest()).resolves.toEqual(validManifestV3);
   });

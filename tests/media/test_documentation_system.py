@@ -51,7 +51,7 @@ def test_root_readme_does_not_publish_dated_specs_as_current_architecture():
     assert not re.search(r"(?is)(current|актуальн)[^\n]{0,80}docs/superpowers/(?:specs|plans)/20\d\d-", text)
 
 
-def test_architecture_layer_covers_current_v51_without_historical_specs():
+def test_architecture_layer_covers_current_v6_without_historical_specs():
     overview = _text("docs/architecture/overview.md")
     media_model = _text("docs/architecture/media-model.md")
     for phrase in ("canonical", "derived", "GitHub Actions", "broker", "web manifest"):
@@ -118,7 +118,7 @@ def test_reference_invariants_include_cross_system_safety_rules():
 
 def test_current_status_is_durable_not_a_pr_ledger():
     text = _text("docs/status/current.md")
-    for required in ("Media Intelligence v6", "record_media_entry", "assess_candidate", "set_work_similarity", "manifest", "v3", "empty_library"):
+    for required in ("Media Intelligence v6", "record_media_entry", "assess_candidate", "set_work_similarity", "manifest", "v4", "empty_library"):
         assert required in text
     for forbidden in ("Current head:", "Media Dev Check #", "Web Check #", "Task 1", "Task 2", "resume from branch"):
         assert forbidden not in text
@@ -138,14 +138,6 @@ def test_media_readme_is_compact_subsystem_router():
     assert len(text) < 7000
 
 
-def test_v5_status_is_small_compatibility_router():
-    text = _text("media/V5_STATUS.md")
-    assert "Media Intelligence v5.1" in text
-    assert "../docs/status/current.md" in text
-    assert "historical" in text.lower() or "истор" in text.lower()
-    assert len(text) < 3500
-    assert "Task 1–4" not in text
-    assert "Media Dev Check #" not in text
 
 
 def test_product_and_design_are_explicitly_scoped_to_media_web():
@@ -171,7 +163,7 @@ def test_agent_bootstrap_does_not_require_historical_specs_or_long_status():
 def test_key_living_documentation_local_links_resolve():
     paths = [
         Path("README.md"), Path("AGENTS.md"), Path("media/README.md"), Path("media/AGENTS.md"),
-        Path("media/START_PROMPT.md"), Path("media/V5_STATUS.md"), Path("docs/README.md"),
+        Path("media/START_PROMPT.md"), Path("docs/README.md"),
     ]
     for directory in ("docs/architecture", "docs/guides", "docs/reference", "docs/status"):
         paths.extend(path.relative_to(ROOT) for path in sorted((ROOT / directory).glob("*.md")))

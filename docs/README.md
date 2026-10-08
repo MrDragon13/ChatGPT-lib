@@ -1,6 +1,6 @@
 # Документация ChatGPT-lib
 
-Текущая media capability — **Media Intelligence v6**. Living docs ниже описывают post-reset систему; v5/v5.1 материалы под `superpowers/` и старые compatibility-файлы являются историей.
+Текущая media capability — **Media Intelligence v6**. Living docs ниже описывают post-reset систему; v5/v5.1 материалы под `superpowers/` являются историей решений, а старые runtime compatibility surfaces удалены.
 
 Этот каталог — карта **living documentation**: актуального описания того, как проект устроен и используется сейчас. Dated design specs и implementation plans сохраняются как история решений, но не являются текущим операционным контрактом после реализации соответствующих изменений.
 

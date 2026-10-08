@@ -35,8 +35,8 @@ def test_media_command_serializes_data_writes_without_cancelling_pending_runs():
 
 def test_media_command_requires_one_request_and_replays_on_fresh_main():
     text=_text("media-command.yml")
-    assert "Require exactly one pending request" in text
-    assert "Expected exactly one pending .media/requests/*.json file" in text
+    assert "Resolve pending or already-applied request" in text
+    assert "Expected exactly one pending request or a recognized data: apply media operation commit" in text
     assert "find .media/requests -maxdepth 1 -type f -name '*.json'" in text
     assert "Replay v6 operation on latest main" in text
     assert "git fetch origin main" in text
@@ -53,7 +53,6 @@ def test_provider_secret_is_exposed_only_when_operation_needs_provider():
     assert "operation == 'refresh_metadata'" in text
     assert "operation == 'refresh_work_metadata'" in text
     assert "'record_media_entry'" in text
-    assert "'record_viewing_feedback'" in text
     assert "steps.operation.outputs.needs_provider == 'true'" in text
 
 
@@ -77,7 +76,7 @@ def test_single_runner_has_targeted_authoritative_gate_and_exact_head_merge():
         "record_media_entry",
         "set_inferred_preferences",
         "add_work",
-        "record_viewing_feedback|edit_viewing_feedback|set_interest",
+        "edit_viewing_feedback|set_interest",
         "set_semantic_fingerprint",
         "record_recommendation_interaction",
         "set_work_similarity|remove_work_similarity",

@@ -6,9 +6,8 @@
 
 | Operation | Категория | Режим | Основной effect | Normal auto-merge |
 | --- | --- | --- | --- | --- |
-| `record_media_entry` | feedback/library | write | Атомарно записать пользовательский отзыв; для отсутствующего work одновременно проверить identity/минимальные metadata/semantics и создать work | да |
+| `record_media_entry` | feedback/library | write | Атомарно записать пользовательский отзыв; для отсутствующего work проверить stable provider identity, получить metadata на trusted side, сохранить semantics и создать work | да |
 | `media_entry_context` | library context | read-only | Вернуть компактное target-scoped состояние work для LLM/Broker без лишних чтений | n/a |
-| `record_viewing_feedback` | feedback | write | Записать viewing/rating/reaction/feedback; может атомарно создать отсутствующий work при `create_if_missing` | да |
 | `edit_viewing_feedback` | feedback | write | Точечно изменить/clear/purge target-scoped viewing feedback | да |
 | `set_interest` | library intent | write | Установить устойчивое interest state для target/work | да |
 | `add_work` | library | write | Добавить canonical work после identity/provider validation | да |
@@ -23,7 +22,7 @@
 | `taste_context` | intelligence | read-only | Построить компактный target taste/evidence context | n/a |
 | `assess_candidate` | intelligence | read-only | Собрать контекст для qualitative ответа «понравится ли мне X?» без mutation | n/a |
 
-Для `record_media_entry(create_if_missing=true)` поле `minimum_metadata` — проверяемое подмножество устойчивых структурированных provider facts. Оно не является копией полного provider payload: credits и длинный `synopsis_short` не должны использоваться как блокирующие preconditions. Полные provider metadata всё равно сохраняются в canonical work.
+Для `record_media_entry(create_if_missing=true)` клиент передаёт stable `provider_identity`, semantic traits и пользовательские сигналы. Полный provider payload, semantic input digest, vocabulary digest и algorithm version получает или вычисляет trusted runtime. Это исключает ложные конфликты из-за изменившегося runtime, локализации, credits или synopsis.
 
 ## Write vs read-only
 
@@ -47,7 +46,6 @@ Source contracts:
 
 - `media/commands/schemas/record_media_entry.schema.json`
 - `media/commands/schemas/media_entry_context.schema.json`
-- `media/commands/schemas/record_viewing_feedback.schema.json`
 - `media/commands/schemas/edit_viewing_feedback.schema.json`
 - `media/commands/schemas/set_interest.schema.json`
 - `media/commands/schemas/add_work.schema.json`

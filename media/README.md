@@ -37,8 +37,6 @@ Derived state находится в `generated/` и пересобирается
 
 [`START_PROMPT.md`](START_PROMPT.md) — human-facing launcher нового киноассистента.
 
-`V5_STATUS.md` сохранён только как historical compatibility pointer.
-
 ## CLI quickstart
 
 ```bash

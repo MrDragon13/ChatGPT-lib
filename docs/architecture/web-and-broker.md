@@ -70,11 +70,11 @@ Internal preconditions добавляет Broker.
 
 ## Web manifest
 
-Current manifest version: v3.
+Current manifest version: v4.
 
 Manifest строится только из canonical/derived media data.
 
-Он включает публичные viewer/group signals, taste/recommendation read models, semantics и explicit similarity, но не публикует внутренние viewer digests или GitHub operation bookkeeping.
+Он включает публичные viewer/group signals, taste/recommendation read models, semantics, explicit similarity и публичный reanalysis gate. Внутренние viewer/evidence digests и GitHub operation bookkeeping не публикуются.
 
 Пустая библиотека экспортируется как валидный manifest с `works: []` и пустыми recommendation candidate sets.
 
