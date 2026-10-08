@@ -12,7 +12,7 @@
 
 Эти слои нельзя смешивать.
 
-Explicit evidence имеет приоритет над inferred interpretation. Inferred output не является independent evidence для следующего inference. Film fingerprint описывает work, never the viewer reaction.
+Explicit evidence имеет приоритет над inferred interpretation. Inferred output не является independent evidence для следующего inference. Film fingerprint описывает work, never the viewer reaction. Credits (directors/writers/main cast) остаются canonical metadata, но не входят в semantic input digest: изменение состава или порядка credits не должно само по себе инвалидировать fingerprint содержания.
 
 ## Taste profile
 
