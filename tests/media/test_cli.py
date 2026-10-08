@@ -4,17 +4,30 @@ import json
 from pathlib import Path
 
 from media.cli import main
+from media.domain.digests import compute_viewer_digest
+from media.tools.common import load_yaml
 from media.tools.rebuild import rebuild_generated
 from tests.media.fixture_repo import copy_fixture_repo
 
 UUID="123e4567-e89b-42d3-a456-426614174201"
 
 def _write_json(path:Path,data:dict)->Path: path.write_text(json.dumps(data,ensure_ascii=False),encoding="utf-8"); return path
-def _feedback_command(path:Path)->Path: return _write_json(path,{"schema_version":1,"operation_id":UUID,"operation":"record_viewing_feedback","work_ref":{"id":"arrival-2016"},"target_updates":[{"target":"primary","rating":{"score":8.5,"source":"explicit_approx","confidence":"high"}}]})
+def _feedback_command(root:Path,path:Path)->Path:
+    work=load_yaml(root/"media/data/works/arrival-2016.yaml")
+    return _write_json(path,{
+        "schema_version":1,
+        "operation_id":UUID,
+        "idempotency_key":UUID,
+        "operation":"record_media_entry",
+        "work_ref":{"id":"arrival-2016"},
+        "create_if_missing":False,
+        "target_updates":[{"target":"primary","rating":{"score":8.5,"source":"explicit_approx","confidence":"high"}}],
+        "preconditions":{"expected_viewer_digests":{"primary":compute_viewer_digest(work,"primary")}},
+    })
 def test_apply_command_dry_run_changes_nothing(tmp_path,monkeypatch,capsys):
-    root=copy_fixture_repo(tmp_path); rebuild_generated(root/"media"); request=_feedback_command(root/"request.json"); before={str(p.relative_to(root)):p.read_bytes() for p in root.rglob("*") if p.is_file()}; monkeypatch.chdir(root); assert main(["apply-command",str(request),"--dry-run","--format","json"])==0; result=json.loads(capsys.readouterr().out); assert result["status"]=="planned"; after={str(p.relative_to(root)):p.read_bytes() for p in root.rglob("*") if p.is_file()}; assert after==before
+    root=copy_fixture_repo(tmp_path); rebuild_generated(root/"media"); request=_feedback_command(root,root/"request.json"); before={str(p.relative_to(root)):p.read_bytes() for p in root.rglob("*") if p.is_file()}; monkeypatch.chdir(root); assert main(["apply-command",str(request),"--dry-run","--format","json"])==0; result=json.loads(capsys.readouterr().out); assert result["status"]=="planned"; after={str(p.relative_to(root)):p.read_bytes() for p in root.rglob("*") if p.is_file()}; assert after==before
 def test_apply_command_json_reports_status_entities_and_files(tmp_path,monkeypatch,capsys):
-    root=copy_fixture_repo(tmp_path); rebuild_generated(root/"media"); request=_feedback_command(root/"request.json"); monkeypatch.chdir(root); assert main(["apply-command",str(request),"--format","json"])==0; result=json.loads(capsys.readouterr().out); assert result["status"]=="applied"; assert result["changed_entities"]==["arrival-2016"]; assert "media/data/works/arrival-2016.yaml" in result["changed_files"]; assert any(path.startswith(".media/operations/") for path in result["changed_files"])
+    root=copy_fixture_repo(tmp_path); rebuild_generated(root/"media"); request=_feedback_command(root,root/"request.json"); monkeypatch.chdir(root); assert main(["apply-command",str(request),"--format","json"])==0; result=json.loads(capsys.readouterr().out); assert result["status"]=="applied"; assert result["changed_entities"]==["arrival-2016"]; assert "media/data/works/arrival-2016.yaml" in result["changed_files"]; assert any(path.startswith(".media/operations/") for path in result["changed_files"])
 def test_add_existing_work_reports_no_change_without_tmdb_token(tmp_path,monkeypatch,capsys):
     root=copy_fixture_repo(tmp_path); rebuild_generated(root/"media"); request=_write_json(root/"add.json",{"schema_version":1,"operation_id":"123e4567-e89b-42d3-a456-426614174202","operation":"add_work","work_ref":{"title":"Arrival","year":2016}}); monkeypatch.chdir(root); monkeypatch.delenv("TMDB_READ_TOKEN",raising=False); assert main(["apply-command",str(request),"--format","json"])==0; result=json.loads(capsys.readouterr().out); assert result["status"]=="no_change"; assert result["changed_entities"]==[]
 def test_doctor_json_has_status_and_checks(tmp_path,monkeypatch,capsys):
@@ -29,7 +42,7 @@ def test_assess_candidate_request_cannot_be_applied(tmp_path,monkeypatch,capsys)
     root=copy_fixture_repo(tmp_path); rebuild_generated(root/"media"); request=_write_json(root/"assess.json",{"schema_version":1,"operation":"assess_candidate","target":"primary","candidate":{"id":"unwatched-fit-2020"}}); monkeypatch.chdir(root); assert main(["apply-command",str(request),"--format","json"])==2; result=json.loads(capsys.readouterr().out); assert result["reason"]=="CommandValidationError"; assert "read-only" in result["message"]
 
 def test_web_export_writes_manifest_and_reports_size(tmp_path,monkeypatch,capsys):
-    root=copy_fixture_repo(tmp_path); rebuild_generated(root/"media"); output=root/"build"/"manifest.json"; monkeypatch.chdir(root); assert main(["web-export","--output",str(output),"--format","json"])==0; result=json.loads(capsys.readouterr().out); assert result["status"]=="ok"; assert result["output"]==str(output); assert result["works"]==8; assert result["bytes"]==output.stat().st_size; manifest=json.loads(output.read_text(encoding="utf-8")); assert manifest["schema_version"]==3
+    root=copy_fixture_repo(tmp_path); rebuild_generated(root/"media"); output=root/"build"/"manifest.json"; monkeypatch.chdir(root); assert main(["web-export","--output",str(output),"--format","json"])==0; result=json.loads(capsys.readouterr().out); assert result["status"]=="ok"; assert result["output"]==str(output); assert result["works"]==8; assert result["bytes"]==output.stat().st_size; manifest=json.loads(output.read_text(encoding="utf-8")); assert manifest["schema_version"]==4
 
 
 def test_refresh_work_metadata_cli_dry_run_initializes_provider(tmp_path, monkeypatch, capsys):
@@ -86,7 +99,6 @@ def test_record_media_entry_existing_work_cli_needs_no_tmdb_token(tmp_path, monk
 
 
 def test_record_media_entry_new_work_cli_initializes_provider(tmp_path, monkeypatch, capsys):
-    from media.domain.digests import compute_semantic_input_digest, compute_vocabulary_digest
     from media.providers.base import CanonicalMetadata
 
     root=copy_fixture_repo(tmp_path); rebuild_generated(root/"media")
@@ -107,15 +119,6 @@ def test_record_media_entry_new_work_cli_initializes_provider(tmp_path, monkeypa
             "provenance":{"provider":"tmdb","provider_id":987654,"fetched_at":"2026-10-07T00:00:00Z"},
         },
     )
-    vocabulary_digest=compute_vocabulary_digest(root/"media")
-    work_for_digest={
-        "schema_version":4,
-        "id":"placeholder",
-        "entity_type":"work",
-        "identity":dict(metadata.identity),
-        "metadata":{"external":dict(metadata.external)},
-    }
-    semantic_digest=compute_semantic_input_digest(work_for_digest,vocabulary_digest,"media-semantic-v1")
     request=_write_json(root/"entry-new.json",{
         "schema_version":1,
         "operation_id":"123e4567-e89b-42d3-a456-426614174302",
@@ -125,20 +128,10 @@ def test_record_media_entry_new_work_cli_initializes_provider(tmp_path, monkeypa
         "create_if_missing":True,
         "target_updates":[{"target":"primary","viewing":{"status":"watched"}}],
         "creation_context":{
-            "resolved_identity":dict(metadata.identity),
             "provider_identity":{"media_type":"movie","id":987654},
-            "minimum_metadata":{
-                "genres":["genre.drama"],
-                "runtime_min":121,
-                "original_language":"en",
-                "synopsis_short":"A carefully verified new film.",
-            },
         },
         "semantic_snapshot":{
             "traits":[{"term":"story.intrigue","source":"llm_inferred","confidence":"high"}],
-            "semantic_input_digest":semantic_digest,
-            "vocabulary_digest":vocabulary_digest,
-            "algorithm_version":"media-semantic-v1",
         },
         "preconditions":{"expected_viewer_digests":{}},
     })
