@@ -1,20 +1,20 @@
 # Media Web
 
-`web/` — статическая React/Vite поверхность персональной медиатеки, публикуемая через GitHub Pages. Она читает versioned derived manifest и не является вторым source of truth.
+`web/` — статический React/Vite-интерфейс медиатеки, который публикуется через GitHub Pages. Он читает версионированный производный manifest и не является отдельным источником данных.
 
-## Где лежат актуальные контракты
+## Актуальные документы
 
-- [Web and broker architecture](../docs/architecture/web-and-broker.md) — manifest, broker и security boundaries.
-- [System architecture](../docs/architecture/overview.md) — место web в общей системе.
-- [Operations runbook](../docs/guides/operations.md) — verification/build/deploy.
-- [`PRODUCT.md`](../PRODUCT.md) — media-web product brief.
-- [`DESIGN.md`](../DESIGN.md) — visual/design-system contract.
+- [Web и Broker](../docs/architecture/web-and-broker.md)
+- [Общая архитектура](../docs/architecture/overview.md)
+- [Эксплуатация](../docs/guides/operations.md)
+- [Описание продукта](../PRODUCT.md)
+- [Дизайн-система](../DESIGN.md)
 
-Canonical media state живёт под `media/`; frontend не читает и не мутирует canonical YAML напрямую. Поддерживаемые edits идут через protected Broker, который преобразует feedback в `record_media_entry` и передаёт его в общий v6 typed-command pipeline.
+Исходные данные медиатеки живут в `media/`. Frontend не читает и не меняет YAML напрямую. Поддерживаемые правки отправляются через Broker, который преобразует их в `record_media_entry` и передаёт в общий v6-путь записи.
 
-Пока запись по произведению ещё не подтверждена, editor не отправляет второй write по тому же `work/target`. Пользователь при этом может продолжать править локальный черновик; после публикации первой операции Web обновляет canonical manifest и только затем разрешает отправить накопленное уточнение.
+Если по одному `work/target` уже выполняется запись, Web не отправляет вторую параллельную операцию. Пользователь может продолжать менять локальный черновик; после публикации первой операции Web обновляет manifest и разрешает отправить следующее изменение.
 
-После v6 reset пустая медиатека — нормальное состояние. Home/Library/History должны показывать явный empty state и оставаться доступными на desktop/mobile/reduced-motion. Не создавайте фиктивные works ради UI.
+Пустая библиотека остаётся поддерживаемым состоянием: Home, Library и History должны показывать понятный empty state, а не фиктивные произведения.
 
 ## Локальная проверка
 
@@ -26,4 +26,4 @@ npm run build
 npm run scan:dist
 ```
 
-Browser/accessibility/responsive checks запускаются текущим `Web Check` workflow. Browser bundle не должен содержать GitHub write credentials, provider tokens или model secrets.
+Проверки браузера, адаптивности и доступности запускает workflow `Web Check`. В собранном браузерном коде не должно быть GitHub-токенов, ключей провайдера или других секретов.
