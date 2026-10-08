@@ -228,26 +228,77 @@ jobs:
               continue
             fi
 
+            echo "Wait for GitHub PR mergeability after force-push head=$HEAD_SHA base=$BASE_SHA"
+            MAX_MERGE_READY_ATTEMPTS=12
+            MERGE_READY=false
+            for ready_attempt in $(seq 1 "$MAX_MERGE_READY_ATTEMPTS"); do
+              PR_JSON=$(gh api "repos/$REPO/pulls/$PR_NUMBER")
+              PR_HEAD_SHA=$(printf '%s' "$PR_JSON" | jq -r '.head.sha // empty')
+              PR_BASE_SHA=$(printf '%s' "$PR_JSON" | jq -r '.base.sha // empty')
+              PR_MERGEABLE=$(printf '%s' "$PR_JSON" | jq -r 'if .mergeable == null then "unknown" elif .mergeable then "true" else "false" end')
+              PR_MERGEABLE_STATE=$(printf '%s' "$PR_JSON" | jq -r '.mergeable_state // "unknown"')
+
+              if [ "$PR_HEAD_SHA" != "$HEAD_SHA" ]; then
+                echo "::error::PR head changed after checked force-push: expected=$HEAD_SHA actual=$PR_HEAD_SHA"
+                exit 5
+              fi
+              if [ "$PR_BASE_SHA" != "$BASE_SHA" ]; then
+                git fetch origin main
+                current_main=$(git rev-parse origin/main)
+                if [ "$current_main" != "$BASE_SHA" ]; then
+                  echo "PR base/main changed while waiting for mergeability; retry v6 request replay."
+                  continue 2
+                fi
+                echo "::error::PR base SHA differs from checked main without a visible main change"
+                exit 5
+              fi
+              if [ "$PR_MERGEABLE" = "true" ]; then
+                MERGE_READY=true
+                break
+              fi
+              if [ "$PR_MERGEABLE" = "false" ] && [ "$PR_MERGEABLE_STATE" != "unknown" ]; then
+                echo "::error::Checked PR head is not mergeable: state=$PR_MERGEABLE_STATE"
+                exit 5
+              fi
+              sleep 2
+            done
+
+            if [ "$MERGE_READY" != "true" ]; then
+              echo "::error::GitHub did not calculate mergeability for checked PR head in time"
+              exit 5
+            fi
+
             echo "Merge checked v6 operation head=$HEAD_SHA base=$BASE_SHA"
-            RESPONSE=$(gh api --method PUT "repos/$REPO/pulls/$PR_NUMBER/merge" --input - <<JSON
+            MAX_MERGE_API_ATTEMPTS=4
+            MERGE_SHA=""
+            for merge_attempt in $(seq 1 "$MAX_MERGE_API_ATTEMPTS"); do
+              set +e
+              RESPONSE=$(gh api --method PUT "repos/$REPO/pulls/$PR_NUMBER/merge" --input - 2>&1 <<JSON
           {"sha": "$HEAD_SHA", "merge_method": "merge"}
           JSON
-            )
-            printf '%s\n' "$RESPONSE"
-            if ! printf '%s' "$RESPONSE" | jq -e '.merged == true' >/dev/null; then
+              )
+              MERGE_STATUS=$?
+              set -e
+              printf '%s\n' "$RESPONSE"
+
+              if [ "$MERGE_STATUS" -eq 0 ] && printf '%s' "$RESPONSE" | jq -e '.merged == true' >/dev/null 2>&1; then
+                MERGE_SHA=$(printf '%s' "$RESPONSE" | jq -r '.sha // empty')
+                break
+              fi
+
               git fetch origin main
               current_main=$(git rev-parse origin/main)
               if [ "$current_main" != "$BASE_SHA" ]; then
                 echo "Merge raced with a main update; retry v6 request replay."
-                continue
+                continue 2
               fi
-              echo "::error::GitHub refused exact-head v6 merge without a main change"
-              exit 5
-            fi
 
-            MERGE_SHA=$(printf '%s' "$RESPONSE" | jq -r '.sha // empty')
+              echo "Merge API was not ready for exact head yet; retry $merge_attempt/$MAX_MERGE_API_ATTEMPTS."
+              sleep 2
+            done
+
             if [ -z "$MERGE_SHA" ]; then
-              echo "::error::Merge response did not contain a merge SHA"
+              echo "::error::GitHub refused exact-head v6 merge after bounded readiness retries"
               exit 5
             fi
             gh workflow run media-pages.yml --repo "$REPO" --ref main -f expected_sha="$MERGE_SHA" -f publish_mode=media

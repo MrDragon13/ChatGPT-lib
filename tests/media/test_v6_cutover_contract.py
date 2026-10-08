@@ -63,14 +63,15 @@ def test_live_broker_feedback_route_uses_v6_mapping():
     assert "const result = await submitFeedback(input, env);" not in text
 
 
-def test_active_library_is_empty_but_archive_and_explicit_preferences_remain():
-    assert list(Path("media/data/works").glob("*.yaml"))==[]
-    assert list(Path("media/data/collections").glob("*.yaml"))==[]
-    assert list(Path("media/data/relations/similarity").glob("*.yaml"))==[]
-    assert list(Path("media/data/interactions").glob("*.jsonl"))==[]
-    assert list(Path("media/preferences/inferred").glob("*.yaml"))==[]
-    assert list(Path(".media/operations").glob("*.json"))==[]
+def test_cutover_archive_and_global_rules_remain_after_library_repopulation():
     assert Path("docs/archive/media-library-before-v6-reset-2026-10-07.md").exists()
     assert Path("media/preferences/explicit/primary.yaml").exists()
     assert Path("media/vocabulary.yaml").exists()
-    assert Path("media/generated/index.jsonl").read_bytes()==b""
+
+    # These were one-time v5 runtime artifacts and must not return.
+    assert not Path("media/pilots/legacy-reassessment-primary.json").exists()
+    assert not Path("media/baselines/intelligence-stage-a.json").exists()
+    assert not Path("media/baselines/intelligence-stage-a.meta.json").exists()
+
+    # Active v6 works/interactions/preferences/receipts are allowed to grow again.
+    # Their consistency is covered by canonical validation and rebuild checks.

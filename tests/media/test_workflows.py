@@ -201,3 +201,29 @@ def test_single_runner_replay_shell_is_syntax_valid():
     )
     assert result.returncode == 0, result.stderr
 
+
+
+def test_single_runner_waits_for_github_mergeability_after_force_push():
+    text=_text("media-command.yml")
+    fast=text.split("- name: Replay v6 operation on latest main",1)[1].split("- name: Replay branch on current main",1)[0]
+    assert "Wait for GitHub PR mergeability" in fast
+    assert "MAX_MERGE_READY_ATTEMPTS" in fast
+    assert 'repos/$REPO/pulls/$PR_NUMBER' in fast
+    assert ".head.sha" in fast
+    assert ".base.sha" in fast
+    assert ".mergeable" in fast
+    assert "sleep 2" in fast
+
+
+def test_single_runner_handles_merge_api_failure_without_set_e_short_circuit():
+    text=_text("media-command.yml")
+    fast=text.split("- name: Replay v6 operation on latest main",1)[1].split("- name: Replay branch on current main",1)[0]
+    merge_call=fast.index('gh api --method PUT "repos/$REPO/pulls/$PR_NUMBER/merge"')
+    before=fast[max(0,merge_call-400):merge_call]
+    after=fast[merge_call:merge_call+1200]
+    assert "set +e" in before
+    assert "MERGE_STATUS=$?" in after
+    assert "set -e" in after
+    assert '"$MERGE_STATUS" -eq 0' in after
+    assert ".merged == true" in after
+    assert "Merge API was not ready" in after
