@@ -78,7 +78,7 @@ def test_cutover_archive_and_global_rules_remain_after_library_repopulation():
 
 
 def test_post_cutover_runtime_has_no_v5_compatibility_surface():
-    root = ROOT
+    root = Path(".")
     assert not (root / "media" / "V5_STATUS.md").exists()
     assert not (root / "media" / "commands" / "schemas" / "record_viewing_feedback.schema.json").exists()
 

@@ -131,6 +131,6 @@ def test_write_pipeline_documents_final_v6_queue_and_removes_legacy_handoff():
 
 
 def test_living_operations_guide_has_no_removed_workflow_names():
-    text = (ROOT / "docs" / "guides" / "operations.md").read_text(encoding="utf-8")
+    text = Path("docs/guides/operations.md").read_text(encoding="utf-8")
     assert "Media Check" not in text
     assert "Media Auto Merge" not in text
