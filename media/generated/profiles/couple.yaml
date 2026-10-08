@@ -252,9 +252,9 @@ affinities:
       trait_confidence: high
       weight: 0.225
   visuals.strong:
-    score: -1.0
-    confidence: low
-    evidence_count: 1
+    score: 0.0
+    confidence: medium
+    evidence_count: 2
     evidence:
     - entity_id: deja-vu-2006
       source_target: primary
@@ -264,13 +264,21 @@ affinities:
       source: explicit
       confidence: high
       weight: 1.8
+    - entity_id: masters-of-the-universe-2026
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
 explicit_preferences: []
 rules: []
 constraints: []
 summary:
-  ratings_count: 2
+  ratings_count: 3
   reactions_count: 1
   relations_count: 0
-  viewing_count: 2
+  viewing_count: 3
 evidence:
-  entity_count: 1
+  entity_count: 2
