@@ -1,28 +1,50 @@
-# Media operation transport
+# Служебные файлы media-операций
 
-`.media/requests/*.json` — временные typed requests для обычных media mutations. Они не являются canonical media data и удаляются после применения операции.
+Каталог `.media/` хранит служебные файлы пути записи. Это не пользовательская медиатека и не второй источник истины.
 
-`.media/operations/*.json` — технические receipts для idempotency/audit. После v6 reset старые receipts удалены; новые появляются только для новых операций.
+## Запросы
 
-Обычный auto-merge write использует один `Media Command` runner:
+`.media/requests/*.json` — временные типизированные запросы обычных операций медиатеки.
+
+До выполнения request-only PR должен содержать ровно один файл:
+
+```text
+.media/requests/<operation-id>.json
+```
+
+Заранее подготовленных изменений канонических YAML или `generated/` в таком PR быть не должно.
+
+## Квитанции операций
+
+`.media/operations/*.json` — технические квитанции (`receipts`) для идемпотентности и аудита.
+
+После сброса v6 старые квитанции были удалены. Новые появляются только после новых операций.
+
+## Обычный путь записи
+
+Все операции с автоматическим слиянием используют единый `Media Command` runner:
 
 ```text
 request-only media/op-* PR
 → очередь media-data-pipeline
-→ replay request на свежий main
-→ deterministic transaction
-→ operation-specific path policy
+→ повторное применение (`replay`) запроса на свежем main
+→ детерминированная transaction
+→ политика путей для конкретной операции
 → минимальная пересборка
-→ targeted authoritative tests
-→ exact-head/base guard
-→ merge
-→ Media Pages для merge SHA
+→ целевые проверки операции
+→ точная проверка head/base
+→ слияние
+→ Media Pages для SHA слияния
 ```
 
-Старый раздельный validation/merge path удалён; normal write полностью обслуживает единый `Media Command` runner.
+Старый раздельный путь validation/merge удалён.
 
-`refresh_metadata` остаётся manual-review операцией: workflow может проверить и обновить её ветку, но не сливает её автоматически.
+`refresh_metadata` остаётся операцией `manual-review`: процесс GitHub Actions может подготовить и проверить изменения в ветке, но не сливает их автоматически.
 
-GitHub Actions не выполняет model inference. `TMDB_READ_TOKEN` доступен только provider-dependent шагу: например, созданию нового work или metadata refresh. Обычный feedback по существующему work выполняется без provider secret.
+## Секреты и внешние данные
 
-Fork PR отклоняется до secret-bearing шагов. Request PR до исполнения должен содержать ровно один `.media/requests/<operation-id>.json` и никакого заранее подготовленного canonical/generated diff.
+GitHub Actions не запускает выводы модели.
+
+`TMDB_READ_TOKEN` доступен только тем шагам, которым действительно нужен провайдер: например, созданию нового произведения или обновлению метаданных. Обычный отзыв о существующем произведении выполняется без секрета провайдера.
+
+Fork PR отсекаются до шагов, которые используют секреты.

@@ -1,36 +1,36 @@
 # ChatGPT-lib
 
-Текущая media capability line: **Media Intelligence v6**.
+Текущая версия подсистемы медиатеки — **Media Intelligence v6**.
 
-Личная библиотека структурированных данных и профилей, собранных в диалогах с ChatGPT. Основной живой subsystem — персональная media intelligence system: фильмы, сериалы и анимация, multi-viewer сигналы, semantic fingerprints, taste context, рекомендации, candidate assessment и explicit similarity между произведениями.
+Это личная медиатека и система рекомендаций для фильмов, сериалов и анимации. Она хранит отдельные сигналы основного пользователя и партнёра, умеет учитывать совместный просмотр, строит семантическое описание произведений и помогает выбирать, что посмотреть дальше.
 
-## Что умеет проект сейчас
+## Что система умеет сейчас
 
-- хранит canonical media data в Git/YAML;
-- ведёт независимые сигналы для `primary`, `partner` и `couple`;
-- строит derived profiles, retrieval index, taste context и web manifest;
-- поддерживает internal и external recommendations с provenance-aware explanations;
-- отвечает на «понравится ли мне X?» через read-only `assess_candidate` без fake precise score;
-- хранит explicit work similarity как target-specific evidence/hint, но не превращает её автоматически в preference;
-- принимает normal media mutations только через strict typed operations и deterministic validation pipeline;
-- использует `record_media_entry` как основной маршрут для нового просмотра, оценки, реакции или отзыва;
-- публикует русскоязычную GitHub Pages-витрину поверх derived manifest;
-- отправляет поддерживаемые browser edits через защищённый typed-command broker без выдачи браузеру GitHub/provider/model secrets.
+- хранит исходные данные медиатеки в Git/YAML;
+- раздельно ведёт данные для `primary`, `partner` и совместного контекста `couple`;
+- строит производные профили, поисковый индекс, контекст вкуса и Web manifest;
+- поддерживает рекомендации как из своей медиатеки, так и с внешним поиском;
+- отвечает на вопрос «понравится ли мне X?» через операцию только для чтения `assess_candidate`;
+- хранит явно указанное сходство между произведениями, не превращая его автоматически в предпочтение;
+- принимает обычные изменения данных только через строгие типизированные операции;
+- использует `record_media_entry` как основной путь для просмотра, оценки, реакции и отзыва;
+- публикует русскоязычный интерфейс через GitHub Pages;
+- отправляет изменения из браузера через защищённый Broker, не раскрывая браузеру секреты GitHub, провайдера или модели.
 
-## Архитектура в одном абзаце
+## Как это устроено
 
-`media/data/` и другие canonical YAML/config источники — source of truth. Python domain/service/repository слой применяет typed operations, валидирует данные и пересобирает derived artifacts. `web/` не читает canonical YAML напрямую: он получает versioned manifest и остаётся read-model surface. Записи из LLM/CLI/web используют один и тот же command contract; normal data operations идут через request-only operation PR, один `Media Command` runner и exact-head merge, а architecture/schema/vocabulary/workflow changes остаются manual developer work. Historical design specs объясняют решения, но текущее поведение описывается living docs и проверяется code/schemas/tests.
+Исходные данные живут в `media/data/` и связанных YAML/config-файлах. Python-слой проверяет типизированные операции, меняет данные и пересобирает производные представления. Web не читает YAML напрямую: он получает версионированный manifest. Запись из LLM, CLI и Web проходит через общий контракт операций.
 
-## Куда идти дальше
+Обычные изменения данных идут через request-only PR и единый процесс GitHub Actions `Media Command`. Изменения кода, схем, словаря, workflows и архитектуры остаются обычной работой разработчика через отдельный PR.
 
-- [Карта всей документации](docs/README.md) — что является living docs, operating contract и historical rationale.
-- [Как пользоваться медиатекой](docs/guides/media-usage.md) — пользовательские сценарии.
-- [Как разрабатывать](docs/guides/development.md) — developer workflow, TDD и ownership документации.
-- [Архитектура системы](docs/architecture/overview.md) — компоненты, data flow и security boundaries.
-- [Personal Media Library v6](media/README.md) — локальная точка входа в `media/` и compatibility entry path для subsystem docs.
-- [Старт нового киноассистента](media/START_PROMPT.md) — human-facing launcher.
-- [`AGENTS.md`](AGENTS.md) — router для LLM/agent workflows.
+## Документация
 
-## Web product/design references
+- [Карта документации](docs/README.md)
+- [Как пользоваться медиатекой](docs/guides/media-usage.md)
+- [Как разрабатывать](docs/guides/development.md)
+- [Архитектура](docs/architecture/overview.md)
+- [Media-подсистема](media/README.md)
+- [Старт нового чата с киноассистентом](media/START_PROMPT.md)
+- [Правила для агента](AGENTS.md)
 
-`PRODUCT.md` и `DESIGN.md` относятся к media web surface: product brief и visual/design-system contract соответственно. Они не заменяют system architecture documentation.
+Для Web отдельно используются [PRODUCT.md](PRODUCT.md) и [DESIGN.md](DESIGN.md).

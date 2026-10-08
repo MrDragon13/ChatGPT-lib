@@ -1,111 +1,105 @@
-# Repository layout
+# Структура репозитория
 
-Карта основных путей ChatGPT-lib после Media Intelligence v6 cutover.
+Карта основных путей ChatGPT-lib после перехода на Media Intelligence v6.
 
-## Root
+## Корень
 
-| Path | Responsibility |
+| Путь | Назначение |
 | --- | --- |
-| `README.md` | короткая project landing page |
-| `AGENTS.md` | repository-level agent router |
-| `PRODUCT.md` | media-web product brief |
-| `DESIGN.md` | media-web visual/design-system contract |
-| `docs/` | living docs + historical Superpowers artifacts + human archive |
-| `media/` | canonical media domain, commands, services и generated read models |
-| `web/` | static React/Vite GitHub Pages client |
-| `broker/` | protected browser write boundary |
-| `tests/` | executable contracts/fixtures |
-| `.github/workflows/` | CI, typed-operation automation и Pages publish |
-| `.media/` | transient requests + operation receipts |
+| `README.md` | короткая входная страница проекта |
+| `AGENTS.md` | маршрутизация для агента |
+| `PRODUCT.md` | описание продукта Media Web |
+| `DESIGN.md` | дизайн-система Media Web |
+| `docs/` | живая документация, архив и история решений |
+| `media/` | данные и логика медиатеки |
+| `web/` | статический клиент на React/Vite |
+| `broker/` | защищённая запись из браузера |
+| `tests/` | исполняемые контракты и тестовые данные |
+| `.github/workflows/` | CI, операции и публикация |
+| `.media/` | временные запросы и квитанции операций |
 
 ## `docs/`
 
-- `docs/architecture/` — current architecture;
-- `docs/guides/` — usage/development/operations;
-- `docs/reference/` — compact contracts/layout;
-- `docs/status/` — durable current state;
-- `docs/archive/media-v6-reset-cutover-2026-10-07.md` — historical cutover/reset record;
-- `docs/archive/media-library-before-v6-reset-2026-10-07.md` — human-readable historical checklist;
-- `docs/superpowers/specs/` и `docs/superpowers/plans/` — historical rationale/plans.
+- `docs/architecture/` — текущая архитектура;
+- `docs/guides/` — использование, разработка и эксплуатация;
+- `docs/reference/` — краткие контракты и справочники;
+- `docs/status/` — текущее устойчивое состояние;
+- `docs/archive/` — исторические записи и завершённые разовые процедуры;
+- `docs/superpowers/` — датированные спецификации/планы и история проектных решений.
 
-Archive и historical specs не являются runtime input.
+Архив и исторические спецификации не используются как входные данные работающей системы.
 
-## `media/` canonical/configuration
+## Канонические данные `media/`
 
-- `media/data/works/` — canonical works; пустое состояние валидно, но каталог снова наполняется обычными v6 writes;
-- `media/data/collections/` — collections;
-- `media/data/lists/` — target lists;
-- `media/data/interactions/` — recommendation interactions;
-- `media/data/relations/similarity/` — explicit target-specific similarity;
-- `media/data/tombstones/` — redirects/merged IDs;
-- `media/preferences/explicit/` — explicit stable preferences;
-- `media/preferences/inferred/` — evidence-backed hypotheses; после reset пусты до нового reanalysis;
-- `media/config/viewers.yaml` / `groups.yaml` — targets;
-- `media/config/intelligence.yaml` — algorithm versions/reanalysis threshold;
-- `media/config/operation_path_policy.json` — operation path/execution policy;
-- `media/vocabulary.yaml` — controlled semantic vocabulary;
-- `media/schemas/` — canonical/read-model schemas;
-- `media/commands/schemas/` — typed request schemas.
+- `media/data/works/` — произведения;
+- `media/data/collections/` — коллекции и франшизы;
+- `media/data/lists/` — списки;
+- `media/data/interactions/` — взаимодействия с рекомендациями;
+- `media/data/relations/similarity/` — явно указанное сходство;
+- `media/data/tombstones/` — перенаправления после объединения идентичностей;
+- `media/preferences/explicit/` — явные устойчивые предпочтения;
+- `media/preferences/inferred/` — выведенные гипотезы;
+- `media/config/viewers.yaml`, `groups.yaml` — пользователи и группы;
+- `media/config/intelligence.yaml` — версии алгоритмов и порог повторного анализа;
+- `media/config/operation_path_policy.json` — разрешённые пути и классы исполнения;
+- `media/vocabulary.yaml` — контролируемый словарь;
+- `media/schemas/` — схемы данных и модели чтения (`read models`);
+- `media/commands/schemas/` — схемы типизированных операций.
 
-Pre-v6 pilot/runtime artifacts и Stage A active baselines отсутствуют в current media tree.
+Старые исполняемые/pilot-файлы до v6 и Stage A baselines в текущем дереве отсутствуют.
 
-## `media/` code
+## Код `media/`
 
-- `media/domain/` — datatypes/contracts/errors;
-- `media/commands/` — command parsing/schema registry;
-- `media/service/` — deterministic mutation/read logic;
-- `media/repository/` — persistence/read adapters;
-- `media/providers/` — external metadata providers;
-- `media/tools/` — validate/build/doctor/archive/audit utilities;
+- `media/domain/` — типы, контракты и ошибки;
+- `media/commands/` — разбор команд и реестр схем;
+- `media/service/` — запись и построение контекста только для чтения;
+- `media/repository/` — чтение и сохранение;
+- `media/providers/` — внешние поставщики метаданных;
+- `media/tools/` — проверка, сборка, диагностика и архив;
 - `media/cli.py` — CLI.
 
 ## `media/generated/`
 
-Derived, rebuildable output:
+Пересобираемые данные:
 
 - `index.jsonl`;
 - `profiles/*.yaml`;
-- другие generated read models.
+- другие модели чтения.
 
-Runtime SQLite derived и не versioned; `doctor` может строить его во временном каталоге.
-
-Generated state не редактируется вручную для изменения canonical meaning.
+Временная SQLite-база тоже является производной и не хранится в Git как источник истины.
 
 ## `web/`
 
-- React/TypeScript static client;
-- читает exported manifest;
-- не является canonical store;
-- browser edits отправляет только через Broker.
+Статический React/TypeScript-клиент. Он читает Web manifest и отправляет поддерживаемые правки только через Broker.
 
 ## `broker/`
 
-Stateless server-side boundary для browser writes. Production feedback преобразуется в `record_media_entry` и использует exact-main viewer digest.
+Серверный слой без собственного состояния для браузерной записи. Он преобразует отзыв в `record_media_entry` и использует `viewer digest` на точном SHA `main`.
 
 ## `.github/workflows/`
 
-- `media-command.yml` — normal typed writes и manual maintenance branch preparation;
-- `media-dev-check.yml` — полный developer media gate;
-- `web-check.yml` — Web tests/build/browser;
-- `broker-check.yml` — Broker tests/typecheck;
-- `media-pages.yml` — exact-SHA Pages build/deploy;
-- maintenance/deploy workflows по текущему назначению.
+- `media-command.yml` — обычные типизированные записи и подготовка ручного PR обслуживания;
+- `media-dev-check.yml` — полная проверка медиатеки для PR разработчика;
+- `web-check.yml` — проверки Web;
+- `broker-check.yml` — проверки Broker;
+- `media-pages.yml` — сборка и публикация Pages для точного SHA;
+- `broker-deploy.yml` — ручная публикация Broker.
 
-Старый раздельный validation/merge path удалён; normal typed writes обслуживает `media-command.yml`.
+Старый раздельный путь validation/merge удалён; обычные записи обслуживает `media-command.yml`.
 
 ## `.media/`
 
-- `.media/requests/` — transient request files;
-- `.media/operations/` — operation receipts.
+- `.media/requests/` — временные файлы запросов;
+- `.media/operations/` — квитанции операций.
 
-Это не canonical user-authored storage.
+Это служебные данные процесса, а не пользовательское хранилище.
 
 ## Где менять контракт
 
-- domain/schema invariant → domain/schema + `architecture/media-model.md` / `reference/invariants.md`;
-- typed operation → command/schema/service + `reference/media-commands.md`;
-- taste/recommendation behavior → service + `architecture/intelligence.md`;
-- write/CI → workflow/service + `architecture/write-pipeline.md`;
-- Web/Broker boundary → code + `architecture/web-and-broker.md`;
-- repository layout → этот файл;
-- большое новое решение → dated Superpowers spec/plan, затем living docs после реализации.
+- схема или доменный инвариант → code/schema + `architecture/media-model.md` / `reference/invariants.md`;
+- типизированная операция → command/schema/service + `reference/media-commands.md`;
+- вкус и рекомендации → service + `architecture/intelligence.md`;
+- CI и запись → workflow/service + `architecture/write-pipeline.md`;
+- Web/Broker → code + `architecture/web-and-broker.md`;
+- структура репозитория → этот файл;
+- крупное новое решение → датированную спецификацию/план, затем живые документы после реализации.

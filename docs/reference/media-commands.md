@@ -1,48 +1,56 @@
-# Media operations reference
+# Операции медиатеки
 
-Компактный каталог текущих typed operations. Полные payload fields и validation rules определяются JSON schemas в `media/commands/schemas/`; этот документ не дублирует schema contract.
+Краткий список текущих типизированных операций. Полные поля запросов и правила проверки определяются JSON Schema в `media/commands/schemas/`; здесь описано только назначение.
 
 ## Каталог
 
-| Operation | Категория | Режим | Основной effect | Normal auto-merge |
+| Операция | Тип | Режим | Что делает | Автослияние |
 | --- | --- | --- | --- | --- |
-| `record_media_entry` | feedback/library | write | Атомарно записать пользовательский отзыв; для отсутствующего work проверить stable provider identity, получить metadata на trusted side, сохранить semantics и создать work | да |
-| `media_entry_context` | library context | read-only | Вернуть компактное target-scoped состояние work для LLM/Broker без лишних чтений | n/a |
-| `edit_viewing_feedback` | feedback | write | Точечно изменить/clear/purge target-scoped viewing feedback | да |
-| `set_interest` | library intent | write | Установить устойчивое interest state для target/work | да |
-| `add_work` | library | write | Добавить canonical work после identity/provider validation | да |
-| `refresh_metadata` | maintenance | write | Bulk/provider metadata refresh с preflight; manual review route | нет |
-| `refresh_work_metadata` | modernization | write | Stale-safe provider metadata refresh ровно одного existing work | да |
-| `set_inferred_preferences` | intelligence | write | Полностью заменить evidence-backed inferred hypotheses target | да |
-| `set_semantic_fingerprint` | semantics | write | Заменить work-level semantic traits из controlled vocabulary | да |
-| `record_recommendation_interaction` | recommendation | write | Добавить append-only recommendation interaction event | да |
-| `set_work_similarity` | relation | write | Upsert одной target-specific undirected explicit similarity assertion | да |
-| `remove_work_similarity` | relation | write | Удалить explicit similarity для target/unordered pair | да |
-| `recommend_context` | recommendation | read-only | Построить candidate/context read model для recommendation reasoning | n/a |
-| `taste_context` | intelligence | read-only | Построить компактный target taste/evidence context | n/a |
-| `assess_candidate` | intelligence | read-only | Собрать контекст для qualitative ответа «понравится ли мне X?» без mutation | n/a |
+| `record_media_entry` | медиатека/отзыв | запись | Атомарно записывает просмотр, оценку, реакцию или отзыв; при необходимости создаёт новое произведение по устойчивой `provider_identity` | да |
+| `media_entry_context` | медиатека | только чтение | Возвращает компактное состояние произведения для выбранного `target` | — |
+| `edit_viewing_feedback` | отзыв | запись | Точечно меняет, очищает или удаляет сохранённый отзыв выбранного `target` | да |
+| `set_interest` | медиатека | запись | Сохраняет устойчивое состояние интереса | да |
+| `add_work` | медиатека | запись | Добавляет произведение после проверки идентичности | да |
+| `refresh_metadata` | обслуживание | запись | Массово обновляет метаданные после предварительной проверки; требует ручной проверки | нет |
+| `refresh_work_metadata` | обслуживание | запись | Безопасно обновляет метаданные одного существующего произведения | да |
+| `set_inferred_preferences` | анализ вкуса | запись | Полностью заменяет выведенные гипотезы о вкусе выбранного `target` | да |
+| `set_semantic_fingerprint` | семантика | запись | Заменяет семантические признаки произведения из контролируемого словаря | да |
+| `record_recommendation_interaction` | рекомендации | запись | Добавляет событие взаимодействия с рекомендацией; старые события не переписываются | да |
+| `set_work_similarity` | связь | запись | Создаёт или обновляет симметричное явное сходство для `target` | да |
+| `remove_work_similarity` | связь | запись | Удаляет такое сходство | да |
+| `recommend_context` | рекомендации | только чтение | Строит кандидатов и контекст для рекомендации | — |
+| `taste_context` | анализ вкуса | только чтение | Строит компактный контекст вкуса и оснований | — |
+| `assess_candidate` | анализ вкуса | только чтение | Собирает данные для качественного ответа «понравится ли мне X?» | — |
 
-Для `record_media_entry(create_if_missing=true)` клиент передаёт stable `provider_identity`, semantic traits и пользовательские сигналы. Полный provider payload, semantic input digest, vocabulary digest и algorithm version получает или вычисляет trusted runtime. Это исключает ложные конфликты из-за изменившегося runtime, локализации, credits или synopsis.
+Для `record_media_entry(create_if_missing=true)` клиент передаёт устойчивую `provider_identity`, семантические признаки и пользовательские сигналы. Полные метаданные, `semantic input digest`, `vocabulary digest` и `algorithm version` получает или вычисляет доверенный код.
 
-## Write vs read-only
+## Запись и чтение
 
-Write operation имеет `operation_id` и применяется через deterministic transaction/path policy. Read-only operation canonical state не мутирует и не создаёт operation PR как побочный эффект.
+Операция записи имеет `operation_id` и выполняется через детерминированную transaction с path policy.
 
-## Auto-merge
+Операции только для чтения канонические данные не меняют и operation PR не создают.
 
-Колонка выше описывает intended current class, но executable authority остаётся за workflow/path-policy code. Даже auto-merge-eligible operation не merge'ится, если затронула запрещённый path, не прошла exact-head checks или перестала соответствовать operation contract.
+## Автоматическое слияние
 
-`refresh_metadata` намеренно остаётся manual maintenance operation. `refresh_work_metadata` — узкая операция обновления одного существующего произведения; успешная проверка может завершиться trusted status `no_change` без искусственной canonical mutation.
+Таблица показывает нормальный режим работы, но окончательное решение принимает процесс GitHub Actions и `path policy`.
 
-## External works
+Даже операция, которой разрешено автоматическое слияние, не будет слита, если она:
 
-Некоторые operations принимают work reference, который может быть external stable identity. External reference не означает автоматическое добавление work, кроме явно разрешённого create flow (`add_work` или feedback create-if-missing).
+- затронула запрещённый путь;
+- не прошла проверку точных head/base;
+- нарушила свой контракт.
 
-Similarity может persist external endpoint без создания canonical work; candidate assessment external work остаётся read-only.
+`refresh_metadata` намеренно остаётся ручной операцией обслуживания. `refresh_work_metadata` работает только с одним существующим произведением и может завершиться успешным `no_change`.
+
+## Внешние произведения
+
+Некоторые операции принимают `WorkRef` на внешнее произведение.
+
+Внешняя ссылка сама по себе не добавляет произведение в библиотеку, кроме явно разрешённого путь создания: `add_work` или `record_media_entry(create_if_missing=true)`.
+
+Связь сходства может хранить внешнюю ссылку без создания локального произведения. `assess_candidate` внешнего фильма остаётся операцией только для чтения.
 
 ## Схемы
-
-Source contracts:
 
 - `media/commands/schemas/record_media_entry.schema.json`
 - `media/commands/schemas/media_entry_context.schema.json`
@@ -60,4 +68,4 @@ Source contracts:
 - `media/commands/schemas/taste_context.schema.json`
 - `media/commands/schemas/assess_candidate.schema.json`
 
-Operation registry synchronization защищается executable docs contract: добавление новой registered operation требует обновить эту таблицу.
+Тест документации проверяет, что этот каталог совпадает с реестром (`registry`) зарегистрированных операций.

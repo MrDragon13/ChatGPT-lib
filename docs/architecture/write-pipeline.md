@@ -1,32 +1,32 @@
-# Media write pipeline
+# Путь записи media-данных
 
-Этот документ описывает текущий v6 lifecycle записи media data. Обычная пользовательская запись не патчит canonical YAML напрямую: сначала создаётся typed request, затем доверенный GitHub Actions runner применяет его к свежему `main`.
+Обычная пользовательская запись не меняет канонические YAML напрямую. Сначала создаётся типизированный запрос, затем доверенный runner GitHub Actions применяет его к свежему `main`.
 
 ## Главный принцип
 
-Для normal data write действует:
+Для обычной записи действует простая схема:
 
-> один человеческий эпизод → один typed request → один operation PR → одна transaction → одна минимальная пересборка → один authoritative gate → один merge.
+> одно человеческое событие → один типизированный запрос → один operation PR → одна deterministic transaction → минимальная пересборка → одна проверка → одно слияние.
 
-GitHub остаётся границей долговременного сохранения, но не должен быть границей задержки разговора.
+GitHub остаётся границей долговременного сохранения, но разговор с пользователем не должен ждать весь цикл записи.
 
 ## Request-only PR
 
-Обычная запись создаёт request-only same-repo ветку `media/op-*` от текущего `main`.
+Обычная запись создаёт ветку `media/op-*` от текущего `main`.
 
-До исполнения PR содержит **ровно один** файл:
+До выполнения операции PR содержит ровно один файл:
 
 ```text
 .media/requests/<operation-id>.json
 ```
 
-Canonical YAML и `media/generated/**` не готовятся заранее клиентом. Их создаёт доверенный runner после повторного применения typed intent к свежему `main`.
+Клиент заранее не готовит изменения канонических YAML или `media/generated/**`. Их создаёт доверенный runner, повторно применяя исходный замысел операции (`intent`) к свежему `main`.
 
-Это позволяет replay операции вместо слияния устаревшего готового YAML diff.
+Так операция переигрывается на актуальных данных вместо слияния заранее подготовленного и уже устаревшего diff.
 
-## Очередь операций
+## Очередь
 
-Normal media writes сериализуются средствами GitHub Actions:
+Обычные записи сериализуются GitHub Actions:
 
 ```yaml
 concurrency:
@@ -35,135 +35,129 @@ concurrency:
   queue: max
 ```
 
-Собственная БД блокировок или отдельный queue service не используются.
+Отдельная база блокировок или сервис очереди не используются.
 
-Очередь предотвращает обычное наложение media writes, но не заменяет exact-base guard: `main` всё ещё может измениться developer/manual PR.
+Очередь уменьшает риск параллельных записей, но не заменяет финальную проверку базы: `main` может измениться из-за PR разработчика или ручного обслуживания.
 
-## `Media Command`
+## Единый `Media Command` runner
 
-Для операции с `execution_class=v6_single_runner` один runner выполняет весь normal path:
+Для `execution_class=v6_single_runner` один runner выполняет весь путь:
 
-1. сохраняет request как недоверенные данные;
+1. принимает request как недоверенные входные данные;
 2. получает свежий `origin/main`;
-3. проверяет, что исходный PR не содержал ничего кроме request;
-4. заново строит operation branch от свежего `main` и возвращает только request;
-5. валидирует command schema и preconditions;
-6. применяет deterministic transaction;
-7. определяет `changed_domains` и из них `DirtyPlan`;
-8. пересобирает каждый нужный derived output максимум один раз;
-9. проверяет operation path policy;
-10. выполняет canonical validation, `rebuild --check` и operation-specific tests;
-11. коммитит проверенный результат в operation branch;
-12. повторно читает текущий `main`;
-13. если base изменился, replay выполняется заново с ограниченным числом попыток;
-14. если base тот же, GitHub API сливает exact checked head;
-15. `Media Pages` запускается для exact merge SHA.
+3. убеждается, что исходный PR содержит только request;
+4. заново строит operation branch от свежего `main`;
+5. проверяет JSON Schema и предварительные условия (`preconditions`);
+6. выполняет deterministic transaction;
+7. вычисляет `changed_domains` и `DirtyPlan`;
+8. пересобирает каждый нужный производный результат максимум один раз;
+9. проверяет `media/config/operation_path_policy.json`;
+10. запускает каноническую валидацию, `rebuild --check` и тесты этой операции;
+11. коммитит проверенный результат;
+12. ещё раз читает текущий `main`;
+13. если база изменилась, повторяет replay ограниченное число раз;
+14. если база та же, GitHub API сливает exact checked head;
+15. `Media Pages` запускается для точного SHA слияния.
 
-Прямой `git push HEAD:main` не используется. Repository auto-merge setting не является частью контракта.
+Прямой `git push HEAD:main` не используется.
 
-## Проверка операции
+## Что проверяется для обычной записи
 
-Normal data write не запускает полный developer regression suite.
+Обычная операция медиатеки не запускает весь полный набор проверок разработчика. Её проверка должна доказать корректность именно этой записи:
 
-Его authoritative gate содержит только то, что доказывает корректность конкретной data operation:
-
-- JSON schema / command validation;
-- operation-specific preconditions;
-- canonical validation;
-- operation-specific path policy;
-- dependency-driven rebuild;
+- JSON Schema и команда;
+- preconditions;
+- каноническая валидация;
+- разрешённые пути;
+- минимальная пересборка;
 - `rebuild --check`;
-- целевые тесты данного типа операции;
-- receipt/idempotency checks.
+- целевые тесты операции;
+- receipt и idempotency.
 
-Полный `pytest`, doctor, Web/Broker gates и архитектурные проверки остаются обязательными для developer changes.
+Полный pytest, doctor и Web/Broker-проверки остаются обязательными для изменений разработчика (`developer changes`).
 
 ## Классы исполнения
 
 Источник истины — `media/config/operation_path_policy.json`.
 
-- Операции с `auto_merge=true` используют `execution_class=v6_single_runner`.
-- Bulk `refresh_metadata` использует `execution_class=manual_review`: workflow может применить и полностью проверить изменение в PR-ветке, но не сливает его автоматически.
-- Architecture/schema/vocabulary/workflow changes не являются typed data operations и идут обычным developer PR.
+- Все операции с `auto_merge=true` используют `execution_class=v6_single_runner`.
+- Массовый `refresh_metadata` использует `execution_class=manual_review`: процесс GitHub Actions может подготовить и проверить изменения, но не сливает их автоматически.
+- Код, схемы, словарь, процессы GitHub Actions и архитектура меняются обычным PR разработчика.
 
-Старые раздельные validation/merge workflows удалены; current normal path полностью обслуживает единый `Media Command` runner.
+Старый раздельный путь validation/merge удалён; текущий путь обычной записи обслуживает единый `Media Command` runner.
 
-## Provider secret
+## Доступ к провайдеру
 
-Provider secret передаётся только тогда, когда операция действительно требует внешнюю проверку.
+Секрет провайдера передаётся только операции, которой действительно нужны внешние данные.
 
-Existing-work feedback не требует provider I/O.
+Запись отзыва о существующем произведении не требует обращения к провайдеру.
 
-Новый `record_media_entry(create_if_missing=true)` получает provider context для stable identity и свежих factual metadata; provider-owned metadata не передаются клиентом как blocking preconditions.
+Для нового `record_media_entry(create_if_missing=true)` доверенный код проверяет устойчивую идентичность и получает актуальные фактические метаданные. Клиент не передаёт эти метаданные как блокирующее условие.
 
 ## `record_media_entry`
 
-Это основной v6 маршрут для события «пользователь сообщает что-то об одном произведении».
+Это основной v6-путь для события «пользователь сообщил что-то об одном произведении».
 
-### Existing work
+### Уже известное произведение
 
-Payload обычно содержит только:
+Запрос обычно содержит:
 
 - `work_ref`;
 - `target_updates`;
 - `preconditions.expected_viewer_digests`.
 
-Existing-work path не обновляет metadata и не пересчитывает semantics.
+Метаданные и семантика при этом не обновляются.
 
-### New work
+### Новое произведение
 
-Payload дополнительно содержит:
+Запрос дополнительно содержит:
 
 - `creation_context.provider_identity`;
 - `semantic_snapshot.traits`;
-- те же viewer updates.
+- пользовательские изменения.
 
-Актуальные provider metadata, semantic input digest, vocabulary digest и algorithm version вычисляются доверенным runtime.
+Актуальные метаданные, `semantic input digest`, `vocabulary digest` и `algorithm version` вычисляет доверенный код.
 
-Создание work, semantic fingerprint и feedback выполняются одной transaction.
+Произведение, семантический профиль и пользовательские сигналы создаются одной transaction.
 
-Если `create_if_missing=true`, но work уже существует по stable identity, existing canonical metadata/semantics не перезаписываются creation payload. Viewer digest проверяется против реально существующего target state.
+Если при `create_if_missing=true` произведение уже найдено по устойчивой identity, его существующие метаданные и семантика не перезаписываются данными создания.
 
-## Idempotency
+## Идемпотентность
 
-`operation_id` идентифицирует конкретную техническую попытку.
+`operation_id` относится к технической попытке. `idempotency_key` — к одному пользовательскому событию.
 
-`idempotency_key` идентифицирует одно пользовательское событие.
+Повтор с тем же ключом и тем же нормализованным запросом возвращает уже применённый результат. Тот же ключ с другим замыслом операции (`intent`) завершается ошибкой.
 
-Повтор с тем же `idempotency_key` и тем же нормализованным request возвращает уже применённый результат. Тот же key с другим intent fail closed.
+`no_change` — нормальный успешный результат: он не создаёт искусственную историю и не запускает лишнюю пересборку.
 
-`no_change` — полноценный успешный результат: он не создаёт искусственную history event и не запускает ненужную пересборку.
+## Пока запись ещё выполняется
 
-## Pending write и повторное уточнение
+LLM может продолжать разговор и учитывать свежий явный сигнал локально.
 
-После отправки операции LLM может продолжать разговор и учитывать явный пользовательский сигнал локально.
+Если пользователь уточняет то же произведение до завершения первой записи, второй Git-запрос не отправляется. Уточнение остаётся в текущей сессии. После завершения первой операции агент заново читает `media_entry_context`, получает свежий viewer digest и отправляет следующую операцию.
 
-Если пользователь изменяет тот же work, пока первая операция pending, второй Git request по тому же work не отправляется. Уточнение остаётся в session-local overlay до authoritative первой операции; затем читается свежий `media_entry_context` и отправляется следующая операция с новым viewer digest.
+Web делает то же: не отправляет вторую отправку, но сохраняет локальный черновик.
 
-Web соблюдает тот же принцип: блокирует второй submit, но сохраняет локальный draft.
+## Разрешённые пути и безопасность
 
-## Path policy и security boundary
+`media/config/operation_path_policy.json` определяет, какие пути может менять каждая операция.
 
-`media/config/operation_path_policy.json` задаёт разрешённые пути конкретной операции.
+Обычная запись не получает права менять схемы, словарь, процессы GitHub Actions, правила агента или архитектуру.
 
-Обычный request может менять только operation-specific canonical/generated/receipt paths. Он не получает право менять schemas, vocabulary, workflows, agent contracts или architecture.
+`Media Command` выполняет защищённый путь только для PR из того же репозитория `media/op-*`. Fork и недоверенные PR не получают выполнение с секретами.
 
-`Media Command` допускается только для same-repository `media/op-*` PR. Fork/untrusted contributor path не получает secret-bearing выполнение.
+Если меняются правила доступа к репозиторию, защита веток/rulesets или модель доверия, нужен отдельный проверка безопасности (`security review`).
 
-Текущая same-runner модель рассчитана на фактическую конфигурацию персонального репозитория. Изменение collaborator model, branch protection/rulesets или trust boundary требует отдельного security review.
+## Операции только для чтения
 
-## Read-only routes
-
-`media_entry_context`, `recommend_context`, `taste_context` и `assess_candidate` не создают operation PR и не мутируют canonical state.
+`media_entry_context`, `recommend_context`, `taste_context` и `assess_candidate` не создают operation PR и не меняют канонические данные.
 
 ## Pages
 
-После merge `Media Pages` получает exact merge SHA. Web manifest строится заново из canonical/derived media state.
+После слияния `Media Pages` получает точный merge SHA и заново строит Web manifest.
 
-Публикация более раннего зелёного SHA не считается публикацией текущего состояния.
+Публикация более раннего зелёного коммита не считается публикацией текущего состояния.
 
-## Developer changes
+## Изменения разработчика
 
-Изменения Python, schemas, workflow, vocabulary, architecture/config или frontend/backend logic проходят обычный reviewed PR и полный релевантный gate.
-
-Для таких изменений normal media auto-merge boundary не используется.
+Изменения Python, схем, процессов GitHub Actions, словаря, архитектуры/config и Web/Broker-кода проходят обычный PR и полный набор релевантных проверок. Для них обычный media auto-merge не используется.

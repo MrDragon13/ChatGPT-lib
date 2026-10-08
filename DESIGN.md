@@ -12,167 +12,138 @@ motion_intensity: 8
 visual_density: 4
 ---
 
-# Media Web Design System
+# Дизайн-система Media Web
 
-## Overview
+Media Web — домашний кинематографичный интерфейс: вечерняя афиша и личный дневник просмотров, а не каталог-таблица и не панель управления.
 
-Media Web is a private-household cinematic film surface, built as an **evening screening board + personal film journal** rather than a generic catalog or dashboard. The frontend renders repository-derived data and sends lightweight feedback edits only through the protected typed-command broker. Personal ratings, reactions and comments visually outrank public provider metrics.
+Главный контекст — `Я / primary`. `Партнёр` и `Вместе` дополняют его и всегда выбираются явно.
 
-The library is **personal-first**: `Я / primary` is the default context and represents the owner's library. `Партнёр` and `Вместе` are additional household contexts over the same film library, not separate or equally primary libraries.
+Утверждённый ориентир композиции — `.impeccable/mocks/home-c.svg` («Вечерний сеанс»). Основной цвет странице дают постеры и фоны фильмов; интерфейс вокруг них остаётся спокойным и нейтральным.
 
-The north-star composition is `.impeccable/mocks/home-c.svg` (“Вечерний сеанс”). The interface uses real poster/backdrop imagery as its primary color source and a restrained neutral UI around it.
+Параметры: **DESIGN_VARIANCE 7 / MOTION_INTENSITY 8 / VISUAL_DENSITY 4**.
 
-Taste configuration is fixed at **DESIGN_VARIANCE 7 / MOTION_INTENSITY 8 / VISUAL_DENSITY 4**.
+## Цвета
 
-## Colors
-
-Core roles:
-
-| Token | Value | Role |
+| Переменная | Значение | Назначение |
 | --- | --- | --- |
-| `--color-canvas` | `#080808` | page/background canvas |
-| `--color-surface` | `#111111` | primary raised/contained surface |
-| `--color-surface-soft` | `#191919` | quiet secondary surface / artwork fallback |
-| `--color-text` | `#F3F0E8` | primary text |
-| `--color-text-muted` | `#BDB7AB` | secondary metadata, AA-safe on canvas |
-| `--color-accent` | `#E0B56C` | tungsten action, active and focus role |
+| `--color-canvas` | `#080808` | основной фон |
+| `--color-surface` | `#111111` | основная поверхность |
+| `--color-surface-soft` | `#191919` | вторичная поверхность и фон без изображения |
+| `--color-text` | `#F3F0E8` | основной текст |
+| `--color-text-muted` | `#BDB7AB` | вторичный текст |
+| `--color-accent` | `#E0B56C` | акцент, активное состояние и фокус |
 
-Rules:
-- Use **one accent only**. Do not introduce blue/purple AI glows or unrelated status colors.
-- Let TMDB imagery provide most page chroma; neutral UI must not tint itself to each poster.
-- Text overlays on backdrops require a dark scrim; do not rely on image darkness.
-- Provider/public metrics stay quieter than household signals.
+Правила:
 
-## Typography
+- используем один интерфейсный акцент;
+- основную цветность дают изображения;
+- текст поверх фона всегда получает затемняющую подложку;
+- показатели провайдера визуально слабее личных впечатлений.
 
-Brand/UI family: **Onest Variable**, self-hosted via `@fontsource-variable/onest`, with Cyrillic/Cyrillic-ext support and system sans fallback.
+## Типографика
 
-Roles:
-- Hero/detail titles: large responsive Onest, roughly 610–700 weight, tight tracking, compact line-height.
-- Section titles: 590–700 weight.
-- Body/actions: 450–650, ordinary readable floor around 16px.
-- Metadata: 14–16px using `--color-text-muted` or stronger.
-- Long synopsis measure: keep near 45–75ch.
+Основной шрифт — **Onest Variable** с кириллицей.
 
-Do not use Inter, Roboto, Arial, Open Sans or Helvetica as the chosen brand face.
+- Крупные названия: плотное начертание, короткая строка, без лишнего воздуха.
+- Заголовки разделов: заметные, но не соревнуются с названием фильма.
+- Основной текст и действия: удобный размер, ориентир от 16 px.
+- Метаданные: 14–16 px и приглушённый цвет.
+- Длинное описание: примерно 45–75 знаков в строке.
 
-## Layout
+Не выбираем Inter, Roboto, Arial, Open Sans или Helvetica как фирменный шрифт.
 
-### Global
-- Near-black full-page canvas with a centered content frame.
-- Navigation stays one desktop line and remains compact.
-- Desktop compositions are asymmetric where useful; CSS Grid is preferred over fragile flex percentage math.
-- Mobile is a real re-composition, not a scaled desktop.
-- A route without an explicit `target` resolves to `primary / Я`; an explicit valid target is preserved across navigation.
+## Компоновка
 
-### Today
-- First viewport belongs to one hero recommendation.
-- Hero identity and evidence lead; a small number of alternatives stay visibly subordinate.
-- Remaining recommendation candidates become the `Посмотреть следующим` horizontal poster rail rather than disappearing.
-- `Я / Партнёр / Вместе` is visible and route-aware; `Я` is the default context.
+### Общие правила
 
-### Library
-- Dense browsing surface: poster-led grid, search and target-aware filters.
-- Desktop prioritizes efficient scanning; mobile keeps a two-column poster grid when space permits.
-- Empty states remain composed and useful rather than rendering blank space.
-- Switching target changes whose subjective signals are foregrounded; it does not create a different underlying film catalog.
+- Почти чёрный фон и ограниченная по ширине область контента.
+- На широком экране навигация остаётся компактной и в одну строку.
+- На широком экране можно использовать асимметрию и CSS Grid.
+- На телефоне используется отдельная адаптация, а не уменьшенная версия широкого экрана.
+- Если `target` в URL не задан, используется `primary / Я`; явно выбранный корректный `target` сохраняется при переходах.
 
-### Detail
-- Backdrop + poster + identity form the opening cinematic field.
-- `Наши впечатления` precedes TMDB.
-- The configured contexts `Я / Партнёр / Вместе` remain visible as distinct signal panels, including a composed empty state when a context has no feedback yet.
-- The active context appears first and is visually marked, but other household contexts remain inspectable.
-- Editing is attached to the target panel being edited; the save target must never change implicitly.
-- A missing `Вместе` signal may explicitly use `Я` as a starting template, but the UI must state both the template source and that the result saves to `Вместе`.
-- Provider score is rounded to one decimal for display and rendered at a subordinate scale.
+### Сегодня
 
-## Elevation & Depth
+Первый экран отдаётся одной главной рекомендации. Название, изображение и причина выбора важнее вспомогательной информации.
 
-Depth comes from imagery, scrims and restrained separation rather than card shadows everywhere.
+Остальные подходящие фильмы показываются ниже в горизонтальной ленте «Посмотреть следующим».
 
-- Poster plates may use a soft dark shadow where physical separation improves the cinematic feel.
-- Dividers use low-opacity milk-white lines.
-- Most grouped content relies on spacing and contrast instead of bordered cards.
-- No global glassmorphism treatment.
+### Медиатека
 
-## Shapes
+Плотная постерная сетка с поиском и понятными фильтрами. На телефоне по возможности остаются две колонки.
 
-- Primary surfaces use a consistent soft radius where the approved comp calls for a cinematic field.
-- Poster artwork preserves film-poster proportions and is not forced into pill shapes.
-- Interactive controls may use compact rounded shapes, but the page must not become “pill-everything”.
-- Focus rings use the tungsten accent and remain clearly visible.
+Смена `target` меняет показываемые субъективные сигналы, но не создаёт отдельный каталог фильмов.
 
-## Components
+### Карточка фильма
+
+Сначала идут фон, постер, название и блок «Наши впечатления». Оценка TMDB вторична.
+
+Контексты `Я / Партнёр / Вместе` показываются отдельно. Если данных нет, это видно явно; подставлять чужую оценку нельзя.
+
+Редактирование всегда относится к выбранному контексту. Значения другого контекста можно использовать только как явно выбранный шаблон, при этом источник и место сохранения должны быть видны.
+
+## Глубина и формы
+
+Глубину создают изображения, затемнение и расстояния между блоками, а не тени на каждой карточке.
+
+Постеры сохраняют нормальные пропорции. Не превращаем интерфейс в набор одинаковых «таблеток». Фокус клавиатуры отмечается акцентным цветом.
+
+## Основные компоненты
 
 ### `TargetSwitcher`
-Visible household context control with `Я`, `Партнёр`, `Вместе`. `Я / primary` is the product default. The switcher replaces only the `target` query parameter and preserves route/filter state.
 
-### Today Hero
-One dominant recommendation with real backdrop, title, year/runtime/genres, evidence-based “почему сейчас” and a single primary `Подробнее` action.
+Переключает `Я`, `Партнёр`, `Вместе`. Меняет только параметр `target` и сохраняет остальное состояние маршрута.
 
-### Recommendation Alternatives / Poster Rail
-Subordinate candidates. Hover/focus may reveal depth under full motion, but reduced-motion must remove spatial movement.
+### Главная рекомендация
 
-### Library Filters
-Search and factual filters, labelled explicitly. No placeholder-as-label behavior.
+Один крупный фильм с реальным backdrop, названием, годом, длительностью, жанрами, кратким объяснением «почему сейчас» и одним основным действием «Подробнее».
 
-### Signal Panel
-Target-scoped personal/group rating, reaction, viewing status and optional feedback summary. Missing data is shown as an explicit empty state rather than silently substituted from another target. Editing stays scoped to that panel. Copying another target into a new record is allowed only as an explicit user action and never changes the destination target.
+### Лента постеров
 
-### Feedback Editor
-The editor always preloads the canonical signal for its destination target. When a template from another target is offered, the form starts empty until the user explicitly chooses the template. The UI visibly identifies where changes will be saved and, after template use, where the starting values came from.
+Вторичные варианты. Анимация может добавлять глубину, но в режиме уменьшенной анимации пространственное движение отключается.
 
-### TMDB Context
-Secondary provider metric. Present score with at most one decimal; preserve full source value in canonical data.
+### Фильтры
 
-### State Messages
-Russian loading, empty, error and missing states. They are part of the composed interface, not raw diagnostic output.
+Все поля имеют явные подписи. Текст-подсказка внутри поля не заменяет его подпись.
 
-### Credits
-The `О проекте`/credits surface carries required TMDB attribution. Attribution is not optional decoration.
+### Панель впечатлений
 
-## Motion
+Показывает данные конкретного `target`: статус просмотра, оценку, реакцию и отзыв. Отсутствие данных показывается честно.
 
-Motion uses `motion/react` and supports the cinematic feel without becoming a dependency for comprehension.
+### Редактор отзыва
 
-- Entrance/reveal: opacity + restrained transform.
-- Recommendation focus changes: controlled crossfade/spatial transition; no autoplay or scroll hijacking.
-- Frequent animation is transform/opacity only.
-- `prefers-reduced-motion: reduce` removes spatial movement and keeps the entire interface usable.
-- Accessibility scans audit the stable reduced-motion state; separate browser tests cover the full-motion path.
+Всегда редактирует выбранный `target`. Если предлагается шаблон из другого контекста, он применяется только после явного действия пользователя.
 
-## Accessibility
+### Данные TMDB
 
-Shipping floor:
-- WCAG AA text contrast.
-- Semantic landmarks/headings.
-- Keyboard-complete profile, filters, cards and detail navigation.
-- Visible `:focus-visible` state.
-- Useful image alt text where artwork conveys identity; decorative duplicates are hidden appropriately.
-- Hover and focus parity for meaningful interactions.
-- Responsive checks at 390px, 768px and desktop widths.
+Показываются вторично. Оценка на экране округляется максимум до одного знака после запятой.
 
-## Do’s and Don’ts
+## Анимация
 
-### Do
-- Prefer personal evidence over generic popularity.
-- Treat `Я / primary` as the default owner context while preserving explicit partner/couple choices.
-- Use real repository-derived titles, signals and TMDB asset refs.
-- Keep Russian as the normal interface language.
-- Vary section composition; let hero, rail, library grid and detail each have a different job.
-- Keep target absence explicit instead of borrowing another target's data invisibly.
-- Keep write actions behind the protected typed-command broker boundary.
+Используется `motion/react`.
 
-### Don’t
-- Do not embed mock movie arrays in production components.
-- Do not add a second recommendation/scoring engine in React.
-- Do not expose GitHub/TMDB/write credentials in the browser.
-- Do not mutate canonical YAML from the site.
-- Do not use blue-purple AI gradients, generic dashboard metric cards, or equal-card walls as the page’s primary composition.
-- Do not fabricate or silently substitute a partner/couple rating to balance layout.
-- Do not redirect an edit to another target just because the selected target is empty.
-- Do not let TMDB score become visually more important than `Наши впечатления`.
+- Для появления — прозрачность и небольшой сдвиг.
+- Для смены фокуса — контролируемое затухание/переход.
+- Частые анимации ограничиваем `transform` и `opacity`.
+- При `prefers-reduced-motion: reduce` пространственное движение отключается.
 
-## Review provenance
+## Доступность
 
-The executable Impeccable launcher and `spawn_agent` are unavailable in this harness. Direction, critique, audit/polish and documentation therefore follow Impeccable’s documented degraded path. See `.impeccable/surfaces/home.md`, approved comp artifacts under `.impeccable/mocks/`, and `.impeccable/critique/2026-10-01-media-web.md`.
+Обязательный минимум:
+
+- контраст WCAG AA;
+- семантические заголовки и области;
+- полная работа с клавиатуры;
+- видимый `:focus-visible`;
+- полезный `alt` у содержательных изображений;
+- одинаковая доступность действий при наведении мыши и фокусе клавиатуры;
+- проверки на 390 px, 768 px и desktop.
+
+## Чего не делать
+
+- Не добавлять второй алгоритм рекомендаций в клиенте.
+- Не хранить GitHub/TMDB/write-секреты в браузере.
+- Не править канонические YAML из Web.
+- Не подставлять данные другого `target` молча.
+- Не делать оценку TMDB важнее личных впечатлений.
+- Не использовать сине-фиолетовые градиенты «под ИИ» и однообразные стены карточек.

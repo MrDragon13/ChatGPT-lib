@@ -1,68 +1,67 @@
 # Разработка ChatGPT-lib
 
-Этот guide описывает developer workflow для code/schema/architecture/docs changes. Для обычной пользовательской media mutation применяйте typed-operation route из `media/AGENTS.md`, а не этот manual process.
+Этот документ описывает изменения кода, схем, архитектуры, процессов GitHub Actions, тестов и документации. Обычные пользовательские записи медиатеки идут по пути из `media/AGENTS.md`, а не по этому процессу.
 
-## 1. Начинайте с current main
+## 1. Начинайте с актуального `main`
 
-Перед изменением:
+Перед работой:
 
-1. проверьте актуальный `main`;
-2. проверьте открытые PR/active work по затрагиваемой области;
-3. прочитайте root `AGENTS.md`, затем subsystem contract `media/AGENTS.md` для media work;
-4. загрузите только релевантные living docs/schema/code.
+1. проверьте текущий `main`;
+2. проверьте открытые PR по той же области;
+3. прочитайте `AGENTS.md` и, для задач по медиатеке, `media/AGENTS.md`;
+4. откройте только те живые документы, схемы и код, которые относятся к задаче.
 
-Historical specs полезны для rationale, но не заменяют current code/contracts.
+Исторические спецификации полезны для понимания причин, но не заменяют текущий код и контракты.
 
-## 2. Сначала выберите route
+## 2. Выберите правильный путь
 
-### Normal typed operation
+### Обычная типизированная операция
 
-Используйте, когда пользователь меняет обычные media data в рамках уже существующего contract: viewing feedback, interest, semantic/inferred state, interactions, explicit similarity и т. п.
+Используется для уже поддерживаемых изменений данных: просмотра, оценки, отзыва, интереса, семантики, выведенных предпочтений, взаимодействий с рекомендациями и сходства.
 
-Такая операция должна идти через strict command schema и существующий operation PR pipeline.
+Такая запись идёт через существующую JSON Schema и operation PR.
 
-### Manual developer route
+### PR разработчика
 
-Используйте для:
+Используется для изменений:
 
-- domain/service/repository code;
-- schemas;
-- controlled vocabulary;
-- architecture semantics;
-- workflow/path policy;
-- broker/security behavior;
-- documentation architecture;
-- maintenance behavior;
-- tests.
+- кода `domain/service/repository`;
+- схем;
+- контролируемого словаря;
+- архитектуры и правил;
+- процессов GitHub Actions и path policy;
+- Broker/Web;
+- документации;
+- обслуживания и тестов.
 
-Не расширяйте normal auto-merge path ради developer change.
+Не расширяйте автоматический путь обычной записи ради изменения для разработчика.
 
 ## 3. TDD
 
-Для behavior/code changes:
+Для изменений поведения:
 
-1. напишите failing test;
-2. подтвердите RED по правильной причине;
+1. напишите тест, который падает по нужной причине;
+2. подтвердите RED;
 3. внесите минимальное изменение;
 4. подтвердите GREEN;
-5. выполните полный regression suite.
+5. запустите полный набор релевантных проверок.
 
-Для docs architecture используйте executable docs contracts там, где drift можно проверить структурно: registry/version/link/path synchronization. Не тестируйте exact prose без необходимости.
+Для документации тестируйте структуру и синхронизацию там, где это полезно: наличие файлов, ссылок, версий, зарегистрированных операций. Не привязывайте тесты к точным формулировкам обычного текста без необходимости.
 
-## 4. Schema и vocabulary evolution
+## 4. Изменение схем и словаря
 
-Schema/vocabulary change — отдельный developer task. Обычная data-entry операция не должна:
+Изменение схемы или словаря — отдельная задача для разработчика.
 
-- добавлять новое schema field;
-- менять enum/required rules;
-- создавать новый vocabulary term/synonym;
-- ослаблять validation.
+Обычная запись данных не должна:
 
-Сначала изменяется contract + tests + migration/compatibility policy, затем data flow.
+- добавлять поле в схему;
+- менять `enum` или правил `required`;
+- создавать новый термин словаря или синоним;
+- ослаблять проверку.
 
-## 5. Verification baseline
+Сначала меняются контракт, тесты и правила совместимости и миграции, затем данные.
 
-Минимальный media gate:
+## 5. Минимальная полная проверка медиатеки
 
 ```bash
 python -m pytest -q
@@ -71,47 +70,47 @@ python -m media.cli rebuild --check
 python -m media.cli doctor --format json
 ```
 
-Для web-impacting change дополнительно выполняются web unit/type/build/browser/static scans согласно текущим workflows.
+Если изменение затрагивает Web или Broker, добавляются их тесты, `typecheck`, сборка, проверки браузера и безопасности по текущим процессам GitHub Actions.
 
-## 6. PR discipline
+## 6. Работа через PR
 
-Для существенной работы используйте отдельную ветку/PR. В активном PR храните короткий progress ledger:
+Для существенной работы используйте отдельную ветку и PR.
 
-- что завершено;
-- exact head SHA для подтверждённого checkpoint;
-- какой gate прошёл;
-- следующий незавершённый task;
-- rulings по неожиданным развилкам.
+В активном PR полезно держать короткую контрольную точку:
 
-Transient checkpoint не переносится в `docs/status/current.md` после merge. Durable status содержит только текущее реализованное состояние и ограничения.
+- что уже сделано;
+- точный SHA вершины ветки проверенного состояния;
+- какие проверки прошли;
+- что осталось;
+- какие решения пришлось принять по ходу работы.
 
-## 7. Documentation ownership
+После слияния временный журнал PR не переносится в `docs/status/current.md`. Там остаются только устойчивые возможности и ограничения.
 
-При изменении поведения обновляется документ, который владеет соответствующим контрактом:
+## 7. Кто владеет документацией
 
-| Изменение | Living docs |
+| Изменение | Что обновить |
 | --- | --- |
-| typed operation | `docs/reference/media-commands.md`; semantic impact → relevant architecture doc |
-| schema/domain invariant | `docs/architecture/media-model.md` и/или `docs/reference/invariants.md` |
-| recommendation/taste/assessment | `docs/architecture/intelligence.md`; user behavior → `docs/guides/media-usage.md` |
-| write/CI/auto-merge | `docs/architecture/write-pipeline.md`, `docs/guides/operations.md` |
-| manifest/broker/security | `docs/architecture/web-and-broker.md`; product impact → `PRODUCT.md` |
-| repository layout | `docs/reference/repository-layout.md` |
-| visual web rule | `DESIGN.md` |
-| durable capability/limitation | `docs/status/current.md` |
-| architectural rationale | dated `docs/superpowers/specs/...` + living docs after implementation |
+| типизированная операция | `docs/reference/media-commands.md`; при изменении смысла — нужная архитектурная страница |
+| схема или инвариант | `docs/architecture/media-model.md` и/или `docs/reference/invariants.md` |
+| рекомендации, вкус, оценка кандидата | `docs/architecture/intelligence.md`; пользовательское поведение — `docs/guides/media-usage.md` |
+| запись, CI, автоматическое слияние | `docs/architecture/write-pipeline.md`, `docs/guides/operations.md` |
+| манифест, Broker, безопасность | `docs/architecture/web-and-broker.md`; при изменении продукта — `PRODUCT.md` |
+| структура репозитория | `docs/reference/repository-layout.md` |
+| визуальные правила Web | `DESIGN.md` |
+| текущее устойчивое состояние | `docs/status/current.md` |
+| новое архитектурное решение | датированный файл в `docs/superpowers/specs/`, затем живые документы после реализации |
 
-Missing required docs update — regression, а не optional polish.
+Если нужная документация не обновлена, изменение считается неполным.
 
-## 8. Review checklist
+## 8. Перед проверкой PR
 
-Перед ready-for-review проверьте:
+Проверьте, что:
 
-- change соответствует выбранному route;
-- test наблюдался RED → GREEN;
-- canonical/generated boundary не нарушен;
-- target semantics не изменились молча;
-- security/credential boundary не расширился;
-- living docs соответствуют code/schema/workflow truth;
-- historical specs не переписаны как будто они current state;
-- active PR содержит checkpoint, достаточный для безопасного resume.
+- выбран правильный путь изменения;
+- для изменения поведения был RED → GREEN;
+- не нарушена граница канонических и производных данных;
+- `target` не поменялся незаметно;
+- граница секретов не расширилась;
+- живая документация соответствует коду, схемам и процессам GitHub Actions;
+- исторические спецификации не выданы за текущее состояние;
+- в PR есть достаточно информации, чтобы безопасно продолжить работу после паузы.

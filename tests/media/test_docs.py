@@ -45,8 +45,11 @@ def test_operations_guide_matches_real_modules_and_agents_contract_keeps_guardra
     for cmd in ['python -m media.tools.validate .','python -m media.tools.build_index media','python -m media.tools.build_profiles media','python -m media.tools.build_db media']:
         assert cmd in operations
     agents=Path('media/AGENTS.md').read_text(encoding='utf-8')
-    for phrase in ['Never invent schema fields','Unknown is better than guessed','Do not persist ephemeral','Run full validation before commit','Normal data entry must not modify schemas']:
-        assert phrase in agents
+    assert "## Жёсткие правила" in agents
+    lowered = agents.lower()
+    for fragment in ("схем", "неизвест", "временн", "полный набор проверок", "словар"):
+        assert fragment in lowered
+    assert "workflow" in lowered or "github actions" in lowered
 
 
 def test_living_docs_define_refresh_metadata_as_manual_bulk_maintenance():
@@ -89,8 +92,12 @@ def test_living_docs_expose_similarity_assessment_and_current_read_model():
     status=Path('docs/status/current.md').read_text(encoding='utf-8')
     assert 'media/data/relations/similarity/' in model
     assert 'similarity' in intelligence.lower()
-    assert 'не является preference' in intelligence or 'не становится preference' in intelligence
-    assert 'external' in model.lower()
+    assert (
+        'не является preference' in intelligence
+        or 'не становится preference' in intelligence
+        or 'не является предпочтением' in intelligence
+    )
+    assert 'external' in model.lower() or 'внешн' in model.lower()
     assert 'Current manifest version: v4' in web
     assert 'Media Intelligence v6' in status
     assert 'assess_candidate' in status
@@ -110,7 +117,7 @@ def test_v6_living_docs_define_observability_and_single_runner_merge_boundary():
 
     assert 'media/config/operation_path_policy.json' in pipeline
     assert 'v6_single_runner' in pipeline
-    assert 'request-only' in pipeline
+    assert 'request-only' in pipeline.lower()
     assert 'GitHub API' in pipeline
     assert 'main' in pipeline
 

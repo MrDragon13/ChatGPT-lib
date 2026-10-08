@@ -1,96 +1,96 @@
-# Web and Broker architecture
+# Web и Broker
 
-Этот документ описывает текущую границу между static Web, Cloudflare Broker, GitHub и media domain.
+Этот документ описывает границу между статическим Media Web, Cloudflare Broker, GitHub и media-подсистемой.
 
-## Роли
+## Web
 
-### Web
-
-`web/` — статический React/Vite клиент GitHub Pages.
+`web/` — статический клиент на React/Vite на GitHub Pages.
 
 Он:
 
-- читает versioned derived manifest;
-- показывает library/history/taste/recommendation data;
-- может отправлять разрешённый feedback через Broker;
-- не читает canonical YAML напрямую;
-- не хранит GitHub/provider/model secrets;
-- не является вторым recommendation engine или canonical store.
+- читает версионированный Web manifest;
+- показывает библиотеку, историю, данные о вкусе и рекомендации;
+- отправляет разрешённые правки через Broker;
+- не читает канонические YAML напрямую;
+- не хранит секреты GitHub, провайдера или модели;
+- не содержит собственного второго алгоритма рекомендаций.
 
-Пустая медиатека после v6 reset — нормальный UI state. Home/Library/History должны быть полезными и доступными без фиктивных works.
+Пустая библиотека остаётся поддерживаемым состоянием интерфейса. Home, Library и History должны показывать понятное состояние пустой библиотеки, а не фиктивные фильмы.
 
-### Broker
+## Broker
 
-Cloudflare Worker — stateless защищённая граница browser write.
+Cloudflare Worker — граница без собственного долговременного состояния для записи из браузера.
 
-Production `POST /v1/feedback` использует v6 `record_media_entry`.
+Рабочий `POST /v1/feedback` использует `record_media_entry`.
 
 Broker:
 
-1. проверяет owner session;
-2. получает exact SHA текущего `main`;
+1. проверяет сессию владельца;
+2. получает точный SHA текущего `main`;
 3. читает `media/generated/index.jsonl` на этом же SHA;
-4. извлекает viewer digest нужного `work/target`;
+4. получает viewer digest нужного `work/target`;
 5. строит `record_media_entry(create_if_missing=false)` с `expected_viewer_digests`;
-6. создаёт `media/op-*` branch и request-only PR от того же SHA;
-7. возвращает operation status.
+6. создаёт ветку `media/op-*` и request-only PR от того же SHA;
+7. возвращает состояние операции.
 
-Browser не получает и не вычисляет viewer digest.
+Браузер viewer digest не получает и не вычисляет.
 
-## Почему Broker не хранит состояние
+## Почему Broker не хранит свою базу
 
-Broker не использует D1/KV/Durable Objects как source of truth.
+Broker не использует D1, KV или Durable Objects как второй источник истины.
 
-Pending status восстанавливается из GitHub operation PR/workflow/merge/Pages state. Это сохраняет один долговременный источник данных и не создаёт отдельную синхронизацию.
+Состояние незавершённой операции восстанавливается из PR, workflow, merge и Pages. Так долговременное состояние остаётся в GitHub и не требует отдельной синхронизации.
 
-## Browser feedback contract
+## Что отправляет браузер
 
-Browser отправляет только human-facing поля, например:
+Браузер отправляет только понятные пользователю поля, например:
 
 - `work_id`;
 - `target`;
-- rating;
-- reaction;
-- feedback summary.
+- оценка (`rating`);
+- реакция (`reaction`);
+- текст отзыва.
 
-Internal preconditions добавляет Broker.
+Служебные `preconditions` добавляет Broker.
 
-Если по тому же work/target уже есть активная operation, Broker/Web не создают второй параллельный request. Web сохраняет следующий local draft и разрешает submit после authoritative первой операции и refresh manifest.
+Если для того же `work/target` уже есть активная операция, второй параллельный запрос не создаётся. Web сохраняет локальный черновик и разрешает следующую отправку после завершения первой операции и обновления manifest.
 
-## Status lifecycle
+## Состояния операции
 
-Основные user-facing состояния:
+Основные состояния для пользователя:
 
-- `submitted` / `checking` — операция ещё не authoritative;
-- `merged` — canonical data уже в `main`, Pages ещё может обновляться;
-- `published` — Pages для merge SHA завершены;
-- `failed` — operation не стала authoritative.
+- `submitted` / `checking` — запись ещё не стала канонической;
+- `merged` — данные уже в `main`, но Pages может ещё обновляться;
+- `published` — Pages для merge SHA опубликованы;
+- `failed` — операция не стала канонической.
 
-Status lifecycle опирается на единый v6 `Media Command`, operation receipt, merge и Pages state; старый split-workflow handoff не используется.
+Текущий путь использует единый `Media Command`, служебную квитанцию операции (`operation receipt`), merge и Pages. Старый раздельный процесс больше не используется.
 
 ## Web manifest
 
 Current manifest version: v4.
 
-Manifest строится только из canonical/derived media data.
+Manifest строится только из канонических и производных media-данных.
 
-Он включает публичные viewer/group signals, taste/recommendation read models, semantics, explicit similarity и публичный reanalysis gate. Внутренние viewer/evidence digests и GitHub operation bookkeeping не публикуются.
+В нём есть публичные сигналы пользователей/группы, данные для отображения вкуса и рекомендаций, семантика, явно указанное сходство и публичный индикатор необходимости повторного анализа.
 
-Пустая библиотека экспортируется как валидный manifest с `works: []` и пустыми recommendation candidate sets.
+Внутренние viewer/evidence digests и служебные данные GitHub-операций не публикуются.
 
-## Security boundaries
+При пустой библиотеке manifest остаётся корректным: `works: []`, а наборы кандидатов рекомендаций пусты.
 
-- GitHub App private key и session secret живут только в Worker.
-- `TMDB_READ_TOKEN` живёт только в trusted server/Actions context.
-- Browser bundle содержит только public Broker URL.
-- Broker создаёт только typed request PR и не патчит canonical YAML напрямую.
-- Media Command применяет operation path policy и exact-head/base guard.
-- Fork/untrusted PR не получает secret-bearing normal data execution.
+## Безопасность
 
-## Deploy
+- приватный ключ GitHub App и секрет сессии находятся только в Worker;
+- `TMDB_READ_TOKEN` используется только в доверенной серверной среде/GitHub Actions;
+- сборка для браузера получает только публичный URL Broker;
+- Broker создаёт типизированный request-only PR и не правит YAML напрямую;
+- `Media Command` проверяет разрешённые пути и точные base/head SHA;
+- недоверенные fork-PR не получают выполнение с секретами.
 
-Broker Deploy остаётся manual и SHA-gated.
+## Публикация
 
-Media Pages строит Web для exact merge SHA.
+`Broker Deploy` запускается вручную и принимает ожидаемый SHA `main`.
 
-Если `MEDIA_BROKER_URL` отсутствует, Web должен сохранять read-only функциональность.
+`Media Pages` строит Web для точного SHA слияния.
+
+Если `MEDIA_BROKER_URL` не задан, Web должен полноценно работать в режиме чтения.

@@ -1,103 +1,119 @@
-# Terminology
+# Термины
 
-Стабильные определения, используемые в living docs, code review и agent reasoning.
+Короткий словарь для живой документации, проверки кода и работы агента. Там, где в коде используется английское имя, оно сохранено в обратных кавычках.
 
-## Canonical
+## Канонические данные — `canonical`
 
-Долговременные данные/контракты, которые являются source of truth и не восстанавливаются из другого derived представления. Для media это в первую очередь утверждённые YAML/config/preferences/relations и schemas/vocabulary contracts.
+Долговременные данные и контракты, которые считаются источником истины. Для медиатеки это в первую очередь YAML, настройки, предпочтения, связи, схемы и словарь.
 
-## Derived
+## Производные данные — `derived`
 
-Детерминированно строящееся представление canonical state: index, profile, taste context, SQLite runtime DB, web manifest и другие read models. Derived artifact можно пересобрать и нельзя использовать как обходной путь для mutation canonical meaning.
+Представления, которые детерминированно строятся из канонических данных: индекс, профиль, `taste_context`, временная SQLite-база, Web manifest и другие модели чтения (`read models`).
 
-## Work
+Их можно пересобрать. Нельзя менять их вручную, чтобы обойти изменение канонических данных.
 
-Canonical произведение в media library с устойчивым локальным ID, identity, metadata, signals/provenance и optional semantic fingerprint.
+## Произведение — `work`
 
-## WorkRef
+Фильм, сериал или другое произведение в медиатеке с устойчивым локальным ID, идентичностью, метаданными, пользовательскими сигналами и, при наличии, семантическим профилем.
 
-Ссылка на произведение, которая может быть canonical (`work_id`) или external stable provider identity. Используется там, где operation должна говорить о work, не обязательно уже добавленном в library.
+## `WorkRef`
 
-## Target
+Ссылка на произведение. Может указывать на локальный `work_id` или на устойчивую внешнюю идентичность провайдера.
 
-Контекст субъективных данных/reasoning. Основные: `primary`, `partner`, `couple`. Target определяет, чьи signals/preference/similarity рассматриваются или куда записывается mutation.
+Используется там, где операция должна говорить о произведении, которое не обязательно уже добавлено в медиатеку.
 
-## Viewer signal
+## Контекст данных — `target`
 
-Raw/explicit user-owned signal о просмотре/реакции: viewing, rating, reaction, feedback и связанные поля.
+Определяет, чьи субъективные данные читаются или записываются. Основные значения:
 
-## Explicit preference
+- `primary`;
+- `partner`;
+- `couple`.
 
-Устойчивое предпочтение/ограничение, которое пользователь заявил напрямую и которое подходит для long-term memory.
+## Явный зрительский сигнал — `viewer signal`
 
-## Inferred hypothesis
+Данные, которые принадлежат пользователю напрямую: просмотр, оценка, реакция, отзыв и связанные поля.
 
-Evidence-backed вывод о taste, построенный из независимых raw/explicit signals. Не является independent evidence для самого себя или другого вывода.
+## Явное предпочтение — `explicit preference`
 
-## Semantic fingerprint
+Устойчивое предпочтение или ограничение, которое пользователь сообщил напрямую и которое имеет смысл помнить долго.
 
-Controlled-vocabulary описание самого произведения: narrative/story/tonal/experience traits и provenance/confidence. Не является оценкой пользователя.
+## Выведенная гипотеза — `inferred hypothesis`
 
-## Evidence
+Вывод о вкусе на основе независимых явных сигналов. Такой вывод не считается новым независимым доказательством сам для себя.
 
-Конкретное основание для reasoning: explicit preference, viewer feedback, repeated independent correlation, representative work, interaction или explicit similarity. Provenance должен позволять отличить user-stated signal от inferred conclusion.
+## Семантический профиль — `semantic fingerprint`
 
-## Taste context
+Описание самого произведения через контролируемый словарь: структура истории, тон, опыт просмотра и другие признаки. Не является оценкой пользователя.
 
-Compact read model для recommendation/assessment reasoning: explicit/inferred taste, representative works, recent feedback, exclusions, affinities, similarity evidence и group disagreement.
+## Основание — `evidence`
 
-## Recommendation context
+Конкретная причина для вывода: явное предпочтение, отзыв, повторяющаяся независимая закономерность, характерное произведение, взаимодействие с рекомендацией или явно указанное сходство.
 
-Read model, соединяющий target taste/context с candidate set/constraints для explainable recommendation reasoning.
+Происхождение данных должно позволять отличить слова пользователя от выведенной гипотезы.
 
-## Candidate assessment
+## `taste_context`
 
-Read-only оценка конкретного candidate через `assess_candidate`: qualitative verdict/confidence, supports, risks и evidence. Assessment не сохраняет prediction как taste fact.
+Компактная модель чтения (`read model`) для рассуждения о вкусе: явные и выведенные данные, характерные произведения, свежие отзывы, исключения, оценки `affinity`, сходство и разногласия пары.
 
-## Explicit similarity
+## `recommend_context`
 
-Target-specific undirected пользовательское утверждение «work A похож на work B». Хранится отдельно от factual sequel/prequel/remake relations. Может быть recommendation evidence/hint, но не preference сама по себе.
+Модель чтения (`read model`), которая соединяет вкусовой контекст с набором кандидатов и ограничений для объяснимой рекомендации.
 
-## Derived similarity
+## `assess_candidate`
 
-Сходство, вычисленное из semantic fingerprints/model reasoning. Не становится canonical explicit similarity без подтверждения пользователя.
+Оценка только для чтения конкретного кандидата: качественный вывод, уверенность, сильные стороны, риски и основания. Результат не сохраняется как факт о вкусе.
 
-## Reconciliation
+## Явное сходство — `explicit similarity`
 
-Deterministic normalization persisted external identity к canonical work, когда тот позже появляется в library. Reconciliation обновляет references/deduplicates relation state, но не создаёт viewer signals.
+Пользовательское утверждение «A похож на B» для конкретного `target`.
 
-## Typed operation
+Связь симметрична, хранится отдельно от фактических отношений `sequel` / `prequel` / `remake` и может помогать рекомендациям, но сама по себе не является предпочтением.
 
-Strict JSON request, соответствующий schema и deterministic handler/read builder. Write operations применяют mutations через controlled pipeline; read-only operations возвращают context без canonical write.
+## Вычисленное сходство — `derived similarity`
 
-## Normal data operation
+Сходство, полученное из семантических профилей или рассуждений модели. Не становится пользовательским утверждением без явного подтверждения.
 
-Обычная user/data mutation, которая может быть eligible для guarded auto-merge при строгом path policy и exact-head GREEN.
+## `reconciliation`
 
-## Maintenance operation
+Детерминированная замена сохранённой внешней идентичности на локальный `work_id`, когда произведение позже появляется в медиатеке.
 
-Операция обслуживания данных/provider metadata с более широким scope и manual review policy, например `refresh_metadata`.
+Она нормализует ссылки, но не создаёт новые зрительские сигналы.
 
-## Manual developer route
+## Типизированная операция — `typed operation`
 
-Процесс изменения code/schema/vocabulary/architecture/workflows/tests/docs, который не притворяется normal data operation и не наследует её auto-merge privileges.
+Строгий JSON-запрос, который соответствует схеме и обрабатывается определённым обработчиком или построителем контекста.
+
+Операции записи меняют данные через контролируемый путь. Операции только для чтения только возвращают контекст.
+
+## Обычная операция данных — `normal data operation`
+
+Поддерживаемое пользовательское изменение, которое при выполнении всех проверок может автоматически слиться в `main`.
+
+## Операция обслуживания — `maintenance operation`
+
+Более широкое техническое изменение данных, например массовый `refresh_metadata`, которое требует ручной проверки.
+
+## PR разработчика
+
+Обычный PR для изменений кода, схем, словаря, архитектуры, процессов GitHub Actions, тестов и документации. Он не получает права обычной автоматического слияния обычной операции данных.
 
 ## Broker
 
-Authenticated server-side boundary для разрешённых browser writes. Broker скрывает credentials и переиспользует typed operation/validation pipeline.
+Защищённый серверный слой для разрешённых записей из браузера. Он скрывает секреты и использует общий путь типизированных операций.
 
 ## Web manifest
 
-Versioned derived JSON read model для static web surface. Manifest не является canonical store.
+Версионированный производный JSON для статического Web. Это не самостоятельное хранилище данных.
 
-## Living docs
+## Живая документация — `living docs`
 
-Актуальная документация текущего поведения/usage/operations/reference. Должна обновляться вместе с изменением реализованного contract.
+Документы, которые описывают текущее поведение, использование, эксплуатацию и контракты. Они обновляются вместе с реализованным изменением.
 
-## Historical rationale
+## История решений
 
-Dated specs/plans под `docs/superpowers/`, сохраняющие контекст проектных решений. После реализации не заменяют living docs/code/schema/AGENTS как current authority.
+Датированные спецификации/планы в `docs/superpowers/`. Они объясняют, почему система пришла к текущему виду, но не переопределяют код, схемы, `AGENTS.md` и живую документацию.
 
-## Durable status
+## Устойчивый статус — `durable status`
 
-Короткое описание текущих capabilities/known limitations, которое переживает завершение конкретного PR. Не содержит task ledger, transient branch SHA или run history.
+Короткое описание текущих возможностей и известных ограничений без временного журнала конкретного PR, ветки или запуска CI.

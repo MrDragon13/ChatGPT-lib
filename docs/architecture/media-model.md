@@ -1,148 +1,146 @@
-# Media domain model
+# Модель данных media
 
-Этот документ описывает текущую v6 модель media data: что хранится как canonical, что является derived, как разделены viewers/targets, semantics, feedback и taste evidence.
+Здесь описано, что хранится как долговременные данные, что можно пересобрать и как разделены произведения, пользователи, отзывы, семантика и вкус.
 
-## Canonical data
+## Канонические данные
 
 Основные пути:
 
-- `media/data/works/` — одно произведение на YAML-файл;
-- `media/data/collections/` — серии/франшизы;
-- `media/data/lists/` — target-scoped списки;
-- `media/data/interactions/` — recommendation interaction events;
-- `media/data/relations/similarity/` — explicit target-specific similarity;
-- `media/data/tombstones/` — redirects после identity merge;
-- `media/preferences/explicit/` — явно заявленные устойчивые preferences/rules;
-- `media/preferences/inferred/` — evidence-backed taste hypotheses;
-- `media/config/` — viewers/groups и технические настройки;
-- `media/vocabulary.yaml` — controlled semantic vocabulary.
+- `media/data/works/` — произведения;
+- `media/data/collections/` — серии и франшизы;
+- `media/data/lists/` — списки для конкретного `target`;
+- `media/data/interactions/` — события, связанные с рекомендациями;
+- `media/data/relations/similarity/` — явно указанное сходство;
+- `media/data/tombstones/` — перенаправления после объединения идентичностей;
+- `media/preferences/explicit/` — явно заявленные устойчивые предпочтения;
+- `media/preferences/inferred/` — выведенные гипотезы о вкусе;
+- `media/config/` — пользователи, группы и технические настройки;
+- `media/vocabulary.yaml` — контролируемый словарь семантических признаков.
 
-Generated files не являются canonical и не редактируются вручную как источник новых фактов.
+`generated/` содержит производные данные и не редактируется как источник новых пользовательских фактов.
 
-После v6 reset активные works/collections/similarity/interactions/inferred preferences начинаются пустыми. Это валидное canonical состояние.
+Сброс v6 7 октября 2026 года начал новую библиотеку с пустого состояния. После этого она снова наполняется обычными v6-записями. Возможность корректно работать при `works=0` остаётся обязательным инвариантом.
 
-## Логические слои work
+## Из чего состоит произведение
 
-Физически work остаётся одним YAML, но логически состоит из независимых слоёв:
+Физически произведение хранится в одном YAML, но логически в нём четыре независимых слоя:
 
-1. **identity** — формат, названия, год, stable external IDs;
-2. **metadata** — фактические сведения о произведении;
-3. **semantics** — controlled semantic fingerprint;
-4. **viewer/group state** — viewing, rating, reaction, feedback и другие subjective signals.
+1. **идентичность** — формат, названия, год, устойчивые внешние ID;
+2. **метаданные** — факты о произведении;
+3. **семантика** — семантический профиль из контролируемого словаря;
+4. **состояние зрителя/группы** — просмотр, оценка, реакция, отзыв и другие субъективные сигналы.
 
-Изменение viewer feedback само по себе не делает metadata или semantics устаревшими. Изменение dynamic provider metrics само по себе не инвалидирует semantic fingerprint.
+Изменение отзыва само по себе не делает метаданные или семантику устаревшими. Изменение динамического рейтинга провайдера само по себе не требует пересчёта семантики.
 
-## Targets
+## `primary`, `partner`, `couple`
 
 - `primary` — основной пользователь;
-- `partner` — отдельный viewer;
-- `couple` — group target.
+- `partner` — второй зритель;
+- `couple` — совместный контекст.
 
-`couple` не является скрытым средним. Disagreement должен оставаться видимым. Subjective state не переносится между targets автоматически.
+Субъективные данные не копируются между ними автоматически. Совместный контекст не скрывает разногласия простым усреднением.
 
-Для автоматического taste reanalysis независимые checkpoints существуют только у `primary` и `partner`; `couple` проверяет состояния участников и не имеет третьего счётчика.
+Автоматический счётчик для повторного анализа вкуса есть только у `primary` и `partner`. Для `couple` проверяется состояние обоих участников.
 
-## Explicit и inferred evidence
+## Явные данные и выведенные гипотезы
 
-Explicit evidence — то, что пользователь сообщил напрямую: viewing/rating/reaction/feedback, explicit preference, interest или similarity assertion.
+К явным данным относятся просмотр, оценка, реакция, отзыв, интерес, явно заявленное предпочтение и явно указанное сходство.
 
-Inferred preference — гипотеза, построенная из независимого evidence. Она не становится самостоятельным evidence для следующего inference.
+Выведенная гипотеза — интерпретация этих данных. Она не становится новым независимым доказательством для следующего вывода.
 
-Свежий explicit signal имеет приоритет над устаревшей inferred interpretation.
+Свежий явный сигнал важнее старой выведенной интерпретации.
 
-## Feedback history и material evidence
+## История отзывов и содержательные события
 
-History может содержать `event_id` и `material_evidence`.
+История может содержать `event_id` и `material_evidence`.
 
-Для taste checkpoint один пользовательский эпизод даёт максимум одно новое material event. Cosmetic summary edit, retry, `no_change` или metadata-only mutation не продвигают checkpoint.
+Для контрольной точки анализа вкуса один человеческий эпизод даёт максимум одно новое содержательное событие. Повтор запроса, `no_change`, изменение только метаданных и косметическая правка текста без изменения структурированных сигналов контрольную точку не двигают.
 
-Содержательная текстовая причина, которая должна влиять на taste, нормализуется в explicit `feedback.signals`; `feedback.summary` сам по себе остаётся human-readable текстом.
+Если текстовая причина должна влиять на вкус, она нормализуется в `feedback.signals`. `feedback.summary` остаётся человекочитаемым текстом.
 
-## Semantic fingerprint
+## Семантический профиль
 
-Semantic fingerprint описывает work, не зрителя.
+Семантический профиль описывает произведение, а не отношение зрителя к нему.
 
-Он строится из фактической semantic input projection, controlled vocabulary и версии алгоритма. Rating/reaction/feedback пользователя не входят в semantic input.
+Он строится из устойчивых входных данных, контролируемого словаря и версии алгоритма. Оценка, реакция и отзыв пользователя в этот вход не входят.
 
-Для reuse используются:
+Для повторного использования учитываются:
 
-- semantic input digest;
-- vocabulary digest;
-- algorithm version.
+- `semantic input digest`;
+- `vocabulary digest`;
+- `algorithm version`.
 
-Если вход и версия не изменились, fingerprint используется повторно.
+Если вход и версия не изменились, существующий семантический профиль можно использовать снова.
 
-## Metadata freshness
+## Свежесть метаданных
 
-Metadata делится минимум на:
+Метаданные делятся на:
 
-- identity-critical facts;
-- относительно статические факты;
-- dynamic metrics.
+- данные, важные для идентичности;
+- относительно стабильные факты;
+- динамические показатели.
 
-Stale optional metadata не блокирует human feedback существующего work.
+Устаревшие необязательные метаданные не должны мешать записать новый отзыв о уже известном произведении.
 
-## Viewer digest
+## Контрольный digest зрителя
 
-`compute_viewer_digest(work, target)` зависит только от состояния конкретного target. Изменение metadata, semantics или другого viewer не меняет этот digest.
+`compute_viewer_digest(work, target)` зависит только от состояния конкретного `target`.
 
-Digest используется как дешёвая precondition-защита от stale/repeated write.
+Изменение метаданных, семантики или данных другого пользователя этот digest не меняет. Он нужен как лёгкая защита от записи поверх устаревшего состояния.
 
-Internal `media/generated/index.jsonl` хранит target digests для быстрого Broker/LLM read path. Public Web manifest эти digests не публикует.
+Внутренний `media/generated/index.jsonl` хранит контрольные digests для быстрого чтения Broker/LLM. Публичный Web manifest их не публикует.
 
-## WorkRef
+## `WorkRef`
 
-Операции могут ссылаться на:
+Ссылка на произведение может указывать:
 
-- canonical work через `work_id`;
-- external work через stable provider identity и display snapshot.
+- на уже существующее произведение через `work_id`;
+- на внешнее произведение через устойчивую идентичность провайдера.
 
-External reference сам по себе не создаёт canonical work, viewing, rating, reaction или interest.
+Внешняя ссылка сама по себе ничего не добавляет в медиатеку и не создаёт просмотр, оценку, реакцию или интерес.
 
-## Explicit similarity
+## Явное сходство
 
-Similarity хранится отдельно и является:
+Сходство хранится отдельно. Оно:
 
-- subjective;
-- target-specific;
-- undirected;
-- способной связывать canonical и external endpoints.
+- субъективно;
+- относится к конкретному `target`;
+- симметрично: A↔B равно B↔A;
+- может связывать локальное и внешнее произведение.
 
-Одна relation определяется как `(target, unordered pair)`. Similarity — evidence/hint для поиска, recommendation и explanation, но не preference сама по себе.
+Одна связь определяется парой произведений и `target`. Она может помогать поиску, рекомендациям и объяснениям, но не является устойчивым предпочтением сама по себе.
 
-Когда external endpoint позже становится canonical work с той же stable identity, deterministic reconciliation нормализует relation без побочного создания viewer signals.
+Если внешнее произведение позже появится в медиатеке с той же устойчивой идентичностью, `reconciliation` заменит внешнюю ссылку на локальную без создания новых зрительских сигналов.
 
-## Derived data
+## Производные данные
 
-Из canonical state строятся:
+Из канонического состояния строятся:
 
-- retrieval index;
-- profiles/affinities;
-- cached reanalysis status;
-- taste/recommendation contexts;
-- временный runtime SQLite;
+- поисковый индекс;
+- профили и `affinity`;
+- состояние повторного анализа вкуса;
+- контексты вкуса и рекомендаций;
+- временная SQLite-база;
 - Web manifest;
-- Web projection similarity.
+- Web-проекция сходства.
 
-`changed_domains` описывает, что изменилось. Отдельный dependency planner строит `DirtyPlan` и определяет минимальный набор derived outputs. Один output пересобирается максимум один раз за transaction.
+`changed_domains` описывает, какие области изменились. `DirtyPlan` определяет минимальный набор производных файлов для пересборки. Каждый результат пересобирается максимум один раз за одну transaction.
 
-## Pre-v6 archive
+## Архив до v6
 
-`docs/archive/media-library-before-v6-reset-2026-10-07.md` — human-readable историческая памятка.
+`docs/archive/media-library-before-v6-reset-2026-10-07.md` — только человекочитаемая историческая памятка.
 
-Она **не является canonical data**, не участвует автоматически в taste/recommendation input и не является machine-readable restore source.
+Она не является текущими данными, не участвует автоматически в рекомендациях и не служит источником машинного восстановления.
 
-При повторном прохождении старого фильма архив может использоваться только как нейтральный checklist; старый rating/reaction/feedback не подмешивается в новый ответ без явного запроса пользователя.
+## Главные инварианты
 
-## Инварианты
-
-- canonical нельзя заменять generated state;
-- unknown лучше guessed identity;
-- target нельзя менять молча;
-- explicit evidence выше inferred interpretation;
-- semantic fingerprint описывает work, а не viewer reaction;
-- similarity — evidence/hint, не preference;
-- external reference не создаёт work автоматически;
-- archive не является intelligence input;
-- пустая библиотека — валидное состояние;
-- provider outage не должен разрушать уже сохранённую stable identity.
+- канонические данные важнее производных;
+- неизвестное лучше догадки;
+- `target` нельзя менять молча;
+- явные данные важнее выведенных гипотез;
+- семантический профиль описывает произведение, а не реакцию зрителя;
+- сходство — подсказка, а не предпочтение;
+- внешняя ссылка не создаёт произведение автоматически;
+- архив не участвует в текущем анализе;
+- пустая библиотека должна оставаться валидным состоянием;
+- сбой провайдера не должен портить уже сохранённую устойчивую идентичность.

@@ -37,10 +37,10 @@ def test_root_readme_routes_to_documentation_usage_development_and_architecture(
 
 def test_docs_index_separates_living_agent_and_historical_layers():
     text = _text("docs/README.md")
-    assert "living" in text.lower()
+    assert "living" in text.lower() or "живая" in text.lower()
     assert "AGENTS.md" in text
     assert "media/AGENTS.md" in text
-    assert "operating contract" in text.lower() or "операцион" in text.lower()
+    assert "operating contract" in text.lower() or "операцион" in text.lower() or "рабочий договор" in text.lower()
     assert "docs/superpowers/" in text
     assert "historical" in text.lower() or "истор" in text.lower()
 
@@ -54,10 +54,21 @@ def test_root_readme_does_not_publish_dated_specs_as_current_architecture():
 def test_architecture_layer_covers_current_v6_without_historical_specs():
     overview = _text("docs/architecture/overview.md")
     media_model = _text("docs/architecture/media-model.md")
-    for phrase in ("canonical", "derived", "GitHub Actions", "broker", "web manifest"):
-        assert phrase.lower() in overview.lower()
-    for phrase in ("primary", "partner", "couple", "semantic fingerprint", "similarity", "WorkRef", "reconciliation"):
-        assert phrase.lower() in media_model.lower()
+    overview_lower = overview.lower()
+    concepts = (
+        ("canonical", "канонич"),
+        ("derived", "производн"),
+        ("github actions", "github"),
+        ("broker", "broker"),
+        ("web manifest", "web manifest"),
+    )
+    for english, russian in concepts:
+        assert english in overview_lower or russian in overview_lower
+    model_lower = media_model.lower()
+    for phrase in ("primary", "partner", "couple", "workref", "reconciliation"):
+        assert phrase in model_lower
+    assert "semantic fingerprint" in model_lower or "семантическ" in model_lower
+    assert "similarity" in model_lower or "сходств" in model_lower
     assert not re.search(r"docs/superpowers/(?:specs|plans)/20\d\d-", overview)
 
 
@@ -65,8 +76,8 @@ def test_intelligence_doc_keeps_similarity_as_evidence_not_preference():
     text = _text("docs/architecture/intelligence.md").lower()
     assert "similarity" in text
     assert "evidence" in text or "свидетель" in text
-    assert "не является preference" in text or "не становится preference" in text
-    assert "independent" in text
+    assert "не является preference" in text or "не становится preference" in text or "не является предпочтением" in text
+    assert "independent" in text or "независим" in text
 
 
 def test_candidate_assessment_doc_is_read_only_and_qualitative():
@@ -112,8 +123,20 @@ def test_operations_guide_uses_existing_verification_commands():
 
 def test_reference_invariants_include_cross_system_safety_rules():
     text = _text("docs/reference/invariants.md").lower()
-    for phrase in ("canonical", "generated", "typed command", "similarity", "preference", "target", "browser", "secret", "unknown", "vocabulary"):
-        assert phrase in text
+    concepts = (
+        ("canonical", "канонич"),
+        ("generated", "generated"),
+        ("typed command", "типизирован"),
+        ("similarity", "сходств"),
+        ("preference", "предпочт"),
+        ("target", "target"),
+        ("browser", "браузер"),
+        ("secret", "секрет"),
+        ("unknown", "неизвест"),
+        ("vocabulary", "словар"),
+    )
+    for english, russian in concepts:
+        assert english in text or russian in text
 
 
 def test_current_status_is_durable_not_a_pr_ledger():
@@ -126,8 +149,9 @@ def test_current_status_is_durable_not_a_pr_ledger():
 
 def test_media_usage_covers_similarity_and_candidate_assessment():
     text = _text("docs/guides/media-usage.md").lower()
-    for phrase in ("assess_candidate", "set_work_similarity", "remove_work_similarity", "external", "primary", "partner", "couple"):
+    for phrase in ("assess_candidate", "set_work_similarity", "remove_work_similarity", "primary", "partner", "couple"):
         assert phrase in text
+    assert "external" in text or "внешн" in text
     assert "не добав" in text and "медиатек" in text
 
 
@@ -143,10 +167,10 @@ def test_media_readme_is_compact_subsystem_router():
 def test_product_and_design_are_explicitly_scoped_to_media_web():
     product = _text("PRODUCT.md")
     design = _text("DESIGN.md")
-    assert "Scope: media-web" in product
-    assert "not repository/system architecture" in product.lower()
+    assert "media-web" in product.lower()
+    assert "архитектур" in product.lower()
     assert "product: media-web" in design
-    assert "# Media Web Design System" in design
+    assert "# Дизайн-система Media Web" in design
 
 
 def test_agent_bootstrap_does_not_require_historical_specs_or_long_status():
