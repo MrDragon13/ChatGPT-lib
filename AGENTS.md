@@ -1,24 +1,26 @@
-# Repository agent router
+# Маршрутизация для агента
 
-The current `main` branch is the repository source of truth. This file is a compact router; do not duplicate subsystem contracts here.
+Актуальный `main` — главный источник истины для репозитория. Этот файл только направляет к нужным правилам и не дублирует их.
 
-## Media bootstrap
+## Работа с медиатекой
 
-For any task involving the personal media library, recommendations, taste/profile reasoning, the media website, or the media write broker:
+Для задач про фильмы, сериалы, рекомендации, вкусовой профиль, Media Web или Broker:
 
-1. Read `media/AGENTS.md` first. It is the normative media operating contract.
-2. Use `docs/README.md` as the map to current living architecture, guides, reference, and status.
-3. Read `docs/status/current.md` when the task depends on current capabilities/known limits or when resuming work; it is not required for every routine media operation.
-4. Treat `media/START_PROMPT.md` as a human-facing launcher for a new cinema-assistant chat, not as the operational contract.
-5. Load schemas, vocabulary, scenario examples, or historical `docs/superpowers/` specs/plans only when the selected route actually needs them. Historical documents explain rationale; they do not override current code, schemas, workflows, living docs, or operating contracts.
+1. Сначала прочитай `media/AGENTS.md` — это основной рабочий договор media-подсистемы.
+2. Используй `docs/README.md` как карту актуальной документации.
+3. Читай `docs/status/current.md`, если задача зависит от текущих возможностей, ограничений или ты продолжаешь ранее начатую работу.
+4. `media/START_PROMPT.md` — стартовый текст для нового чата с киноассистентом, а не технический контракт.
+5. Схемы, словарь, примеры сценариев и исторические материалы открывай только тогда, когда они действительно нужны.
 
-Normal media mutations must use the typed operation routes defined by `media/AGENTS.md`. Do not directly edit canonical media YAML or `generated/` as a shortcut.
+История решений лежит в `docs/superpowers/` и `docs/archive/`. Она помогает понять причины старых решений, но не отменяет текущий код, схемы, workflows и живую документацию.
 
-## Scope routing
+Обычные изменения медиатеки выполняются только через типизированные операции из `media/AGENTS.md`. Не правь канонические YAML и `generated/` напрямую в обход этого пути.
 
-- Media data, ratings, feedback, interest, recommendations, taste reanalysis, semantic enrichment, similarity, and candidate assessment → `media/AGENTS.md` plus the relevant `docs/architecture/` or `docs/reference/` page when explanation is needed.
-- Media web/broker work → `media/AGENTS.md`, then `docs/architecture/web-and-broker.md`, `PRODUCT.md` / `DESIGN.md`, and relevant code.
-- Architecture, schemas, vocabulary, workflows, maintenance, or docs architecture → follow the explicit developer/manual route in `media/AGENTS.md` and `docs/guides/development.md`.
-- Operational verification/recovery → `docs/guides/operations.md`.
+## Куда идти по типу задачи
 
-When resuming interrupted work, verify current `main` and the active PR/status checkpoint first; then consult `docs/status/current.md` for durable project state.
+- Данные медиатеки, оценки, отзывы, интерес, рекомендации, анализ вкуса, семантика и сходство → `media/AGENTS.md`, затем нужный файл из `docs/architecture/` или `docs/reference/`.
+- Media Web и Broker → `media/AGENTS.md`, `docs/architecture/web-and-broker.md`, `PRODUCT.md`, `DESIGN.md`.
+- Код, схемы, словарь, workflows, архитектура и устройство документации → `docs/guides/development.md`.
+- Проверка, пересборка, публикация и восстановление после сбоев → `docs/guides/operations.md`.
+
+При возобновлении незавершённой работы сначала проверь актуальный `main`, открытые PR и последний подтверждённый checkpoint. Затем при необходимости сверяйся с `docs/status/current.md`.
