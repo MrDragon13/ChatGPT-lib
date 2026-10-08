@@ -137,3 +137,38 @@ def test_metadata_freshness_is_pure_and_classifies_missing_layers():
         "static": "current",
         "dynamic": "missing",
     }
+
+
+def test_semantic_input_digest_ignores_credits_but_tracks_content_facts():
+    work = work_document()
+    work["metadata"]["external"]["directors"] = [
+        {"name": "Director A", "external_ids": {"tmdb": 1}},
+    ]
+    work["metadata"]["external"]["writers"] = [
+        {"name": "Writer A", "external_ids": {"tmdb": 2}},
+    ]
+    work["metadata"]["external"]["main_cast"] = [
+        {"name": "Actor A", "character": "Hero", "external_ids": {"tmdb": 3}},
+    ]
+
+    changed_credits = deepcopy(work)
+    changed_credits["metadata"]["external"]["directors"] = [
+        {"name": "Director B", "external_ids": {"tmdb": 4}},
+    ]
+    changed_credits["metadata"]["external"]["writers"].reverse()
+    changed_credits["metadata"]["external"]["main_cast"].append(
+        {"name": "Actor B", "character": "Friend", "external_ids": {"tmdb": 5}}
+    )
+
+    changed_synopsis = deepcopy(work)
+    changed_synopsis["metadata"]["external"]["synopsis_short"] = "A different story premise."
+
+    vocab_digest = "sha256:" + "a" * 64
+    baseline = compute_semantic_input_digest(work, vocab_digest, "media-semantic-v1")
+
+    assert baseline == compute_semantic_input_digest(
+        changed_credits, vocab_digest, "media-semantic-v1"
+    )
+    assert baseline != compute_semantic_input_digest(
+        changed_synopsis, vocab_digest, "media-semantic-v1"
+    )
