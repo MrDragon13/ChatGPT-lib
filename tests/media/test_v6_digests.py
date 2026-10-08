@@ -172,3 +172,36 @@ def test_semantic_input_digest_ignores_credits_but_tracks_content_facts():
     assert baseline != compute_semantic_input_digest(
         changed_synopsis, vocab_digest, "media-semantic-v1"
     )
+
+
+def test_semantic_digest_normalizes_synopsis_typography_and_unordered_sets():
+    work = work_document()
+    work["metadata"]["external"]["countries"] = ["US", "GB"]
+    work["metadata"]["external"]["synopsis_short"] = (
+        "Ощущения — не что иное, как предупреждения.\n\n"
+        "Оказавшись в прошлом, он влюбляется в неё…"
+    )
+
+    formatted = deepcopy(work)
+    formatted["metadata"]["external"]["genres"] = list(reversed(formatted["metadata"]["external"]["genres"]))
+    formatted["metadata"]["external"]["countries"] = ["GB", "US"]
+    formatted["metadata"]["external"]["synopsis_short"] = (
+        "ощущения - не что иное, как предупреждения. "
+        "Оказавшись в прошлом, он влюбляется в нее..."
+    )
+
+    changed_content = deepcopy(work)
+    changed_content["metadata"]["external"]["synopsis_short"] = (
+        "Ощущения — не что иное, как предупреждения. "
+        "Оказавшись в прошлом, он НЕ влюбляется в неё."
+    )
+
+    vocab_digest = "sha256:" + "a" * 64
+    baseline = compute_semantic_input_digest(work, vocab_digest, "media-semantic-v1")
+
+    assert baseline == compute_semantic_input_digest(
+        formatted, vocab_digest, "media-semantic-v1"
+    )
+    assert baseline != compute_semantic_input_digest(
+        changed_content, vocab_digest, "media-semantic-v1"
+    )
