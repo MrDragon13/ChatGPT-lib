@@ -266,3 +266,42 @@ it("does not wait for legacy check or auto-merge workflows for a v6 single-runne
   expect(seen.some((url) => url.includes("/actions/workflows/media-check.yml/runs"))).toBe(false);
   expect(seen.some((url) => url.includes("/actions/workflows/media-auto-merge.yml/runs"))).toBe(false);
 });
+
+
+it("keeps an applied operation pending merge after a post-apply command failure", async () => {
+  mockScenario({
+    pr: openPr(),
+    commandRuns: [{
+      status: "completed",
+      conclusion: "failure",
+      head_sha: "operation-head",
+      html_url: "https://github.com/actions/runs/command-failed-after-apply",
+    }],
+    receiptOperation: "record_media_entry",
+  });
+
+  await expect(getOperationStatus(operationId, env())).resolves.toMatchObject({
+    status: "checking",
+    actions_url: "https://github.com/actions/runs/command-failed-after-apply",
+  });
+});
+
+it("never queries removed legacy workflows after Media Command success", async () => {
+  const seen = mockScenario({
+    pr: openPr(),
+    commandRuns: [{
+      status: "completed",
+      conclusion: "success",
+      head_sha: "operation-head",
+      html_url: "https://github.com/actions/runs/command",
+    }],
+    receiptOperation: "set_interest",
+  });
+
+  await expect(getOperationStatus(operationId, env())).resolves.toMatchObject({
+    status: "checking",
+    actions_url: "https://github.com/actions/runs/command",
+  });
+  expect(seen.some((url) => url.includes("/actions/workflows/media-check.yml/runs"))).toBe(false);
+  expect(seen.some((url) => url.includes("/actions/workflows/media-auto-merge.yml/runs"))).toBe(false);
+});

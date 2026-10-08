@@ -319,3 +319,22 @@ def test_record_media_entry_rejects_unknown_fields():
     bad["unexpected"] = True
     with pytest.raises(CommandValidationError):
         parse_command(bad)
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("runtime_min", 116),
+        ("synopsis_short", "Provider copy can drift."),
+        ("directors", [{"name": "Someone"}]),
+        ("writers", [{"name": "Someone"}]),
+        ("main_cast", [{"name": "Someone"}]),
+        ("external_metrics", {"tmdb": {"score": 7.0}}),
+        ("provenance", {"provider": "tmdb"}),
+    ],
+)
+def test_record_media_entry_rejects_volatile_minimum_metadata(field, value):
+    data = valid_record_media_entry_dict(create_if_missing=True)
+    data["creation_context"]["minimum_metadata"] = {field: value}
+    with pytest.raises(CommandValidationError):
+        parse_command(data)

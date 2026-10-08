@@ -422,3 +422,27 @@ def test_new_work_minimum_synopsis_rejects_changed_meaning(tmp_path):
             provider=FakeProvider(metadata),
             now=NOW,
         )
+
+
+def test_new_work_trusts_provider_for_identity_metadata_and_semantic_bookkeeping(tmp_path):
+    root = copy_fixture_repo(tmp_path)
+    metadata = _provider_metadata()
+    provider = FakeProvider(metadata)
+    command = _new_command(root, metadata)
+    command["creation_context"] = {"provider_identity": {"media_type": "movie", "id": 987654}}
+    command["semantic_snapshot"] = {
+        "traits": [{"term": "story.intrigue", "source": "llm_inferred", "confidence": "high"}],
+        "algorithm_version": "media-semantic-v1",
+    }
+
+    result = transaction.execute_command(root, parse_command(command), provider=provider, now=NOW)
+    work = resolve_work(YamlRepository(root / "media"), parse_command(command).work_ref).data
+    vocabulary_digest = compute_vocabulary_digest(root / "media")
+    expected_semantic_digest = compute_semantic_input_digest(work, vocabulary_digest, "media-semantic-v1")
+
+    assert result.status == "applied"
+    assert provider.calls == [("fetch", "movie", 987654)]
+    assert work["identity"]["title_ru"] == "Новый фильм"
+    assert work["metadata"]["external"]["runtime_min"] == 121
+    assert work["metadata"]["semantic"]["vocabulary_digest"] == vocabulary_digest
+    assert work["metadata"]["semantic"]["input_digest"] == expected_semantic_digest

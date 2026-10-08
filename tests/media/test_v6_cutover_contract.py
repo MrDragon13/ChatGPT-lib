@@ -75,3 +75,19 @@ def test_cutover_archive_and_global_rules_remain_after_library_repopulation():
 
     # Active v6 works/interactions/preferences/receipts are allowed to grow again.
     # Their consistency is covered by canonical validation and rebuild checks.
+
+
+def test_post_cutover_runtime_has_no_v5_compatibility_surface():
+    root = ROOT
+    assert not (root / "media" / "V5_STATUS.md").exists()
+    assert not (root / "media" / "commands" / "schemas" / "record_viewing_feedback.schema.json").exists()
+
+    schema_text = (root / "media" / "commands" / "schema.py").read_text(encoding="utf-8")
+    command_text = (root / "media" / "domain" / "commands.py").read_text(encoding="utf-8")
+    transaction_text = (root / "media" / "service" / "transaction.py").read_text(encoding="utf-8")
+    path_policy_text = (root / "media" / "service" / "path_policy.py").read_text(encoding="utf-8")
+
+    assert "record_viewing_feedback" not in schema_text
+    assert "RecordViewingFeedbackCommand" not in command_text
+    assert "RecordViewingFeedbackCommand" not in transaction_text
+    assert "complete_reassessment_item" not in path_policy_text

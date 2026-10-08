@@ -251,3 +251,24 @@ def test_manifest_never_exports_internal_viewer_digests(tmp_path):
     root=copy_fixture_repo(tmp_path); prepare_derived(root)
     manifest=_web_export_module().build_web_manifest(root/"media")
     assert "viewer_digests" not in _all_keys(manifest)
+
+
+def test_manifest_v4_publishes_v6_reanalysis_gate(tmp_path):
+    root = copy_fixture_repo(tmp_path)
+    for index in range(5):
+        append_material_rating_event(
+            root,
+            score=7.0 + index / 2,
+            event_id=f"123e4567-e89b-42d3-a456-4266141749{index:02d}",
+            at=f"2026-10-07T16:0{index}:00Z",
+        )
+    prepare_derived(root)
+    manifest = _web_export_module().build_web_manifest(root / "media")
+
+    assert manifest["schema_version"] == 4
+    primary_taste = manifest["taste_contexts"]["primary"]
+    primary_recommend = manifest["recommendations"]["primary"]
+    assert primary_taste["reanalysis"]["due"] is True
+    assert "taste_reanalysis_due" in primary_taste["limitations"]
+    assert primary_recommend["reanalysis"]["due"] is True
+    assert "taste_reanalysis_due" in primary_recommend["limitations"]
