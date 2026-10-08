@@ -92,7 +92,11 @@ def test_living_docs_expose_similarity_assessment_and_current_read_model():
     status=Path('docs/status/current.md').read_text(encoding='utf-8')
     assert 'media/data/relations/similarity/' in model
     assert 'similarity' in intelligence.lower()
-    assert 'не является preference' in intelligence or 'не становится preference' in intelligence
+    assert (
+        'не является preference' in intelligence
+        or 'не становится preference' in intelligence
+        or 'не является предпочтением' in intelligence
+    )
     assert 'external' in model.lower() or 'внешн' in model.lower()
     assert 'Current manifest version: v4' in web
     assert 'Media Intelligence v6' in status
