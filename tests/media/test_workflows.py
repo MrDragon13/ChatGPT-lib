@@ -224,5 +224,6 @@ def test_single_runner_handles_merge_api_failure_without_set_e_short_circuit():
     assert "set +e" in before
     assert "MERGE_STATUS=$?" in after
     assert "set -e" in after
-    assert 'if [ "$MERGE_STATUS" -ne 0 ]' in after
+    assert '"$MERGE_STATUS" -eq 0' in after
+    assert ".merged == true" in after
     assert "Merge API was not ready" in after
