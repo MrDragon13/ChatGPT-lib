@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://chatgpt-lib.local/schemas/web-manifest.schema.json",
-  "title": "Media web manifest v3",
+  "title": "Media web manifest v4",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -145,11 +145,27 @@
           }
         }
       }
+    },
+    "reanalysisStatus": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "target",
+        "due"
+      ],
+      "properties": {
+        "target": {
+          "type": "string"
+        },
+        "due": {
+          "type": "boolean"
+        }
+      }
     }
   },
   "properties": {
     "schema_version": {
-      "const": 3
+      "const": 4
     },
     "default_target": {
       "type": [
@@ -220,7 +236,9 @@
           "profile",
           "representative",
           "recent_feedback",
-          "exclusions"
+          "exclusions",
+          "limitations",
+          "reanalysis"
         ],
         "properties": {
           "schema_version": {
@@ -381,6 +399,16 @@
                 }
               }
             }
+          },
+          "limitations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "reanalysis": {
+            "$ref": "#/$defs/reanalysisStatus"
           }
         }
       }
@@ -395,6 +423,7 @@
           "request",
           "coverage",
           "limitations",
+          "reanalysis",
           "candidates"
         ],
         "properties": {
@@ -460,7 +489,8 @@
                 "partial_semantic_coverage",
                 "fallback_candidates_present",
                 "no_personalized_candidates",
-                "empty_library"
+                "empty_library",
+                "taste_reanalysis_due"
               ]
             },
             "uniqueItems": true
@@ -476,6 +506,9 @@
               },
               "additionalProperties": true
             }
+          },
+          "reanalysis": {
+            "$ref": "#/$defs/reanalysisStatus"
           }
         }
       }

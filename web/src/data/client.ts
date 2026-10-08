@@ -1,6 +1,6 @@
 import type { WebManifest } from "./types";
 
-const SUPPORTED_MANIFEST_SCHEMA_VERSIONS = new Set([1, 2, 3]);
+const SUPPORTED_MANIFEST_SCHEMA_VERSIONS = new Set([1, 2, 3, 4]);
 
 export class ManifestLoadError extends Error {
   constructor(

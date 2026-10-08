@@ -59,6 +59,7 @@ export type HomeViewModel = {
   couple: HomeCandidate[];
   recent: RecentWork[];
   taste: HomeTasteModel | null;
+  reanalysisDue: boolean;
 };
 
 type UnknownRecord = Record<string, unknown>;
@@ -272,5 +273,8 @@ export function buildHomeViewModel(manifest: WebManifest, target: TargetId): Hom
     couple: recommendationViews(manifest, "couple").slice(0, 12),
     recent: recentViews(manifest, target),
     taste: tasteView(manifest, target),
+    reanalysisDue:
+      manifest.recommendations[target]?.limitations?.includes("taste_reanalysis_due") === true ||
+      manifest.taste_contexts?.[target]?.limitations?.includes("taste_reanalysis_due") === true,
   };
 }

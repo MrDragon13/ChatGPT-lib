@@ -357,3 +357,19 @@
     will-change: auto;
   }
 }
+
+.home-reanalysis-notice {
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+  margin: 0 auto 1.25rem;
+  max-width: var(--content-max);
+  padding: 0.85rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 36%, transparent);
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, var(--color-surface) 88%, var(--color-accent) 12%);
+}
+
+.home-reanalysis-notice span {
+  color: var(--color-text-muted);
+}
