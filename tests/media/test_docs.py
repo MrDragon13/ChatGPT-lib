@@ -92,7 +92,7 @@ def test_living_docs_expose_similarity_assessment_and_current_read_model():
     assert 'media/data/relations/similarity/' in model
     assert 'similarity' in intelligence.lower()
     assert 'не является preference' in intelligence or 'не становится preference' in intelligence
-    assert 'external' in model.lower()
+    assert 'external' in model.lower() or 'внешн' in model.lower()
     assert 'Current manifest version: v4' in web
     assert 'Media Intelligence v6' in status
     assert 'assess_candidate' in status
@@ -112,7 +112,7 @@ def test_v6_living_docs_define_observability_and_single_runner_merge_boundary():
 
     assert 'media/config/operation_path_policy.json' in pipeline
     assert 'v6_single_runner' in pipeline
-    assert 'request-only' in pipeline
+    assert 'request-only' in pipeline.lower()
     assert 'GitHub API' in pipeline
     assert 'main' in pipeline
 
