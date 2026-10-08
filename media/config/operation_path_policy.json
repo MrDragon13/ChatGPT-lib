@@ -23,17 +23,6 @@
       ],
       "execution_class": "v6_single_runner"
     },
-    "record_viewing_feedback": {
-      "auto_merge": true,
-      "allowed_paths": [
-        "media/data/works/*.yaml",
-        "media/generated/index.jsonl",
-        "media/generated/profiles/*.yaml",
-        ".media/operations/*.json",
-        "media/data/relations/similarity/*.yaml"
-      ],
-      "execution_class": "v6_single_runner"
-    },
     "edit_viewing_feedback": {
       "auto_merge": true,
       "allowed_paths": [

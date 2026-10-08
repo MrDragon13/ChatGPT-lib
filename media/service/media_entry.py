@@ -10,7 +10,6 @@ from media.domain.digests import (
     compute_semantic_input_digest,
     compute_viewer_digest,
     compute_vocabulary_digest,
-    normalize_semantic_text,
 )
 from media.domain.errors import CommandValidationError, NotFoundError, ProviderUnavailableError
 from media.providers.base import MetadataProvider, ProviderCandidate
@@ -25,24 +24,12 @@ def _date(now: datetime | None) -> str:
     return (now or datetime.now(timezone.utc)).date().isoformat()
 
 
-def _stable_identity(identity: Mapping[str, Any]) -> dict[str, Any]:
-    external = identity.get("external_ids") or {}
-    result: dict[str, Any] = {"format": identity.get("format")}
-    tmdb = external.get("tmdb") if isinstance(external, Mapping) else None
-    if isinstance(tmdb, Mapping) and tmdb.get("media_type") and tmdb.get("id") is not None:
-        result["tmdb"] = {"media_type": tmdb.get("media_type"), "id": tmdb.get("id")}
-    imdb = external.get("imdb") if isinstance(external, Mapping) else None
-    if imdb:
-        result["imdb"] = imdb
-    return result
-
-
-def _assert_compatible_identity(existing: Mapping[str, Any], submitted: Mapping[str, Any]) -> None:
-    current = _stable_identity(existing)
-    incoming = _stable_identity(submitted)
-    for key in ("format", "tmdb", "imdb"):
-        if key in current and key in incoming and current[key] != incoming[key]:
-            raise CommandValidationError(f"stable identity mismatch for {key}")
+def _semantic_algorithm_version(repo: YamlRepository) -> str:
+    config = load_yaml(repo.media_root / "config" / "intelligence.yaml") or {}
+    value = config.get("semantic_algorithm_version")
+    if not isinstance(value, str) or not value:
+        raise CommandValidationError("semantic_algorithm_version is missing from trusted config")
+    return value
 
 
 def _validate_viewer_preconditions(
@@ -89,55 +76,6 @@ def _assert_provider_identity(command: RecordMediaEntryCommand, provider_identit
             raise CommandValidationError("provider identity contradicts work_ref")
 
 
-def _matches_minimum(expected: Any, actual: Any) -> bool:
-    if isinstance(expected, Mapping):
-        if not isinstance(actual, Mapping):
-            return False
-        return all(
-            key in actual and _matches_minimum(value, actual[key])
-            for key, value in expected.items()
-        )
-    if isinstance(expected, (list, tuple)):
-        if not isinstance(actual, (list, tuple)):
-            return False
-        remaining = list(actual)
-        for expected_item in expected:
-            for index, actual_item in enumerate(remaining):
-                if _matches_minimum(expected_item, actual_item):
-                    remaining.pop(index)
-                    break
-            else:
-                return False
-        return True
-    return actual == expected
-
-
-def _assert_creation_context(
-    command: RecordMediaEntryCommand,
-    identity: Mapping[str, Any],
-    external: Mapping[str, Any],
-) -> None:
-    creation = command.creation_context
-    if creation is None:
-        raise CommandValidationError("creation_context is required for new work")
-    _assert_compatible_identity(identity, creation.resolved_identity)
-    for key, value in creation.resolved_identity.items():
-        if key in identity and identity[key] != value:
-            raise CommandValidationError(f"resolved identity mismatch for {key}")
-    for key, value in creation.minimum_metadata.items():
-        actual = external.get(key)
-        if (
-            key == "synopsis_short"
-            and isinstance(value, str)
-            and isinstance(actual, str)
-        ):
-            matches = normalize_semantic_text(value) == normalize_semantic_text(actual)
-        else:
-            matches = key in external and _matches_minimum(value, actual)
-        if not matches:
-            raise CommandValidationError(f"minimum metadata mismatch for {key}")
-
-
 def plan_record_media_entry(
     repo: YamlRepository,
     command: RecordMediaEntryCommand,
@@ -152,7 +90,7 @@ def plan_record_media_entry(
 
     if record is not None:
         if command.create_if_missing and command.creation_context is not None:
-            _assert_compatible_identity(record.data.get("identity") or {}, command.creation_context.resolved_identity)
+            _assert_provider_identity(command, record.data.get("identity") or {})
         _validate_viewer_preconditions(record.data, command)
         document, changed, targets = apply_feedback_updates(
             repo,
@@ -181,7 +119,6 @@ def plan_record_media_entry(
     provider_identity = command.creation_context.provider_identity
     metadata = provider.fetch_work(provider_identity.media_type, provider_identity.id)
     _assert_provider_identity(command, metadata.identity)
-    _assert_creation_context(command, metadata.identity, metadata.external)
 
     candidate = ProviderCandidate(
         provider_identity.media_type,
@@ -202,17 +139,14 @@ def plan_record_media_entry(
 
     snapshot = command.semantic_snapshot
     vocabulary_digest = compute_vocabulary_digest(repo.media_root)
-    if snapshot.vocabulary_digest != vocabulary_digest:
-        raise CommandValidationError("semantic vocabulary digest mismatch")
-    semantic_digest = compute_semantic_input_digest(document, vocabulary_digest, snapshot.algorithm_version)
-    if snapshot.semantic_input_digest != semantic_digest:
-        raise CommandValidationError("semantic input digest mismatch")
+    algorithm_version = _semantic_algorithm_version(repo)
+    semantic_digest = compute_semantic_input_digest(document, vocabulary_digest, algorithm_version)
     traits = _validate_traits(repo, snapshot.traits)
     document.setdefault("metadata", {})["semantic"] = {
         "traits": traits,
         "input_digest": semantic_digest,
         "vocabulary_digest": vocabulary_digest,
-        "algorithm_version": snapshot.algorithm_version,
+        "algorithm_version": algorithm_version,
     }
 
     document, changed, targets = apply_feedback_updates(

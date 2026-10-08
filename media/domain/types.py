@@ -42,17 +42,12 @@ class ProviderIdentity:
 
 @dataclass(frozen=True)
 class CreationContext:
-    resolved_identity: Mapping[str, Any]
     provider_identity: ProviderIdentity
-    minimum_metadata: Mapping[str, Any]
 
 
 @dataclass(frozen=True)
 class SemanticSnapshot:
     traits: tuple[Mapping[str, Any], ...]
-    semantic_input_digest: str
-    vocabulary_digest: str
-    algorithm_version: str
 
 
 @dataclass(frozen=True)

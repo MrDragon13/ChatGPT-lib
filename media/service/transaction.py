@@ -4,7 +4,7 @@ import hashlib
 import json
 import shutil
 import tempfile
-from dataclasses import asdict, replace
+from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -15,7 +15,6 @@ from media.domain.commands import (
     EditViewingFeedbackCommand,
     RecordMediaEntryCommand,
     RecordRecommendationInteractionCommand,
-    RecordViewingFeedbackCommand,
     RefreshMetadataCommand,
     RefreshWorkMetadataCommand,
     RemoveWorkSimilarityCommand,
@@ -24,15 +23,14 @@ from media.domain.commands import (
     SetSemanticFingerprintCommand,
     SetWorkSimilarityCommand,
 )
-from media.domain.errors import CommandValidationError, NotFoundError, TransactionValidationError
-from media.domain.types import WorkRef
+from media.domain.errors import CommandValidationError, TransactionValidationError
 from media.repository.yaml_repo import YamlRepository
 from media.service.enrich import plan_add_work_resolved
 from media.service.intelligence import plan_set_semantic_fingerprint
 from media.service.derived import derive_dirty_plan
 from media.service.interactions import plan_record_recommendation_interaction
 from media.service.media_entry import plan_record_media_entry
-from media.service.mutate import apply_feedback_updates, plan_edit_viewing_feedback, plan_record_viewing_feedback, plan_set_interest
+from media.service.mutate import plan_edit_viewing_feedback, plan_set_interest
 from media.service.path_policy import verify_changed_paths, verify_operation_specific_paths
 from media.service.preferences import plan_set_inferred_preferences
 from media.service.refresh import plan_refresh_metadata, plan_refresh_work_metadata
@@ -44,7 +42,6 @@ from media.tools.validate import validate_repository
 
 MutableCommand = (
     RecordMediaEntryCommand
-    | RecordViewingFeedbackCommand
     | EditViewingFeedbackCommand
     | SetInterestCommand
     | AddWorkCommand
@@ -128,27 +125,6 @@ def _plan_add_work(repo: YamlRepository, command: AddWorkCommand, now: datetime 
     return _with_similarity_reconciliation(repo, plan, work_id)
 
 
-def _plan_record_feedback(repo: YamlRepository, command: RecordViewingFeedbackCommand, now: datetime | None, provider: Any = None) -> MutationPlan:
-    try: return plan_record_viewing_feedback(repo,command,now=now)
-    except NotFoundError:
-        if not command.create_if_missing: raise
-    add_command=AddWorkCommand(command.schema_version,command.operation_id,command.work_ref); add_plan,work_id=plan_add_work_resolved(repo,add_command,provider,now=now)
-    if not add_plan.documents:
-        return plan_record_viewing_feedback(repo,replace(command,work_ref=WorkRef(id=work_id),create_if_missing=False),now=now)
-    if len(add_plan.documents)!=1: raise CommandValidationError("create-if-missing expected exactly one new work document")
-    path,document=next(iter(add_plan.documents.items())); updated_document,_,touched_targets=apply_feedback_updates(repo,document,command.target_updates,now=now)
-    domains = set(add_plan.changed_domains)
-    domains.update(f"viewer:{target}" for target in touched_targets)
-    plan = MutationPlan(
-        command.operation_id,
-        "record_viewing_feedback",
-        (work_id,),
-        {path:updated_document},
-        tuple(sorted(domains)),
-    )
-    return _with_similarity_reconciliation(repo, plan, work_id)
-
-
 def _plan(
     repo: YamlRepository,
     command: MutableCommand,
@@ -162,7 +138,6 @@ def _plan(
         if plan.details.get("created") and plan.details.get("work_id"):
             return _with_similarity_reconciliation(repo,plan,str(plan.details["work_id"]))
         return plan
-    if isinstance(command,RecordViewingFeedbackCommand): return _plan_record_feedback(repo,command,now,provider)
     if isinstance(command,EditViewingFeedbackCommand): return plan_edit_viewing_feedback(repo,command,now=now)
     if isinstance(command,SetInterestCommand): return plan_set_interest(repo,command,now=now)
     if isinstance(command,SetSemanticFingerprintCommand): return plan_set_semantic_fingerprint(repo,command,now=now)

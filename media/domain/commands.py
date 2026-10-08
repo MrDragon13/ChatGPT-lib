@@ -20,15 +20,6 @@ class RecordMediaEntryCommand:
 
 
 @dataclass(frozen=True)
-class RecordViewingFeedbackCommand:
-    schema_version: int
-    operation_id: str
-    work_ref: WorkRef
-    target_updates: tuple[TargetUpdate, ...]
-    create_if_missing: bool = False
-
-
-@dataclass(frozen=True)
 class EditViewingFeedbackCommand:
     schema_version: int
     operation_id: str
@@ -162,7 +153,6 @@ class AssessCandidateRequest:
 
 MediaCommand: TypeAlias = (
     RecordMediaEntryCommand
-    | RecordViewingFeedbackCommand
     | EditViewingFeedbackCommand
     | SetInterestCommand
     | AddWorkCommand

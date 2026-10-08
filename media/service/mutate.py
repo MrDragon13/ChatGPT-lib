@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from typing import Any, Mapping
 
 from media.domain.changeset import MutationPlan
-from media.domain.commands import EditViewingFeedbackCommand, RecordViewingFeedbackCommand, SetInterestCommand
+from media.domain.commands import EditViewingFeedbackCommand, SetInterestCommand
 from media.domain.digests import is_material_evidence_change
 from media.domain.errors import CommandValidationError
 from media.domain.types import TargetEdit, TargetUpdate
@@ -89,11 +89,6 @@ def apply_feedback_edits(repo: YamlRepository, document: Mapping[str, Any], edit
             signal.setdefault("history",[]).append({"at":_at(now),"previous":previous,"current":current}); signals[edit.target]=signal; changed=True; touched_targets.add(edit.target)
     if changed: doc.setdefault("provenance",{})["updated_at"]=_date(now)
     return doc,changed,touched_targets
-
-
-def plan_record_viewing_feedback(repo: YamlRepository, command: RecordViewingFeedbackCommand, *, now: datetime | None = None) -> MutationPlan:
-    record=resolve_work(repo,command.work_ref); doc,changed,touched_targets=apply_feedback_updates(repo,record.data,command.target_updates,now=now); path=str(record.path.relative_to(repo.media_root.parent)).replace("\\","/")
-    return MutationPlan(command.operation_id,"record_viewing_feedback",(record.id,) if changed else (),{path:doc} if changed else {},tuple(sorted(f"viewer:{target}" for target in touched_targets)) if changed else ())
 
 
 def plan_edit_viewing_feedback(repo: YamlRepository, command: EditViewingFeedbackCommand, *, now: datetime | None = None) -> MutationPlan:
