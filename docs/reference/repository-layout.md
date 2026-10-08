@@ -12,11 +12,11 @@
 | `DESIGN.md` | дизайн-система Media Web |
 | `docs/` | живая документация, архив и история решений |
 | `media/` | данные и логика медиатеки |
-| `web/` | статический React/Vite-клиент |
+| `web/` | статический клиент на React/Vite |
 | `broker/` | защищённая запись из браузера |
-| `tests/` | исполняемые контракты и fixtures |
+| `tests/` | исполняемые контракты и тестовые данные |
 | `.github/workflows/` | CI, операции и публикация |
-| `.media/` | временные requests и operation receipts |
+| `.media/` | временные запросы и квитанции операций |
 
 ## `docs/`
 
@@ -25,34 +25,34 @@
 - `docs/reference/` — краткие контракты и справочники;
 - `docs/status/` — текущее устойчивое состояние;
 - `docs/archive/` — исторические записи и завершённые разовые процедуры;
-- `docs/superpowers/` — датированные specs/plans и история проектных решений.
+- `docs/superpowers/` — датированные спецификации/планы и история проектных решений.
 
-Архив и historical specs не используются как runtime input.
+Архив и исторические спецификации не используются как входные данные работающей системы.
 
 ## Канонические данные `media/`
 
 - `media/data/works/` — произведения;
 - `media/data/collections/` — коллекции и франшизы;
 - `media/data/lists/` — списки;
-- `media/data/interactions/` — recommendation interactions;
+- `media/data/interactions/` — взаимодействия с рекомендациями;
 - `media/data/relations/similarity/` — явно указанное сходство;
-- `media/data/tombstones/` — перенаправления после merge identity;
+- `media/data/tombstones/` — перенаправления после объединения идентичностей;
 - `media/preferences/explicit/` — явные устойчивые предпочтения;
 - `media/preferences/inferred/` — выведенные гипотезы;
 - `media/config/viewers.yaml`, `groups.yaml` — пользователи и группы;
-- `media/config/intelligence.yaml` — версии алгоритмов и порог reanalysis;
+- `media/config/intelligence.yaml` — версии алгоритмов и порог повторного анализа;
 - `media/config/operation_path_policy.json` — разрешённые пути и классы исполнения;
 - `media/vocabulary.yaml` — контролируемый словарь;
-- `media/schemas/` — схемы данных и read models;
+- `media/schemas/` — схемы данных и модели чтения (`read models`);
 - `media/commands/schemas/` — схемы типизированных операций.
 
-Старые pre-v6 runtime/pilot-файлы и Stage A baselines в текущем дереве отсутствуют.
+Старые исполняемые/pilot-файлы до v6 и Stage A baselines в текущем дереве отсутствуют.
 
 ## Код `media/`
 
 - `media/domain/` — типы, контракты и ошибки;
-- `media/commands/` — разбор команд и registry схем;
-- `media/service/` — запись и построение read-only контекста;
+- `media/commands/` — разбор команд и реестр схем;
+- `media/service/` — запись и построение контекста только для чтения;
 - `media/repository/` — чтение и сохранение;
 - `media/providers/` — внешние поставщики метаданных;
 - `media/tools/` — проверка, сборка, диагностика и архив;
@@ -64,9 +64,9 @@
 
 - `index.jsonl`;
 - `profiles/*.yaml`;
-- другие read models.
+- другие модели чтения.
 
-Runtime SQLite тоже является производной и не хранится в Git как источник истины.
+Временная SQLite-база тоже является производной и не хранится в Git как источник истины.
 
 ## `web/`
 
@@ -74,23 +74,23 @@ Runtime SQLite тоже является производной и не хран
 
 ## `broker/`
 
-Stateless server-side слой для браузерной записи. Он преобразует отзыв в `record_media_entry` и использует viewer digest на точном SHA `main`.
+Серверный слой без собственного состояния для браузерной записи. Он преобразует отзыв в `record_media_entry` и использует `viewer digest` на точном SHA `main`.
 
 ## `.github/workflows/`
 
-- `media-command.yml` — обычные типизированные записи и подготовка manual maintenance PR;
-- `media-dev-check.yml` — полный media-gate developer PR;
+- `media-command.yml` — обычные типизированные записи и подготовка ручного PR обслуживания;
+- `media-dev-check.yml` — полная проверка медиатеки для PR разработчика;
 - `web-check.yml` — проверки Web;
 - `broker-check.yml` — проверки Broker;
 - `media-pages.yml` — сборка и публикация Pages для точного SHA;
 - `broker-deploy.yml` — ручная публикация Broker.
 
-Старый раздельный validation/merge путь удалён; обычные записи обслуживает `media-command.yml`.
+Старый раздельный путь validation/merge удалён; обычные записи обслуживает `media-command.yml`.
 
 ## `.media/`
 
 - `.media/requests/` — временные файлы запросов;
-- `.media/operations/` — operation receipts.
+- `.media/operations/` — квитанции операций.
 
 Это служебные данные процесса, а не пользовательское хранилище.
 
@@ -102,4 +102,4 @@ Stateless server-side слой для браузерной записи. Он п
 - CI и запись → workflow/service + `architecture/write-pipeline.md`;
 - Web/Broker → code + `architecture/web-and-broker.md`;
 - структура репозитория → этот файл;
-- крупное новое решение → датированный spec/plan, затем живые документы после реализации.
+- крупное новое решение → датированную спецификацию/план, затем живые документы после реализации.
