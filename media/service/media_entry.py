@@ -88,6 +88,29 @@ def _assert_provider_identity(command: RecordMediaEntryCommand, provider_identit
             raise CommandValidationError("provider identity contradicts work_ref")
 
 
+def _matches_minimum(expected: Any, actual: Any) -> bool:
+    if isinstance(expected, Mapping):
+        if not isinstance(actual, Mapping):
+            return False
+        return all(
+            key in actual and _matches_minimum(value, actual[key])
+            for key, value in expected.items()
+        )
+    if isinstance(expected, (list, tuple)):
+        if not isinstance(actual, (list, tuple)):
+            return False
+        remaining = list(actual)
+        for expected_item in expected:
+            for index, actual_item in enumerate(remaining):
+                if _matches_minimum(expected_item, actual_item):
+                    remaining.pop(index)
+                    break
+            else:
+                return False
+        return True
+    return actual == expected
+
+
 def _assert_creation_context(
     command: RecordMediaEntryCommand,
     identity: Mapping[str, Any],
@@ -101,7 +124,7 @@ def _assert_creation_context(
         if key in identity and identity[key] != value:
             raise CommandValidationError(f"resolved identity mismatch for {key}")
     for key, value in creation.minimum_metadata.items():
-        if external.get(key) != value:
+        if key not in external or not _matches_minimum(value, external[key]):
             raise CommandValidationError(f"minimum metadata mismatch for {key}")
 
 

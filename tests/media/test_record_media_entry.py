@@ -323,3 +323,59 @@ def test_create_if_missing_existing_work_rejects_contradictory_stable_identity(t
 
     with pytest.raises(CommandValidationError, match="identity"):
         transaction.execute_command(root, parse_command(data), provider=RaisingProvider(), now=NOW)
+
+
+def test_new_work_minimum_metadata_accepts_verified_subset_and_credit_order_changes(tmp_path):
+    root = copy_fixture_repo(tmp_path)
+    metadata = _provider_metadata()
+    external = deepcopy(dict(metadata.external))
+    external["directors"] = [
+        {"name": "Tony Scott", "external_ids": {"tmdb": 893}},
+        {"name": "Additional Director", "external_ids": {"tmdb": 999001}},
+    ]
+    external["writers"] = [
+        {"name": "Bill Marsilii", "external_ids": {"tmdb": 52927}},
+        {"name": "Terry Rossio", "external_ids": {"tmdb": 1706}},
+    ]
+    external["main_cast"] = [
+        {"name": "Denzel Washington", "character": "Doug Carlin", "external_ids": {"tmdb": 5292}},
+        {"name": "Paula Patton", "character": "Claire Kuchever", "external_ids": {"tmdb": 52851}},
+    ]
+    metadata = CanonicalMetadata(identity=metadata.identity, external=external)
+    command = _new_command(root, metadata)
+    command["creation_context"]["minimum_metadata"].update({
+        "directors": [
+            {"name": "Tony Scott", "external_ids": {"tmdb": 893}},
+        ],
+        "writers": [
+            {"name": "Terry Rossio", "external_ids": {"tmdb": 1706}},
+            {"name": "Bill Marsilii", "external_ids": {"tmdb": 52927}},
+        ],
+        "main_cast": [
+            {"name": "Paula Patton", "character": "Claire Kuchever"},
+        ],
+    })
+
+    result = transaction.execute_command(
+        root,
+        parse_command(command),
+        provider=FakeProvider(metadata),
+        now=NOW,
+    )
+
+    assert result.status == "applied"
+
+
+def test_new_work_minimum_metadata_still_rejects_false_fact(tmp_path):
+    root = copy_fixture_repo(tmp_path)
+    metadata = _provider_metadata()
+    command = _new_command(root, metadata)
+    command["creation_context"]["minimum_metadata"]["runtime_min"] = 999
+
+    with pytest.raises(CommandValidationError, match="minimum metadata mismatch for runtime_min"):
+        transaction.execute_command(
+            root,
+            parse_command(command),
+            provider=FakeProvider(metadata),
+            now=NOW,
+        )
