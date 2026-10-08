@@ -16,9 +16,6 @@ STATIC_METADATA_KEYS = (
     "countries",
     "production_status",
     "synopsis_short",
-    "directors",
-    "writers",
-    "main_cast",
     "certifications",
     "content_warnings",
 )
