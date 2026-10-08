@@ -1,43 +1,45 @@
-# Media feedback broker
+# Media feedback Broker
 
-This Cloudflare Worker is the protected write bridge for the static media site. It authenticates one GitHub owner, maps browser feedback to typed `record_media_entry`, creates a request-only operation PR, and reports GitHub/Pages status. It never edits canonical media YAML directly.
+Cloudflare Worker служит защищённым мостом между статическим Media Web и записью в GitHub. Он авторизует владельца, превращает браузерный отзыв в типизированную `record_media_entry`, создаёт request-only PR и сообщает состояние операции.
 
-Production `POST /v1/feedback` использует v6: Broker читает viewer digest из `media/generated/index.jsonl` на exact SHA текущего `main`, строит preconditioned `record_media_entry`, а затем создаёт branch/PR от того же SHA. Browser не знает и не вычисляет digest.
+Broker никогда не правит канонические YAML напрямую.
 
-## 1. Create the GitHub App
+Production `POST /v1/feedback` работает по v6-схеме: Broker читает viewer digest из `media/generated/index.jsonl` на точном SHA текущего `main`, добавляет precondition и создаёт ветку/PR от того же SHA. Браузер сам digest не знает и не вычисляет.
 
-Create one GitHub App and install it **only** on `MrDragon13/ChatGPT-lib`.
+## 1. GitHub App
 
-Repository permissions:
+Создайте один GitHub App и установите его только в `MrDragon13/ChatGPT-lib`.
+
+Права репозитория:
 
 - Metadata: Read-only
 - Contents: Read and write
 - Pull requests: Read and write
 - Actions: Read-only
 
-No workflow-write permission is needed.
+Право на запись workflows не требуется.
 
-Set the user authorization callback URL to:
+Callback для авторизации пользователя:
 
 ```text
 https://<worker-host>/v1/auth/callback
 ```
 
-Record the App ID, Client ID, Client Secret, installation ID, and the numeric GitHub user ID that is allowed to edit.
+Нужно сохранить App ID, Client ID, Client Secret, installation ID и числовой GitHub user ID владельца, которому разрешено редактирование.
 
-Generate a GitHub App private key. The Worker imports PKCS#8 PEM. If GitHub gives you a different RSA PEM form, convert it before storing it:
+Приватный ключ GitHub App должен быть в формате PKCS#8 PEM. Если GitHub выдал другой RSA PEM, преобразуйте его:
 
 ```bash
 openssl pkcs8 -topk8 -nocrypt -in github-app.pem -out github-app-pkcs8.pem
 ```
 
-Do not commit either private-key file.
+Файлы приватного ключа нельзя коммитить.
 
-## 2. Cloudflare Worker configuration
+## 2. Настройка Cloudflare Worker
 
-`wrangler.jsonc` already contains the public repository/origin settings and two Rate Limiting bindings. Namespace IDs `1001` and `1002` must be unique within your Cloudflare account; change them before deployment if those IDs are already used by another Worker.
+`wrangler.jsonc` содержит публичные настройки репозитория/origin и два Rate Limiting binding. Namespace IDs `1001` и `1002` должны быть уникальны в Cloudflare-аккаунте.
 
-Wrangler must be authenticated to the target Cloudflare account. Store runtime configuration on the Worker, not in this repository:
+Секреты хранятся в Worker, а не в репозитории:
 
 ```bash
 cd broker
@@ -50,42 +52,40 @@ npx wrangler secret put BROKER_SESSION_SECRET
 npx wrangler secret put GITHUB_APP_PRIVATE_KEY < github-app-pkcs8.pem
 ```
 
-Use a high-entropy random value for `BROKER_SESSION_SECRET`.
+Для `BROKER_SESSION_SECRET` нужен случайный секрет с высокой энтропией.
 
-The production allowed browser origin is fixed to:
+Разрешённый production origin:
 
 ```text
 https://mrdragon13.github.io
 ```
 
-The browser never receives any GitHub token or Worker secret.
+Браузер не получает GitHub-токены и секреты Worker.
 
-## 3. GitHub Actions deployment credentials
+## 3. Секреты GitHub Actions для публикации
 
-For the manual `Broker Deploy` workflow, configure these repository Actions secrets:
+Для ручного workflow `Broker Deploy` нужны:
 
-- `CLOUDFLARE_API_TOKEN` — a Cloudflare API token able to deploy this Worker;
-- `CLOUDFLARE_ACCOUNT_ID` — the target Cloudflare account ID.
+- `CLOUDFLARE_API_TOKEN` — токен с правом публикации Worker;
+- `CLOUDFLARE_ACCOUNT_ID` — ID Cloudflare-аккаунта.
 
-Runtime GitHub App secrets stay in Cloudflare and are not copied into GitHub Actions.
+Runtime-секреты GitHub App остаются в Cloudflare и не копируются в GitHub Actions.
 
-`Broker Deploy` is deliberately manual. Run it from `main` and pass the exact main commit SHA that already passed repository checks. This prevents an unprovisioned Cloudflare account from making normal merges or GitHub Pages deployment fail.
+`Broker Deploy` запускается вручную из `main`. В поле `expected_sha` передаётся точный SHA уже проверенного `main`. Если SHA не совпадёт, публикация остановится.
 
-## 4. Publish the broker URL to the site
+## 4. URL Broker для сайта
 
-After the Worker is deployed and owner login works, create the GitHub repository variable:
+После публикации Worker и проверки входа владельца создайте переменную репозитория:
 
 ```text
 MEDIA_BROKER_URL=https://<worker-host>
 ```
 
-The Pages build exposes only this public URL as `VITE_MEDIA_BROKER_URL`. No write credential belongs in the Vite build or Pages artifact.
+Сборка Pages передаёт в Web только публичный адрес как `VITE_MEDIA_BROKER_URL`.
 
-If `MEDIA_BROKER_URL` is absent, the site must continue to build and operate read-only.
+Если `MEDIA_BROKER_URL` не задан, сайт должен продолжать работать в режиме чтения.
 
-## 5. Verification before enabling the web editor
-
-Run locally or in CI:
+## 5. Проверка
 
 ```bash
 cd broker
@@ -94,16 +94,16 @@ npm run test:run
 npm run typecheck
 ```
 
-Then perform one controlled operation through the deployed broker and confirm this chain completes:
+Затем выполните одну контролируемую запись через опубликованный Broker и проверьте полный путь:
 
 ```text
 POST /v1/feedback
   -> exact main SHA + viewer digest
   -> request-only media/op-<uuid> PR
-  -> Media Command single-runner gate
+  -> Media Command
   -> exact-head merge
   -> Media Pages
   -> GET /v1/operations/<uuid> == published
 ```
 
-`MEDIA_BROKER_URL` должен указывать только на проверенный production Worker. При его отсутствии static site остаётся read-only.
+`MEDIA_BROKER_URL` должен указывать только на проверенный production Worker.
