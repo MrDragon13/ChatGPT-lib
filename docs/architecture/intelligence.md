@@ -1,187 +1,159 @@
-# Media intelligence
+# Логика вкуса и рекомендаций
 
-Этот документ описывает текущие правила taste reasoning, recommendations, candidate assessment и explicit similarity в Media Intelligence v6.
+Этот документ описывает, как Media Intelligence v6 работает с пользовательскими сигналами, рекомендациями, оценкой конкретного фильма и явно указанным сходством.
 
-## Источники знания
+## Три разных слоя
 
-Система различает три слоя:
+Система разделяет:
 
-1. **explicit user evidence** — rating, reaction, feedback, explicit preference, interest, similarity;
-2. **inferred taste hypotheses** — объясняющие гипотезы, построенные из independent evidence;
-3. **work semantics** — признаки самого произведения из controlled vocabulary.
+1. **явные сигналы пользователя** — оценка, реакция, отзыв, интерес, предпочтение, сходство;
+2. **выведенные гипотезы о вкусе** — объясняющие выводы на основе независимых сигналов;
+3. **семантику произведения** — признаки самого фильма из контролируемого словаря.
 
-Эти слои нельзя смешивать.
+Смешивать эти слои нельзя.
 
-Explicit evidence имеет приоритет над inferred interpretation. Inferred output не является independent evidence для следующего inference. Film fingerprint описывает work, never the viewer reaction. Credits (directors/writers/main cast) остаются canonical metadata, но не входят в semantic input digest: изменение состава или порядка credits не должно само по себе инвалидировать fingerprint содержания. Synopsis остаётся canonical metadata и может использоваться LLM при построении fingerprint, но его редакционная формулировка не входит в semantic input digest и сама по себе не инвалидирует fingerprint. `genres` и `countries` в digest трактуются как неупорядоченные множества; устойчивые структурированные факты вроде runtime/genres продолжают влиять на freshness.
+Явный сигнал важнее выведенной гипотезы. Результат предыдущего вывода не считается независимым evidence для следующего. Semantic fingerprint описывает фильм, а не отношение зрителя.
 
-## Taste profile
+Credits остаются каноническими метаданными, но не входят в `semantic input digest`: перестановка актёров или авторов не должна сама по себе инвалидировать описание содержания. Synopsis может использоваться при построении fingerprint, но изменение его редакционной формулировки тоже не должно автоматически инвалидировать fingerprint. `genres` и `countries` в digest считаются неупорядоченными наборами.
 
-Generated profile строится детерминированно для конкретного target.
+## Профиль вкуса
+
+Производный профиль строится отдельно для каждого `target`.
 
 Он содержит:
 
-- explicit preferences/rules;
-- affinities по semantic terms;
-- inferred hypotheses как отдельную explanation layer;
-- evidence counts/provenance;
-- cached reanalysis status для viewer targets.
+- явно заявленные предпочтения и правила;
+- affinity по семантическим признакам;
+- выведенные гипотезы как отдельный объясняющий слой;
+- количество и происхождение evidence;
+- состояние необходимости повторного анализа для `primary` и `partner`.
 
-Inferred hypotheses не должны молча усиливать численные affinity scores как будто это новое пользовательское evidence.
+Выведенные гипотезы не должны незаметно усиливать численные affinity так, будто пользователь сообщил новые данные.
 
-## Checkpointed taste reanalysis
+## Когда переанализировать вкус
 
-Глубокий LLM reanalysis не выполняется после каждого feedback.
+Глубокий анализ не запускается после каждого отзыва.
 
-Для `primary` и `partner` отдельно существует evidence checkpoint.
+Для `primary` и `partner` отдельно хранится evidence checkpoint. Порог по умолчанию — **5** новых содержательных событий после последнего полного анализа.
 
-Default threshold: **5** новых содержательных explicit events после последнего полного reanalysis.
+Одно содержательное событие:
 
-Material event:
+- даёт максимум +1 за один человеческий эпизод по одному произведению;
+- не создаётся повторным запросом или idempotent replay;
+- не создаётся при `no_change`;
+- не создаётся при изменении только метаданных;
+- не создаётся косметической правкой `feedback.summary`, если структурированные сигналы не изменились;
+- может появиться при новой содержательной переоценке того же произведения.
 
-- максимум +1 за один человеческий эпизод по одному work;
-- retry и idempotent replay не считаются;
-- `no_change` не считается;
-- metadata-only change не считается;
-- косметическая правка `feedback.summary` без изменения structured explicit signals не считается;
-- последующая содержательная переоценка того же work может дать новое событие.
+Источник истины — checkpoint и его digest, а не отдельно изменяемый счётчик.
 
-Источник истины — checkpoint/prefix digest, а не отдельный изменяемый integer.
+Перед ответом, зависящим от вкуса — рекомендацией, сравнением, вопросом «что сегодня», `assess_candidate` или совместным выбором:
 
-Перед taste-dependent decision (`recommend`, сравнение, «что сегодня», `assess_candidate`, couple recommendation):
+1. прочитать статус reanalysis;
+2. если порог не достигнут, использовать текущий профиль, но отдавать приоритет свежим явным сигналам;
+3. если порог достигнут, сначала выполнить новый анализ;
+4. сохранить результат через `set_inferred_preferences` вместе с checkpoint/digest и версией алгоритма;
+5. свежий результат можно использовать в текущем разговоре сразу, но каноническим он становится только после слияния в `main`.
 
-1. прочитать reanalysis status;
-2. если threshold не достигнут — использовать current profile, но свежие explicit signals имеют приоритет;
-3. если threshold достигнут — сначала построить fresh reanalysis;
-4. сохранить его через `set_inferred_preferences` вместе с evidence checkpoint/digest и algorithm version;
-5. использовать свежий результат в текущем разговоре сразу; canonical checkpoint становится authoritative только после merge.
+У `couple` нет отдельного третьего счётчика: проверяются `primary` и `partner`.
 
-`couple` не имеет собственного счётчика. Перед couple decision проверяются `primary` и `partner`; переанализируется только тот участник, которому это нужно.
+## `taste_context`
 
-## Taste context
+`taste_context` — компактный read-only контекст для рассуждения о вкусе.
 
-`taste_context` — read-only компактный context для reasoning.
+Он включает явные и выведенные данные, характерные произведения, недавние отзывы, разногласия пары и `limitations`.
 
-Он включает explicit/inferred profile data, representative works, recent feedback, couple disagreement и limitations.
+Если у пользователя пока нет evidence по произведениям, контекст сообщает `cold_start_no_work_evidence`. При этом явно сохранённые глобальные предпочтения остаются доступными.
 
-При нуле work evidence viewer context сообщает `cold_start_no_work_evidence`. Это не отменяет сохранённые global explicit preferences.
+## Рекомендации из своей медиатеки
 
-## Recommendations
+Внутренняя рекомендация рассматривает только локальные произведения.
 
-### Internal
+При `works=0` список кандидатов пуст, а `limitations` содержит `empty_library`. Создавать фиктивный фильм ради интерфейса или теста нельзя.
 
-Internal recommendation рассматривает только canonical local works.
-
-Если library пуста, candidate list пуст и limitation содержит `empty_library`. Нельзя создавать фиктивный кандидат ради UI или теста.
-
-Текущая deterministic ranking policy отделяет кандидатов с personalized semantic basis от fallback:
+Текущая детерминированная сортировка отделяет персонализированные кандидаты от fallback:
 
 - `trait_overlap` идёт раньше `none`;
-- personalized candidates учитывают directional balance strengths/concerns;
-- затем учитываются concerns, interest priority и stable ID;
-- fallback не притворяется personalized reasoning.
+- для персонализированных кандидатов учитывается баланс сильных и слабых совпадений;
+- затем учитываются риски, приоритет интереса и стабильный ID;
+- fallback не выдаётся за персональную рекомендацию.
 
-Confidence и magnitude affinity доступны для explanation, но не являются скрытым opaque match score.
+Численные affinity можно использовать для объяснения, но они не превращаются в скрытый единый match score.
 
-### External discovery
+## Внешний поиск
 
-General recommendation request допускает external discovery по умолчанию.
+Обычная просьба «посоветуй фильм» по умолчанию допускает внешний поиск.
 
-Локальная библиотека служит памятью о вкусах, evidence anchors и exclusions, но не ограничивает внешний candidate set.
+Локальная библиотека при этом служит памятью о вкусах, исключениях и примерах. Сам факт внешней рекомендации не создаёт новое произведение в канонической библиотеке.
 
-Сам факт внешней рекомендации не создаёт canonical work.
+## Основания и ограничения
 
-## Recommendation evidence и limitations
+`recommend_context` возвращает кандидатов, сильные и слабые стороны, `ranking_basis`, покрытие данных и `limitations`.
 
-`recommend_context` возвращает:
+`ranking_basis=none` означает отсутствие персонального семантического основания.
 
-- candidates;
-- structured strengths/concerns;
-- `ranking_basis` / fallback reason;
-- coverage;
-- top-level `limitations`.
+Ограничения нужно учитывать в выводе, но не повторять одно и то же предупреждение несколько раз.
 
-`ranking_basis=none` не является personalized semantic evidence.
+## `assess_candidate`
 
-Active limitations — material context. Agent должен учитывать их в выводе один раз и кратко, а не механически повторять предупреждение.
+`assess_candidate` — read-only путь для вопроса «понравится ли мне X?».
 
-## Candidate assessment
+Кандидат может быть уже в медиатеке или оставаться внешним.
 
-`assess_candidate` — read-only context для вопроса «понравится ли мне X?».
+Используются:
 
-Кандидат может быть canonical или external.
+- вкусовой контекст выбранного `target`;
+- semantic fingerprint кандидата, если он есть;
+- конкретные похожие/противоположные примеры;
+- явно указанное similarity;
+- покрытие данных и `limitations`.
 
-Assessment использует:
+Ответ должен быть **качественным**, а не псевдоточными 73% или непрозрачным match score.
 
-- target taste context;
-- candidate semantic fingerprint, если он есть;
-- concrete supporting/contradicting works;
-- explicit similarity;
-- coverage/limitations.
+`assessment_coverage` показывает, насколько хорошо ответ обеспечен данными. Неполное покрытие нельзя описывать как полностью обоснованную уверенность.
 
-Ответ остаётся **qualitative**. Система не создаёт fake precise probability, deterministic `likely/mixed/unlikely` или opaque match score.
+Внешний кандидат можно оценить, не добавляя его в медиатеку.
 
-Top-level `assessment_coverage` показывает реальную полноту основания: наличие fingerprint, число directional matches и coverage supporting work evidence.
+## Явное сходство
 
-Partial `assessment_coverage` must not be described as fully grounded certainty.
+`set_work_similarity` сохраняет пользовательское утверждение о сходстве для конкретного `target`. `remove_work_similarity` удаляет ту же связь независимо от порядка A/B.
 
-External candidate может быть оценён без добавления в canonical library.
+Similarity может связывать локальное произведение с внешним. Оно помогает рекомендациям и объяснениям, но **не является preference** само по себе.
 
-## Explicit similarity
+Автоматически вычисленное сходство нельзя показывать как пользовательское мнение без явного подтверждения.
 
-`set_work_similarity` хранит target-specific undirected user assertion. `remove_work_similarity` удаляет ту же logical relation независимо от порядка endpoints.
+## Совместный выбор
 
-Similarity может связывать canonical и stable external work.
+Совместный профиль не должен скрывать разногласия.
 
-Она является evidence/hint для recommendation и explanation, но **не является preference** сама по себе.
+`taste_context.couple.term_signals` показывает направление сигнала каждого участника и статус:
 
-Derived semantic similarity не показывается как пользовательское мнение без explicit confirmation.
+- `agreement` — у обоих одинаковый ненулевой знак;
+- `disagreement` — знаки расходятся;
+- `insufficient` — данных недостаточно.
 
-## Couple reasoning
+Высокая уверенность не превращает разногласие в согласие.
 
-Couple profile не должен скрывать disagreement.
+## Недостаток данных
 
-`taste_context.couple.term_signals` показывает signed direction каждого member для semantic term и status:
+Если fingerprint или пользовательских сигналов мало, система не должна выдумывать признаки. Неопределённость выражается через покрытие и `limitations`.
 
-- `agreement` — одинаковый non-zero sign у всех участников;
-- `disagreement` — разные non-zero signs при наличии directed evidence;
-- `insufficient` — directed evidence не хватает.
+Неизвестное лучше догадки.
 
-Confidence не превращает disagreement в agreement.
+## Архив до v6
 
-## Semantic coverage и uncertainty
+Старый MD-архив не является evidence для вкуса. Его нельзя автоматически подмешивать в профили, рекомендации или `assess_candidate`.
 
-Недостаточный fingerprint/evidence не должен компенсироваться выдуманными traits.
+Если пользователь заново оценивает старый фильм, новый ответ создаёт новые явные данные обычным v6-путём.
 
-Uncertainty выражается через coverage и limitations. Unknown лучше guessed.
+## Проверка качества
 
-## Pre-v6 archive
+После reset старая персональная библиотека не используется как regression fixture. Поведение проверяется небольшими синтетическими примерами: сильный интерес, смешанная реакция, разногласие пары, слабое семантическое покрытие, similarity без preference и конфликт старой гипотезы со свежим явным сигналом.
 
-Старый MD-архив не является taste evidence.
+Для воспроизводимой диагностики используется:
 
-Его нельзя автоматически импортировать в profiles, recommendations или candidate assessment.
+```bash
+python -m media.tools.audit_intelligence . --format json
+```
 
-Если пользователь заново проходит старый фильм, fresh response создаёт новое explicit evidence обычным v6 flow.
-
-## Quality regression
-
-После reset старая активная пользовательская библиотека не используется как regression fixture.
-
-Качественные правила защищаются compact synthetic/reference fixtures, включая:
-
-- strong positive intrigue/problem-solving evidence;
-- mixed evidence;
-- couple disagreement;
-- sparse semantic coverage;
-- explicit similarity without preference;
-- stale inferred interpretation против fresh explicit evidence.
-
-Это защищает поведение, не превращая старую персональную базу в скрытый runtime input.
-
-
-## Диагностика качества
-
-`python -m media.tools.audit_intelligence . --format json` остаётся воспроизводимой диагностикой текущего canonical состояния.
-
-`canonical_input_digest` позволяет проверить, что два запуска аудита относятся к одному набору входных данных. Старый Stage A baseline больше не является активным runtime-файлом после reset; исторические измерения остаются в Git history.
-
-Регрессии поведения v6 защищаются небольшими синтетическими/reference fixtures, а не старой персональной библиотекой. Это отделяет проверку алгоритма от пользовательских данных.
+`canonical_input_digest` позволяет убедиться, что два запуска относятся к одному набору входных данных. Старый Stage A baseline после reset не является активным runtime-файлом.
