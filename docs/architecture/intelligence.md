@@ -12,7 +12,7 @@
 
 Эти слои нельзя смешивать.
 
-Explicit evidence имеет приоритет над inferred interpretation. Inferred output не является independent evidence для следующего inference. Film fingerprint описывает work, never the viewer reaction. Credits (directors/writers/main cast) остаются canonical metadata, но не входят в semantic input digest: изменение состава или порядка credits не должно само по себе инвалидировать fingerprint содержания. Synopsis перед вычислением digest нормализуется по Unicode, регистру, пробелам, `ё/е` и типографским тире/многоточию; `genres` и `countries` трактуются как неупорядоченные множества.
+Explicit evidence имеет приоритет над inferred interpretation. Inferred output не является independent evidence для следующего inference. Film fingerprint описывает work, never the viewer reaction. Credits (directors/writers/main cast) остаются canonical metadata, но не входят в semantic input digest: изменение состава или порядка credits не должно само по себе инвалидировать fingerprint содержания. Synopsis остаётся canonical metadata и может использоваться LLM при построении fingerprint, но его редакционная формулировка не входит в semantic input digest и сама по себе не инвалидирует fingerprint. `genres` и `countries` в digest трактуются как неупорядоченные множества; устойчивые структурированные факты вроде runtime/genres продолжают влиять на freshness.
 
 ## Taste profile
 

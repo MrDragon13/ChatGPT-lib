@@ -160,8 +160,8 @@ def test_semantic_input_digest_ignores_credits_but_tracks_content_facts():
         {"name": "Actor B", "character": "Friend", "external_ids": {"tmdb": 5}}
     )
 
-    changed_synopsis = deepcopy(work)
-    changed_synopsis["metadata"]["external"]["synopsis_short"] = "A different story premise."
+    changed_runtime = deepcopy(work)
+    changed_runtime["metadata"]["external"]["runtime_min"] = 117
 
     vocab_digest = "sha256:" + "a" * 64
     baseline = compute_semantic_input_digest(work, vocab_digest, "media-semantic-v1")
@@ -170,7 +170,7 @@ def test_semantic_input_digest_ignores_credits_but_tracks_content_facts():
         changed_credits, vocab_digest, "media-semantic-v1"
     )
     assert baseline != compute_semantic_input_digest(
-        changed_synopsis, vocab_digest, "media-semantic-v1"
+        changed_runtime, vocab_digest, "media-semantic-v1"
     )
 
 
@@ -202,6 +202,27 @@ def test_semantic_digest_normalizes_synopsis_typography_and_unordered_sets():
     assert baseline == compute_semantic_input_digest(
         formatted, vocab_digest, "media-semantic-v1"
     )
-    assert baseline != compute_semantic_input_digest(
+    assert baseline == compute_semantic_input_digest(
         changed_content, vocab_digest, "media-semantic-v1"
+    )
+
+
+def test_semantic_digest_tracks_structured_content_facts_even_when_synopsis_is_ignored():
+    work = work_document()
+    changed_genres = deepcopy(work)
+    changed_genres["metadata"]["external"]["genres"] = [
+        "genre.drama",
+        "genre.thriller",
+    ]
+    changed_runtime = deepcopy(work)
+    changed_runtime["metadata"]["external"]["runtime_min"] = 117
+
+    vocab_digest = "sha256:" + "a" * 64
+    baseline = compute_semantic_input_digest(work, vocab_digest, "media-semantic-v1")
+
+    assert baseline != compute_semantic_input_digest(
+        changed_genres, vocab_digest, "media-semantic-v1"
+    )
+    assert baseline != compute_semantic_input_digest(
+        changed_runtime, vocab_digest, "media-semantic-v1"
     )
