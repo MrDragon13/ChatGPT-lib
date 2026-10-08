@@ -379,3 +379,46 @@ def test_new_work_minimum_metadata_still_rejects_false_fact(tmp_path):
             provider=FakeProvider(metadata),
             now=NOW,
         )
+
+
+def test_new_work_minimum_synopsis_accepts_typographic_equivalence(tmp_path):
+    root = copy_fixture_repo(tmp_path)
+    metadata = _provider_metadata()
+    external = deepcopy(dict(metadata.external))
+    external["synopsis_short"] = (
+        "Ощущения — не что иное, как предупреждения.\n\n"
+        "Оказавшись в прошлом, он влюбляется в неё…"
+    )
+    metadata = CanonicalMetadata(identity=metadata.identity, external=external)
+    command = _new_command(root, metadata)
+    command["creation_context"]["minimum_metadata"]["synopsis_short"] = (
+        "ощущения - не что иное, как предупреждения. "
+        "Оказавшись в прошлом, он влюбляется в нее..."
+    )
+
+    result = transaction.execute_command(
+        root,
+        parse_command(command),
+        provider=FakeProvider(metadata),
+        now=NOW,
+    )
+
+    assert result.status == "applied"
+
+
+def test_new_work_minimum_synopsis_rejects_changed_meaning(tmp_path):
+    root = copy_fixture_repo(tmp_path)
+    metadata = _provider_metadata()
+    external = deepcopy(dict(metadata.external))
+    external["synopsis_short"] = "Герой спасает город."
+    metadata = CanonicalMetadata(identity=metadata.identity, external=external)
+    command = _new_command(root, metadata)
+    command["creation_context"]["minimum_metadata"]["synopsis_short"] = "Герой уничтожает город."
+
+    with pytest.raises(CommandValidationError, match="minimum metadata mismatch for synopsis_short"):
+        transaction.execute_command(
+            root,
+            parse_command(command),
+            provider=FakeProvider(metadata),
+            now=NOW,
+        )
