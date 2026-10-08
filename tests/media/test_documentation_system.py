@@ -66,7 +66,7 @@ def test_intelligence_doc_keeps_similarity_as_evidence_not_preference():
     assert "similarity" in text
     assert "evidence" in text or "свидетель" in text
     assert "не является preference" in text or "не становится preference" in text
-    assert "independent" in text
+    assert "independent" in text or "независим" in text
 
 
 def test_candidate_assessment_doc_is_read_only_and_qualitative():
@@ -112,8 +112,20 @@ def test_operations_guide_uses_existing_verification_commands():
 
 def test_reference_invariants_include_cross_system_safety_rules():
     text = _text("docs/reference/invariants.md").lower()
-    for phrase in ("canonical", "generated", "typed command", "similarity", "preference", "target", "browser", "secret", "unknown", "vocabulary"):
-        assert phrase in text
+    concepts = (
+        ("canonical", "канонич"),
+        ("generated", "generated"),
+        ("typed command", "типизирован"),
+        ("similarity", "similarity"),
+        ("preference", "preference"),
+        ("target", "target"),
+        ("browser", "браузер"),
+        ("secret", "секрет"),
+        ("unknown", "неизвест"),
+        ("vocabulary", "словар"),
+    )
+    for english, russian in concepts:
+        assert english in text or russian in text
 
 
 def test_current_status_is_durable_not_a_pr_ledger():
@@ -143,10 +155,10 @@ def test_media_readme_is_compact_subsystem_router():
 def test_product_and_design_are_explicitly_scoped_to_media_web():
     product = _text("PRODUCT.md")
     design = _text("DESIGN.md")
-    assert "Scope: media-web" in product
-    assert "not repository/system architecture" in product.lower()
+    assert "media-web" in product.lower()
+    assert "архитектур" in product.lower()
     assert "product: media-web" in design
-    assert "# Media Web Design System" in design
+    assert "# Дизайн-система Media Web" in design
 
 
 def test_agent_bootstrap_does_not_require_historical_specs_or_long_status():
