@@ -1,43 +1,43 @@
 # Personal Media Library v6
 
-`media/` — canonical personal media subsystem для фильмов, сериалов, мини-сериалов и анимации. Git/YAML хранит долговременное состояние; index, profiles, taste/recommendation contexts, временный SQLite и web manifest являются derived read models.
+`media/` — основная подсистема личной медиатеки для фильмов, сериалов, мини-сериалов и анимации.
 
-После v6 reset активная библиотека намеренно начинается пустой. Глобальные explicit preferences и vocabulary сохранены. Старые пользовательские данные находятся только в человекочитаемом архиве `docs/archive/media-library-before-v6-reset-2026-10-07.md` и не участвуют автоматически в intelligence.
+Долговременные данные хранятся в Git/YAML. Индексы, профили, контексты вкуса и рекомендаций, временная SQLite-база и Web manifest — производные данные, которые можно пересобрать.
 
-## Быстрый ориентир
+После перехода на v6 библиотека была обнулена и начала наполняться заново обычными v6-записями. Старые пользовательские данные сохранены только в человекочитаемом архиве `docs/archive/media-library-before-v6-reset-2026-10-07.md` и автоматически в рекомендации не попадают.
 
-Canonical data:
+## Где что лежит
 
-- `data/works/` — произведения и target-scoped viewer/group signals;
-- `data/collections/`, `data/lists/`, `data/interactions/` — коллекции, списки и recommendation events;
-- `data/relations/similarity/` — explicit target-specific undirected similarity;
-- `preferences/explicit/` и `preferences/inferred/` — explicit preferences и evidence-backed inferred hypotheses;
-- `config/` — `primary`, `partner`, `couple`;
-- `vocabulary.yaml` и `schemas/` — controlled semantic/schema contracts.
+- `data/works/` — произведения и сигналы зрителей/группы;
+- `data/collections/`, `data/lists/`, `data/interactions/` — коллекции, списки и события рекомендаций;
+- `data/relations/similarity/` — явно указанное сходство;
+- `preferences/explicit/` — явно заявленные устойчивые предпочтения;
+- `preferences/inferred/` — выведенные гипотезы о вкусе;
+- `config/` — настройки `primary`, `partner`, `couple` и алгоритмов;
+- `vocabulary.yaml`, `schemas/` — словарь и схемы;
+- `generated/` — производные файлы, которые нельзя править как источник пользовательских фактов.
 
-Derived state находится в `generated/` и пересобирается из canonical data. Не редактируйте generated artifacts как источник пользовательских фактов.
+## Актуальная документация
 
-## Текущая документация
-
-- [Media domain model](../docs/architecture/media-model.md)
-- [Media intelligence](../docs/architecture/intelligence.md)
-- [Write pipeline](../docs/architecture/write-pipeline.md)
-- [Web and broker](../docs/architecture/web-and-broker.md)
+- [Модель данных](../docs/architecture/media-model.md)
+- [Логика вкуса и рекомендаций](../docs/architecture/intelligence.md)
+- [Путь записи](../docs/architecture/write-pipeline.md)
+- [Web и Broker](../docs/architecture/web-and-broker.md)
 - [Как пользоваться медиатекой](../docs/guides/media-usage.md)
-- [Operations runbook](../docs/guides/operations.md)
-- [Media operations reference](../docs/reference/media-commands.md)
-- [Cross-system invariants](../docs/reference/invariants.md)
-- [Current status](../docs/status/current.md)
+- [Эксплуатация](../docs/guides/operations.md)
+- [Справочник операций](../docs/reference/media-commands.md)
+- [Инварианты](../docs/reference/invariants.md)
+- [Текущее состояние](../docs/status/current.md)
 
-Исторические specs/plans под `../docs/superpowers/` объясняют причины решений, но не заменяют current code, schemas, `AGENTS.md` и living docs.
+Исторические specs/plans в `../docs/superpowers/` нужны только для разбора старых решений.
 
-## Operating contract
+## Правила для агента
 
-Перед agent/LLM работой читайте [`AGENTS.md`](AGENTS.md). Новый основной write route — `record_media_entry`; существующий work использует быстрый путь без provider lookup и semantic recomputation.
+Перед работой с медиатекой читайте [`AGENTS.md`](AGENTS.md). Основной путь записи просмотра, оценки, реакции и отзыва — `record_media_entry`.
 
-[`START_PROMPT.md`](START_PROMPT.md) — human-facing launcher нового киноассистента.
+[`START_PROMPT.md`](START_PROMPT.md) — короткий стартовый текст для нового чата с киноассистентом.
 
-## CLI quickstart
+## Быстрые команды CLI
 
 ```bash
 python -m media.cli search "Arrival" --format json
@@ -51,21 +51,15 @@ python -m media.cli rebuild --check
 python -m media.cli doctor --format json
 ```
 
-Full verification и explicit build commands находятся в [operations runbook](../docs/guides/operations.md).
+Полная проверка описана в [руководстве по эксплуатации](../docs/guides/operations.md).
 
-## Core boundaries
+## Важные границы
 
-- Normal media mutations используют strict typed commands; LLM/browser code не патчит canonical YAML напрямую.
-- `media_entry_context`, `recommend_context`, `taste_context` и `assess_candidate` read-only.
-- External recommendation/candidate/similarity reference не создаёт canonical work без явного create flow.
-- Explicit similarity — evidence/hint, но не preference.
-- Unknown identity/metadata/vocabulary не угадываются.
-- Architecture, schemas, vocabulary и workflows меняются отдельным developer PR.
-- Browser write/provider/model secrets не попадают в static Pages bundle.
-- Pre-v6 MD archive не является canonical или recommendation input.
-
-## Архив до v6
-
-`media.tools.archive_library` остаётся инструментом воспроизводимой проверки исторического MD-снимка. Финальный архив был проверен побайтной регенерацией до reset.
-
-После cutover архив используется только как человеческий чек-лист. Автоматический импорт старых ratings/reactions/feedback обратно в intelligence запрещён.
+- Обычные изменения данных идут через типизированные команды, а не через прямую правку YAML.
+- `media_entry_context`, `recommend_context`, `taste_context` и `assess_candidate` только читают данные.
+- Внешняя рекомендация или ссылка на похожий фильм сама по себе не добавляет произведение в библиотеку.
+- Явно указанное сходство — основание для рекомендаций, но не предпочтение само по себе.
+- Неизвестные идентичность, метаданные и термины словаря не угадываются.
+- Схемы, словарь, workflows и архитектура меняются отдельным developer PR.
+- Секреты GitHub, провайдера и модели не попадают в статический Web.
+- Архив до v6 не является источником текущих данных.
