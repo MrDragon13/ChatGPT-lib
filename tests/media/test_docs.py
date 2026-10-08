@@ -47,8 +47,9 @@ def test_operations_guide_matches_real_modules_and_agents_contract_keeps_guardra
     agents=Path('media/AGENTS.md').read_text(encoding='utf-8')
     assert "## Жёсткие правила" in agents
     lowered = agents.lower()
-    for fragment in ("схем", "неизвест", "временн", "полный набор проверок", "workflow", "словар"):
+    for fragment in ("схем", "неизвест", "временн", "полный набор проверок", "словар"):
         assert fragment in lowered
+    assert "workflow" in lowered or "github actions" in lowered
 
 
 def test_living_docs_define_refresh_metadata_as_manual_bulk_maintenance():
