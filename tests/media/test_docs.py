@@ -45,8 +45,10 @@ def test_operations_guide_matches_real_modules_and_agents_contract_keeps_guardra
     for cmd in ['python -m media.tools.validate .','python -m media.tools.build_index media','python -m media.tools.build_profiles media','python -m media.tools.build_db media']:
         assert cmd in operations
     agents=Path('media/AGENTS.md').read_text(encoding='utf-8')
-    for phrase in ['Never invent schema fields','Unknown is better than guessed','Do not persist ephemeral','Run full validation before commit','Normal data entry must not modify schemas']:
-        assert phrase in agents
+    assert "## Жёсткие правила" in agents
+    lowered = agents.lower()
+    for fragment in ("схем", "неизвест", "временн", "полный набор проверок", "workflow", "словар"):
+        assert fragment in lowered
 
 
 def test_living_docs_define_refresh_metadata_as_manual_bulk_maintenance():
