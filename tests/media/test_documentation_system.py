@@ -173,6 +173,21 @@ def test_product_and_design_are_explicitly_scoped_to_media_web():
     assert "# Дизайн-система Media Web" in design
 
 
+def test_russian_technical_prose_style_is_part_of_agent_and_development_contracts():
+    paths = ("AGENTS.md", "media/AGENTS.md", "docs/guides/development.md", "docs/README.md")
+    for path in paths:
+        text = _text(path).lower()
+        assert "разговорно-техническ" in text, path
+        assert "английск" in text, path
+        assert "обратн" in text and "кавыч" in text, path
+
+    development = _text("docs/guides/development.md").lower()
+    for example in ("runtime", "workflow", "review", "fallback", "pending", "developer change"):
+        assert example in development
+    assert "точный идентификатор" in development
+    assert "границ" in development and "безопасност" in development
+
+
 def test_agent_bootstrap_does_not_require_historical_specs_or_long_status():
     root = _text("AGENTS.md")
     media = _text("media/AGENTS.md")
