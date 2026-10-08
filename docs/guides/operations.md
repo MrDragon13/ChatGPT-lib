@@ -1,14 +1,14 @@
-# Operations runbook
+# Эксплуатация и проверка
 
-Короткий runbook для проверки, пересборки, web verification и recovery. Команды предполагают запуск из корня репозитория, если не указано иное.
+Короткое руководство по проверке, пересборке, публикации и восстановлению. Если не сказано иначе, команды запускаются из корня репозитория.
 
-## Установка Python dependencies
+## Python-зависимости
 
 ```bash
 python -m pip install -r media/requirements.txt
 ```
 
-## Полный media verification
+## Полная проверка media
 
 ```bash
 python -m pytest -q
@@ -17,18 +17,18 @@ python -m media.cli rebuild --check
 python -m media.cli doctor --format json
 ```
 
-Интерпретация:
+Что проверяет каждая команда:
 
-- pytest — executable contracts;
-- `validate` — canonical schemas/invariants;
-- `rebuild --check` — committed generated artifacts соответствуют canonical state;
-- `doctor` — repository/runtime integrity diagnostics.
+- `pytest` — исполняемые контракты;
+- `validate` — схемы и инварианты канонических данных;
+- `rebuild --check` — совпадают ли сохранённые производные файлы с тем, что должно быть построено из канонических данных;
+- `doctor` — целостность репозитория и runtime.
 
-Не объявляйте change GREEN, если прошёл только focused test, а полный suite красный.
+Нельзя считать developer-изменение полностью проверенным, если прошёл только один целевой тест, а полный набор проверок падает.
 
-## Явная пересборка derived artifacts
+## Пересборка производных данных
 
-Если нужно пересобрать, а не только проверить:
+Если нужно не только проверить, но и пересобрать:
 
 ```bash
 python -m media.tools.build_index media
@@ -36,21 +36,21 @@ python -m media.tools.build_profiles media
 python -m media.tools.build_db media
 ```
 
-`generated/database.sqlite` является rebuildable runtime artifact и не должен восприниматься как canonical source of truth.
+`generated/database.sqlite` — временный пересобираемый файл, а не источник истины.
 
-После rebuild снова выполните validation + `rebuild --check` + doctor.
+После пересборки снова выполните validation, `rebuild --check` и doctor.
 
 ## Web manifest
 
-Проверка exporter вручную:
+Ручная проверка экспорта:
 
 ```bash
 python -m media.cli web-export --output /tmp/media-web-manifest.json --format json
 ```
 
-Current manifest contract описан в `docs/architecture/web-and-broker.md`; schema/exporter code остаётся фактическим источником version truth.
+Текущий контракт описан в `docs/architecture/web-and-broker.md`. Фактическая версия определяется кодом exporter/schema.
 
-## Web verification
+## Проверка Web
 
 ```bash
 cd web
@@ -60,91 +60,91 @@ npm run typecheck
 npm run build
 ```
 
-Если change затрагивает browser behavior/visuals, также выполняйте Playwright/browser checks и static artifact scan согласно `.github/workflows/web-check.yml` / Pages workflow.
+Если меняется поведение браузера или внешний вид, дополнительно нужны Playwright/browser-проверки и scan статической сборки по текущему `.github/workflows/web-check.yml`.
 
-`npm run build` уже включает TypeScript check по текущему `package.json`, но отдельный `npm run typecheck` полезен как явный gate и закреплён CI.
-
-## Canonical validation отдельно
-
-Для быстрого preflight:
+## Быстрая проверка канонических данных
 
 ```bash
 python -m media.tools.validate .
 ```
 
-Validation failure чинится в canonical/schema/domain layer. Не правьте generated output вручную, чтобы «скрыть» canonical error.
+Если validation падает, исправляйте причину в канонических данных, схеме или коде. Не правьте производный файл вручную, чтобы скрыть ошибку.
 
-## Metadata maintenance
+## Массовое обновление метаданных
 
-Bulk metadata refresh выполняется через typed maintenance operation `refresh_metadata` со scope `all_movies`.
+Bulk `refresh_metadata` со scope `all_movies` — ручная maintenance-операция.
 
-Maintenance должен:
+Она должна:
 
-- выполнить identity preflight до mutation;
-- сохранить user-owned signals и manual overrides;
-- не оставлять partial mutation при ambiguity/provider failure;
-- пройти manual review/merge.
+- сначала проверить идентичности всех затронутых произведений;
+- сохранить пользовательские сигналы и ручные overrides;
+- не оставлять частично обновлённые данные при неоднозначности или сбое провайдера;
+- пройти ручной review и merge.
 
-`refresh_metadata` не является normal auto-merge operation.
+`refresh_metadata` не относится к обычным auto-merge операциям.
 
-## GitHub Actions gates
+## Основные GitHub Actions
 
-Основные роли workflows:
+- `Media Command` — применяет обычную типизированную операцию к свежему `main`, проверяет её и сливает точный проверенный head;
+- `Media Dev Check` — полный media-gate для developer PR;
+- `Web Check` — тесты, typecheck, build, browser и security-проверки Web;
+- `Broker Check` — тесты и typecheck Broker;
+- `Media Pages` — сборка и публикация Pages для точного SHA;
+- `Broker Deploy` — ручная публикация Worker с проверкой ожидаемого SHA.
 
-- Media Command — применить normal typed operation на свежем `main`, выполнить operation-specific authoritative gate и exact-head merge;
-- Media Dev Check — developer/manual PR regression gate;
-- Web Check — frontend tests/type/build/browser/security checks;
-- Media Pages — exact-revision build + GitHub Pages deploy.
-
-Название workflow важно меньше contract: success должен относиться к exact revision, которую вы собираетесь merge/publish.
+Важно не название workflow, а то, что успешная проверка относится к той же точной revision, которую собираются сливать или публиковать.
 
 ## Проверка Pages после merge
 
-После web/media change:
+1. Убедитесь, что `main` указывает на ожидаемый merge SHA.
+2. Найдите `Media Pages` для этого SHA.
+3. Проверьте успешную сборку.
+4. Проверьте успешную публикацию.
+5. При изменении интерфейса проверьте опубликованный сайт.
 
-1. убедитесь, что `main` указывает на ожидаемый merge SHA;
-2. найдите Media Pages run для этого же SHA;
-3. подтвердите build success;
-4. подтвердите deploy success;
-5. при UI-impact проверьте опубликованную surface/browser checks.
+Пока публикация для merge SHA не завершилась успешно, текущую версию нельзя считать опубликованной.
 
-До success на merge SHA публикацию нельзя считать завершённой.
+## Публикация Broker
 
-## Stale generated artifacts
+`Broker Deploy` запускается вручную из `main`.
 
-Симптом: canonical validation проходит, но `rebuild --check` показывает drift.
+В `expected_sha` передаётся точный SHA, который уже прошёл проверки. Workflow повторно сверяет SHA, устанавливает зависимости, запускает Broker tests/typecheck и только затем вызывает `wrangler deploy`.
 
-Порядок:
+Если код Broker не менялся, повторная публикация не требуется.
 
-1. убедитесь, что canonical change intentional;
-2. выполните deterministic rebuild соответствующих artifacts;
-3. не добавляйте ручные правки в generated output;
-4. повторите полный media verification.
+## Расхождение производных файлов
 
-Если rebuild меняет неожиданные unrelated artifacts, сначала расследуйте root cause.
+Симптом: каноническая validation проходит, но `rebuild --check` показывает drift.
 
-## Interrupted work / recovery
+Порядок действий:
 
-При возобновлении работы:
+1. убедитесь, что изменение канонических данных было намеренным;
+2. выполните детерминированную пересборку;
+3. не вносите ручные смысловые правки в `generated/`;
+4. снова запустите полную media-проверку.
 
-1. проверьте current `main`;
-2. найдите active PR/ветку;
-3. прочитайте последний PR checkpoint;
-4. сравните exact head SHA и CI state;
-5. продолжайте с первого незавершённого task, не воспроизводя уже подтверждённые шаги.
+Если пересборка неожиданно меняет несвязанные файлы, сначала найдите причину.
 
-Durable project state находится в `docs/status/current.md`; transient development progress — в active PR.
+## Возобновление прерванной работы
 
-## Provider failure
+1. Проверьте текущий `main`.
+2. Найдите активный PR/ветку.
+3. Прочитайте последний checkpoint PR.
+4. Сверьте точный head SHA и состояние CI.
+5. Продолжайте с первого незавершённого шага.
 
-Provider unavailable/ambiguous identity — не повод угадывать. Mutation должна остановиться до partial write или вернуть корректный needs-input/unavailable result согласно operation contract.
+Устойчивое состояние проекта описано в `docs/status/current.md`, а временный прогресс — в активном PR.
 
-## Когда нужен отдельный incident/debug pass
+## Сбой провайдера
 
-Не «подгоняйте» тест/validation под неожиданный failure. Сначала определите root cause, особенно если:
+Если провайдер недоступен или identity неоднозначна, не угадывайте. Операция должна остановиться до частичной записи или вернуть корректный статус, предусмотренный её контрактом.
 
-- failure появляется только в CI;
-- generated state расходится с canonical;
-- exact-head workflow проверяет не тот SHA;
-- browser build содержит credential-like content;
-- provider identity разрешается неоднозначно.
+## Когда нужен отдельный разбор сбоя
+
+Сначала ищите причину, а не подгоняйте тест под результат, особенно если:
+
+- ошибка появляется только в CI;
+- `generated/` расходится с каноническими данными;
+- workflow проверяет не тот SHA;
+- browser build содержит похожие на секреты строки;
+- провайдер неоднозначно определяет произведение.
