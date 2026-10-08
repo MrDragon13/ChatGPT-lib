@@ -23,6 +23,8 @@
 | `taste_context` | intelligence | read-only | Построить компактный target taste/evidence context | n/a |
 | `assess_candidate` | intelligence | read-only | Собрать контекст для qualitative ответа «понравится ли мне X?» без mutation | n/a |
 
+Для `record_media_entry(create_if_missing=true)` поле `minimum_metadata` — проверяемое подмножество устойчивых структурированных provider facts. Оно не является копией полного provider payload: credits и длинный `synopsis_short` не должны использоваться как блокирующие preconditions. Полные provider metadata всё равно сохраняются в canonical work.
+
 ## Write vs read-only
 
 Write operation имеет `operation_id` и применяется через deterministic transaction/path policy. Read-only operation canonical state не мутирует и не создаёт operation PR как побочный эффект.
