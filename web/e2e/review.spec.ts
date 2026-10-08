@@ -26,8 +26,10 @@ async function warmLazyArtwork(page: Page) {
 async function openFirstPrimaryDetail(page: Page): Promise<boolean> {
   await page.goto("#/library?target=primary");
   const cards = page.locator(".library-card");
+  const emptyHeading = page.getByRole("heading", { name: "Медиатека пока пуста" });
+  await expect(cards.first().or(emptyHeading)).toBeVisible();
   if (await cards.count() === 0) {
-    await expect(page.getByRole("heading", { name: "Медиатека пока пуста" })).toBeVisible();
+    await expect(emptyHeading).toBeVisible();
     return false;
   }
   const href = await cards.first().getAttribute("href");
@@ -104,7 +106,7 @@ test("capture feedback editor review surfaces", async ({ page }) => {
 
   await page.setViewportSize({ width: 1440, height: 900 });
   const hasWork = await openFirstPrimaryDetail(page);
-  test.skip(!hasWork, "Пустая post-reset медиатека: detail/editor появятся после первого сохранённого фильма.");
+  test.skip(!hasWork, "Пустая медиатека: detail/editor недоступны без сохранённого фильма.");
 
   const primaryCard = page.locator(".signal-panel").filter({
     has: page.getByRole("heading", { name: "Я", exact: true }),
