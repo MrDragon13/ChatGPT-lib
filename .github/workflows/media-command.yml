@@ -37,16 +37,52 @@ jobs:
       - name: Install media dependencies
         run: python -m pip install -r media/requirements.txt
 
-      - name: Require exactly one pending request
+      - name: Resolve pending or already-applied request
         id: request
         shell: bash
         run: |
+          set -euo pipefail
           mapfile -t REQUESTS < <(find .media/requests -maxdepth 1 -type f -name '*.json' | sort)
-          if [ "${#REQUESTS[@]}" -ne 1 ]; then
-            echo "::error::Expected exactly one pending .media/requests/*.json file"
+          if [ "${#REQUESTS[@]}" -eq 1 ]; then
+            REQUEST="${REQUESTS[0]}"
+            cp -- "$REQUEST" /tmp/media-request.json
+            echo "request=$REQUEST" >> "$GITHUB_OUTPUT"
+            echo "recovery=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "${#REQUESTS[@]}" -gt 1 ]; then
+            echo "::error::Expected at most one pending .media/requests/*.json file"
             exit 2
           fi
-          echo "request=${REQUESTS[0]}" >> "$GITHUB_OUTPUT"
+
+          HEAD_SUBJECT=$(git log -1 --format=%s)
+          if [[ "$HEAD_SUBJECT" =~ ^data:\ apply\ media\ operation\ ([0-9a-f-]+)$ ]]; then
+            OPERATION_ID="${BASH_REMATCH[1]}"
+            REQUEST=".media/requests/$OPERATION_ID.json"
+            PARENT_SUBJECT=$(git log -1 --format=%s HEAD^)
+            if [ "$PARENT_SUBJECT" != "data: request media operation $OPERATION_ID" ]; then
+              echo "::error::Cannot recover request: applied commit parent is not the matching request commit"
+              exit 2
+            fi
+            git show "HEAD^:$REQUEST" > /tmp/media-request.json
+            python - "$OPERATION_ID" <<'PY'
+          import json
+          import sys
+
+          operation_id = sys.argv[1]
+          command = json.load(open('/tmp/media-request.json', encoding='utf-8'))
+          if command.get('operation_id') != operation_id:
+              raise SystemExit('recovered request operation_id does not match applied commit')
+          PY
+            echo "Recover request from applied branch for operation $OPERATION_ID"
+            echo "already-applied branch will be replayed from trusted request commit"
+            echo "request=$REQUEST" >> "$GITHUB_OUTPUT"
+            echo "recovery=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "::error::Expected exactly one pending request or a recognized data: apply media operation commit"
+          exit 2
 
       - name: Configure bot Git identity
         shell: bash
@@ -62,6 +98,7 @@ jobs:
           echo "base_sha=$(git rev-parse origin/main)" >> "$GITHUB_OUTPUT"
 
       - name: Reject pre-existing non-request branch changes
+        if: ${{ steps.request.outputs.recovery != 'true' }}
         shell: bash
         env:
           REQUEST: ${{ steps.request.outputs.request }}
@@ -80,9 +117,8 @@ jobs:
         env:
           REQUEST: ${{ steps.request.outputs.request }}
         run: |
-          cp -- "$REQUEST" /tmp/media-request.json
           git show origin/main:media/config/operation_path_policy.json > /tmp/media-operation-policy.json
-          python - "$REQUEST" /tmp/media-operation-policy.json "$GITHUB_OUTPUT" <<'PY'
+          python - /tmp/media-request.json /tmp/media-operation-policy.json "$GITHUB_OUTPUT" <<'PY'
           import json
           import sys
 
@@ -91,7 +127,7 @@ jobs:
           operation = command['operation']
           create_if_missing = bool(command.get('create_if_missing', False))
           needs_provider = operation == 'add_work' or operation == 'refresh_metadata' or operation == 'refresh_work_metadata' or (
-              operation in {'record_media_entry', 'record_viewing_feedback'} and create_if_missing
+              operation == 'record_media_entry' and create_if_missing
           )
           entry = policy.get('operations', {}).get(operation) or {}
           execution_class = entry.get('execution_class', 'manual_review')
@@ -195,7 +231,7 @@ jobs:
               add_work)
                 TESTS=(tests/media/test_add_work.py tests/media/test_transaction.py)
                 ;;
-              record_viewing_feedback|edit_viewing_feedback|set_interest)
+              edit_viewing_feedback|set_interest)
                 TESTS=(tests/media/test_mutations.py tests/media/test_transaction.py)
                 ;;
               set_semantic_fingerprint)
@@ -239,8 +275,14 @@ jobs:
               PR_MERGEABLE_STATE=$(printf '%s' "$PR_JSON" | jq -r '.mergeable_state // "unknown"')
 
               if [ "$PR_HEAD_SHA" != "$HEAD_SHA" ]; then
-                echo "::error::PR head changed after checked force-push: expected=$HEAD_SHA actual=$PR_HEAD_SHA"
-                exit 5
+                REMOTE_NOW=$(git ls-remote origin "refs/heads/$BRANCH" | awk '{print $1}')
+                if [ "$REMOTE_NOW" != "$HEAD_SHA" ]; then
+                  echo "::error::Operation branch changed after checked force-push: expected=$HEAD_SHA actual=$REMOTE_NOW"
+                  exit 5
+                fi
+                echo "GitHub returned stale PR API head after force-push: expected=$HEAD_SHA api=$PR_HEAD_SHA; retry mergeability."
+                sleep 2
+                continue
               fi
               if [ "$PR_BASE_SHA" != "$BASE_SHA" ]; then
                 git fetch origin main
@@ -249,8 +291,9 @@ jobs:
                   echo "PR base/main changed while waiting for mergeability; retry v6 request replay."
                   continue 2
                 fi
-                echo "::error::PR base SHA differs from checked main without a visible main change"
-                exit 5
+                echo "GitHub returned stale PR API base while main is unchanged; retry mergeability."
+                sleep 2
+                continue
               fi
               if [ "$PR_MERGEABLE" = "true" ]; then
                 MERGE_READY=true
