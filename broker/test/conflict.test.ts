@@ -74,7 +74,7 @@ describe("active feedback conflicts", () => {
         return json({
           encoding: "base64",
           content: base64Json({
-            operation: "record_viewing_feedback",
+            operation: "record_media_entry",
             work_ref: { id: "game-night-2018" },
             target_updates: [{ target: "primary", rating: { score: 7 } }],
           }),

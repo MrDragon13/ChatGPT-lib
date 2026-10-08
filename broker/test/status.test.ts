@@ -131,59 +131,6 @@ describe("feedback operation status", () => {
     await expect(getOperationStatus(operationId, env())).resolves.toMatchObject({ status: "failed", reason: "command_failed" });
   });
 
-  it("reports checking after command success while Media Check is pending", async () => {
-    mockScenario({
-      pr: openPr(),
-      commandRuns: [{ status: "completed", conclusion: "success", head_sha: "operation-head" }],
-      checkRuns: [{ status: "in_progress", conclusion: null, head_sha: "operation-head" }],
-    });
-    await expect(getOperationStatus(operationId, env())).resolves.toMatchObject({ status: "checking" });
-  });
-
-  it("reports check failure", async () => {
-    mockScenario({
-      pr: openPr(),
-      commandRuns: [{ status: "completed", conclusion: "success", head_sha: "operation-head" }],
-      checkRuns: [{ status: "completed", conclusion: "failure", head_sha: "operation-head" }],
-    });
-    await expect(getOperationStatus(operationId, env())).resolves.toMatchObject({ status: "failed", reason: "check_failed" });
-  });
-
-  it("ignores approval-required pull_request checks when the exact dispatched check succeeds", async () => {
-    mockScenario({
-      pr: openPr(),
-      commandRuns: [{ status: "completed", conclusion: "success", head_sha: "request-head" }],
-      checkRuns: [
-        { event: "pull_request", status: "completed", conclusion: "action_required", head_sha: "operation-head" },
-        { event: "workflow_dispatch", status: "completed", conclusion: "success", head_sha: "operation-head", html_url: "https://github.com/actions/runs/check" },
-      ],
-      mergeRuns: [{
-        status: "in_progress",
-        conclusion: null,
-        display_title: `Media Auto Merge · ${branch}`,
-        html_url: "https://github.com/actions/runs/merge",
-      }],
-    });
-    await expect(getOperationStatus(operationId, env())).resolves.toMatchObject({
-      status: "checking",
-      actions_url: "https://github.com/actions/runs/merge",
-    });
-  });
-
-  it("reports merge failure after a successful check when auto merge fails", async () => {
-    mockScenario({
-      pr: openPr(),
-      commandRuns: [{ status: "completed", conclusion: "success", head_sha: "operation-head" }],
-      checkRuns: [{ status: "completed", conclusion: "success", head_sha: "operation-head" }],
-      mergeRuns: [{
-        status: "completed",
-        conclusion: "failure",
-        display_title: `Media Auto Merge · ${branch}`,
-      }],
-    });
-    await expect(getOperationStatus(operationId, env())).resolves.toMatchObject({ status: "failed", reason: "merge_failed" });
-  });
-
   it("reports merged until Pages succeeds for the exact merge sha", async () => {
     mockScenario({
       pr: openPr({ state: "closed", merged_at: "2026-10-02T10:00:00Z", merge_commit_sha: "merge-sha" }),

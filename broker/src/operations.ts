@@ -15,15 +15,6 @@ import {
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
-export type FeedbackCommand = {
-  schema_version: 1;
-  operation_id: string;
-  operation: "record_viewing_feedback";
-  work_ref: { id: string };
-  create_if_missing: false;
-  target_updates: Array<Record<string, unknown>>;
-};
-
 export type MediaEntryCommand = {
   schema_version: 1;
   operation_id: string;
@@ -72,7 +63,7 @@ export type WorkflowRun = {
   html_url?: string;
 };
 
-export type OperationFailureReason = "command_failed" | "check_failed" | "merge_failed" | "deploy_failed";
+export type OperationFailureReason = "command_failed" | "merge_failed" | "deploy_failed";
 export type OperationStatus = "submitted" | "applying" | "checking" | "merged" | "published" | "failed";
 
 export type OperationStatusResponse = {
@@ -171,17 +162,6 @@ function buildTargetUpdate(input: FeedbackInput): Record<string, unknown> {
   return update;
 }
 
-export function buildFeedbackCommand(input: FeedbackInput, operationId: string): FeedbackCommand {
-  return {
-    schema_version: 1,
-    operation_id: operationId,
-    operation: "record_viewing_feedback",
-    work_ref: { id: input.work_id },
-    create_if_missing: false,
-    target_updates: [buildTargetUpdate(input)],
-  };
-}
-
 export function buildMediaEntryCommand(
   input: FeedbackInput,
   operationId: string,
@@ -243,36 +223,6 @@ function submissionError(error: unknown, operationId: string): OperationSubmissi
     error instanceof Error ? error.message : "feedback operation submission failed",
     operationId,
   );
-}
-
-export async function submitFeedback(input: FeedbackInput, env: BrokerEnv): Promise<SubmittedOperation> {
-  const operationId = crypto.randomUUID();
-  const branch = `media/op-${operationId}`;
-  let token: string;
-  let branchCreated = false;
-
-  try {
-    token = await mintInstallationToken(env);
-    const mainSha = await getMainSha(env, token);
-    await createBranch(env, token, branch, mainSha);
-    branchCreated = true;
-
-    const command = buildFeedbackCommand(input, operationId);
-    const requestPath = `.media/requests/${operationId}.json`;
-    const content = utf8Base64(`${JSON.stringify(command)}\n`);
-    await putRequestFile(env, token, branch, requestPath, content, operationId);
-    const prNumber = await createOperationPullRequest(env, token, branch, operationId, input.work_id);
-    return { operation_id: operationId, pr_number: prNumber, status: "submitted" };
-  } catch (error) {
-    if (branchCreated && token!) {
-      try {
-        await deleteBranch(env, token, branch);
-      } catch {
-        // The original failure is authoritative; cleanup is best-effort.
-      }
-    }
-    throw submissionError(error, operationId);
-  }
 }
 
 export async function submitFeedbackV6(input: FeedbackInput, env: BrokerEnv): Promise<SubmittedOperation> {
@@ -418,21 +368,15 @@ export async function getOperationStatus(
   const commandRun = commandRuns.at(0);
   if (!commandRun) return { ...base, status: "submitted" };
   if (activeRun(commandRun)) return { ...base, status: "applying", actions_url: commandRun.html_url };
-  if (failedConclusion(commandRun)) return { ...base, status: "failed", reason: "command_failed", actions_url: commandRun.html_url };
 
-  const operationKind = await appliedOperationKind(operationId, pull.head.sha, env, token);
-  if (operationKind === "record_media_entry") {
+  // The branch ref is authoritative here. GitHub's PR head snapshot can lag briefly
+  // after the trusted runner force-pushes an applied operation commit.
+  const operationKind = await appliedOperationKind(operationId, branch, env, token);
+  if (operationKind !== null) {
     return { ...base, status: "checking", actions_url: commandRun.html_url };
   }
-
-  const checkRuns = await listWorkflowRuns(env, token, "media-check.yml", { branch, event: "workflow_dispatch" });
-  const checkRun = checkRuns.find((run) => run.head_sha === pull.head.sha);
-  if (!checkRun || activeRun(checkRun)) return { ...base, status: "checking", actions_url: checkRun?.html_url ?? commandRun.html_url };
-  if (failedConclusion(checkRun)) return { ...base, status: "failed", reason: "check_failed", actions_url: checkRun.html_url };
-
-  const mergeRuns = await listWorkflowRuns(env, token, "media-auto-merge.yml", { event: "workflow_run" });
-  const mergeTitle = `Media Auto Merge · ${branch}`;
-  const mergeRun = mergeRuns.find((run) => run.display_title === mergeTitle);
-  if (failedConclusion(mergeRun)) return { ...base, status: "failed", reason: "merge_failed", actions_url: mergeRun?.html_url };
-  return { ...base, status: "checking", actions_url: mergeRun?.html_url ?? checkRun.html_url };
+  if (failedConclusion(commandRun)) {
+    return { ...base, status: "failed", reason: "command_failed", actions_url: commandRun.html_url };
+  }
+  return { ...base, status: "checking", actions_url: commandRun.html_url };
 }
