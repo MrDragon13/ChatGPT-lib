@@ -160,8 +160,8 @@ def test_semantic_input_digest_ignores_credits_but_tracks_content_facts():
         {"name": "Actor B", "character": "Friend", "external_ids": {"tmdb": 5}}
     )
 
-    changed_synopsis = deepcopy(work)
-    changed_synopsis["metadata"]["external"]["synopsis_short"] = "A different story premise."
+    changed_runtime = deepcopy(work)
+    changed_runtime["metadata"]["external"]["runtime_min"] = 117
 
     vocab_digest = "sha256:" + "a" * 64
     baseline = compute_semantic_input_digest(work, vocab_digest, "media-semantic-v1")
@@ -170,7 +170,7 @@ def test_semantic_input_digest_ignores_credits_but_tracks_content_facts():
         changed_credits, vocab_digest, "media-semantic-v1"
     )
     assert baseline != compute_semantic_input_digest(
-        changed_synopsis, vocab_digest, "media-semantic-v1"
+        changed_runtime, vocab_digest, "media-semantic-v1"
     )
 
 
