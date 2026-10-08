@@ -104,7 +104,7 @@ def verify_operation_specific_paths(
     details: Mapping[str, Any] | None = None,
 ) -> None:
     """Enforce write-shape constraints that the simple declarative wildcard grammar cannot express."""
-    if operation not in {"complete_reassessment_item", "refresh_work_metadata"}:
+    if operation != "refresh_work_metadata":
         return
 
     normalized = tuple(paths)
@@ -119,7 +119,6 @@ def verify_operation_specific_paths(
         raise PathPolicyError(f"{operation} work-file mutation requires planner work_id")
     expected = f"media/data/works/{work_id}.yaml"
     if work_paths[0] != expected:
-        label = "reserved work" if operation == "complete_reassessment_item" else "selected work"
         raise PathPolicyError(
-            f"{operation} may modify only the {label} {expected}, got {work_paths[0]}"
+            f"{operation} may modify only the selected work {expected}, got {work_paths[0]}"
         )

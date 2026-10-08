@@ -1,4 +1,6 @@
-# Media legacy reassessment pilot runbook
+# Archived: Media legacy reassessment pilot runbook
+
+> Historical artifact only. The reassessment pilot/runtime was removed during the Media Intelligence v6 cutover. Nothing in this document is a current operating instruction.
 
 Status: **pilot activated**. PR A foundation is merged; PR B installs the frozen ledger at `media/pilots/legacy-reassessment-primary.json`. No user item is reserved merely by activation.
 

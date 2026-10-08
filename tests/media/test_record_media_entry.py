@@ -111,16 +111,6 @@ def _provider_metadata(provider_id=987654):
 
 def _new_command(root: Path, metadata: CanonicalMetadata, *, operation_id=OP1, event_id=EVENT, trait="story.intrigue"):
     provider_id = metadata.identity["external_ids"]["tmdb"]["id"]
-    algorithm = "media-semantic-v1"
-    vocabulary_digest = compute_vocabulary_digest(root / "media")
-    work_for_digest = {
-        "schema_version": 4,
-        "id": "placeholder",
-        "entity_type": "work",
-        "identity": deepcopy(dict(metadata.identity)),
-        "metadata": {"external": deepcopy(dict(metadata.external))},
-    }
-    semantic_digest = compute_semantic_input_digest(work_for_digest, vocabulary_digest, algorithm)
     return {
         "schema_version": 1,
         "operation_id": operation_id,
@@ -134,24 +124,13 @@ def _new_command(root: Path, metadata: CanonicalMetadata, *, operation_id=OP1, e
             "rating": {"score": 8.5, "source": "explicit", "confidence": "exact"},
         }],
         "creation_context": {
-            "resolved_identity": deepcopy(dict(metadata.identity)),
             "provider_identity": {"media_type": "movie", "id": provider_id},
-            "minimum_metadata": {
-                "genres": ["genre.drama"],
-                "runtime_min": 121,
-                "original_language": "en",
-                "synopsis_short": "A carefully verified new film.",
-            },
         },
         "semantic_snapshot": {
             "traits": [{"term": trait, "source": "llm_inferred", "confidence": "high"}],
-            "semantic_input_digest": semantic_digest,
-            "vocabulary_digest": vocabulary_digest,
-            "algorithm_version": algorithm,
         },
         "preconditions": {"expected_viewer_digests": {}},
     }
-
 
 def _snapshot(root: Path):
     return {
@@ -274,19 +253,13 @@ def test_create_if_missing_existing_work_reconciles_without_provider_or_overwrit
     before = load_yaml(root / "media/data/works/arrival-2016.yaml")
     current_digest = compute_viewer_digest(before, "primary")
     data = _existing_command(root, create=True, digest=current_digest)
-    identity = deepcopy(before["identity"])
-    tmdb = identity["external_ids"]["tmdb"]
+    tmdb = before["identity"]["external_ids"]["tmdb"]
     data["work_ref"] = {"tmdb_media_type": tmdb["media_type"], "tmdb_id": tmdb["id"]}
     data["creation_context"] = {
-        "resolved_identity": identity,
         "provider_identity": {"media_type": tmdb["media_type"], "id": tmdb["id"]},
-        "minimum_metadata": {"runtime_min": 999},
     }
     data["semantic_snapshot"] = {
         "traits": [{"term": "pacing.slow", "source": "llm_inferred", "confidence": "low"}],
-        "semantic_input_digest": "sha256:" + "1" * 64,
-        "vocabulary_digest": "sha256:" + "2" * 64,
-        "algorithm_version": "ignored-for-existing",
     }
 
     transaction.execute_command(root, parse_command(data), provider=RaisingProvider(), now=NOW)
@@ -301,124 +274,41 @@ def test_create_if_missing_existing_work_reconciles_without_provider_or_overwrit
         transaction.execute_command(root, parse_command(conflict), provider=RaisingProvider(), now=NOW)
 
 
-def test_create_if_missing_existing_work_rejects_contradictory_stable_identity(tmp_path):
+def test_create_if_missing_existing_work_rejects_contradictory_provider_identity(tmp_path):
     root = copy_fixture_repo(tmp_path)
     before = load_yaml(root / "media/data/works/arrival-2016.yaml")
     data = _existing_command(root, create=True)
     tmdb = before["identity"]["external_ids"]["tmdb"]
     data["work_ref"] = {"tmdb_media_type": tmdb["media_type"], "tmdb_id": tmdb["id"]}
-    contradictory = deepcopy(before["identity"])
-    contradictory["external_ids"]["tmdb"]["id"] = 1
     data["creation_context"] = {
-        "resolved_identity": contradictory,
-        "provider_identity": {"media_type": tmdb["media_type"], "id": tmdb["id"]},
-        "minimum_metadata": {},
+        "provider_identity": {"media_type": tmdb["media_type"], "id": 1},
     }
-    data["semantic_snapshot"] = {
-        "traits": [],
-        "semantic_input_digest": "sha256:" + "1" * 64,
-        "vocabulary_digest": "sha256:" + "2" * 64,
-        "algorithm_version": "ignored-for-existing",
-    }
+    data["semantic_snapshot"] = {"traits": []}
 
-    with pytest.raises(CommandValidationError, match="identity"):
+    with pytest.raises(CommandValidationError, match="provider identity"):
         transaction.execute_command(root, parse_command(data), provider=RaisingProvider(), now=NOW)
 
 
-def test_new_work_minimum_metadata_accepts_verified_subset_and_credit_order_changes(tmp_path):
+
+
+def test_new_work_trusts_provider_for_identity_metadata_and_semantic_bookkeeping(tmp_path):
     root = copy_fixture_repo(tmp_path)
     metadata = _provider_metadata()
-    external = deepcopy(dict(metadata.external))
-    external["directors"] = [
-        {"name": "Tony Scott", "external_ids": {"tmdb": 893}},
-        {"name": "Additional Director", "external_ids": {"tmdb": 999001}},
-    ]
-    external["writers"] = [
-        {"name": "Bill Marsilii", "external_ids": {"tmdb": 52927}},
-        {"name": "Terry Rossio", "external_ids": {"tmdb": 1706}},
-    ]
-    external["main_cast"] = [
-        {"name": "Denzel Washington", "character": "Doug Carlin", "external_ids": {"tmdb": 5292}},
-        {"name": "Paula Patton", "character": "Claire Kuchever", "external_ids": {"tmdb": 52851}},
-    ]
-    metadata = CanonicalMetadata(identity=metadata.identity, external=external)
+    provider = FakeProvider(metadata)
     command = _new_command(root, metadata)
-    command["creation_context"]["minimum_metadata"].update({
-        "directors": [
-            {"name": "Tony Scott", "external_ids": {"tmdb": 893}},
-        ],
-        "writers": [
-            {"name": "Terry Rossio", "external_ids": {"tmdb": 1706}},
-            {"name": "Bill Marsilii", "external_ids": {"tmdb": 52927}},
-        ],
-        "main_cast": [
-            {"name": "Paula Patton", "character": "Claire Kuchever"},
-        ],
-    })
+    command["creation_context"] = {"provider_identity": {"media_type": "movie", "id": 987654}}
+    command["semantic_snapshot"] = {
+        "traits": [{"term": "story.intrigue", "source": "llm_inferred", "confidence": "high"}],
+    }
 
-    result = transaction.execute_command(
-        root,
-        parse_command(command),
-        provider=FakeProvider(metadata),
-        now=NOW,
-    )
+    result = transaction.execute_command(root, parse_command(command), provider=provider, now=NOW)
+    work = resolve_work(YamlRepository(root / "media"), parse_command(command).work_ref).data
+    vocabulary_digest = compute_vocabulary_digest(root / "media")
+    expected_semantic_digest = compute_semantic_input_digest(work, vocabulary_digest, "media-semantic-v1")
 
     assert result.status == "applied"
-
-
-def test_new_work_minimum_metadata_still_rejects_false_fact(tmp_path):
-    root = copy_fixture_repo(tmp_path)
-    metadata = _provider_metadata()
-    command = _new_command(root, metadata)
-    command["creation_context"]["minimum_metadata"]["runtime_min"] = 999
-
-    with pytest.raises(CommandValidationError, match="minimum metadata mismatch for runtime_min"):
-        transaction.execute_command(
-            root,
-            parse_command(command),
-            provider=FakeProvider(metadata),
-            now=NOW,
-        )
-
-
-def test_new_work_minimum_synopsis_accepts_typographic_equivalence(tmp_path):
-    root = copy_fixture_repo(tmp_path)
-    metadata = _provider_metadata()
-    external = deepcopy(dict(metadata.external))
-    external["synopsis_short"] = (
-        "Ощущения — не что иное, как предупреждения.\n\n"
-        "Оказавшись в прошлом, он влюбляется в неё…"
-    )
-    metadata = CanonicalMetadata(identity=metadata.identity, external=external)
-    command = _new_command(root, metadata)
-    command["creation_context"]["minimum_metadata"]["synopsis_short"] = (
-        "ощущения - не что иное, как предупреждения. "
-        "Оказавшись в прошлом, он влюбляется в нее..."
-    )
-
-    result = transaction.execute_command(
-        root,
-        parse_command(command),
-        provider=FakeProvider(metadata),
-        now=NOW,
-    )
-
-    assert result.status == "applied"
-
-
-def test_new_work_minimum_synopsis_rejects_changed_meaning(tmp_path):
-    root = copy_fixture_repo(tmp_path)
-    metadata = _provider_metadata()
-    external = deepcopy(dict(metadata.external))
-    external["synopsis_short"] = "Герой спасает город."
-    metadata = CanonicalMetadata(identity=metadata.identity, external=external)
-    command = _new_command(root, metadata)
-    command["creation_context"]["minimum_metadata"]["synopsis_short"] = "Герой уничтожает город."
-
-    with pytest.raises(CommandValidationError, match="minimum metadata mismatch for synopsis_short"):
-        transaction.execute_command(
-            root,
-            parse_command(command),
-            provider=FakeProvider(metadata),
-            now=NOW,
-        )
+    assert provider.calls == [("fetch", "movie", 987654)]
+    assert work["identity"]["title_ru"] == "Новый фильм"
+    assert work["metadata"]["external"]["runtime_min"] == 121
+    assert work["metadata"]["semantic"]["vocabulary_digest"] == vocabulary_digest
+    assert work["metadata"]["semantic"]["input_digest"] == expected_semantic_digest

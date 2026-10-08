@@ -31,17 +31,6 @@ EXPECTED_POLICY = json.loads(r'''{
     ],
     "execution_class": "v6_single_runner"
   },
-  "record_viewing_feedback": {
-    "auto_merge": true,
-    "allowed_paths": [
-      "media/data/works/*.yaml",
-      "media/generated/index.jsonl",
-      "media/generated/profiles/*.yaml",
-      ".media/operations/*.json",
-      "media/data/relations/similarity/*.yaml"
-    ],
-    "execution_class": "v6_single_runner"
-  },
   "edit_viewing_feedback": {
     "auto_merge": true,
     "allowed_paths": [
@@ -278,7 +267,7 @@ def test_existing_feedback_operation_cannot_modify_future_intelligence_paths():
         "media/pilots/legacy-reassessment-primary.json",
     ):
         with pytest.raises(PathPolicyError):
-            verify_changed_paths("record_viewing_feedback", [path])
+            verify_changed_paths("record_media_entry", [path])
 
 
 def test_similarity_operations_allow_only_relation_and_receipt_paths():
@@ -303,7 +292,7 @@ def test_similarity_operations_allow_only_relation_and_receipt_paths():
 def test_work_creation_paths_allow_similarity_reconciliation_but_regular_edits_do_not():
     relation_path = "media/data/relations/similarity/primary.yaml"
     verify_changed_paths("add_work", [relation_path])
-    verify_changed_paths("record_viewing_feedback", [relation_path])
+    verify_changed_paths("record_media_entry", [relation_path])
 
     for operation in ("edit_viewing_feedback", "set_interest", "set_semantic_fingerprint"):
         with pytest.raises(PathPolicyError):

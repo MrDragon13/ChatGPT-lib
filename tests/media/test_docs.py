@@ -91,10 +91,10 @@ def test_living_docs_expose_similarity_assessment_and_current_read_model():
     assert 'similarity' in intelligence.lower()
     assert 'не является preference' in intelligence or 'не становится preference' in intelligence
     assert 'external' in model.lower()
-    assert 'Current manifest version: v3' in web
+    assert 'Current manifest version: v4' in web
     assert 'Media Intelligence v6' in status
     assert 'assess_candidate' in status
-    assert 'manifest' in status.lower() and 'v3' in status
+    assert 'manifest' in status.lower() and 'v4' in status
 
 
 def test_v6_living_docs_define_observability_and_single_runner_merge_boundary():
@@ -125,6 +125,21 @@ def test_write_pipeline_documents_final_v6_queue_and_removes_legacy_handoff():
     assert 'media-data-pipeline' in pipeline
     assert 'cancel-in-progress: false' in pipeline
     assert 'queue: max' in pipeline
-    assert 'Media Check' in pipeline and 'больше не участвуют' in pipeline
-    assert 'Media Auto Merge' in pipeline
+    assert 'единый `Media Command` runner' in pipeline
     assert 'security review' in pipeline
+
+
+def test_living_docs_have_no_removed_split_workflow_names():
+    paths = [
+        Path(".media/README.md"),
+        Path("docs/architecture/write-pipeline.md"),
+        Path("docs/architecture/web-and-broker.md"),
+        Path("docs/guides/operations.md"),
+        Path("docs/reference/invariants.md"),
+        Path("docs/reference/repository-layout.md"),
+        Path("docs/status/current.md"),
+    ]
+    for path in paths:
+        text = path.read_text(encoding="utf-8")
+        assert "Media Check" not in text, path
+        assert "Media Auto Merge" not in text, path

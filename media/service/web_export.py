@@ -14,7 +14,7 @@ from media.tools.common import load_yaml
 from media.tools.schema_utils import validate_against_schema
 
 
-WEB_MANIFEST_SCHEMA_VERSION = 3
+WEB_MANIFEST_SCHEMA_VERSION = 4
 
 
 def _load_profile(media_root: Path, target: str) -> dict[str, Any]:
@@ -36,17 +36,6 @@ def _web_vocabulary(media_root: Path) -> dict[str, dict[str, str]]:
         if isinstance(kind, str) and isinstance(label_ru, str):
             result[term_id] = {"kind": kind, "label_ru": label_ru}
     return result
-
-
-def _manifest_v3_context(context: dict[str, Any]) -> dict[str, Any]:
-    projected = dict(context)
-    projected.pop("reanalysis", None)
-    if "limitations" in projected:
-        projected["limitations"] = [
-            item for item in (projected.get("limitations") or [])
-            if item != "taste_reanalysis_due"
-        ]
-    return projected
 
 
 def _semantic_fingerprint(data: dict[str, Any]) -> list[dict[str, Any]]:
@@ -181,18 +170,14 @@ def build_web_manifest(media_root: Path) -> dict[str, Any]:
             include_not_interested=False,
             limit=24,
         )
-        recommendations[target] = _manifest_v3_context(
-            build_recommend_context(media_root, recommendation_request)
-        )
+        recommendations[target] = build_recommend_context(media_root, recommendation_request)
         taste_request = TasteContextRequest(
             schema_version=1,
             target=target,
             recent_limit=12,
             representative_limit=8,
         )
-        taste_contexts[target] = _manifest_v3_context(
-            build_taste_context(media_root, taste_request)
-        )
+        taste_contexts[target] = build_taste_context(media_root, taste_request)
 
     manifest: dict[str, Any] = {
         "schema_version": WEB_MANIFEST_SCHEMA_VERSION,

@@ -60,7 +60,6 @@
 - **metadata maintenance** — `refresh_work_metadata` для одного произведения; bulk `refresh_metadata(all_movies)` остаётся manual-review операцией.
 - **architecture / vocabulary maintenance** — отдельный developer PR, не обычная пользовательская запись.
 
-Активного legacy reassessment pilot больше нет.
 
 ## Обычная запись: `record_media_entry`
 
@@ -88,9 +87,9 @@
 Если произведения нет:
 
 1. надёжно определить его по устойчивой внешней идентичности;
-2. получить только минимум устойчивых структурированных фактов, нужных для идентичности и качественной семантики; в блокирующий `minimum_metadata` не включай credits и длинный `synopsis_short` — они сохраняются как metadata, но не должны ломать создание из-за редакционных различий;
-3. сделать один semantic reasoning pass;
-4. отправить один `record_media_entry(create_if_missing=true)`, который атомарно создаёт work, semantics и viewer evidence.
+2. передать в create flow только устойчивую provider identity; актуальные provider metadata доверенный runtime получает сам;
+3. сделать один semantic reasoning pass и передать только semantic traits из controlled vocabulary;
+4. отправить один `record_media_entry(create_if_missing=true)`, который на trusted side вычисляет semantic bookkeeping и атомарно создаёт work, semantics и viewer evidence.
 
 Не используй обычную цепочку `add_work → reread → semantics → feedback`.
 
@@ -102,7 +101,7 @@
 
 - Оценка, реакция и отзыв пользователя не являются объективными traits произведения.
 - Для семантического отпечатка обязателен контролируемый словарь.
-- Если semantic input digest и версия алгоритма не изменились, fingerprint переиспользуется без нового LLM-прохода.
+- Semantic input digest, vocabulary digest и algorithm version — trusted runtime bookkeeping; агент не вычисляет и не подставляет их в new-work payload.
 - Явные пользовательские данные важнее выведенной интерпретации.
 - Выведенный результат не является независимым доказательством для следующего вывода.
 - Явно заданное сходство помогает рекомендациям и объяснениям, но само по себе не является устойчивым предпочтением.
@@ -186,7 +185,6 @@ Browser/provider/model secrets не попадают в static Web bundle.
 - `remove_work_similarity`
 - `refresh_work_metadata`
 
-`record_viewing_feedback` остаётся узкой compatibility operation, но новым основным LLM-маршрутом является `record_media_entry`.
 
 Read-only:
 

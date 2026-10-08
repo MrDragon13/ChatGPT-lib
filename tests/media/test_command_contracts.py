@@ -4,14 +4,27 @@ import pytest
 
 from media.commands.schema import parse_command
 from media.domain.errors import CommandValidationError
-from media.domain.commands import AddWorkCommand, RecommendContextRequest, RecordViewingFeedbackCommand, SetInterestCommand
+from media.domain.commands import AddWorkCommand, RecommendContextRequest, RecordMediaEntryCommand, SetInterestCommand
 
 VALID_UUID = "123e4567-e89b-42d3-a456-426614174000"
 WORK_DIGEST = "sha256:" + "b" * 64
 
 
 def valid_record_feedback_dict() -> dict:
-    return {"schema_version": 1, "operation_id": VALID_UUID, "operation": "record_viewing_feedback", "work_ref": {"title": "Arrival", "year": 2016}, "target_updates": [{"target": "primary", "viewing": {"status": "watched"}, "rating": {"score": 8.5, "source": "explicit_approx", "confidence": "high"}}]}
+    return {
+        "schema_version": 1,
+        "operation_id": VALID_UUID,
+        "idempotency_key": "123e4567-e89b-42d3-a456-426614174099",
+        "operation": "record_media_entry",
+        "work_ref": {"title": "Arrival", "year": 2016},
+        "create_if_missing": False,
+        "target_updates": [{
+            "target": "primary",
+            "viewing": {"status": "watched"},
+            "rating": {"score": 8.5, "source": "explicit_approx", "confidence": "high"},
+        }],
+        "preconditions": {"expected_viewer_digests": {"primary": "sha256:" + "a" * 64}},
+    }
 
 
 def valid_set_interest_dict(priority: int | None = 3) -> dict:
@@ -56,19 +69,12 @@ def test_operation_id_must_be_canonical_uuid_text():
 
 
 def test_parse_constructs_typed_commands():
-    record = parse_command(valid_record_feedback_dict()); assert isinstance(record, RecordViewingFeedbackCommand); assert record.work_ref.title == "Arrival"; assert record.target_updates[0].rating["score"] == 8.5
+    record = parse_command(valid_record_feedback_dict()); assert isinstance(record, RecordMediaEntryCommand); assert record.work_ref.title == "Arrival"; assert record.target_updates[0].rating["score"] == 8.5
     interest = parse_command(valid_set_interest_dict()); assert isinstance(interest, SetInterestCommand); assert interest.state == "shortlist"
     add = parse_command({"schema_version": 1, "operation_id": VALID_UUID, "operation": "add_work", "work_ref": {"title": "Arrival", "year": 2016}}); assert isinstance(add, AddWorkCommand)
     recommend = parse_command({"schema_version": 1, "operation": "recommend_context", "target": "couple", "text": "not dark tonight", "only_unwatched": True, "runtime_max": 120, "include_not_interested": False, "limit": 12}); assert isinstance(recommend, RecommendContextRequest); assert recommend.limit == 12
 
 
-def test_record_feedback_create_if_missing_is_typed_and_defaults_false():
-    default = parse_command(valid_record_feedback_dict())
-    assert isinstance(default, RecordViewingFeedbackCommand)
-    assert default.create_if_missing is False
-    data = valid_record_feedback_dict(); data["create_if_missing"] = True
-    command = parse_command(data)
-    assert command.create_if_missing is True
 
 
 def test_feedback_term_membership_is_not_checked_by_command_schema():
@@ -254,21 +260,10 @@ def valid_record_media_entry_dict(create_if_missing: bool = False) -> dict:
     if create_if_missing:
         data["work_ref"] = {"tmdb_media_type": "movie", "tmdb_id": 329865}
         data["creation_context"] = {
-            "resolved_identity": {
-                "format": "movie",
-                "title_original": "Arrival",
-                "title_ru": "Прибытие",
-                "year": 2016,
-                "external_ids": {"tmdb": {"media_type": "movie", "id": 329865}},
-            },
             "provider_identity": {"media_type": "movie", "id": 329865},
-            "minimum_metadata": {"runtime_min": 116},
         }
         data["semantic_snapshot"] = {
             "traits": [{"term": "story.intrigue", "source": "llm_inferred", "confidence": "high"}],
-            "semantic_input_digest": "sha256:" + "2" * 64,
-            "vocabulary_digest": "sha256:" + "3" * 64,
-            "algorithm_version": "media-semantic-v1",
         }
         data["preconditions"] = {"expected_viewer_digests": {}}
     return data
@@ -283,7 +278,7 @@ def test_record_media_entry_parses_existing_and_new_work_variants():
     created = parse_command(valid_record_media_entry_dict(create_if_missing=True))
     assert created.create_if_missing is True
     assert created.creation_context.provider_identity.id == 329865
-    assert created.semantic_snapshot.algorithm_version == "media-semantic-v1"
+    assert created.semantic_snapshot.traits[0]["term"] == "story.intrigue"
 
 
 def test_record_media_entry_requires_creation_and_semantics_only_for_creation():
@@ -319,3 +314,22 @@ def test_record_media_entry_rejects_unknown_fields():
     bad["unexpected"] = True
     with pytest.raises(CommandValidationError):
         parse_command(bad)
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("runtime_min", 116),
+        ("synopsis_short", "Provider copy can drift."),
+        ("directors", [{"name": "Someone"}]),
+        ("writers", [{"name": "Someone"}]),
+        ("main_cast", [{"name": "Someone"}]),
+        ("external_metrics", {"tmdb": {"score": 7.0}}),
+        ("provenance", {"provider": "tmdb"}),
+    ],
+)
+def test_record_media_entry_rejects_volatile_minimum_metadata(field, value):
+    data = valid_record_media_entry_dict(create_if_missing=True)
+    data["creation_context"]["minimum_metadata"] = {field: value}
+    with pytest.raises(CommandValidationError):
+        parse_command(data)

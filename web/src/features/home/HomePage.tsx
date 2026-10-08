@@ -230,6 +230,12 @@ export function HomePage() {
 
   return (
     <div className="home-page">
+      {model.reanalysisDue ? (
+        <aside className="home-reanalysis-notice" role="status" data-testid="reanalysis-notice">
+          <strong>Профиль вкуса накопил новые оценки.</strong>
+          <span>Перед следующим точным подбором обновите анализ в киноассистенте.</span>
+        </aside>
+      ) : null}
       <section
         className="cinema-hero"
         aria-labelledby="hero-title"

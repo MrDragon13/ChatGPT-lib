@@ -91,8 +91,7 @@ Maintenance должен:
 
 Основные роли workflows:
 
-- Media Command — применить typed operation детерминированно;
-- Media Check — authoritative exact-head gate для normal operation result;
+- Media Command — применить normal typed operation на свежем `main`, выполнить operation-specific authoritative gate и exact-head merge;
 - Media Dev Check — developer/manual PR regression gate;
 - Web Check — frontend tests/type/build/browser/security checks;
 - Media Pages — exact-revision build + GitHub Pages deploy.

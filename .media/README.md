@@ -19,7 +19,7 @@ request-only media/op-* PR
 → Media Pages для merge SHA
 ```
 
-Отдельных `Media Check` и `Media Auto Merge` больше нет.
+Старый раздельный validation/merge path удалён; normal write полностью обслуживает единый `Media Command` runner.
 
 `refresh_metadata` остаётся manual-review операцией: workflow может проверить и обновить её ветку, но не сливает её автоматически.
 

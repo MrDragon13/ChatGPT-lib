@@ -10,11 +10,13 @@ import pytest
 
 import media.service.transaction as transaction
 from media.commands.schema import parse_command
+from media.domain.digests import compute_viewer_digest
 from media.domain.errors import PathPolicyError
 from media.providers.tmdb import TMDBProvider
 from media.repository.sqlite_repo import SQLiteRepository
 from media.service.path_policy import verify_changed_paths
 from media.service.transaction import execute_command
+from media.tools.common import load_yaml
 from tests.media.fixture_repo import copy_fixture_repo
 
 
@@ -31,7 +33,7 @@ def test_sqlite_adapter_matches_real_build_db_works_columns(tmp_path):
 
 def test_path_allowlist_rejects_nested_work_path():
     with pytest.raises(PathPolicyError):
-        verify_changed_paths('record_viewing_feedback',['media/data/works/nested/evil.yaml'])
+        verify_changed_paths('record_media_entry',['media/data/works/nested/evil.yaml'])
 
 
 def test_receipt_copy_failure_rolls_back_media_files(tmp_path,monkeypatch):
@@ -41,7 +43,17 @@ def test_receipt_copy_failure_rolls_back_media_files(tmp_path,monkeypatch):
             raise OSError('receipt storage unavailable')
         return original(src,dst,*args,**kwargs)
     monkeypatch.setattr(transaction.shutil,'copy2',fail_receipt)
-    command=parse_command({'schema_version':1,'operation_id':'123e4567-e89b-42d3-a456-426614174399','operation':'record_viewing_feedback','work_ref':{'id':'arrival-2016'},'target_updates':[{'target':'primary','viewing':{'status':'partial'}}]})
+    work=load_yaml(root/'media/data/works/arrival-2016.yaml')
+    command=parse_command({
+        'schema_version':1,
+        'operation_id':'123e4567-e89b-42d3-a456-426614174399',
+        'idempotency_key':'123e4567-e89b-42d3-a456-426614174399',
+        'operation':'record_media_entry',
+        'work_ref':{'id':'arrival-2016'},
+        'create_if_missing':False,
+        'target_updates':[{'target':'primary','viewing':{'status':'partial'}}],
+        'preconditions':{'expected_viewer_digests':{'primary':compute_viewer_digest(work,'primary')}},
+    })
     with pytest.raises(OSError,match='receipt storage unavailable'):
         execute_command(root,command,now=datetime(2026,10,1,tzinfo=timezone.utc))
     after={str(p.relative_to(root)):p.read_bytes() for p in root.rglob('*') if p.is_file()}

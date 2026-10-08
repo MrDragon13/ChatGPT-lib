@@ -325,20 +325,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "resolved_identity",
-        "provider_identity",
-        "minimum_metadata"
+        "provider_identity"
       ],
       "properties": {
-        "resolved_identity": {
-          "type": "object",
-          "minProperties": 1
-        },
         "provider_identity": {
           "$ref": "#/$defs/providerIdentity"
-        },
-        "minimum_metadata": {
-          "type": "object"
         }
       }
     },
@@ -346,10 +337,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "traits",
-        "semantic_input_digest",
-        "vocabulary_digest",
-        "algorithm_version"
+        "traits"
       ],
       "properties": {
         "traits": {
@@ -357,16 +345,6 @@
           "items": {
             "$ref": "#/$defs/semanticTrait"
           }
-        },
-        "semantic_input_digest": {
-          "$ref": "#/$defs/digest"
-        },
-        "vocabulary_digest": {
-          "$ref": "#/$defs/digest"
-        },
-        "algorithm_version": {
-          "type": "string",
-          "minLength": 1
         }
       }
     },

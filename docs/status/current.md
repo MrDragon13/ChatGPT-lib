@@ -7,12 +7,12 @@
 ## Текущее состояние данных
 
 - Git/YAML в `main` остаётся canonical source of truth.
-- Активная медиатека после v6 reset начинается с пустого набора works.
-- Collections, explicit work similarity, interactions и inferred preferences после reset пусты.
+- V6 reset 7 октября 2026 года начал новую active library с пустого набора works; после reset библиотека снова наполняется обычными v6 writes.
+- Collections, explicit work similarity, interactions и inferred preferences были очищены reset'ом и появляются снова только через новые canonical v6 writes.
 - Глобальные explicit preferences пользователя сохранены.
 - Controlled vocabulary, schemas, code, Broker и Web сохранены.
 - `docs/archive/media-library-before-v6-reset-2026-10-07.md` хранит человекочитаемый снимок старой медиатеки, но **не участвует автоматически** в рекомендациях, анализе вкусов или восстановлении canonical data.
-- Legacy reassessment pilot/runtime удалён.
+- В current tree активны только v6 runtime routes; pre-v6 pilot/runtime artifacts отсутствуют.
 
 Пустая библиотека — ожидаемое валидное состояние. Index, profiles, web manifest, doctor, validate и read-contexts должны работать детерминированно и без специальных ручных обходов.
 
@@ -63,7 +63,7 @@ request-only PR
 
 - Все normal auto-merge операции используют `v6_single_runner`.
 - Bulk `refresh_metadata` остаётся `manual_review`.
-- Старые `Media Check` и `Media Auto Merge` удалены.
+- Старый раздельный validation/merge path удалён.
 
 Для developer changes по Python, schemas, workflows, vocabulary, architecture/config, Web/Broker logic остаются полные PR-проверки.
 
@@ -88,7 +88,7 @@ Production `POST /v1/feedback` теперь преобразует browser feedb
 - не передаёт browser-клиенту внутреннюю логику digest/precondition;
 - не хранит GitHub/provider/model secrets в static Web bundle.
 
-Web manifest остаётся **v3**. Внутренние viewer digests не публикуются в browser manifest.
+Web manifest — **v4**. Он публикует reanalysis gate, но не внутренние viewer/evidence digests.
 
 Пустая Web-медиатека показывает честный empty state вместо выдуманного кандидата.
 
@@ -136,12 +136,12 @@ Generated viewer profiles кэшируют reanalysis status, поэтому rec
 
 ## Recommendation cold start
 
-После reset локальный recommendation pool пуст. Это не ошибка.
+После reset локальный evidence pool некоторое время остаётся малым. Пустой pool при этом является валидным состоянием, а не ошибкой.
 
-- `recommend_context` сообщает `empty_library`.
-- `taste_context` при отсутствии work evidence сообщает `cold_start_no_work_evidence`.
-- Сохранённые global explicit preferences остаются доступными.
-- General recommendation request может использовать external discovery; локальная медиатека по мере нового заполнения снова становится памятью, evidence и exclusion layer.
+- при фактически пустом pool `recommend_context` сообщает `empty_library`;
+- при отсутствии work evidence `taste_context` сообщает `cold_start_no_work_evidence`;
+- сохранённые global explicit preferences остаются доступными;
+- general recommendation request может использовать external discovery; локальная медиатека по мере заполнения служит памятью, evidence и exclusion layer.
 
 ## Архив старой библиотеки
 
@@ -159,7 +159,7 @@ Pre-v6 archive — только человеческая памятка и че�
 - External discovery/live model reasoning остаётся на agent/server boundary.
 - Bulk provider metadata refresh требует manual review.
 - Controlled vocabulary меняется только отдельным developer/architecture PR.
-- Public Web manifest пока остаётся v3; внутренние v6 bookkeeping fields не обязаны быть browser-visible.
+- Public Web manifest v4 показывает только необходимый reanalysis gate; внутренние digest/bookkeeping fields остаются server-side.
 
 ## Verification model
 
@@ -183,6 +183,6 @@ Developer changes считаются проверенными только по�
 - `docs/architecture/web-and-broker.md` — Web/Broker security и write flow;
 - `docs/reference/media-commands.md` — каталог операций;
 - `docs/reference/invariants.md` — обязательные правила;
-- `docs/runbooks/media-v6-reset.md` — одноразовый cutover/reset runbook.
+- `docs/archive/media-v6-reset-cutover-2026-10-07.md` — historical record одноразового cutover/reset.
 
 Dated files под `docs/superpowers/specs/` и `docs/superpowers/plans/` сохраняются как история решений и не заменяют current code, schemas или living docs.

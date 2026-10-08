@@ -86,7 +86,7 @@ Normal data write не запускает полный developer regression suit
 - Bulk `refresh_metadata` использует `execution_class=manual_review`: workflow может применить и полностью проверить изменение в PR-ветке, но не сливает его автоматически.
 - Architecture/schema/vocabulary/workflow changes не являются typed data operations и идут обычным developer PR.
 
-Удалённые `Media Check` и `Media Auto Merge` больше не участвуют в current pipeline.
+Старые раздельные validation/merge workflows удалены; current normal path полностью обслуживает единый `Media Command` runner.
 
 ## Provider secret
 
@@ -94,7 +94,7 @@ Provider secret передаётся только тогда, когда опе�
 
 Existing-work feedback не требует provider I/O.
 
-Новый `record_media_entry(create_if_missing=true)` может получить provider context только для проверки identity и минимальных factual data.
+Новый `record_media_entry(create_if_missing=true)` получает provider context для stable identity и свежих factual metadata; provider-owned metadata не передаются клиентом как blocking preconditions.
 
 ## `record_media_entry`
 
@@ -114,9 +114,11 @@ Existing-work path не обновляет metadata и не пересчитыв
 
 Payload дополнительно содержит:
 
-- `creation_context` с проверенной identity и минимальными metadata;
-- `semantic_snapshot`;
+- `creation_context.provider_identity`;
+- `semantic_snapshot.traits`;
 - те же viewer updates.
+
+Актуальные provider metadata, semantic input digest, vocabulary digest и algorithm version вычисляются доверенным runtime.
 
 Создание work, semantic fingerprint и feedback выполняются одной transaction.
 

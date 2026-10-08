@@ -86,7 +86,7 @@ def test_living_docs_expose_post_reset_audit_contract():
     assert "canonical_input_digest" in intelligence
     assert "Stage A baseline" in intelligence
     assert "синтет" in intelligence.lower()
-    assert "Stage A runtime baselines больше не существуют" in layout
+    assert "Stage A active baselines отсутствуют" in layout
     assert "synthetic/reference fixtures" in status
     assert not Path("media/baselines/intelligence-stage-a.json").exists()
     assert not Path("media/baselines/intelligence-stage-a.meta.json").exists()
