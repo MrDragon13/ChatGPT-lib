@@ -1,17 +1,168 @@
 schema_version: 4
 target: partner
 generated_from: canonical-v4
-affinities: {}
+affinities:
+  content.violence:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: deja-vu-2006
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.225
+  entertainment.engaging:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: deja-vu-2006
+      source_target: partner
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
+  genre.action:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: deja-vu-2006
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: external_source
+      trait_confidence: exact
+      weight: 0.25
+  genre.science_fiction:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: deja-vu-2006
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: external_source
+      trait_confidence: exact
+      weight: 0.25
+  genre.thriller:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: deja-vu-2006
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: external_source
+      trait_confidence: exact
+      weight: 0.25
+  story.intrigue:
+    score: 1.0
+    confidence: medium
+    evidence_count: 2
+    evidence:
+    - entity_id: deja-vu-2006
+      source_target: partner
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
+    - entity_id: deja-vu-2006
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.225
+  story.problem_solving:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: deja-vu-2006
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.225
+  story.twists:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: deja-vu-2006
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.225
+  structure.mystery:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: deja-vu-2006
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.225
+  tone.serious:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: deja-vu-2006
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.225
 explicit_preferences: []
 rules: []
 constraints: []
-summary: {}
+summary:
+  ratings_count: 1
+  reactions_count: 1
+  relations_count: 0
+  viewing_count: 1
 evidence:
-  entity_count: 0
+  entity_count: 1
 reanalysis:
   target: partner
   threshold: 5
-  outstanding_count: 0
+  outstanding_count: 1
   due: false
   checkpoint_valid: true
-  current_evidence_digest: sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+  current_evidence_digest: sha256:177c6b9cf45ee8d2ad4a84e4c2526bebc977363d334862c4523a10e222d3d410

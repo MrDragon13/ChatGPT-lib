@@ -1,0 +1,23 @@
+{
+  "applied_at": "2026-10-08T07:39:38.125236+00:00",
+  "changed_entities": [
+    "deja-vu-2006"
+  ],
+  "changed_files": [
+    "media/data/works/deja-vu-2006.yaml",
+    "media/generated/index.jsonl",
+    "media/generated/profiles/couple.yaml",
+    "media/generated/profiles/partner.yaml",
+    "media/generated/profiles/primary.yaml",
+    ".media/operations/6f6ebc3e-35d7-4e69-9c42-2fb2c76d4301.json"
+  ],
+  "details": {
+    "created": true,
+    "work_id": "deja-vu-2006"
+  },
+  "idempotency_key": "4f8be82a-e876-4766-a42c-a0d4e9f3e9e2",
+  "operation": "record_media_entry",
+  "operation_id": "6f6ebc3e-35d7-4e69-9c42-2fb2c76d4301",
+  "request_digest": "sha256:4477641dd850469cec1a4cd10b9baae7802052a2d29c4298f6ffcea9ecafeb90",
+  "status": "applied"
+}
