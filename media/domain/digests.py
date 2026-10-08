@@ -17,7 +17,6 @@ STATIC_METADATA_KEYS = (
     "original_language",
     "countries",
     "production_status",
-    "synopsis_short",
     "certifications",
     "content_warnings",
 )
