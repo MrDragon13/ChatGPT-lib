@@ -1,115 +1,111 @@
 # Архитектура ChatGPT-lib
 
-Этот документ описывает **текущее** устройство проекта. Historical design decisions находятся в `docs/superpowers/`, но для понимания работающей системы читать dated specs не требуется.
+Этот документ описывает систему такой, какой она работает сейчас. История проектных решений лежит в `docs/superpowers/`, но для обычной работы читать её не нужно.
 
 ## Система в целом
 
-ChatGPT-lib — Git-native personal media intelligence system. Канонические пользовательские данные и долгоживущие выводы хранятся в репозитории; Python-слой применяет строгие операции, строит derived read models и экспортирует данные для статического web-интерфейса.
+ChatGPT-lib хранит личную медиатеку в Git и строит поверх неё рекомендации, профили и Web-интерфейс.
 
 ```text
-user / LLM / CLI / web edit
-          |
-          v
-strict typed operation
-          |
-          v
+пользователь / LLM / CLI / Web
+            |
+            v
+типизированная операция
+            |
+            v
 media domain + service + repository
-          |
-          +--> canonical Git/YAML
-          |
-          +--> derived index / profiles / taste context / web manifest
-                                              |
-                                              v
-                                      static GitHub Pages
+            |
+            +--> канонические Git/YAML-данные
+            |
+            +--> производные index / profiles / contexts / Web manifest
+                                                |
+                                                v
+                                        GitHub Pages
 
-web write -> authenticated broker -> same typed operation boundary
+запись из Web -> Broker -> тот же путь типизированной операции
 ```
 
-## Основные компоненты
+## Канонические и производные данные
 
-### Canonical media layer
+**Канонические данные** (`canonical`) — долговременная память системы. Для media это YAML, настройки, предпочтения, связи, схемы и словарь.
 
-`media/` содержит source of truth для библиотеки. Canonical данные включают works, collections, lists, recommendation interactions, explicit similarity relations, explicit/inferred preferences, target configuration и controlled vocabulary.
+**Производные данные** (`derived`) — индекс, профили, контексты, временная SQLite-база и Web manifest. Их можно пересобрать из канонических данных.
 
-Generated artifacts не являются вторым источником истины: их можно пересобрать из canonical state.
+Практическое правило: если нужно изменить смысл пользовательских данных, править производный файл вручную нельзя.
 
-Подробнее: [media model](media-model.md).
+Подробнее: [модель данных](media-model.md).
 
-### Domain / service / repository
+## Код media-подсистемы
 
-Python-код под `media/domain/`, `media/service/` и `media/repository/` разделяет:
+Основные слои:
 
-- типы и domain contracts;
-- deterministic application typed commands;
-- read-only context building;
-- provider resolution/enrichment;
-- canonical persistence;
-- derived export/rebuild.
+- `media/domain/` — типы, инварианты и ошибки;
+- `media/service/` — применение команд и построение контекста;
+- `media/repository/` — чтение и запись;
+- `media/providers/` — получение внешних метаданных;
+- `media/tools/` — проверка, пересборка и диагностика.
 
-Обычный LLM или browser request не пишет YAML произвольно. Сначала выбирается typed operation, затем deterministic код применяет mutation или строит read-only response.
+LLM и браузер не меняют YAML напрямую. Они передают типизированную операцию, а детерминированный код либо применяет её, либо возвращает read-only результат.
 
-### Intelligence layer
+## Логика вкуса и рекомендаций
 
-Taste reasoning опирается на explicit user evidence, evidence-backed inferred hypotheses, semantic fingerprint произведений, representative works, recommendation interactions и explicit work similarity. Recommendation engine не сводит вкус к одному opaque score и сохраняет provenance объяснений.
+Система разделяет:
 
-Подробнее: [intelligence](intelligence.md).
+- явные сигналы пользователя;
+- выведенные гипотезы о вкусе;
+- семантические признаки самого произведения.
 
-### Write pipeline и GitHub Actions
+Эти слои не должны подменять друг друга. Подробности: [логика вкуса и рекомендаций](intelligence.md).
 
-Normal media mutations проходят через operation PR, deterministic transaction, validation/rebuild, exact-head verification и guarded merge. Architecture/schema/vocabulary/workflow changes используют manual developer route.
+## Запись через GitHub
 
-GitHub Actions исполняет deterministic проверки и публикацию; LLM не запускается внутри media pipeline.
+Обычные изменения медиатеки проходят через request-only PR, единый workflow `Media Command`, проверку точного SHA и слияние только проверенной версии.
 
-Подробнее: [write pipeline](write-pipeline.md).
+Изменения кода, схем, словаря, workflows и архитектуры идут отдельным developer PR.
 
-### Web
+Подробнее: [путь записи](write-pipeline.md).
 
-`web/` — статическая React/Vite GitHub Pages поверхность. Она читает versioned **web manifest**, экспортированный из media layer, а не canonical YAML напрямую.
+## Web
 
-Frontend отвечает за presentation и lightweight interaction UX, но не имеет собственного recommendation engine и не становится source of truth.
+`web/` — статический React/Vite-клиент на GitHub Pages.
 
-### Broker
+Он читает версионированный Web manifest, а не канонические YAML. Frontend отвечает за отображение и взаимодействие, но не содержит второго алгоритма рекомендаций и не является вторым источником истины.
 
-Browser write не получает GitHub write credentials, TMDB/provider tokens или model secrets. Поддерживаемые изменения отправляются через authenticated **broker**, который переводит разрешённый request в тот же typed-command flow, что используется другими клиентами.
+## Broker
 
-Подробнее: [web and broker](web-and-broker.md).
+Browser не получает секреты GitHub, TMDB или модели. Разрешённые изменения отправляются в Cloudflare Broker, который авторизует владельца и переводит запрос в тот же типизированный путь записи.
 
-## Canonical и derived
+Подробнее: [Web и Broker](web-and-broker.md).
 
-**Canonical** — данные, которые должны пережить rebuild и являются долговременной памятью проекта.
+## Контексты пользователя
 
-**Derived** — представления, которые детерминированно строятся поверх canonical данных: retrieval index, taste profiles/context, SQLite runtime database, recommendation context и web manifest.
+Система различает:
 
-Практическое правило: generated/derived data не правится вручную как способ изменить смысл системы.
+- `primary` — основной пользователь;
+- `partner` — партнёр;
+- `couple` — совместный контекст.
 
-## Targets
+`couple` — не «третий пользователь» и не среднее двух оценок. Если вкусы расходятся, это должно оставаться видимым.
 
-Система различает `primary`, `partner` и `couple`:
+## Границы чтения и записи
 
-- `primary` и `partner` — отдельные viewer contexts;
-- `couple` — group target для совместного reasoning, а не «третий человек»;
-- субъективные сигналы и explicit similarity не копируются между targets автоматически;
-- disagreement в couple-контексте показывается явно, а не скрывается средним значением.
+`media_entry_context`, `recommend_context`, `taste_context` и `assess_candidate` только читают данные.
 
-## Read и write boundaries
+Обычная запись выполняется через зарегистрированные типизированные команды. Изменения схем, словаря, workflows и архитектуры нельзя маскировать под обычную запись данных.
 
-Read-only операции (`recommend_context`, `taste_context`, `assess_candidate`) не должны мутировать canonical state.
+## Безопасность
 
-Normal writes используют strict typed commands. Изменения schemas, vocabulary, architecture, workflows и maintenance-policy не маскируются под обычную data-entry операцию.
+- секреты записи не попадают в browser bundle;
+- токены провайдера и модели не публикуются в Pages;
+- публичный manifest не содержит внутренние данные синхронизации;
+- Broker принимает только разрешённые виды записи;
+- media-workflows остаются детерминированными и не запускают LLM внутри CI.
 
-## Security boundaries
+## Дальше
 
-- canonical write credentials не попадают в browser bundle;
-- provider/model secrets не публикуются в Pages;
-- web manifest содержит только данные, допустимые для статической read surface;
-- broker ограничивает поддерживаемые write intents;
-- GitHub Actions media pipeline остаётся deterministic и не зависит от live LLM.
-
-## Куда читать дальше
-
-- [Media model](media-model.md)
-- [Intelligence](intelligence.md)
-- [Write pipeline](write-pipeline.md)
-- [Web and broker](web-and-broker.md)
-- [Repository layout](../reference/repository-layout.md)
-- [Cross-system invariants](../reference/invariants.md)
+- [Модель данных](media-model.md)
+- [Логика вкуса и рекомендаций](intelligence.md)
+- [Путь записи](write-pipeline.md)
+- [Web и Broker](web-and-broker.md)
+- [Структура репозитория](../reference/repository-layout.md)
+- [Инварианты](../reference/invariants.md)
