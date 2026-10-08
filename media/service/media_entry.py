@@ -10,6 +10,7 @@ from media.domain.digests import (
     compute_semantic_input_digest,
     compute_viewer_digest,
     compute_vocabulary_digest,
+    normalize_semantic_text,
 )
 from media.domain.errors import CommandValidationError, NotFoundError, ProviderUnavailableError
 from media.providers.base import MetadataProvider, ProviderCandidate
@@ -124,7 +125,16 @@ def _assert_creation_context(
         if key in identity and identity[key] != value:
             raise CommandValidationError(f"resolved identity mismatch for {key}")
     for key, value in creation.minimum_metadata.items():
-        if key not in external or not _matches_minimum(value, external[key]):
+        actual = external.get(key)
+        if (
+            key == "synopsis_short"
+            and isinstance(value, str)
+            and isinstance(actual, str)
+        ):
+            matches = normalize_semantic_text(value) == normalize_semantic_text(actual)
+        else:
+            matches = key in external and _matches_minimum(value, actual)
+        if not matches:
             raise CommandValidationError(f"minimum metadata mismatch for {key}")
 
 

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
+import unicodedata
 from copy import deepcopy
 from pathlib import Path
 from typing import Any, Mapping
@@ -67,6 +69,31 @@ def compute_vocabulary_digest(media_root: Path) -> str:
     return _sha256(document)
 
 
+def normalize_semantic_text(value: str) -> str:
+    normalized = unicodedata.normalize("NFKC", value).casefold().replace("ё", "е")
+    normalized = (
+        normalized
+        .replace("—", "-")
+        .replace("–", "-")
+        .replace("−", "-")
+        .replace("‐", "-")
+        .replace("‑", "-")
+        .replace("…", "...")
+    )
+    normalized = re.sub(r"\s+", " ", normalized).strip()
+    normalized = re.sub(r"\s*-\s*", " - ", normalized)
+    return re.sub(r"\s+", " ", normalized).strip()
+
+
+def _normalize_semantic_metadata_value(key: str, value: Any) -> Any:
+    if key == "synopsis_short" and isinstance(value, str):
+        return normalize_semantic_text(value)
+    if key in {"genres", "countries"} and isinstance(value, (list, tuple)):
+        items = [deepcopy(item) for item in value]
+        return sorted(items, key=_canonical_json)
+    return deepcopy(value)
+
+
 def semantic_input_projection(document: Mapping[str, Any]) -> Mapping[str, Any]:
     identity = document.get("identity") or {}
     projected_identity = {
@@ -81,9 +108,9 @@ def semantic_input_projection(document: Mapping[str, Any]) -> Mapping[str, Any]:
     effective: dict[str, Any] = {}
     for key in STATIC_METADATA_KEYS:
         if key in external:
-            effective[key] = deepcopy(external[key])
+            effective[key] = _normalize_semantic_metadata_value(key, external[key])
         if key in overrides:
-            effective[key] = deepcopy(overrides[key])
+            effective[key] = _normalize_semantic_metadata_value(key, overrides[key])
 
     return {
         "identity": projected_identity,
