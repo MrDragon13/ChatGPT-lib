@@ -64,8 +64,11 @@ def test_architecture_layer_covers_current_v6_without_historical_specs():
     )
     for english, russian in concepts:
         assert english in overview_lower or russian in overview_lower
-    for phrase in ("primary", "partner", "couple", "semantic fingerprint", "similarity", "WorkRef", "reconciliation"):
-        assert phrase.lower() in media_model.lower()
+    model_lower = media_model.lower()
+    for phrase in ("primary", "partner", "couple", "workref", "reconciliation"):
+        assert phrase in model_lower
+    assert "semantic fingerprint" in model_lower or "семантическ" in model_lower
+    assert "similarity" in model_lower or "сходств" in model_lower
     assert not re.search(r"docs/superpowers/(?:specs|plans)/20\d\d-", overview)
 
 
@@ -73,7 +76,7 @@ def test_intelligence_doc_keeps_similarity_as_evidence_not_preference():
     text = _text("docs/architecture/intelligence.md").lower()
     assert "similarity" in text
     assert "evidence" in text or "свидетель" in text
-    assert "не является preference" in text or "не становится preference" in text
+    assert "не является preference" in text or "не становится preference" in text or "не является предпочтением" in text
     assert "independent" in text or "независим" in text
 
 
@@ -124,8 +127,8 @@ def test_reference_invariants_include_cross_system_safety_rules():
         ("canonical", "канонич"),
         ("generated", "generated"),
         ("typed command", "типизирован"),
-        ("similarity", "similarity"),
-        ("preference", "preference"),
+        ("similarity", "сходств"),
+        ("preference", "предпочт"),
         ("target", "target"),
         ("browser", "браузер"),
         ("secret", "секрет"),
