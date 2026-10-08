@@ -1,0 +1,23 @@
+{
+  "applied_at": "2026-10-08T10:20:52.834389+00:00",
+  "changed_entities": [
+    "masters-of-the-universe-2026"
+  ],
+  "changed_files": [
+    "media/data/works/masters-of-the-universe-2026.yaml",
+    "media/generated/index.jsonl",
+    "media/generated/profiles/couple.yaml",
+    "media/generated/profiles/partner.yaml",
+    "media/generated/profiles/primary.yaml",
+    ".media/operations/f4934307-5252-44dc-a0db-b7cad1080634.json"
+  ],
+  "details": {
+    "created": true,
+    "work_id": "masters-of-the-universe-2026"
+  },
+  "idempotency_key": "ad3e63ce-6256-42ab-befc-5901ff75651c",
+  "operation": "record_media_entry",
+  "operation_id": "f4934307-5252-44dc-a0db-b7cad1080634",
+  "request_digest": "sha256:7ff4c456a189a7389443a2593d8ccbf38b38b66150ef14b80efc308e80126c14",
+  "status": "applied"
+}
