@@ -1,4 +1,6 @@
-# Media Intelligence v6 — reset runbook
+# Archived: Media Intelligence v6 cutover/reset record
+
+> Historical artifact only. The v6 reset completed on 2026-10-07. Current operating rules live in `media/AGENTS.md`, `docs/status/current.md`, and the living architecture/reference docs.
 
 Этот документ фиксирует одноразовый переход со старой активной медиатеки на v6 и правила восстановления после него.
 

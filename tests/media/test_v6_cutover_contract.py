@@ -80,6 +80,8 @@ def test_cutover_archive_and_global_rules_remain_after_library_repopulation():
 def test_post_cutover_runtime_has_no_v5_compatibility_surface():
     root = Path(".")
     assert not (root / "media" / "V5_STATUS.md").exists()
+    assert not (root / "docs" / "runbooks" / "media-v6-reset.md").exists()
+    assert (root / "docs" / "archive" / "media-v6-reset-cutover-2026-10-07.md").exists()
     assert not (root / "media" / "commands" / "schemas" / "record_viewing_feedback.schema.json").exists()
 
     schema_text = (root / "media" / "commands" / "schema.py").read_text(encoding="utf-8")
@@ -89,5 +91,10 @@ def test_post_cutover_runtime_has_no_v5_compatibility_surface():
 
     assert "record_viewing_feedback" not in schema_text
     assert "RecordViewingFeedbackCommand" not in command_text
+    cli_text = (root / "media" / "cli.py").read_text(encoding="utf-8")
+    broker_text = (root / "broker" / "src" / "operations.ts").read_text(encoding="utf-8")
+
     assert "RecordViewingFeedbackCommand" not in transaction_text
+    assert "record_viewing_feedback" not in cli_text
+    assert "record_viewing_feedback" not in broker_text
     assert "complete_reassessment_item" not in path_policy_text

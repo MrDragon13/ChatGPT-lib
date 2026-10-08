@@ -60,7 +60,6 @@
 - **metadata maintenance** — `refresh_work_metadata` для одного произведения; bulk `refresh_metadata(all_movies)` остаётся manual-review операцией.
 - **architecture / vocabulary maintenance** — отдельный developer PR, не обычная пользовательская запись.
 
-Активного legacy reassessment pilot больше нет.
 
 ## Обычная запись: `record_media_entry`
 

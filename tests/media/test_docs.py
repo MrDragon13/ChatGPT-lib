@@ -129,7 +129,17 @@ def test_write_pipeline_documents_final_v6_queue_and_removes_legacy_handoff():
     assert 'security review' in pipeline
 
 
-def test_living_operations_guide_has_no_removed_workflow_names():
-    text = Path("docs/guides/operations.md").read_text(encoding="utf-8")
-    assert "Media Check" not in text
-    assert "Media Auto Merge" not in text
+def test_living_docs_have_no_removed_split_workflow_names():
+    paths = [
+        Path(".media/README.md"),
+        Path("docs/architecture/write-pipeline.md"),
+        Path("docs/architecture/web-and-broker.md"),
+        Path("docs/guides/operations.md"),
+        Path("docs/reference/invariants.md"),
+        Path("docs/reference/repository-layout.md"),
+        Path("docs/status/current.md"),
+    ]
+    for path in paths:
+        text = path.read_text(encoding="utf-8")
+        assert "Media Check" not in text, path
+        assert "Media Auto Merge" not in text, path

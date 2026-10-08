@@ -12,7 +12,7 @@
 - Глобальные explicit preferences пользователя сохранены.
 - Controlled vocabulary, schemas, code, Broker и Web сохранены.
 - `docs/archive/media-library-before-v6-reset-2026-10-07.md` хранит человекочитаемый снимок старой медиатеки, но **не участвует автоматически** в рекомендациях, анализе вкусов или восстановлении canonical data.
-- Legacy reassessment pilot/runtime удалён.
+- В current tree активны только v6 runtime routes; pre-v6 pilot/runtime artifacts отсутствуют.
 
 Пустая библиотека — ожидаемое валидное состояние. Index, profiles, web manifest, doctor, validate и read-contexts должны работать детерминированно и без специальных ручных обходов.
 
@@ -63,7 +63,7 @@ request-only PR
 
 - Все normal auto-merge операции используют `v6_single_runner`.
 - Bulk `refresh_metadata` остаётся `manual_review`.
-- Старые `Media Check` и `Media Auto Merge` удалены.
+- Старый раздельный validation/merge path удалён.
 
 Для developer changes по Python, schemas, workflows, vocabulary, architecture/config, Web/Broker logic остаются полные PR-проверки.
 
@@ -183,6 +183,6 @@ Developer changes считаются проверенными только по�
 - `docs/architecture/web-and-broker.md` — Web/Broker security и write flow;
 - `docs/reference/media-commands.md` — каталог операций;
 - `docs/reference/invariants.md` — обязательные правила;
-- `docs/runbooks/media-v6-reset.md` — одноразовый cutover/reset runbook.
+- `docs/archive/media-v6-reset-cutover-2026-10-07.md` — historical record одноразового cutover/reset.
 
 Dated files под `docs/superpowers/specs/` и `docs/superpowers/plans/` сохраняются как история решений и не заменяют current code, schemas или living docs.

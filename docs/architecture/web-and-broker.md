@@ -66,7 +66,7 @@ Internal preconditions добавляет Broker.
 - `published` — Pages для merge SHA завершены;
 - `failed` — operation не стала authoritative.
 
-Для v6 status не требуется ожидать удалённые `Media Check`/`Media Auto Merge` workflows.
+Status lifecycle опирается на единый v6 `Media Command`, operation receipt, merge и Pages state; старый split-workflow handoff не используется.
 
 ## Web manifest
 

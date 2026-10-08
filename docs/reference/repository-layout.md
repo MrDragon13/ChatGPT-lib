@@ -24,7 +24,7 @@
 - `docs/guides/` — usage/development/operations;
 - `docs/reference/` — compact contracts/layout;
 - `docs/status/` — durable current state;
-- `docs/runbooks/media-v6-reset.md` — cutover/reset record and recovery rules;
+- `docs/archive/media-v6-reset-cutover-2026-10-07.md` — historical cutover/reset record;
 - `docs/archive/media-library-before-v6-reset-2026-10-07.md` — human-readable historical checklist;
 - `docs/superpowers/specs/` и `docs/superpowers/plans/` — historical rationale/plans.
 
@@ -32,7 +32,7 @@ Archive и historical specs не являются runtime input.
 
 ## `media/` canonical/configuration
 
-- `media/data/works/` — canonical works; после reset каталог валидно пуст;
+- `media/data/works/` — canonical works; пустое состояние валидно, но каталог снова наполняется обычными v6 writes;
 - `media/data/collections/` — collections;
 - `media/data/lists/` — target lists;
 - `media/data/interactions/` — recommendation interactions;
@@ -47,7 +47,7 @@ Archive и historical specs не являются runtime input.
 - `media/schemas/` — canonical/read-model schemas;
 - `media/commands/schemas/` — typed request schemas.
 
-`media/pilots/legacy-reassessment-primary.json` и Stage A runtime baselines больше не существуют.
+Pre-v6 pilot/runtime artifacts и Stage A active baselines отсутствуют в current media tree.
 
 ## `media/` code
 
@@ -91,7 +91,7 @@ Stateless server-side boundary для browser writes. Production feedback пре
 - `media-pages.yml` — exact-SHA Pages build/deploy;
 - maintenance/deploy workflows по текущему назначению.
 
-Отдельные `Media Check` и `Media Auto Merge` удалены.
+Старый раздельный validation/merge path удалён; normal typed writes обслуживает `media-command.yml`.
 
 ## `.media/`
 

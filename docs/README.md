@@ -33,6 +33,7 @@ Repository path `docs/superpowers/` содержит historical design/implement
 - `guides/` — как ей пользоваться, разрабатывать и обслуживать;
 - `reference/` — компактные текущие контракты и определения;
 - `status/` — durable current state;
+- `archive/` — historical human records и завершённые one-time runbooks;
 - `superpowers/` — исторические specs/plans.
 
 ## Язык
