@@ -6,15 +6,17 @@ import pytest
 
 from media.commands.schema import parse_command
 from media.domain.changeset import MutationPlan
+from media.domain.digests import compute_viewer_digest
 from media.domain.errors import PathPolicyError, TransactionValidationError
 from media.service.path_policy import verify_changed_paths
 from media.service.transaction import execute_command, preview_command
+from media.tools.common import load_yaml
 from tests.media.fixture_repo import copy_fixture_repo
 
 UUID = "123e4567-e89b-42d3-a456-426614174010"
 
 
-def command(term=None):
+def command(root: Path, term=None):
     update = {"target": "primary", "viewing": {"status": "partial"}}
     if term:
         update["feedback"] = {
@@ -29,13 +31,21 @@ def command(term=None):
                 }
             ],
         }
+    work = load_yaml(root / "media/data/works/arrival-2016.yaml")
     return parse_command(
         {
             "schema_version": 1,
             "operation_id": UUID,
-            "operation": "record_viewing_feedback",
+            "idempotency_key": UUID,
+            "operation": "record_media_entry",
             "work_ref": {"id": "arrival-2016"},
+            "create_if_missing": False,
             "target_updates": [update],
+            "preconditions": {
+                "expected_viewer_digests": {
+                    "primary": compute_viewer_digest(work, "primary"),
+                },
+            },
         }
     )
 
@@ -51,7 +61,7 @@ def _fake_command(operation_id: str = UUID):
 def _plan(*, json_documents=None):
     return MutationPlan(
         operation_id=UUID,
-        operation="record_viewing_feedback",
+        operation="record_media_entry",
         changed_entities=(),
         documents={},
         changed_domains=(),
@@ -90,7 +100,7 @@ def test_empty_plan_remains_no_change(tmp_path, monkeypatch):
 
 def test_same_operation_id_returns_already_applied_without_second_effect(tmp_path):
     root = copy_fixture_repo(tmp_path)
-    cmd = command()
+    cmd = command(root)
     first = execute_command(root, cmd, now=datetime(2026, 10, 1, tzinfo=timezone.utc))
     after = snapshot(root)
     second = execute_command(root, cmd, now=datetime(2026, 10, 2, tzinfo=timezone.utc))
@@ -103,15 +113,15 @@ def test_invalid_vocabulary_term_leaves_original_tree_byte_identical(tmp_path):
     root = copy_fixture_repo(tmp_path)
     before = snapshot(root)
     with pytest.raises(TransactionValidationError):
-        execute_command(root, command("missing.term"), now=datetime(2026, 10, 1, tzinfo=timezone.utc))
+        execute_command(root, command(root, "missing.term"), now=datetime(2026, 10, 1, tzinfo=timezone.utc))
     assert snapshot(root) == before
 
 
 def test_path_policy_rejects_schema_and_service_paths():
     with pytest.raises(PathPolicyError):
-        verify_changed_paths("record_viewing_feedback", ["media/schemas/work.schema.json"])
+        verify_changed_paths("record_media_entry", ["media/schemas/work.schema.json"])
     with pytest.raises(PathPolicyError):
-        verify_changed_paths("record_viewing_feedback", ["media/service/mutate.py"])
+        verify_changed_paths("record_media_entry", ["media/service/mutate.py"])
     verify_changed_paths(
         "record_viewing_feedback",
         [

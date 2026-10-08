@@ -13,6 +13,9 @@ from media.tools.build_index import write_index
 def copy_fixture_repo(tmp_path: Path) -> Path:
     src=Path(__file__).parents[1]/"fixtures"/"media_repo"; dst=tmp_path/"repo"; shutil.copytree(src,dst); project_media=Path(__file__).parents[2]/"media"
     if (project_media/"schemas").exists(): shutil.copytree(project_media/"schemas",dst/"media"/"schemas",dirs_exist_ok=True)
+    if (project_media/"config"/"intelligence.yaml").exists():
+        (dst/"media"/"config").mkdir(parents=True,exist_ok=True)
+        shutil.copy2(project_media/"config"/"intelligence.yaml",dst/"media"/"config"/"intelligence.yaml")
     if (project_media/"vocabulary.yaml").exists(): shutil.copy2(project_media/"vocabulary.yaml",dst/"media"/"vocabulary.yaml")
     return dst
 

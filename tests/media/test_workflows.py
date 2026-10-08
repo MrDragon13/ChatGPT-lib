@@ -230,11 +230,12 @@ def test_single_runner_handles_merge_api_failure_without_set_e_short_circuit():
 
 def test_single_runner_tolerates_stale_pr_head_after_force_push():
     text = _text("media-command.yml")
-    guard = text.split('if [ "$PR_HEAD_SHA" != "$HEAD_SHA" ]; then', 1)[1].split("fi", 1)[0]
+    guard = text.split('if [ "$PR_HEAD_SHA" != "$HEAD_SHA" ]; then', 1)[1].split('if [ "$PR_BASE_SHA" != "$BASE_SHA" ]; then', 1)[0]
     assert 'git ls-remote origin "refs/heads/$BRANCH"' in guard
-    assert "continue" in guard
+    assert 'if [ "$REMOTE_NOW" != "$HEAD_SHA" ]; then' in guard
+    assert "exit 5" in guard
     assert "stale PR API head" in guard
-    assert "exit 5" not in guard
+    assert "continue" in guard
 
 
 def test_single_runner_can_recover_request_from_already_applied_branch():
