@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Наше кино</title>
+  <rect width="64" height="64" rx="15" fill="#080808"/>
+  <path d="M12 16c14-9 28-9 40 0v10c-12-9-26-9-40 0z" fill="#E0B56C"/>
+  <path d="M12 38c14-9 28-9 40 0v10c-12-9-26-9-40 0z" fill="#E0B56C"/>
+  <g fill="#080808">
+    <rect x="17" y="15" width="7" height="7" rx="1.5" transform="rotate(-13 20.5 18.5)"/>
+    <rect x="29" y="12" width="7" height="7" rx="1.5"/>
+    <rect x="41" y="15" width="7" height="7" rx="1.5" transform="rotate(13 44.5 18.5)"/>
+    <rect x="17" y="39" width="7" height="7" rx="1.5" transform="rotate(-13 20.5 42.5)"/>
+    <rect x="29" y="42" width="7" height="7" rx="1.5"/>
+    <rect x="41" y="39" width="7" height="7" rx="1.5" transform="rotate(13 44.5 42.5)"/>
+  </g>
+  <path d="M27 25.5a3 3 0 0 1 4.5-2.6l14 8.5a3 3 0 0 1 0 5.2l-14 8.5A3 3 0 0 1 27 42.5z" fill="#F3F0E8" stroke="#080808" stroke-width="3"/>
+</svg>
