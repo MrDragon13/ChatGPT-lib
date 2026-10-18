@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "operation_id": "addd31aa-5911-4937-8aa3-de8fce35ae05",
+  "idempotency_key": "dfd5f0f7-a879-452b-84f7-7f707fb930cd",
+  "operation": "record_media_entry",
+  "work_ref": {
+    "tmdb_media_type": "movie",
+    "tmdb_id": 7299,
+    "title": "Equilibrium",
+    "year": 2002
+  },
+  "create_if_missing": true,
+  "target_updates": [
+    {
+      "target": "primary",
+      "viewing": {
+        "status": "watched"
+      },
+      "rating": {
+        "score": 9,
+        "source": "explicit",
+        "confidence": "exact"
+      },
+      "reaction": {
+        "value": "liked",
+        "source": "explicit",
+        "confidence": "high"
+      },
+      "feedback": {
+        "summary": "Очень стильная антиутопия, 9/10. Сюжет не особенно оригинальный, но достаточно хороший и интересный; увлекательно наблюдать за развитием главного героя от блюстителя и фактически карателя режима до мятежника. Главная причина высокой оценки — одни из лучших экшен-сцен, которые я вообще видел: выдающаяся постановка стрельбы и драк, красивые ракурсы, общая визуальная стилистика и отличный темп. Боевые сцены других фильмов часто сравниваю именно с «Эквилибриумом» — он для меня эталон экшен-постановки.",
+        "signals": [
+          {
+            "term": "action.strong",
+            "sentiment": "positive",
+            "strength": 3,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "visuals.strong",
+            "sentiment": "positive",
+            "strength": 3,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "entertainment.engaging",
+            "sentiment": "positive",
+            "strength": 2,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "characters.depth",
+            "sentiment": "positive",
+            "strength": 2,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "story.intrigue",
+            "sentiment": "positive",
+            "strength": 2,
+            "source": "explicit",
+            "confidence": "high"
+          }
+        ]
+      }
+    }
+  ],
+  "creation_context": {
+    "provider_identity": {
+      "media_type": "movie",
+      "id": 7299
+    }
+  },
+  "semantic_snapshot": {
+    "traits": [
+      {
+        "term": "genre.science_fiction",
+        "source": "external_source",
+        "confidence": "exact"
+      },
+      {
+        "term": "genre.action",
+        "source": "external_source",
+        "confidence": "exact"
+      },
+      {
+        "term": "genre.thriller",
+        "source": "external_source",
+        "confidence": "exact"
+      },
+      {
+        "term": "action.strong",
+        "source": "llm_inferred",
+        "confidence": "high"
+      },
+      {
+        "term": "tone.dark",
+        "source": "llm_inferred",
+        "confidence": "high"
+      },
+      {
+        "term": "pacing.fast",
+        "source": "llm_inferred",
+        "confidence": "medium"
+      },
+      {
+        "term": "visuals.strong",
+        "source": "llm_inferred",
+        "confidence": "high"
+      },
+      {
+        "term": "characters.depth",
+        "source": "llm_inferred",
+        "confidence": "medium"
+      }
+    ]
+  },
+  "preconditions": {
+    "expected_viewer_digests": {}
+  }
+}
