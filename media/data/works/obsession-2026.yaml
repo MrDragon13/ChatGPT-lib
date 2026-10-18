@@ -1,0 +1,178 @@
+schema_version: 4
+id: obsession-2026
+entity_type: work
+identity:
+  format: movie
+  title_original: Obsession
+  title_ru: Обсессия
+  year: 2026
+  release_date: '2026-05-13'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 1339713
+    imdb: tt37287335
+metadata:
+  external:
+    genres:
+    - genre.thriller
+    runtime_min: 108
+    original_language: en
+    countries:
+    - US
+    - GB
+    production_status: completed
+    synopsis_short: Безнадёжный романтик Беар давно и безответно влюблён в красавицу
+      Ники. Однажды в магазине эзотерики он находит странную безделушку — волшебную
+      палочку. Если её сломать, исполнится твоё заветное желание. Беар загадывает,
+      чтобы Ники любила его больше всех на свете. И девушка правда в него влюбляется.
+      Однако его счастью быстро приходит конец. Парень замечает, что Ники буквально
+      им одержима, а её знаки внимания становятся всё более пугающими. Оказывается,
+      желание парня исполнилось, но совсем не так, как он мечтал.
+    directors:
+    - name: Карри Баркер
+      external_ids:
+        tmdb: 2381985
+    writers:
+    - name: Карри Баркер
+      external_ids:
+        tmdb: 2381985
+    main_cast:
+    - name: Майкл Джонстон
+      character: Bear
+      external_ids:
+        tmdb: 1561370
+    - name: Инди Наварретти
+      character: Nikki
+      external_ids:
+        tmdb: 2638587
+    - name: Купер Томлинсон
+      character: Ian
+      external_ids:
+        tmdb: 2823609
+    - name: Меган Лоулесс
+      character: Sarah
+      external_ids:
+        tmdb: 1519711
+    - name: Энди Рихтер
+      character: Carter
+      external_ids:
+        tmdb: 28637
+    - name: Хейли Фицджеральд
+      character: Viola
+      external_ids:
+        tmdb: 3095494
+    - name: Дэрин Тондер
+      character: Harry
+      external_ids:
+        tmdb: 1352948
+    - name: Энтони Павоне
+      character: Reggie
+      external_ids:
+        tmdb: 4030428
+    - name: Justice
+      character: Joe
+      external_ids:
+        tmdb: 3592074
+    - name: Anthony Casabianca
+      character: Chris
+      external_ids:
+        tmdb: 5618033
+    - name: Chloe Breen
+      character: Ruthie
+      external_ids:
+        tmdb: 5423994
+    - name: Малкольм Келнер
+      character: Bartender
+      external_ids:
+        tmdb: 3729434
+    assets:
+      poster:
+        provider: tmdb
+        path: /cdRHtfzxbpjxD5yOyFrRummb0yO.jpg
+      backdrop:
+        provider: tmdb
+        path: /5lTZyuBTNOfawsfPT8Q0cIg6qAF.jpg
+    external_metrics:
+      tmdb:
+        score: 8.178
+        votes: 6163
+        observed_at: '2026-10-18'
+    provenance:
+      provider: tmdb
+      provider_id: 1339713
+      fetched_at: '2026-10-18T15:37:44.029586Z'
+  semantic:
+    traits:
+    - term: genre.thriller
+      source: external_source
+      confidence: exact
+    - term: tone.dark
+      source: llm_inferred
+      confidence: high
+    - term: content.frightening
+      source: llm_inferred
+      confidence: high
+    - term: content.violence
+      source: llm_inferred
+      confidence: high
+    - term: content.gore
+      source: llm_inferred
+      confidence: medium
+    - term: story.intrigue
+      source: llm_inferred
+      confidence: medium
+    input_digest: sha256:8512fc4e31e3b4ef060f2229935bf3207d332ceeb28075156cd7c6ecfb86ca11
+    vocabulary_digest: sha256:3a84ed82cd767ea408ae0bd3a08e264bcc82fbc4f7e7c12d4c05b4a26b50c493
+    algorithm_version: media-semantic-v1
+provenance:
+  created_at: '2026-10-18'
+  updated_at: '2026-10-18'
+viewer_signals:
+  primary:
+    viewing: &id001
+      status: watched
+    rating: &id002
+      score: 6
+      source: explicit
+      confidence: exact
+    reaction: &id003
+      value: mixed
+      source: explicit
+      confidence: high
+    feedback: &id004
+      summary: 'Фильм показался сильно перехайпованным: все вокруг говорили, что его
+        обязательно надо посмотреть, но само впечатление от просмотра было неприятным.
+        При этом признаю, что как кино он, вероятно, сделан хорошо: главная актриса
+        играет настолько убедительно, а визуальная подача и повествование настолько
+        эффективно вызывают отвращение, что временами буквально физически не хочется
+        смотреть на экран. Обычно смотрю фильмы ради интереса и удовольствия от процесса,
+        а здесь получилось ровно наоборот. Такого опыта в кино не ищу. Досмотрел только
+        потому, что смотрел с женой и фильм рекомендовали друзья. Похожие ощущения
+        неприятия и разочарования из-за общественного ажиотажа вызывала и «Субстанция».'
+      signals:
+      - term: entertainment.engaging
+        sentiment: negative
+        strength: 3
+        source: explicit
+        confidence: high
+      - term: emotion.impact
+        sentiment: mixed
+        strength: 3
+        source: explicit
+        confidence: high
+      - term: visuals.strong
+        sentiment: mixed
+        strength: 2
+        source: explicit
+        confidence: high
+    history:
+    - at: '2026-10-18T15:37:44.104855Z'
+      previous: {}
+      current:
+        viewing: *id001
+        rating: *id002
+        reaction: *id003
+        feedback: *id004
+      event_id: f14219f8-8e4c-4934-89f2-f31448f68e7a
+      material_evidence: true

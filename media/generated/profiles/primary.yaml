@@ -16,10 +16,23 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.16875
-  entertainment.engaging:
-    score: 1.0
+  emotion.impact:
+    score: 0.0
     confidence: medium
-    evidence_count: 2
+    evidence_count: 1
+    evidence:
+    - entity_id: obsession-2026
+      source_target: primary
+      source_kind: feedback
+      sentiment: mixed
+      strength: 3
+      source: explicit
+      confidence: high
+      weight: 2.7
+  entertainment.engaging:
+    score: 0.142857
+    confidence: high
+    evidence_count: 3
     evidence:
     - entity_id: deja-vu-2006
       source_target: primary
@@ -29,6 +42,14 @@ affinities:
       source: explicit
       confidence: high
       weight: 1.8
+    - entity_id: obsession-2026
+      source_target: primary
+      source_kind: feedback
+      sentiment: negative
+      strength: 3
+      source: explicit
+      confidence: high
+      weight: 2.7
     - entity_id: the-sheep-detectives-2026
       source_target: primary
       source_kind: feedback
@@ -254,8 +275,8 @@ affinities:
       weight: 0.16875
   visuals.strong:
     score: 0.0
-    confidence: medium
-    evidence_count: 2
+    confidence: high
+    evidence_count: 3
     evidence:
     - entity_id: deja-vu-2006
       source_target: primary
@@ -273,6 +294,14 @@ affinities:
       source: explicit
       confidence: high
       weight: 1.8
+    - entity_id: obsession-2026
+      source_target: primary
+      source_kind: feedback
+      sentiment: mixed
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
 explicit_preferences:
 - id: genre-secondary-to-execution
   statement: Жанр сам по себе вторичен; качество реализации важнее жанровой принадлежности.
@@ -286,16 +315,16 @@ rules:
   confidence: exact
 constraints: []
 summary:
-  ratings_count: 3
-  reactions_count: 1
+  ratings_count: 4
+  reactions_count: 2
   relations_count: 0
-  viewing_count: 3
+  viewing_count: 4
 evidence:
-  entity_count: 3
+  entity_count: 4
 reanalysis:
   target: primary
   threshold: 5
-  outstanding_count: 3
+  outstanding_count: 4
   due: false
   checkpoint_valid: true
-  current_evidence_digest: sha256:24f62ea78361d45f57cd731d9c104a801c1a2913b51d9c8213f8d0d4f1a42fe3
+  current_evidence_digest: sha256:d80a4d8d3698b95348d16d8fa696f41c96bbc138aa82d2cb1740559fa1aa5d13

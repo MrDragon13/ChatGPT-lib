@@ -25,10 +25,23 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.225
+  emotion.impact:
+    score: 0.0
+    confidence: medium
+    evidence_count: 1
+    evidence:
+    - entity_id: obsession-2026
+      source_target: primary
+      source_kind: feedback
+      sentiment: mixed
+      strength: 3
+      source: explicit
+      confidence: high
+      weight: 2.7
   entertainment.engaging:
-    score: 1.0
+    score: 0.333333
     confidence: high
-    evidence_count: 3
+    evidence_count: 4
     evidence:
     - entity_id: deja-vu-2006
       source_target: primary
@@ -46,6 +59,14 @@ affinities:
       source: explicit
       confidence: high
       weight: 1.8
+    - entity_id: obsession-2026
+      source_target: primary
+      source_kind: feedback
+      sentiment: negative
+      strength: 3
+      source: explicit
+      confidence: high
+      weight: 2.7
     - entity_id: the-sheep-detectives-2026
       source_target: primary
       source_kind: feedback
@@ -351,8 +372,8 @@ affinities:
       weight: 0.225
   visuals.strong:
     score: 0.0
-    confidence: medium
-    evidence_count: 2
+    confidence: high
+    evidence_count: 3
     evidence:
     - entity_id: deja-vu-2006
       source_target: primary
@@ -370,13 +391,21 @@ affinities:
       source: explicit
       confidence: high
       weight: 1.8
+    - entity_id: obsession-2026
+      source_target: primary
+      source_kind: feedback
+      sentiment: mixed
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
 explicit_preferences: []
 rules: []
 constraints: []
 summary:
-  ratings_count: 4
-  reactions_count: 2
+  ratings_count: 5
+  reactions_count: 3
   relations_count: 0
-  viewing_count: 4
+  viewing_count: 5
 evidence:
-  entity_count: 3
+  entity_count: 4
