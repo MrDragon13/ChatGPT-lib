@@ -1,0 +1,23 @@
+{
+  "applied_at": "2026-10-18T16:15:01.306467+00:00",
+  "changed_entities": [
+    "the-martian-2015"
+  ],
+  "changed_files": [
+    "media/data/works/the-martian-2015.yaml",
+    "media/generated/index.jsonl",
+    "media/generated/profiles/couple.yaml",
+    "media/generated/profiles/partner.yaml",
+    "media/generated/profiles/primary.yaml",
+    ".media/operations/68d30a2b-2efa-4ec7-92f3-713714c83959.json"
+  ],
+  "details": {
+    "created": true,
+    "work_id": "the-martian-2015"
+  },
+  "idempotency_key": "a56cc01d-1966-425f-ab91-731a5dfc600b",
+  "operation": "record_media_entry",
+  "operation_id": "68d30a2b-2efa-4ec7-92f3-713714c83959",
+  "request_digest": "sha256:34d699ac10834786442a3251672a59bea88c7421604f3f244f8baeb937e6890c",
+  "status": "applied"
+}

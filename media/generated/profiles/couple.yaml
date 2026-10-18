@@ -136,9 +136,9 @@ affinities:
       confidence: high
       weight: 2.7
   entertainment.engaging:
-    score: 0.4
+    score: 0.454545
     confidence: high
-    evidence_count: 8
+    evidence_count: 9
     evidence:
     - entity_id: backrooms-2026
       source_target: primary
@@ -196,6 +196,14 @@ affinities:
       source: explicit
       confidence: high
       weight: 2.7
+    - entity_id: the-martian-2015
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
     - entity_id: the-sheep-detectives-2026
       source_target: primary
       source_kind: feedback
@@ -239,7 +247,7 @@ affinities:
   genre.adventure:
     score: 1.0
     confidence: low
-    evidence_count: 1
+    evidence_count: 2
     evidence:
     - entity_id: interstellar-2014
       source_target: primary
@@ -250,6 +258,15 @@ affinities:
       trait_source: external_source
       trait_confidence: exact
       weight: 0.5
+    - entity_id: the-martian-2015
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 9.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: external_source
+      trait_confidence: exact
+      weight: 0.375
   genre.comedy:
     score: 1.0
     confidence: low
@@ -276,7 +293,7 @@ affinities:
   genre.drama:
     score: 1.0
     confidence: low
-    evidence_count: 2
+    evidence_count: 3
     evidence:
     - entity_id: green-book-2018
       source_target: primary
@@ -296,6 +313,15 @@ affinities:
       trait_source: external_source
       trait_confidence: exact
       weight: 0.5
+    - entity_id: the-martian-2015
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 9.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: external_source
+      trait_confidence: exact
+      weight: 0.375
   genre.mystery:
     score: 0.333333
     confidence: low
@@ -320,9 +346,9 @@ affinities:
       trait_confidence: exact
       weight: 0.25
   genre.science_fiction:
-    score: 0.939577
+    score: 0.944598
     confidence: medium
-    evidence_count: 6
+    evidence_count: 7
     evidence:
     - entity_id: backrooms-2026
       source_target: primary
@@ -377,6 +403,15 @@ affinities:
       trait_source: external_source
       trait_confidence: exact
       weight: 0.5
+    - entity_id: the-martian-2015
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 9.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: external_source
+      trait_confidence: exact
+      weight: 0.375
   genre.thriller:
     score: 1.0
     confidence: low
@@ -400,6 +435,28 @@ affinities:
       trait_source: external_source
       trait_confidence: exact
       weight: 0.25
+  humor.witty:
+    score: 1.0
+    confidence: medium
+    evidence_count: 2
+    evidence:
+    - entity_id: the-martian-2015
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 3
+      source: explicit
+      confidence: high
+      weight: 2.7
+    - entity_id: the-martian-2015
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 9.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.3375
   narrative.time_loop:
     score: 1.0
     confidence: medium
@@ -439,7 +496,7 @@ affinities:
   pacing.moderate:
     score: 1.0
     confidence: low
-    evidence_count: 1
+    evidence_count: 2
     evidence:
     - entity_id: green-book-2018
       source_target: primary
@@ -450,10 +507,19 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: medium
       weight: 0.13125
+    - entity_id: the-martian-2015
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 9.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: medium
+      weight: 0.2625
   story.intrigue:
-    score: 0.522388
+    score: 0.598326
     confidence: high
-    evidence_count: 10
+    evidence_count: 12
     evidence:
     - entity_id: backrooms-2026
       source_target: primary
@@ -523,6 +589,23 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.45
+    - entity_id: the-martian-2015
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
+    - entity_id: the-martian-2015
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 9.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.3375
     - entity_id: the-sheep-detectives-2026
       source_target: primary
       source_kind: feedback
@@ -576,8 +659,8 @@ affinities:
       weight: 1.8
   story.problem_solving:
     score: 1.0
-    confidence: low
-    evidence_count: 4
+    confidence: medium
+    evidence_count: 6
     evidence:
     - entity_id: deja-vu-2006
       source_target: primary
@@ -615,6 +698,23 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.45
+    - entity_id: the-martian-2015
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 3
+      source: explicit
+      confidence: high
+      weight: 2.7
+    - entity_id: the-martian-2015
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 9.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.3375
   story.twists:
     score: 1.0
     confidence: low
@@ -710,7 +810,7 @@ affinities:
   tone.light:
     score: 1.0
     confidence: medium
-    evidence_count: 3
+    evidence_count: 4
     evidence:
     - entity_id: green-book-2018
       source_target: primary
@@ -721,6 +821,15 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: medium
       weight: 0.13125
+    - entity_id: the-martian-2015
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 9.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: medium
+      weight: 0.2625
     - entity_id: the-sheep-detectives-2026
       source_target: primary
       source_kind: feedback
@@ -849,9 +958,9 @@ explicit_preferences: []
 rules: []
 constraints: []
 summary:
-  ratings_count: 9
-  reactions_count: 7
+  ratings_count: 10
+  reactions_count: 8
   relations_count: 0
-  viewing_count: 9
+  viewing_count: 10
 evidence:
-  entity_count: 8
+  entity_count: 9
