@@ -1,0 +1,23 @@
+{
+  "applied_at": "2026-10-18T16:27:12.076756+00:00",
+  "changed_entities": [
+    "inside-man-2006"
+  ],
+  "changed_files": [
+    "media/data/works/inside-man-2006.yaml",
+    "media/generated/index.jsonl",
+    "media/generated/profiles/couple.yaml",
+    "media/generated/profiles/partner.yaml",
+    "media/generated/profiles/primary.yaml",
+    ".media/operations/996ef29a-b80a-4710-a251-1ba7a62509a9.json"
+  ],
+  "details": {
+    "created": true,
+    "work_id": "inside-man-2006"
+  },
+  "idempotency_key": "3e573adb-3d7e-49e3-a265-e169832073bf",
+  "operation": "record_media_entry",
+  "operation_id": "996ef29a-b80a-4710-a251-1ba7a62509a9",
+  "request_digest": "sha256:dacbedbbcaa2263f41406cf9326b6a725954a0685d4550f311dbcca15e3427f4",
+  "status": "applied"
+}
