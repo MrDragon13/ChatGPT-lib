@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "operation_id": "8e36a94a-8b4d-41c9-b750-259ead403f97",
+  "idempotency_key": "07f8da32-3ec4-4978-b4e5-7a06aa245e50",
+  "operation": "record_media_entry",
+  "work_ref": {
+    "tmdb_media_type": "movie",
+    "tmdb_id": 157336,
+    "title": "Interstellar",
+    "year": 2014
+  },
+  "create_if_missing": true,
+  "target_updates": [
+    {
+      "target": "primary",
+      "viewing": {
+        "status": "watched"
+      },
+      "rating": {
+        "score": 10,
+        "source": "explicit",
+        "confidence": "exact"
+      },
+      "reaction": {
+        "value": "liked",
+        "source": "explicit",
+        "confidence": "high"
+      },
+      "feedback": {
+        "summary": "Шикарный фильм, который я считаю эталоном научной фантастики: понравилось буквально всё — графика, визуальная картинка, атмосфера, история и тщательно продуманная вселенная. Особенно ценю стремление к научной достоверности: насколько знаю, создатели консультировались с физиками, чтобы всё правильно отобразить. Напряжённые сцены вместе с музыкой Ханса Циммера производят сильное впечатление. Смотрел несколько раз и думаю, что пересмотрю ещё.",
+        "signals": [
+          {
+            "term": "genre.science_fiction",
+            "sentiment": "positive",
+            "strength": 3,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "visuals.strong",
+            "sentiment": "positive",
+            "strength": 3,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "atmosphere.immersive",
+            "sentiment": "positive",
+            "strength": 3,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "worldbuilding.strong",
+            "sentiment": "positive",
+            "strength": 3,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "story.intrigue",
+            "sentiment": "positive",
+            "strength": 3,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "entertainment.engaging",
+            "sentiment": "positive",
+            "strength": 3,
+            "source": "explicit",
+            "confidence": "high"
+          }
+        ]
+      }
+    }
+  ],
+  "creation_context": {
+    "provider_identity": {
+      "media_type": "movie",
+      "id": 157336
+    }
+  },
+  "semantic_snapshot": {
+    "traits": [
+      {
+        "term": "genre.science_fiction",
+        "source": "external_source",
+        "confidence": "exact"
+      },
+      {
+        "term": "genre.drama",
+        "source": "external_source",
+        "confidence": "exact"
+      },
+      {
+        "term": "genre.adventure",
+        "source": "external_source",
+        "confidence": "exact"
+      },
+      {
+        "term": "worldbuilding.strong",
+        "source": "llm_inferred",
+        "confidence": "high"
+      },
+      {
+        "term": "story.problem_solving",
+        "source": "llm_inferred",
+        "confidence": "high"
+      },
+      {
+        "term": "story.intrigue",
+        "source": "llm_inferred",
+        "confidence": "high"
+      },
+      {
+        "term": "tone.serious",
+        "source": "llm_inferred",
+        "confidence": "high"
+      },
+      {
+        "term": "atmosphere.immersive",
+        "source": "llm_inferred",
+        "confidence": "high"
+      }
+    ]
+  },
+  "preconditions": {
+    "expected_viewer_digests": {}
+  }
+}
