@@ -1,0 +1,198 @@
+schema_version: 4
+id: interstellar-2014
+entity_type: work
+identity:
+  format: movie
+  title_original: Interstellar
+  title_ru: Интерстеллар
+  year: 2014
+  release_date: '2014-11-04'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 157336
+    imdb: tt0816692
+metadata:
+  external:
+    genres:
+    - genre.adventure
+    - genre.drama
+    - genre.science_fiction
+    runtime_min: 169
+    original_language: en
+    countries:
+    - GB
+    - US
+    production_status: completed
+    synopsis_short: Когда засуха, пыльные бури и вымирание растений приводят человечество
+      к продовольственному кризису, коллектив исследователей и учёных отправляется
+      сквозь червоточину в путешествие, чтобы превзойти прежние ограничения для космических
+      путешествий человека и найти планету с подходящими для человечества условиями.
+    directors:
+    - name: Кристофер Нолан
+      external_ids:
+        tmdb: 525
+    writers:
+    - name: Джонатан Нолан
+      external_ids:
+        tmdb: 527
+    - name: Кристофер Нолан
+      external_ids:
+        tmdb: 525
+    main_cast:
+    - name: Мэттью Макконахи
+      character: Cooper
+      external_ids:
+        tmdb: 10297
+    - name: Энн Хэтэуэй
+      character: Brand
+      external_ids:
+        tmdb: 1813
+    - name: Майкл Кейн
+      character: Professor Brand
+      external_ids:
+        tmdb: 3895
+    - name: Джессика Честейн
+      character: Murph
+      external_ids:
+        tmdb: 83002
+    - name: Кейси Аффлек
+      character: Tom
+      external_ids:
+        tmdb: 1893
+    - name: Уэс Бентли
+      character: Doyle
+      external_ids:
+        tmdb: 8210
+    - name: Тофер Грейс
+      character: Getty
+      external_ids:
+        tmdb: 17052
+    - name: Маккензи Фой
+      character: Murph (10 Yrs.)
+      external_ids:
+        tmdb: 851784
+    - name: Эллен Бёрстин
+      character: Murph (older)
+      external_ids:
+        tmdb: 9560
+    - name: Джон Литгоу
+      character: Donald
+      external_ids:
+        tmdb: 12074
+    - name: Билл Ирвин
+      character: TARS (voice)
+      external_ids:
+        tmdb: 58549
+    - name: Дэвид Джеси
+      character: Romilly
+      external_ids:
+        tmdb: 55411
+    assets:
+      poster:
+        provider: tmdb
+        path: /vReLRjDV9XPhiOSEW7QWow4DXwf.jpg
+      backdrop:
+        provider: tmdb
+        path: /8sNiAPPYU14PUepFNeSNGUTiHW.jpg
+    external_metrics:
+      tmdb:
+        score: 8.491
+        votes: 41521
+        observed_at: '2026-10-18'
+    provenance:
+      provider: tmdb
+      provider_id: 157336
+      fetched_at: '2026-10-18T16:09:05.905178Z'
+  semantic:
+    traits:
+    - term: genre.science_fiction
+      source: external_source
+      confidence: exact
+    - term: genre.drama
+      source: external_source
+      confidence: exact
+    - term: genre.adventure
+      source: external_source
+      confidence: exact
+    - term: worldbuilding.strong
+      source: llm_inferred
+      confidence: high
+    - term: story.problem_solving
+      source: llm_inferred
+      confidence: high
+    - term: story.intrigue
+      source: llm_inferred
+      confidence: high
+    - term: tone.serious
+      source: llm_inferred
+      confidence: high
+    - term: atmosphere.immersive
+      source: llm_inferred
+      confidence: high
+    input_digest: sha256:adf1e637354d67628f2397f7be84446bb479cff60d199846a795ebc8a2798f22
+    vocabulary_digest: sha256:3a84ed82cd767ea408ae0bd3a08e264bcc82fbc4f7e7c12d4c05b4a26b50c493
+    algorithm_version: media-semantic-v1
+provenance:
+  created_at: '2026-10-18'
+  updated_at: '2026-10-18'
+viewer_signals:
+  primary:
+    viewing: &id001
+      status: watched
+    rating: &id002
+      score: 10
+      source: explicit
+      confidence: exact
+    reaction: &id003
+      value: liked
+      source: explicit
+      confidence: high
+    feedback: &id004
+      summary: 'Шикарный фильм, который я считаю эталоном научной фантастики: понравилось
+        буквально всё — графика, визуальная картинка, атмосфера, история и тщательно
+        продуманная вселенная. Особенно ценю стремление к научной достоверности: насколько
+        знаю, создатели консультировались с физиками, чтобы всё правильно отобразить.
+        Напряжённые сцены вместе с музыкой Ханса Циммера производят сильное впечатление.
+        Смотрел несколько раз и думаю, что пересмотрю ещё.'
+      signals:
+      - term: genre.science_fiction
+        sentiment: positive
+        strength: 3
+        source: explicit
+        confidence: high
+      - term: visuals.strong
+        sentiment: positive
+        strength: 3
+        source: explicit
+        confidence: high
+      - term: atmosphere.immersive
+        sentiment: positive
+        strength: 3
+        source: explicit
+        confidence: high
+      - term: worldbuilding.strong
+        sentiment: positive
+        strength: 3
+        source: explicit
+        confidence: high
+      - term: story.intrigue
+        sentiment: positive
+        strength: 3
+        source: explicit
+        confidence: high
+      - term: entertainment.engaging
+        sentiment: positive
+        strength: 3
+        source: explicit
+        confidence: high
+    history:
+    - at: '2026-10-18T16:09:06.028304Z'
+      previous: {}
+      current:
+        viewing: *id001
+        rating: *id002
+        reaction: *id003
+        feedback: *id004
+      event_id: 07f8da32-3ec4-4978-b4e5-7a06aa245e50
+      material_evidence: true

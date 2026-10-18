@@ -1,0 +1,23 @@
+{
+  "applied_at": "2026-10-18T16:09:07.101141+00:00",
+  "changed_entities": [
+    "interstellar-2014"
+  ],
+  "changed_files": [
+    "media/data/works/interstellar-2014.yaml",
+    "media/generated/index.jsonl",
+    "media/generated/profiles/couple.yaml",
+    "media/generated/profiles/partner.yaml",
+    "media/generated/profiles/primary.yaml",
+    ".media/operations/8e36a94a-8b4d-41c9-b750-259ead403f97.json"
+  ],
+  "details": {
+    "created": true,
+    "work_id": "interstellar-2014"
+  },
+  "idempotency_key": "07f8da32-3ec4-4978-b4e5-7a06aa245e50",
+  "operation": "record_media_entry",
+  "operation_id": "8e36a94a-8b4d-41c9-b750-259ead403f97",
+  "request_digest": "sha256:7e6ba6b1dd137d0bdf3b9228d77acbb7fa762322c888803341c8d5dbf91f3c8b",
+  "status": "applied"
+}

@@ -16,9 +16,9 @@ affinities:
       confidence: high
       weight: 2.7
   atmosphere.immersive:
-    score: 0.93722
-    confidence: medium
-    evidence_count: 2
+    score: 0.970526
+    confidence: high
+    evidence_count: 4
     evidence:
     - entity_id: backrooms-2026
       source_target: primary
@@ -37,6 +37,23 @@ affinities:
       source: explicit
       confidence: high
       weight: 2.7
+    - entity_id: interstellar-2014
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 3
+      source: explicit
+      confidence: high
+      weight: 2.7
+    - entity_id: interstellar-2014
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 10.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.45
   characters.depth:
     score: 1.0
     confidence: medium
@@ -119,9 +136,9 @@ affinities:
       confidence: high
       weight: 2.7
   entertainment.engaging:
-    score: 0.294118
+    score: 0.4
     confidence: high
-    evidence_count: 7
+    evidence_count: 8
     evidence:
     - entity_id: backrooms-2026
       source_target: primary
@@ -163,6 +180,14 @@ affinities:
       source: explicit
       confidence: high
       weight: 1.8
+    - entity_id: interstellar-2014
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 3
+      source: explicit
+      confidence: high
+      weight: 2.7
     - entity_id: obsession-2026
       source_target: primary
       source_kind: feedback
@@ -211,6 +236,20 @@ affinities:
       trait_source: external_source
       trait_confidence: exact
       weight: 0.375
+  genre.adventure:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: interstellar-2014
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 10.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: external_source
+      trait_confidence: exact
+      weight: 0.5
   genre.comedy:
     score: 1.0
     confidence: low
@@ -237,7 +276,7 @@ affinities:
   genre.drama:
     score: 1.0
     confidence: low
-    evidence_count: 1
+    evidence_count: 2
     evidence:
     - entity_id: green-book-2018
       source_target: primary
@@ -248,6 +287,15 @@ affinities:
       trait_source: external_source
       trait_confidence: exact
       weight: 0.1875
+    - entity_id: interstellar-2014
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 10.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: external_source
+      trait_confidence: exact
+      weight: 0.5
   genre.mystery:
     score: 0.333333
     confidence: low
@@ -272,9 +320,9 @@ affinities:
       trait_confidence: exact
       weight: 0.25
   genre.science_fiction:
-    score: 0.733333
-    confidence: low
-    evidence_count: 4
+    score: 0.939577
+    confidence: medium
+    evidence_count: 6
     evidence:
     - entity_id: backrooms-2026
       source_target: primary
@@ -312,6 +360,23 @@ affinities:
       trait_source: external_source
       trait_confidence: exact
       weight: 0.375
+    - entity_id: interstellar-2014
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 3
+      source: explicit
+      confidence: high
+      weight: 2.7
+    - entity_id: interstellar-2014
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 10.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: external_source
+      trait_confidence: exact
+      weight: 0.5
   genre.thriller:
     score: 1.0
     confidence: low
@@ -386,9 +451,9 @@ affinities:
       trait_confidence: medium
       weight: 0.13125
   story.intrigue:
-    score: 0.337931
+    score: 0.522388
     confidence: high
-    evidence_count: 8
+    evidence_count: 10
     evidence:
     - entity_id: backrooms-2026
       source_target: primary
@@ -441,6 +506,23 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.3375
+    - entity_id: interstellar-2014
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 3
+      source: explicit
+      confidence: high
+      weight: 2.7
+    - entity_id: interstellar-2014
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 10.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.45
     - entity_id: the-sheep-detectives-2026
       source_target: primary
       source_kind: feedback
@@ -495,7 +577,7 @@ affinities:
   story.problem_solving:
     score: 1.0
     confidence: low
-    evidence_count: 3
+    evidence_count: 4
     evidence:
     - entity_id: deja-vu-2006
       source_target: primary
@@ -524,6 +606,15 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.3375
+    - entity_id: interstellar-2014
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 10.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.45
   story.twists:
     score: 1.0
     confidence: low
@@ -650,7 +741,7 @@ affinities:
   tone.serious:
     score: 1.0
     confidence: low
-    evidence_count: 2
+    evidence_count: 3
     evidence:
     - entity_id: deja-vu-2006
       source_target: primary
@@ -670,10 +761,19 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.225
+    - entity_id: interstellar-2014
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 10.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.45
   visuals.strong:
-    score: 0.4
+    score: 0.538462
     confidence: high
-    evidence_count: 5
+    evidence_count: 6
     evidence:
     - entity_id: deja-vu-2006
       source_target: primary
@@ -699,6 +799,14 @@ affinities:
       source: explicit
       confidence: high
       weight: 1.8
+    - entity_id: interstellar-2014
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 3
+      source: explicit
+      confidence: high
+      weight: 2.7
     - entity_id: masters-of-the-universe-2026
       source_target: primary
       source_kind: feedback
@@ -715,13 +823,35 @@ affinities:
       source: explicit
       confidence: high
       weight: 1.8
+  worldbuilding.strong:
+    score: 1.0
+    confidence: medium
+    evidence_count: 2
+    evidence:
+    - entity_id: interstellar-2014
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 3
+      source: explicit
+      confidence: high
+      weight: 2.7
+    - entity_id: interstellar-2014
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 10.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.45
 explicit_preferences: []
 rules: []
 constraints: []
 summary:
-  ratings_count: 8
-  reactions_count: 6
+  ratings_count: 9
+  reactions_count: 7
   relations_count: 0
-  viewing_count: 8
+  viewing_count: 9
 evidence:
-  entity_count: 7
+  entity_count: 8
