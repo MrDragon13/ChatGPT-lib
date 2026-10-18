@@ -1,0 +1,23 @@
+{
+  "applied_at": "2026-10-18T16:32:09.744877+00:00",
+  "changed_entities": [
+    "the-grand-budapest-hotel-2014"
+  ],
+  "changed_files": [
+    "media/data/works/the-grand-budapest-hotel-2014.yaml",
+    "media/generated/index.jsonl",
+    "media/generated/profiles/couple.yaml",
+    "media/generated/profiles/partner.yaml",
+    "media/generated/profiles/primary.yaml",
+    ".media/operations/0db0b9d8-92eb-42f2-9eb3-7fdcb3b0a101.json"
+  ],
+  "details": {
+    "created": true,
+    "work_id": "the-grand-budapest-hotel-2014"
+  },
+  "idempotency_key": "749478d3-26e5-44c5-bcb8-62ead7839961",
+  "operation": "record_media_entry",
+  "operation_id": "0db0b9d8-92eb-42f2-9eb3-7fdcb3b0a101",
+  "request_digest": "sha256:32deccaaefca4432dcd4b4f2f906a18ea802f4afb1fcd11ccdd5793a2e6e726f",
+  "status": "applied"
+}

@@ -466,6 +466,19 @@ affinities:
       trait_source: external_source
       trait_confidence: exact
       weight: 0.125
+  humor.absurd:
+    score: -1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: the-grand-budapest-hotel-2014
+      source_target: primary
+      source_kind: feedback
+      sentiment: negative
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
   humor.witty:
     score: 1.0
     confidence: high
@@ -992,9 +1005,9 @@ affinities:
       trait_confidence: high
       weight: 0.45
   visuals.strong:
-    score: 0.444444
+    score: 0.5
     confidence: high
-    evidence_count: 8
+    evidence_count: 9
     evidence:
     - entity_id: deja-vu-2006
       source_target: primary
@@ -1060,6 +1073,14 @@ affinities:
       source: explicit
       confidence: high
       weight: 2.7
+    - entity_id: the-grand-budapest-hotel-2014
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
   worldbuilding.strong:
     score: 1.0
     confidence: medium
@@ -1104,16 +1125,16 @@ rules:
   confidence: exact
 constraints: []
 summary:
-  ratings_count: 11
+  ratings_count: 12
   reactions_count: 9
   relations_count: 0
-  viewing_count: 11
+  viewing_count: 12
 evidence:
-  entity_count: 11
+  entity_count: 12
 reanalysis:
   target: primary
   threshold: 5
-  outstanding_count: 11
+  outstanding_count: 12
   due: true
   checkpoint_valid: true
-  current_evidence_digest: sha256:e25b707be8bbb4067b6ced5de3c29fa8c894d36bfb4eefe53fc737e4f5aa19f1
+  current_evidence_digest: sha256:a5f813ef1515711dbd5ca6fe4d70dcb23a3bc8ce0ff156b3ad66c58f19785932

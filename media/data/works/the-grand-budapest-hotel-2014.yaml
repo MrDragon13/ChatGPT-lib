@@ -1,0 +1,202 @@
+schema_version: 4
+id: the-grand-budapest-hotel-2014
+entity_type: work
+identity:
+  format: movie
+  title_original: The Grand Budapest Hotel
+  title_ru: Отель «Гранд Будапешт»
+  year: 2014
+  release_date: '2014-02-26'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 120467
+    imdb: tt2278388
+metadata:
+  external:
+    genres:
+    - genre.comedy
+    - genre.drama
+    runtime_min: 100
+    original_language: en
+    countries:
+    - US
+    - DE
+    production_status: completed
+    synopsis_short: Картина расскажет о легендарном консьерже популярного европейского
+      отеля и проследит за его жизнью между двумя мировыми войнами, а также за его
+      дружбой с юным сотрудником, который становится его протеже. Сюжет включает в себя
+      кражу бесценной картины эпохи Возрождения, борьбу за огромное наследство и потрясения,
+      постигшие Европу во время первой половины XX века.
+    directors:
+    - name: Уэс Андерсон
+      external_ids:
+        tmdb: 5655
+    writers:
+    - name: Уэс Андерсон
+      external_ids:
+        tmdb: 5655
+    main_cast:
+    - name: Рэйф Файнс
+      character: M. Gustave
+      external_ids:
+        tmdb: 5469
+    - name: Ф. Мюррей Абрахам
+      character: Mr. Moustafa
+      external_ids:
+        tmdb: 1164
+    - name: Тони Револори
+      character: Zero
+      external_ids:
+        tmdb: 1291350
+    - name: Эдриен Броуди
+      character: Dmitri
+      external_ids:
+        tmdb: 3490
+    - name: Уиллем Дефо
+      character: Jopling
+      external_ids:
+        tmdb: 5293
+    - name: Матьё Амальрик
+      character: Serge X.
+      external_ids:
+        tmdb: 8789
+    - name: Джефф Голдблюм
+      character: Deputy Kovacs
+      external_ids:
+        tmdb: 4785
+    - name: Харви Кейтель
+      character: Ludwig
+      external_ids:
+        tmdb: 1037
+    - name: Джуд Лоу
+      character: Young Author
+      external_ids:
+        tmdb: 9642
+    - name: Билл Мюррей
+      character: M. Ivan
+      external_ids:
+        tmdb: 1532
+    - name: Эдвард Нортон
+      character: Henckels
+      external_ids:
+        tmdb: 819
+    - name: Сирша Ронан
+      character: Agatha
+      external_ids:
+        tmdb: 36592
+    assets:
+      poster:
+        provider: tmdb
+        path: /5qFxj03eBrkI0bUiGIonb4e0AI4.jpg
+      backdrop:
+        provider: tmdb
+        path: /jK65srQczOKTpW62wPxwwKztGgE.jpg
+    external_metrics:
+      tmdb:
+        score: 8.026
+        votes: 16621
+        observed_at: '2026-10-18'
+    provenance:
+      provider: tmdb
+      provider_id: 120467
+      fetched_at: '2026-10-18T16:32:08.518250Z'
+  semantic:
+    traits:
+    - term: genre.comedy
+      source: external_source
+      confidence: exact
+    - term: genre.drama
+      source: external_source
+      confidence: exact
+    - term: humor.absurd
+      source: llm_inferred
+      confidence: high
+    - term: visuals.strong
+      source: llm_inferred
+      confidence: high
+    - term: tone.light
+      source: llm_inferred
+      confidence: high
+    - term: structure.ensemble
+      source: llm_inferred
+      confidence: medium
+    - term: story.intrigue
+      source: llm_inferred
+      confidence: medium
+    input_digest: sha256:c72ec901babe12c99b446a8ef67b2ab383d809441693baaefad482ff9f86a5c9
+    vocabulary_digest: sha256:3a84ed82cd767ea408ae0bd3a08e264bcc82fbc4f7e7c12d4c05b4a26b50c493
+    algorithm_version: media-semantic-v1
+provenance:
+  created_at: '2026-10-18'
+  updated_at: '2026-10-18'
+viewer_signals:
+  primary:
+    viewing: &id001
+      status: watched
+    rating: &id002
+      score: 6
+      source: explicit
+      confidence: exact
+    feedback: &id003
+      summary: У фильма очень выразительный собственный стиль, идея и характерная
+        подача; актёры играют хорошо, всё выглядит органично в рамках созданного мира.
+        Однако лёгкий абсурдный юмор по большей части не зашёл, а с сюжетом возникло
+        личное несовпадение. Итоговая оценка 6/10.
+      signals:
+      - term: visuals.strong
+        sentiment: positive
+        strength: 2
+        source: explicit
+        confidence: high
+      - term: humor.absurd
+        sentiment: negative
+        strength: 2
+        source: explicit
+        confidence: high
+    history:
+    - at: '2026-10-18T16:32:08.636012Z'
+      previous: {}
+      current:
+        viewing: *id001
+        rating: *id002
+        feedback: *id003
+      event_id: 749478d3-26e5-44c5-bcb8-62ead7839961
+      material_evidence: true
+  partner:
+    viewing: &id004
+      status: watched
+    rating: &id005
+      score: 8
+      source: explicit_approx
+      confidence: medium
+    reaction: &id006
+      value: liked
+      source: explicit
+      confidence: high
+    feedback: &id007
+      summary: 'Со слов мужа, фильм очень понравился: жена сначала посмотрела его
+        самостоятельно и много смеялась, затем пересмотрела вместе с ним и второй
+        раз тоже смотрела с интересом. Муж предполагает оценку около 8/10; точную
+        оценку она сама не называла.'
+      signals:
+      - term: humor.absurd
+        sentiment: positive
+        strength: 2
+        source: explicit
+        confidence: high
+      - term: entertainment.engaging
+        sentiment: positive
+        strength: 2
+        source: explicit
+        confidence: high
+    history:
+    - at: '2026-10-18T16:32:08.636636Z'
+      previous: {}
+      current:
+        viewing: *id004
+        rating: *id005
+        reaction: *id006
+        feedback: *id007
+      event_id: 749478d3-26e5-44c5-bcb8-62ead7839961
+      material_evidence: true
