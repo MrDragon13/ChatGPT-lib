@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "operation_id": "cf88a861-d0d3-4b28-bbee-367319442060",
+  "idempotency_key": "5f90d477-2e1c-41eb-8dd1-b0584a032014",
+  "operation": "record_media_entry",
+  "work_ref": {
+    "tmdb_media_type": "movie",
+    "tmdb_id": 1083381,
+    "title": "Backrooms",
+    "year": 2026
+  },
+  "create_if_missing": true,
+  "target_updates": [
+    {
+      "target": "primary",
+      "viewing": {
+        "status": "watched"
+      },
+      "rating": {
+        "score": 4,
+        "source": "explicit",
+        "confidence": "exact"
+      },
+      "reaction": {
+        "value": "disliked",
+        "source": "explicit",
+        "confidence": "high"
+      },
+      "feedback": {
+        "summary": "Очень странный фильм, который мне не понравился; интернет-хайп вокруг него кажется раздутым. Чтобы понимать происходящее и множество отсылок, зрителю, по моему ощущению, нужно заранее изучить большой объём лора в интернете: авторы почти ничего не объясняют внутри самого фильма. История пытается удерживать интерес только тем, что ты не понимаешь происходящего, хотя по сути мало что происходит. Весь фильм держит в неведении, а концовка просто обрывает повествование и не отвечает на вопросы. Мне не нравится загадочность ради самой загадочности без содержательного развития и объяснений.",
+        "signals": [
+          {
+            "term": "story.intrigue",
+            "sentiment": "negative",
+            "strength": 3,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "story.payoff",
+            "sentiment": "negative",
+            "strength": 3,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "entertainment.engaging",
+            "sentiment": "negative",
+            "strength": 3,
+            "source": "explicit",
+            "confidence": "high"
+          }
+        ]
+      }
+    }
+  ],
+  "creation_context": {
+    "provider_identity": {
+      "media_type": "movie",
+      "id": 1083381
+    }
+  },
+  "semantic_snapshot": {
+    "traits": [
+      {
+        "term": "genre.science_fiction",
+        "source": "external_source",
+        "confidence": "exact"
+      },
+      {
+        "term": "genre.mystery",
+        "source": "external_source",
+        "confidence": "exact"
+      },
+      {
+        "term": "tone.dark",
+        "source": "llm_inferred",
+        "confidence": "high"
+      },
+      {
+        "term": "structure.mystery",
+        "source": "llm_inferred",
+        "confidence": "high"
+      },
+      {
+        "term": "content.frightening",
+        "source": "llm_inferred",
+        "confidence": "high"
+      },
+      {
+        "term": "atmosphere.immersive",
+        "source": "llm_inferred",
+        "confidence": "medium"
+      }
+    ]
+  },
+  "preconditions": {
+    "expected_viewer_digests": {}
+  }
+}
