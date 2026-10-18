@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "operation_id": "0db0b9d8-92eb-42f2-9eb3-7fdcb3b0a101",
+  "idempotency_key": "749478d3-26e5-44c5-bcb8-62ead7839961",
+  "operation": "record_media_entry",
+  "work_ref": {
+    "tmdb_media_type": "movie",
+    "tmdb_id": 120467,
+    "title": "The Grand Budapest Hotel",
+    "year": 2014
+  },
+  "create_if_missing": true,
+  "target_updates": [
+    {
+      "target": "primary",
+      "viewing": {
+        "status": "watched"
+      },
+      "rating": {
+        "score": 6,
+        "source": "explicit",
+        "confidence": "exact"
+      },
+      "feedback": {
+        "summary": "У фильма очень выразительный собственный стиль, идея и характерная подача; актёры играют хорошо, всё выглядит органично в рамках созданного мира. Однако лёгкий абсурдный юмор по большей части не зашёл, а с сюжетом возникло личное несовпадение. Итоговая оценка 6/10.",
+        "signals": [
+          {
+            "term": "visuals.strong",
+            "sentiment": "positive",
+            "strength": 2,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "humor.absurd",
+            "sentiment": "negative",
+            "strength": 2,
+            "source": "explicit",
+            "confidence": "high"
+          }
+        ]
+      }
+    },
+    {
+      "target": "partner",
+      "viewing": {
+        "status": "watched"
+      },
+      "rating": {
+        "score": 8,
+        "source": "explicit_approx",
+        "confidence": "medium"
+      },
+      "reaction": {
+        "value": "liked",
+        "source": "explicit",
+        "confidence": "high"
+      },
+      "feedback": {
+        "summary": "Со слов мужа, фильм очень понравился: жена сначала посмотрела его самостоятельно и много смеялась, затем пересмотрела вместе с ним и второй раз тоже смотрела с интересом. Муж предполагает оценку около 8/10; точную оценку она сама не называла.",
+        "signals": [
+          {
+            "term": "humor.absurd",
+            "sentiment": "positive",
+            "strength": 2,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "entertainment.engaging",
+            "sentiment": "positive",
+            "strength": 2,
+            "source": "explicit",
+            "confidence": "high"
+          }
+        ]
+      }
+    }
+  ],
+  "creation_context": {
+    "provider_identity": {
+      "media_type": "movie",
+      "id": 120467
+    }
+  },
+  "semantic_snapshot": {
+    "traits": [
+      {
+        "term": "genre.comedy",
+        "source": "external_source",
+        "confidence": "exact"
+      },
+      {
+        "term": "genre.drama",
+        "source": "external_source",
+        "confidence": "exact"
+      },
+      {
+        "term": "humor.absurd",
+        "source": "llm_inferred",
+        "confidence": "high"
+      },
+      {
+        "term": "visuals.strong",
+        "source": "llm_inferred",
+        "confidence": "high"
+      },
+      {
+        "term": "tone.light",
+        "source": "llm_inferred",
+        "confidence": "high"
+      },
+      {
+        "term": "structure.ensemble",
+        "source": "llm_inferred",
+        "confidence": "medium"
+      },
+      {
+        "term": "story.intrigue",
+        "source": "llm_inferred",
+        "confidence": "medium"
+      }
+    ]
+  },
+  "preconditions": {
+    "expected_viewer_digests": {}
+  }
+}
