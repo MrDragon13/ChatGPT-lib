@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "operation_id": "161dd509-bc70-43f5-8f53-8d8fdbc8e2b4",
+  "idempotency_key": "e665322e-98f9-418f-9ef2-9437791289e0",
+  "operation": "record_media_entry",
+  "work_ref": {
+    "tmdb_media_type": "movie",
+    "tmdb_id": 1301421,
+    "title": "The Sheep Detectives",
+    "year": 2026
+  },
+  "create_if_missing": true,
+  "target_updates": [
+    {
+      "target": "primary",
+      "viewing": {
+        "status": "watched"
+      },
+      "rating": {
+        "score": 8,
+        "source": "explicit",
+        "confidence": "exact"
+      },
+      "reaction": {
+        "value": "liked",
+        "source": "explicit",
+        "confidence": "high"
+      },
+      "feedback": {
+        "summary": "Очень милый, добрый фильм с очаровательными овечками, который интересно смотреть. Детективная линия вполне неплохая, если не слишком вдумываться; личность убийцы раскрывается для зрителя практически одновременно с главными героями.",
+        "signals": [
+          {
+            "term": "entertainment.engaging",
+            "sentiment": "positive",
+            "strength": 2,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "story.intrigue",
+            "sentiment": "positive",
+            "strength": 1,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "tone.light",
+            "sentiment": "positive",
+            "strength": 2,
+            "source": "explicit",
+            "confidence": "high"
+          }
+        ]
+      }
+    }
+  ],
+  "creation_context": {
+    "provider_identity": {
+      "media_type": "movie",
+      "id": 1301421
+    }
+  },
+  "semantic_snapshot": {
+    "traits": [
+      {
+        "term": "genre.comedy",
+        "source": "external_source",
+        "confidence": "exact"
+      },
+      {
+        "term": "genre.mystery",
+        "source": "external_source",
+        "confidence": "exact"
+      },
+      {
+        "term": "structure.mystery",
+        "source": "llm_inferred",
+        "confidence": "high"
+      },
+      {
+        "term": "structure.ensemble",
+        "source": "llm_inferred",
+        "confidence": "high"
+      },
+      {
+        "term": "story.intrigue",
+        "source": "llm_inferred",
+        "confidence": "high"
+      },
+      {
+        "term": "tone.light",
+        "source": "llm_inferred",
+        "confidence": "high"
+      }
+    ]
+  },
+  "preconditions": {
+    "expected_viewer_digests": {}
+  }
+}
