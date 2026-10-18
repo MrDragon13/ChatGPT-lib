@@ -1,0 +1,23 @@
+{
+  "applied_at": "2026-10-18T16:03:44.582874+00:00",
+  "changed_entities": [
+    "green-book-2018"
+  ],
+  "changed_files": [
+    "media/data/works/green-book-2018.yaml",
+    "media/generated/index.jsonl",
+    "media/generated/profiles/couple.yaml",
+    "media/generated/profiles/partner.yaml",
+    "media/generated/profiles/primary.yaml",
+    ".media/operations/a7a13c8e-17da-4208-b162-69ac5a9af828.json"
+  ],
+  "details": {
+    "created": true,
+    "work_id": "green-book-2018"
+  },
+  "idempotency_key": "711304b7-f701-430b-91ac-2bc99382df1b",
+  "operation": "record_media_entry",
+  "operation_id": "a7a13c8e-17da-4208-b162-69ac5a9af828",
+  "request_digest": "sha256:eacb9bd902fd5adfca3ebfb67a04454e3513ee6eb638cd7a5218e523879c4d11",
+  "status": "applied"
+}
