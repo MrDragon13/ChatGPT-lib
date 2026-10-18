@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "operation_id": "996ef29a-b80a-4710-a251-1ba7a62509a9",
+  "idempotency_key": "3e573adb-3d7e-49e3-a265-e169832073bf",
+  "operation": "record_media_entry",
+  "work_ref": {
+    "tmdb_media_type": "movie",
+    "tmdb_id": 388,
+    "title": "Inside Man",
+    "year": 2006
+  },
+  "create_if_missing": true,
+  "target_updates": [
+    {
+      "target": "primary",
+      "viewing": {
+        "status": "watched"
+      },
+      "rating": {
+        "score": 7,
+        "source": "explicit",
+        "confidence": "exact"
+      },
+      "reaction": {
+        "value": "liked",
+        "source": "explicit",
+        "confidence": "high"
+      },
+      "feedback": {
+        "summary": "В целом хороший фильм: смотрел с удовольствием, хотя и за несколько подходов, по частям. К сегодняшнему дню немного устарел, в особенности не понравилась несколько «мыльная» картинка. Финал показался слегка фальшивым и неправдоподобным: по сюжету главный герой скрывался за построенной грабителями стеной в хранилище, но странно, что за всё время никто не заметил уменьшения пространства. Для фильма с упором на реалистичность и продуманность ограбления такое допущение в развязке выглядит неубедительно. Поведение полиции тоже местами показалось абсурдным и нелогичным. Несмотря на замечания, просмотр принёс удовольствие.",
+        "signals": [
+          {
+            "term": "entertainment.engaging",
+            "sentiment": "positive",
+            "strength": 2,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "visuals.strong",
+            "sentiment": "negative",
+            "strength": 2,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "story.logic",
+            "sentiment": "negative",
+            "strength": 3,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "story.payoff",
+            "sentiment": "negative",
+            "strength": 2,
+            "source": "explicit",
+            "confidence": "high"
+          }
+        ]
+      }
+    }
+  ],
+  "creation_context": {
+    "provider_identity": {
+      "media_type": "movie",
+      "id": 388
+    }
+  },
+  "semantic_snapshot": {
+    "traits": [
+      {
+        "term": "genre.crime",
+        "source": "external_source",
+        "confidence": "exact"
+      },
+      {
+        "term": "genre.thriller",
+        "source": "external_source",
+        "confidence": "exact"
+      },
+      {
+        "term": "genre.drama",
+        "source": "external_source",
+        "confidence": "exact"
+      },
+      {
+        "term": "story.intrigue",
+        "source": "llm_inferred",
+        "confidence": "high"
+      },
+      {
+        "term": "story.twists",
+        "source": "llm_inferred",
+        "confidence": "high"
+      },
+      {
+        "term": "story.problem_solving",
+        "source": "llm_inferred",
+        "confidence": "medium"
+      },
+      {
+        "term": "structure.ensemble",
+        "source": "llm_inferred",
+        "confidence": "high"
+      },
+      {
+        "term": "tone.serious",
+        "source": "llm_inferred",
+        "confidence": "medium"
+      }
+    ]
+  },
+  "preconditions": {
+    "expected_viewer_digests": {}
+  }
+}
