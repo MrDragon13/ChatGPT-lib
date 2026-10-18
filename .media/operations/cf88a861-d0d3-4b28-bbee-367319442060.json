@@ -1,0 +1,23 @@
+{
+  "applied_at": "2026-10-18T15:46:42.464345+00:00",
+  "changed_entities": [
+    "backrooms-2026"
+  ],
+  "changed_files": [
+    "media/data/works/backrooms-2026.yaml",
+    "media/generated/index.jsonl",
+    "media/generated/profiles/couple.yaml",
+    "media/generated/profiles/partner.yaml",
+    "media/generated/profiles/primary.yaml",
+    ".media/operations/cf88a861-d0d3-4b28-bbee-367319442060.json"
+  ],
+  "details": {
+    "created": true,
+    "work_id": "backrooms-2026"
+  },
+  "idempotency_key": "5f90d477-2e1c-41eb-8dd1-b0584a032014",
+  "operation": "record_media_entry",
+  "operation_id": "cf88a861-d0d3-4b28-bbee-367319442060",
+  "request_digest": "sha256:e122e33ff8c1b8d815f331cdd4f339d8c4c4d3a9914bb30f004c14c5ad503287",
+  "status": "applied"
+}

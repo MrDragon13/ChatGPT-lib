@@ -2,6 +2,34 @@ schema_version: 4
 target: couple
 generated_from: canonical-v4
 affinities:
+  atmosphere.immersive:
+    score: -1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: backrooms-2026
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 4.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: medium
+      weight: 0.0875
+  content.frightening:
+    score: -1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: backrooms-2026
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 4.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.1125
   content.violence:
     score: 1.0
     confidence: low
@@ -39,10 +67,18 @@ affinities:
       confidence: high
       weight: 2.7
   entertainment.engaging:
-    score: 0.333333
+    score: -0.0
     confidence: high
-    evidence_count: 4
+    evidence_count: 5
     evidence:
+    - entity_id: backrooms-2026
+      source_target: primary
+      source_kind: feedback
+      sentiment: negative
+      strength: 3
+      source: explicit
+      confidence: high
+      weight: 2.7
     - entity_id: deja-vu-2006
       source_target: primary
       source_kind: feedback
@@ -113,10 +149,19 @@ affinities:
       trait_confidence: exact
       weight: 0.25
   genre.mystery:
-    score: 1.0
+    score: 0.333333
     confidence: low
-    evidence_count: 1
+    evidence_count: 2
     evidence:
+    - entity_id: backrooms-2026
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 4.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: external_source
+      trait_confidence: exact
+      weight: 0.125
     - entity_id: the-sheep-detectives-2026
       source_target: primary
       source_kind: rating_trait
@@ -127,10 +172,19 @@ affinities:
       trait_confidence: exact
       weight: 0.25
   genre.science_fiction:
-    score: 1.0
+    score: 0.555556
     confidence: low
-    evidence_count: 2
+    evidence_count: 3
     evidence:
+    - entity_id: backrooms-2026
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 4.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: external_source
+      trait_confidence: exact
+      weight: 0.125
     - entity_id: deja-vu-2006
       source_target: primary
       source_kind: rating_trait
@@ -173,10 +227,18 @@ affinities:
       trait_confidence: exact
       weight: 0.25
   story.intrigue:
-    score: 1.0
-    confidence: medium
-    evidence_count: 5
+    score: 0.102804
+    confidence: high
+    evidence_count: 6
     evidence:
+    - entity_id: backrooms-2026
+      source_target: primary
+      source_kind: feedback
+      sentiment: negative
+      strength: 3
+      source: explicit
+      confidence: high
+      weight: 2.7
     - entity_id: deja-vu-2006
       source_target: primary
       source_kind: rating_trait
@@ -233,6 +295,19 @@ affinities:
       source: explicit
       confidence: high
       weight: 1.8
+  story.payoff:
+    score: -1.0
+    confidence: medium
+    evidence_count: 1
+    evidence:
+    - entity_id: backrooms-2026
+      source_target: primary
+      source_kind: feedback
+      sentiment: negative
+      strength: 3
+      source: explicit
+      confidence: high
+      weight: 2.7
   story.problem_solving:
     score: 1.0
     confidence: low
@@ -294,10 +369,19 @@ affinities:
       trait_confidence: high
       weight: 0.225
   structure.mystery:
-    score: 1.0
+    score: 0.692308
     confidence: low
-    evidence_count: 3
+    evidence_count: 4
     evidence:
+    - entity_id: backrooms-2026
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 4.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.1125
     - entity_id: deja-vu-2006
       source_target: primary
       source_kind: rating_trait
@@ -325,6 +409,20 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.225
+  tone.dark:
+    score: -1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: backrooms-2026
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 4.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.1125
   tone.light:
     score: 1.0
     confidence: medium
@@ -403,9 +501,9 @@ explicit_preferences: []
 rules: []
 constraints: []
 summary:
-  ratings_count: 5
-  reactions_count: 3
+  ratings_count: 6
+  reactions_count: 4
   relations_count: 0
-  viewing_count: 5
+  viewing_count: 6
 evidence:
-  entity_count: 4
+  entity_count: 5
