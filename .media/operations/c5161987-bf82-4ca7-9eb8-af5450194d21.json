@@ -1,0 +1,17 @@
+{
+  "applied_at": "2026-10-18T17:01:47.713629+00:00",
+  "changed_entities": [
+    "preferences:primary"
+  ],
+  "changed_files": [
+    "media/generated/profiles/primary.yaml",
+    "media/preferences/inferred/primary.yaml",
+    ".media/operations/c5161987-bf82-4ca7-9eb8-af5450194d21.json"
+  ],
+  "details": {
+    "target": "primary"
+  },
+  "operation": "set_inferred_preferences",
+  "operation_id": "c5161987-bf82-4ca7-9eb8-af5450194d21",
+  "status": "applied"
+}
