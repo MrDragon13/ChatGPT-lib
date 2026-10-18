@@ -1,0 +1,23 @@
+{
+  "applied_at": "2026-10-18T15:37:44.704701+00:00",
+  "changed_entities": [
+    "obsession-2026"
+  ],
+  "changed_files": [
+    "media/data/works/obsession-2026.yaml",
+    "media/generated/index.jsonl",
+    "media/generated/profiles/couple.yaml",
+    "media/generated/profiles/partner.yaml",
+    "media/generated/profiles/primary.yaml",
+    ".media/operations/442bfbb2-4f54-40f9-8cc1-d6b531e7c6a7.json"
+  ],
+  "details": {
+    "created": true,
+    "work_id": "obsession-2026"
+  },
+  "idempotency_key": "f14219f8-8e4c-4934-89f2-f31448f68e7a",
+  "operation": "record_media_entry",
+  "operation_id": "442bfbb2-4f54-40f9-8cc1-d6b531e7c6a7",
+  "request_digest": "sha256:5303167eff060a4a989a394de9e139f119697a88d2fb81943d04025b3931ea97",
+  "status": "applied"
+}
