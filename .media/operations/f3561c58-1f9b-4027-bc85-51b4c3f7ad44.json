@@ -1,0 +1,13 @@
+{
+  "applied_at": "2026-10-18T16:20:46.347919+00:00",
+  "changed_entities": [
+    "similarity:primary:work:project-hail-mary-2026|work:the-martian-2015"
+  ],
+  "changed_files": [
+    "media/data/relations/similarity/primary.yaml",
+    ".media/operations/f3561c58-1f9b-4027-bc85-51b4c3f7ad44.json"
+  ],
+  "operation": "set_work_similarity",
+  "operation_id": "f3561c58-1f9b-4027-bc85-51b4c3f7ad44",
+  "status": "applied"
+}
