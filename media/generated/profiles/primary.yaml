@@ -16,9 +16,9 @@ affinities:
       confidence: high
       weight: 2.7
   atmosphere.immersive:
-    score: -1.0
-    confidence: low
-    evidence_count: 1
+    score: 0.93722
+    confidence: medium
+    evidence_count: 2
     evidence:
     - entity_id: backrooms-2026
       source_target: primary
@@ -29,6 +29,36 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: medium
       weight: 0.0875
+    - entity_id: green-book-2018
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 3
+      source: explicit
+      confidence: high
+      weight: 2.7
+  characters.depth:
+    score: 1.0
+    confidence: medium
+    evidence_count: 2
+    evidence:
+    - entity_id: green-book-2018
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 3
+      source: explicit
+      confidence: high
+      weight: 2.7
+    - entity_id: green-book-2018
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 7.5
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.16875
   content.frightening:
     score: -1.0
     confidence: low
@@ -80,9 +110,9 @@ affinities:
       confidence: high
       weight: 2.7
   entertainment.engaging:
-    score: 0.076923
+    score: 0.2
     confidence: high
-    evidence_count: 5
+    evidence_count: 6
     evidence:
     - entity_id: backrooms-2026
       source_target: primary
@@ -108,6 +138,14 @@ affinities:
       source: explicit
       confidence: high
       weight: 2.7
+    - entity_id: green-book-2018
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
     - entity_id: obsession-2026
       source_target: primary
       source_kind: feedback
@@ -150,8 +188,17 @@ affinities:
   genre.comedy:
     score: 1.0
     confidence: low
-    evidence_count: 1
+    evidence_count: 2
     evidence:
+    - entity_id: green-book-2018
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 7.5
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: external_source
+      trait_confidence: exact
+      weight: 0.1875
     - entity_id: the-sheep-detectives-2026
       source_target: primary
       source_kind: rating_trait
@@ -161,6 +208,20 @@ affinities:
       trait_source: external_source
       trait_confidence: exact
       weight: 0.25
+  genre.drama:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: green-book-2018
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 7.5
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: external_source
+      trait_confidence: exact
+      weight: 0.1875
   genre.mystery:
     score: 0.333333
     confidence: low
@@ -266,6 +327,20 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.3375
+  pacing.moderate:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: green-book-2018
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 7.5
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: medium
+      weight: 0.13125
   story.intrigue:
     score: 0.119266
     confidence: high
@@ -456,8 +531,17 @@ affinities:
   tone.light:
     score: 1.0
     confidence: medium
-    evidence_count: 2
+    evidence_count: 3
     evidence:
+    - entity_id: green-book-2018
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 7.5
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: medium
+      weight: 0.13125
     - entity_id: the-sheep-detectives-2026
       source_target: primary
       source_kind: feedback
@@ -490,9 +574,9 @@ affinities:
       trait_confidence: high
       weight: 0.16875
   visuals.strong:
-    score: 0.25
+    score: 0.4
     confidence: high
-    evidence_count: 4
+    evidence_count: 5
     evidence:
     - entity_id: deja-vu-2006
       source_target: primary
@@ -503,6 +587,14 @@ affinities:
       confidence: high
       weight: 1.8
     - entity_id: edge-of-tomorrow-2014
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
+    - entity_id: green-book-2018
       source_target: primary
       source_kind: feedback
       sentiment: positive
@@ -539,16 +631,16 @@ rules:
   confidence: exact
 constraints: []
 summary:
-  ratings_count: 6
-  reactions_count: 4
+  ratings_count: 7
+  reactions_count: 5
   relations_count: 0
-  viewing_count: 6
+  viewing_count: 7
 evidence:
-  entity_count: 6
+  entity_count: 7
 reanalysis:
   target: primary
   threshold: 5
-  outstanding_count: 6
+  outstanding_count: 7
   due: true
   checkpoint_valid: true
-  current_evidence_digest: sha256:88b3d580fbb7af7f78ca4eeba583a90db595831fc504ca941bcaab007d7cad3c
+  current_evidence_digest: sha256:fba3656769b914742b077fa24f927f444894e7e4ae98bbee341c9f23a9af8da1

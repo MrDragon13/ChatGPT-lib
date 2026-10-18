@@ -1,0 +1,179 @@
+schema_version: 4
+id: green-book-2018
+entity_type: work
+identity:
+  format: movie
+  title_original: Green Book
+  title_ru: Зелёная книга
+  year: 2018
+  release_date: '2018-11-16'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 490132
+    imdb: tt6966692
+metadata:
+  external:
+    genres:
+    - genre.drama
+    - genre.comedy
+    runtime_min: 130
+    original_language: en
+    countries:
+    - US
+    production_status: completed
+    synopsis_short: В 1962 году Тони Лип, вышибала, был нанят в качестве водителя
+      для пианиста Дона Ширли, чтобы сопровождать его в турне по южным штатам — в
+      те времена, когда афроамериканцы полагались на путеводитель под названием «Зелёная
+      книга негритянского автомобилиста».
+    directors:
+    - name: Peter Farrelly
+      external_ids:
+        tmdb: 7396
+    writers:
+    - name: Brian Hayes Currie
+      external_ids:
+        tmdb: 1557939
+    - name: Nick Vallelonga
+      external_ids:
+        tmdb: 78336
+    - name: Peter Farrelly
+      external_ids:
+        tmdb: 7396
+    main_cast:
+    - name: Вигго Мортенсен
+      character: Tony Lip
+      external_ids:
+        tmdb: 110
+    - name: Махершала Али
+      character: Dr. Don Shirley
+      external_ids:
+        tmdb: 932967
+    - name: Линда Карделлини
+      character: Dolores
+      external_ids:
+        tmdb: 1817
+    - name: Себастьян Манискалько
+      character: Johnny Venere
+      external_ids:
+        tmdb: 299743
+    - name: Димитар Маринов
+      character: Oleg
+      external_ids:
+        tmdb: 1613744
+    - name: Mike Hatton
+      character: George
+      external_ids:
+        tmdb: 130532
+    - name: Пи Джей Бирн
+      character: Record Exec
+      external_ids:
+        tmdb: 1211946
+    - name: Джо Кортезе
+      character: Gio Loscudo
+      external_ids:
+        tmdb: 830
+    - name: Mary Agnes Nixon
+      character: Copa Coat Check Girl
+      external_ids:
+        tmdb: 5907315
+    - name: Von Lewis
+      character: Bobby Rydell
+      external_ids:
+        tmdb: 2256705
+    - name: Jon Sortland
+      character: Rydell Band Leader
+      external_ids:
+        tmdb: 2949700
+    - name: Дон Старк
+      character: Jules Podell
+      external_ids:
+        tmdb: 130129
+    assets:
+      poster:
+        provider: tmdb
+        path: /fYch3e75YFnsJS9wAOOMlzErMqR.jpg
+      backdrop:
+        provider: tmdb
+        path: /5En0fmDagt3Pk8d7P3uTwfeQceg.jpg
+    external_metrics:
+      tmdb:
+        score: 8.224
+        votes: 13381
+        observed_at: '2026-10-18'
+    provenance:
+      provider: tmdb
+      provider_id: 490132
+      fetched_at: '2026-10-18T16:03:44.077226Z'
+  semantic:
+    traits:
+    - term: genre.drama
+      source: external_source
+      confidence: exact
+    - term: genre.comedy
+      source: external_source
+      confidence: exact
+    - term: characters.depth
+      source: llm_inferred
+      confidence: high
+    - term: tone.light
+      source: llm_inferred
+      confidence: medium
+    - term: pacing.moderate
+      source: llm_inferred
+      confidence: medium
+    input_digest: sha256:8c022094a583e17845ff9b6303ce84ba11f9cfc04a28b4843413cc402d4536d4
+    vocabulary_digest: sha256:3a84ed82cd767ea408ae0bd3a08e264bcc82fbc4f7e7c12d4c05b4a26b50c493
+    algorithm_version: media-semantic-v1
+provenance:
+  created_at: '2026-10-18'
+  updated_at: '2026-10-18'
+viewer_signals:
+  primary:
+    viewing: &id001
+      status: watched
+    rating: &id002
+      score: 7.5
+      source: explicit
+      confidence: exact
+    reaction: &id003
+      value: liked
+      source: explicit
+      confidence: high
+    feedback: &id004
+      summary: Понравились общая атмосфера фильма, динамика развития отношений между
+        главными героями и развитие их характеров. Интересно показаны исторический
+        период и социальное напряжение, связанное с расовой дискриминацией чернокожих
+        людей. Красивая картинка, атмосферная и хорошая постановка — фильм просто
+        интересно смотреть.
+      signals:
+      - term: atmosphere.immersive
+        sentiment: positive
+        strength: 3
+        source: explicit
+        confidence: high
+      - term: characters.depth
+        sentiment: positive
+        strength: 3
+        source: explicit
+        confidence: high
+      - term: visuals.strong
+        sentiment: positive
+        strength: 2
+        source: explicit
+        confidence: high
+      - term: entertainment.engaging
+        sentiment: positive
+        strength: 2
+        source: explicit
+        confidence: high
+    history:
+    - at: '2026-10-18T16:03:44.130478Z'
+      previous: {}
+      current:
+        viewing: *id001
+        rating: *id002
+        reaction: *id003
+        feedback: *id004
+      event_id: 711304b7-f701-430b-91ac-2bc99382df1b
+      material_evidence: true
