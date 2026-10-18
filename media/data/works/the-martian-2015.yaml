@@ -1,0 +1,185 @@
+schema_version: 4
+id: the-martian-2015
+entity_type: work
+identity:
+  format: movie
+  title_original: The Martian
+  title_ru: Марсианин
+  year: 2015
+  release_date: '2015-09-30'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 286217
+    imdb: tt3659388
+metadata:
+  external:
+    genres:
+    - genre.science_fiction
+    - genre.drama
+    - genre.adventure
+    runtime_min: 141
+    original_language: en
+    countries:
+    - US
+    production_status: completed
+    synopsis_short: Марсианская миссия «Арес-3» в процессе работы была вынуждена экстренно
+      покинуть планету из-за надвигающейся песчаной бури. Инженер и биолог Марк Уотни
+      получил повреждение скафандра во время песчаной бури. Сотрудники миссии, посчитав
+      его погибшим, эвакуировались с планеты, оставив Марка одного. Очнувшись, Уотни
+      обнаруживает, что связь с Землёй отсутствует, но при этом полностью функционирует
+      жилой модуль. Главный герой начинает искать способ продержаться на имеющихся
+      запасах еды, витаминов, воды и воздуха ещё 4 года до прилёта следующей миссии
+      «Арес-4».
+    directors:
+    - name: Ридли Скотт
+      external_ids:
+        tmdb: 578
+    writers:
+    - name: Дрю Годдард
+      external_ids:
+        tmdb: 47506
+    main_cast:
+    - name: Мэтт Деймон
+      character: Mark Watney
+      external_ids:
+        tmdb: 1892
+    - name: Джессика Честейн
+      character: Melissa Lewis
+      external_ids:
+        tmdb: 83002
+    - name: Кристен Уиг
+      character: Annie Montrose
+      external_ids:
+        tmdb: 41091
+    - name: Джефф Дэниелс
+      character: Theodore "Teddy" Sanders
+      external_ids:
+        tmdb: 8447
+    - name: Майкл Пенья
+      character: Rick Martinez
+      external_ids:
+        tmdb: 454
+    - name: Шон Бин
+      character: Mitch Henderson
+      external_ids:
+        tmdb: 48
+    - name: Кейт Мара
+      character: Beth Johanssen
+      external_ids:
+        tmdb: 51072
+    - name: Себастиан Стэн
+      character: Chris Beck
+      external_ids:
+        tmdb: 60898
+    - name: Аксель Хенни
+      character: Alex Vogel
+      external_ids:
+        tmdb: 76547
+    - name: Чиветел Эджиофор
+      character: Vincent Kapoor
+      external_ids:
+        tmdb: 5294
+    - name: Бенедикт Вонг
+      character: Bruce Ng
+      external_ids:
+        tmdb: 30082
+    - name: Маккензи Дэвис
+      character: Mindy Park
+      external_ids:
+        tmdb: 1110405
+    assets:
+      poster:
+        provider: tmdb
+        path: /6U19srkH4wI6taluviXbVaIpsau.jpg
+      backdrop:
+        provider: tmdb
+        path: /lzMS0CI3FLQYC5EgJoWeIaEt0lm.jpg
+    external_metrics:
+      tmdb:
+        score: 7.71
+        votes: 21972
+        observed_at: '2026-10-18'
+    provenance:
+      provider: tmdb
+      provider_id: 286217
+      fetched_at: '2026-10-18T16:14:59.964564Z'
+  semantic:
+    traits:
+    - term: genre.science_fiction
+      source: external_source
+      confidence: exact
+    - term: genre.adventure
+      source: external_source
+      confidence: exact
+    - term: genre.drama
+      source: external_source
+      confidence: exact
+    - term: story.problem_solving
+      source: llm_inferred
+      confidence: high
+    - term: humor.witty
+      source: llm_inferred
+      confidence: high
+    - term: story.intrigue
+      source: llm_inferred
+      confidence: high
+    - term: pacing.moderate
+      source: llm_inferred
+      confidence: medium
+    - term: tone.light
+      source: llm_inferred
+      confidence: medium
+    input_digest: sha256:3a9ebbac82d715c658b0cfaedc93a1a2c6cee0b421f1f9c2d564f4ea7d435a08
+    vocabulary_digest: sha256:3a84ed82cd767ea408ae0bd3a08e264bcc82fbc4f7e7c12d4c05b4a26b50c493
+    algorithm_version: media-semantic-v1
+provenance:
+  created_at: '2026-10-18'
+  updated_at: '2026-10-18'
+viewer_signals:
+  primary:
+    viewing: &id001
+      status: watched
+    rating: &id002
+      score: 9
+      source: explicit
+      confidence: exact
+    reaction: &id003
+      value: liked
+      source: explicit
+      confidence: high
+    feedback: &id004
+      summary: Крепко сделанный фильм с интересной историей и очень удачно вплетённым
+        остроумным юмором. Юмор — одна из главных причин, почему фильм так понравился.
+        Было интересно наблюдать за находчивостью главного героя и его решениями.
+      signals:
+      - term: humor.witty
+        sentiment: positive
+        strength: 3
+        source: explicit
+        confidence: high
+      - term: story.problem_solving
+        sentiment: positive
+        strength: 3
+        source: explicit
+        confidence: high
+      - term: entertainment.engaging
+        sentiment: positive
+        strength: 2
+        source: explicit
+        confidence: high
+      - term: story.intrigue
+        sentiment: positive
+        strength: 2
+        source: explicit
+        confidence: high
+    history:
+    - at: '2026-10-18T16:15:00.102095Z'
+      previous: {}
+      current:
+        viewing: *id001
+        rating: *id002
+        reaction: *id003
+        feedback: *id004
+      event_id: a56cc01d-1966-425f-ab91-731a5dfc600b
+      material_evidence: true
