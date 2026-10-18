@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "operation_id": "f3561c58-1f9b-4027-bc85-51b4c3f7ad44",
+  "operation": "set_work_similarity",
+  "target": "primary",
+  "left": {
+    "id": "project-hail-mary-2026"
+  },
+  "right": {
+    "id": "the-martian-2015"
+  },
+  "terms": [
+    "humor.witty",
+    "story.problem_solving",
+    "story.intrigue",
+    "genre.science_fiction"
+  ],
+  "note": "По явному впечатлению зрителя фильмы очень похожи: плотный интересный научно-фантастический сюжет, органичный остроумный юмор, находчивый главный герой, который решает проблемы. При этом «Проект „Аве Мария“» зритель считает визуально впечатляюще, но несколько более затянутым, чем «Марсианин»."
+}
