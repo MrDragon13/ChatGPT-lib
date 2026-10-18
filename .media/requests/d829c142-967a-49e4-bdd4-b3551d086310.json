@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "operation_id": "d829c142-967a-49e4-bdd4-b3551d086310",
+  "idempotency_key": "e8fbfa57-4d81-4e8d-b1d2-939e48ef83fa",
+  "operation": "record_media_entry",
+  "work_ref": {
+    "tmdb_media_type": "movie",
+    "tmdb_id": 333339,
+    "title": "Ready Player One",
+    "year": 2018
+  },
+  "create_if_missing": true,
+  "target_updates": [
+    {
+      "target": "primary",
+      "viewing": {
+        "status": "watched"
+      },
+      "rating": {
+        "score": 10,
+        "source": "explicit",
+        "confidence": "exact"
+      },
+      "reaction": {
+        "value": "liked",
+        "source": "explicit",
+        "confidence": "high"
+      },
+      "feedback": {
+        "summary": "Очень любимый фильм, оценка 10/10, смотрел примерно пять раз. Отличная интересная задумка о технологиях будущего, местами даже воспринимается как предсказание. Поскольку я геймер, особенно люблю многочисленные отсылки к видеоиграм и поп-культуре. Стивен Спилберг по-прежнему делает отличное кино, очень жду продолжения.",
+        "signals": [
+          {
+            "term": "genre.science_fiction",
+            "sentiment": "positive",
+            "strength": 3,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "story.intrigue",
+            "sentiment": "positive",
+            "strength": 2,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "worldbuilding.strong",
+            "sentiment": "positive",
+            "strength": 3,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "entertainment.engaging",
+            "sentiment": "positive",
+            "strength": 3,
+            "source": "explicit",
+            "confidence": "high"
+          }
+        ]
+      }
+    },
+    {
+      "target": "partner",
+      "viewing": {
+        "status": "watched"
+      },
+      "rating": {
+        "score": 10,
+        "source": "explicit",
+        "confidence": "exact"
+      },
+      "reaction": {
+        "value": "liked",
+        "source": "explicit",
+        "confidence": "high"
+      },
+      "feedback": {
+        "summary": "Жена разделяет восторженное впечатление от фильма и тоже оценивает его на 10/10. Особенно ей понравились красивые персонажи и красивая графика. Число просмотров жены не уточнялось.",
+        "signals": [
+          {
+            "term": "visuals.strong",
+            "sentiment": "positive",
+            "strength": 3,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "entertainment.engaging",
+            "sentiment": "positive",
+            "strength": 3,
+            "source": "explicit",
+            "confidence": "high"
+          }
+        ]
+      }
+    }
+  ],
+  "creation_context": {
+    "provider_identity": {
+      "media_type": "movie",
+      "id": 333339
+    }
+  },
+  "semantic_snapshot": {
+    "traits": [
+      {
+        "term": "genre.science_fiction",
+        "source": "external_source",
+        "confidence": "exact"
+      },
+      {
+        "term": "genre.adventure",
+        "source": "external_source",
+        "confidence": "exact"
+      },
+      {
+        "term": "genre.action",
+        "source": "external_source",
+        "confidence": "exact"
+      },
+      {
+        "term": "worldbuilding.strong",
+        "source": "llm_inferred",
+        "confidence": "high"
+      },
+      {
+        "term": "visuals.strong",
+        "source": "llm_inferred",
+        "confidence": "high"
+      },
+      {
+        "term": "story.intrigue",
+        "source": "llm_inferred",
+        "confidence": "high"
+      },
+      {
+        "term": "tone.light",
+        "source": "llm_inferred",
+        "confidence": "medium"
+      }
+    ]
+  },
+  "preconditions": {
+    "expected_viewer_digests": {}
+  }
+}
