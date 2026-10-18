@@ -136,9 +136,9 @@ affinities:
       confidence: high
       weight: 2.7
   entertainment.engaging:
-    score: 0.538462
+    score: 0.571429
     confidence: high
-    evidence_count: 11
+    evidence_count: 12
     evidence:
     - entity_id: backrooms-2026
       source_target: primary
@@ -206,6 +206,14 @@ affinities:
       weight: 2.7
     - entity_id: project-hail-mary-2026
       source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
+    - entity_id: the-grand-budapest-hotel-2014
+      source_target: partner
       source_kind: feedback
       sentiment: positive
       strength: 2
@@ -295,7 +303,7 @@ affinities:
   genre.comedy:
     score: 1.0
     confidence: low
-    evidence_count: 2
+    evidence_count: 3
     evidence:
     - entity_id: green-book-2018
       source_target: primary
@@ -306,6 +314,15 @@ affinities:
       trait_source: external_source
       trait_confidence: exact
       weight: 0.1875
+    - entity_id: the-grand-budapest-hotel-2014
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit_approx
+      rating_confidence: medium
+      trait_source: external_source
+      trait_confidence: exact
+      weight: 0.14875
     - entity_id: the-sheep-detectives-2026
       source_target: primary
       source_kind: rating_trait
@@ -332,7 +349,7 @@ affinities:
   genre.drama:
     score: 1.0
     confidence: low
-    evidence_count: 5
+    evidence_count: 6
     evidence:
     - entity_id: green-book-2018
       source_target: primary
@@ -370,6 +387,15 @@ affinities:
       trait_source: external_source
       trait_confidence: exact
       weight: 0.3125
+    - entity_id: the-grand-budapest-hotel-2014
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit_approx
+      rating_confidence: medium
+      trait_source: external_source
+      trait_confidence: exact
+      weight: 0.14875
     - entity_id: the-martian-2015
       source_target: primary
       source_kind: rating_trait
@@ -510,6 +536,36 @@ affinities:
       trait_source: external_source
       trait_confidence: exact
       weight: 0.125
+  humor.absurd:
+    score: 0.035854
+    confidence: medium
+    evidence_count: 3
+    evidence:
+    - entity_id: the-grand-budapest-hotel-2014
+      source_target: primary
+      source_kind: feedback
+      sentiment: negative
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
+    - entity_id: the-grand-budapest-hotel-2014
+      source_target: partner
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
+    - entity_id: the-grand-budapest-hotel-2014
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit_approx
+      rating_confidence: medium
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.133875
   humor.witty:
     score: 1.0
     confidence: high
@@ -622,9 +678,9 @@ affinities:
       confidence: high
       weight: 1.8
   story.intrigue:
-    score: 0.654676
+    score: 0.65696
     confidence: high
-    evidence_count: 15
+    evidence_count: 16
     evidence:
     - entity_id: backrooms-2026
       source_target: primary
@@ -720,6 +776,15 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.28125
+    - entity_id: the-grand-budapest-hotel-2014
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit_approx
+      rating_confidence: medium
+      trait_source: llm_inferred
+      trait_confidence: medium
+      weight: 0.104125
     - entity_id: the-martian-2015
       source_target: primary
       source_kind: feedback
@@ -923,7 +988,7 @@ affinities:
   structure.ensemble:
     score: 1.0
     confidence: low
-    evidence_count: 2
+    evidence_count: 3
     evidence:
     - entity_id: inside-man-2006
       source_target: primary
@@ -934,6 +999,15 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.1125
+    - entity_id: the-grand-budapest-hotel-2014
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit_approx
+      rating_confidence: medium
+      trait_source: llm_inferred
+      trait_confidence: medium
+      weight: 0.104125
     - entity_id: the-sheep-detectives-2026
       source_target: primary
       source_kind: rating_trait
@@ -1010,7 +1084,7 @@ affinities:
   tone.light:
     score: 1.0
     confidence: medium
-    evidence_count: 4
+    evidence_count: 5
     evidence:
     - entity_id: green-book-2018
       source_target: primary
@@ -1021,6 +1095,15 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: medium
       weight: 0.13125
+    - entity_id: the-grand-budapest-hotel-2014
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit_approx
+      rating_confidence: medium
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.133875
     - entity_id: the-martian-2015
       source_target: primary
       source_kind: rating_trait
@@ -1089,9 +1172,9 @@ affinities:
       trait_confidence: high
       weight: 0.45
   visuals.strong:
-    score: 0.444444
+    score: 0.503691
     confidence: high
-    evidence_count: 8
+    evidence_count: 10
     evidence:
     - entity_id: deja-vu-2006
       source_target: primary
@@ -1157,6 +1240,23 @@ affinities:
       source: explicit
       confidence: high
       weight: 2.7
+    - entity_id: the-grand-budapest-hotel-2014
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
+    - entity_id: the-grand-budapest-hotel-2014
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit_approx
+      rating_confidence: medium
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.133875
   worldbuilding.strong:
     score: 1.0
     confidence: medium
@@ -1192,9 +1292,9 @@ explicit_preferences: []
 rules: []
 constraints: []
 summary:
-  ratings_count: 12
-  reactions_count: 10
+  ratings_count: 14
+  reactions_count: 11
   relations_count: 0
-  viewing_count: 12
+  viewing_count: 14
 evidence:
-  entity_count: 11
+  entity_count: 12

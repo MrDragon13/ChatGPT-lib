@@ -18,10 +18,18 @@ affinities:
       weight: 0.225
   entertainment.engaging:
     score: 1.0
-    confidence: low
-    evidence_count: 1
+    confidence: medium
+    evidence_count: 2
     evidence:
     - entity_id: deja-vu-2006
+      source_target: partner
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
+    - entity_id: the-grand-budapest-hotel-2014
       source_target: partner
       source_kind: feedback
       sentiment: positive
@@ -43,6 +51,34 @@ affinities:
       trait_source: external_source
       trait_confidence: exact
       weight: 0.25
+  genre.comedy:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: the-grand-budapest-hotel-2014
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit_approx
+      rating_confidence: medium
+      trait_source: external_source
+      trait_confidence: exact
+      weight: 0.14875
+  genre.drama:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: the-grand-budapest-hotel-2014
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit_approx
+      rating_confidence: medium
+      trait_source: external_source
+      trait_confidence: exact
+      weight: 0.14875
   genre.science_fiction:
     score: 1.0
     confidence: low
@@ -71,10 +107,32 @@ affinities:
       trait_source: external_source
       trait_confidence: exact
       weight: 0.25
+  humor.absurd:
+    score: 1.0
+    confidence: low
+    evidence_count: 2
+    evidence:
+    - entity_id: the-grand-budapest-hotel-2014
+      source_target: partner
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
+    - entity_id: the-grand-budapest-hotel-2014
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit_approx
+      rating_confidence: medium
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.133875
   story.intrigue:
     score: 1.0
     confidence: medium
-    evidence_count: 2
+    evidence_count: 3
     evidence:
     - entity_id: deja-vu-2006
       source_target: partner
@@ -93,6 +151,15 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.225
+    - entity_id: the-grand-budapest-hotel-2014
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit_approx
+      rating_confidence: medium
+      trait_source: llm_inferred
+      trait_confidence: medium
+      weight: 0.104125
   story.problem_solving:
     score: 1.0
     confidence: low
@@ -121,6 +188,20 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.225
+  structure.ensemble:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: the-grand-budapest-hotel-2014
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit_approx
+      rating_confidence: medium
+      trait_source: llm_inferred
+      trait_confidence: medium
+      weight: 0.104125
   structure.mystery:
     score: 1.0
     confidence: low
@@ -135,6 +216,20 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.225
+  tone.light:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: the-grand-budapest-hotel-2014
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit_approx
+      rating_confidence: medium
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.133875
   tone.serious:
     score: 1.0
     confidence: low
@@ -149,20 +244,34 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.225
+  visuals.strong:
+    score: 1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: the-grand-budapest-hotel-2014
+      source_target: partner
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit_approx
+      rating_confidence: medium
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.133875
 explicit_preferences: []
 rules: []
 constraints: []
 summary:
-  ratings_count: 1
-  reactions_count: 1
+  ratings_count: 2
+  reactions_count: 2
   relations_count: 0
-  viewing_count: 1
+  viewing_count: 2
 evidence:
-  entity_count: 11
+  entity_count: 12
 reanalysis:
   target: partner
   threshold: 5
-  outstanding_count: 1
+  outstanding_count: 2
   due: false
   checkpoint_valid: true
-  current_evidence_digest: sha256:177c6b9cf45ee8d2ad4a84e4c2526bebc977363d334862c4523a10e222d3d410
+  current_evidence_digest: sha256:10ce09e6914a21eb43e5c273198893ff01c12cb42dc7096d43f2484c92747f76
