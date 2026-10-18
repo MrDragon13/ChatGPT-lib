@@ -1,0 +1,190 @@
+schema_version: 4
+id: inside-man-2006
+entity_type: work
+identity:
+  format: movie
+  title_original: Inside Man
+  title_ru: Не пойман — не вор
+  year: 2006
+  release_date: '2006-03-17'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 388
+    imdb: tt0454848
+metadata:
+  external:
+    genres:
+    - genre.crime
+    - genre.drama
+    - genre.thriller
+    runtime_min: 129
+    original_language: en
+    countries:
+    - US
+    production_status: completed
+    synopsis_short: История крутого полицейского, детектива Фрезьера, который сталкивается
+      «на узкой дорожке» с хитрым грабителем банков Долтоном. Их противостояние выливается
+      в напряженную драму с захватом заложников. По мере того, как развивается эта
+      игра в «кошки-мышки», на горизонте появляется еще одна загадочная фигура — брокер
+      Мадалина, роль которой в разворачивающихся событиях остается до поры до времени
+      совершенно непонятной. Мадалина вносит еще больше хаоса и нестабильности в и
+      без того чрезвычайно хрупкую ситуацию…
+    directors:
+    - name: Спайк Ли
+      external_ids:
+        tmdb: 5281
+    writers:
+    - name: Russell Gewirtz
+      external_ids:
+        tmdb: 5282
+    main_cast:
+    - name: Дензел Вашингтон
+      character: Keith Frazier
+      external_ids:
+        tmdb: 5292
+    - name: Клайв Оуэн
+      character: Dalton Russell
+      external_ids:
+        tmdb: 2296
+    - name: Джоди Фостер
+      character: Madeleine White
+      external_ids:
+        tmdb: 1038
+    - name: Кристофер Пламмер
+      character: Arthur Case
+      external_ids:
+        tmdb: 290
+    - name: Уиллем Дефо
+      character: John Darius
+      external_ids:
+        tmdb: 5293
+    - name: Чиветел Эджиофор
+      character: Bill Mitchell
+      external_ids:
+        tmdb: 5294
+    - name: Carlos Andrés Gómez
+      character: Steve
+      external_ids:
+        tmdb: 5295
+    - name: Ким Дайректор
+      character: Stevie
+      external_ids:
+        tmdb: 4889
+    - name: Джеймс Рэнсон
+      character: Steve-O
+      external_ids:
+        tmdb: 5296
+    - name: Bernie Rachelle
+      character: Chaim
+      external_ids:
+        tmdb: 5297
+    - name: Питер Герети
+      character: Captain Coughlin
+      external_ids:
+        tmdb: 1986
+    - name: Victor Colicchio
+      character: Sergeant Collins
+      external_ids:
+        tmdb: 5298
+    assets:
+      poster:
+        provider: tmdb
+        path: /8ZcIjP53vaFeW416SMNr0d5kTYY.jpg
+      backdrop:
+        provider: tmdb
+        path: /tOkSenL74N23O4S7wjJSUHz7Aeh.jpg
+    external_metrics:
+      tmdb:
+        score: 7.41
+        votes: 6632
+        observed_at: '2026-10-18'
+    provenance:
+      provider: tmdb
+      provider_id: 388
+      fetched_at: '2026-10-18T16:27:11.286833Z'
+  semantic:
+    traits:
+    - term: genre.crime
+      source: external_source
+      confidence: exact
+    - term: genre.thriller
+      source: external_source
+      confidence: exact
+    - term: genre.drama
+      source: external_source
+      confidence: exact
+    - term: story.intrigue
+      source: llm_inferred
+      confidence: high
+    - term: story.twists
+      source: llm_inferred
+      confidence: high
+    - term: story.problem_solving
+      source: llm_inferred
+      confidence: medium
+    - term: structure.ensemble
+      source: llm_inferred
+      confidence: high
+    - term: tone.serious
+      source: llm_inferred
+      confidence: medium
+    input_digest: sha256:f1c69e42bc7ee07ed2541d12bba73f81eed14ff547a284cd5048361e105c7aee
+    vocabulary_digest: sha256:3a84ed82cd767ea408ae0bd3a08e264bcc82fbc4f7e7c12d4c05b4a26b50c493
+    algorithm_version: media-semantic-v1
+provenance:
+  created_at: '2026-10-18'
+  updated_at: '2026-10-18'
+viewer_signals:
+  primary:
+    viewing: &id001
+      status: watched
+    rating: &id002
+      score: 7
+      source: explicit
+      confidence: exact
+    reaction: &id003
+      value: liked
+      source: explicit
+      confidence: high
+    feedback: &id004
+      summary: 'В целом хороший фильм: смотрел с удовольствием, хотя и за несколько
+        подходов, по частям. К сегодняшнему дню немного устарел, в особенности не
+        понравилась несколько «мыльная» картинка. Финал показался слегка фальшивым
+        и неправдоподобным: по сюжету главный герой скрывался за построенной грабителями
+        стеной в хранилище, но странно, что за всё время никто не заметил уменьшения
+        пространства. Для фильма с упором на реалистичность и продуманность ограбления
+        такое допущение в развязке выглядит неубедительно. Поведение полиции тоже
+        местами показалось абсурдным и нелогичным. Несмотря на замечания, просмотр
+        принёс удовольствие.'
+      signals:
+      - term: entertainment.engaging
+        sentiment: positive
+        strength: 2
+        source: explicit
+        confidence: high
+      - term: visuals.strong
+        sentiment: negative
+        strength: 2
+        source: explicit
+        confidence: high
+      - term: story.logic
+        sentiment: negative
+        strength: 3
+        source: explicit
+        confidence: high
+      - term: story.payoff
+        sentiment: negative
+        strength: 2
+        source: explicit
+        confidence: high
+    history:
+    - at: '2026-10-18T16:27:11.367006Z'
+      previous: {}
+      current:
+        viewing: *id001
+        rating: *id002
+        reaction: *id003
+        feedback: *id004
+      event_id: 3e573adb-3d7e-49e3-a265-e169832073bf
+      material_evidence: true
