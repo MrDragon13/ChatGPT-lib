@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "operation_id": "442bfbb2-4f54-40f9-8cc1-d6b531e7c6a7",
+  "idempotency_key": "f14219f8-8e4c-4934-89f2-f31448f68e7a",
+  "operation": "record_media_entry",
+  "work_ref": {
+    "tmdb_media_type": "movie",
+    "tmdb_id": 1339713,
+    "title": "Obsession"
+  },
+  "create_if_missing": true,
+  "target_updates": [
+    {
+      "target": "primary",
+      "viewing": {
+        "status": "watched"
+      },
+      "rating": {
+        "score": 6,
+        "source": "explicit",
+        "confidence": "exact"
+      },
+      "reaction": {
+        "value": "mixed",
+        "source": "explicit",
+        "confidence": "high"
+      },
+      "feedback": {
+        "summary": "Фильм показался сильно перехайпованным: все вокруг говорили, что его обязательно надо посмотреть, но само впечатление от просмотра было неприятным. При этом признаю, что как кино он, вероятно, сделан хорошо: главная актриса играет настолько убедительно, а визуальная подача и повествование настолько эффективно вызывают отвращение, что временами буквально физически не хочется смотреть на экран. Обычно смотрю фильмы ради интереса и удовольствия от процесса, а здесь получилось ровно наоборот. Такого опыта в кино не ищу. Досмотрел только потому, что смотрел с женой и фильм рекомендовали друзья. Похожие ощущения неприятия и разочарования из-за общественного ажиотажа вызывала и «Субстанция».",
+        "signals": [
+          {
+            "term": "entertainment.engaging",
+            "sentiment": "negative",
+            "strength": 3,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "emotion.impact",
+            "sentiment": "mixed",
+            "strength": 3,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "visuals.strong",
+            "sentiment": "mixed",
+            "strength": 2,
+            "source": "explicit",
+            "confidence": "high"
+          }
+        ]
+      }
+    }
+  ],
+  "creation_context": {
+    "provider_identity": {
+      "media_type": "movie",
+      "id": 1339713
+    }
+  },
+  "semantic_snapshot": {
+    "traits": [
+      {
+        "term": "genre.thriller",
+        "source": "external_source",
+        "confidence": "exact"
+      },
+      {
+        "term": "tone.dark",
+        "source": "llm_inferred",
+        "confidence": "high"
+      },
+      {
+        "term": "content.frightening",
+        "source": "llm_inferred",
+        "confidence": "high"
+      },
+      {
+        "term": "content.violence",
+        "source": "llm_inferred",
+        "confidence": "high"
+      },
+      {
+        "term": "content.gore",
+        "source": "llm_inferred",
+        "confidence": "medium"
+      },
+      {
+        "term": "story.intrigue",
+        "source": "llm_inferred",
+        "confidence": "medium"
+      }
+    ]
+  },
+  "preconditions": {
+    "expected_viewer_digests": {}
+  }
+}
