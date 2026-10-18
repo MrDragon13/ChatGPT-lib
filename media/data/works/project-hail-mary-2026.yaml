@@ -1,0 +1,199 @@
+schema_version: 4
+id: project-hail-mary-2026
+entity_type: work
+identity:
+  format: movie
+  title_original: Project Hail Mary
+  title_ru: Проект «Конец света»
+  year: 2026
+  release_date: '2026-03-15'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 687163
+    imdb: tt12042730
+metadata:
+  external:
+    genres:
+    - genre.science_fiction
+    - genre.adventure
+    runtime_min: 156
+    original_language: en
+    countries:
+    - US
+    production_status: completed
+    synopsis_short: Астронавт Райленд Грейс просыпается на космическом корабле, не
+      помня ни себя, ни свою миссию. Постепенно мужчина приходит к выводу, что он
+      — единственный выживший из экипажа, отправленного в звёздную систему Тау Кита
+      в поисках спасения от катастрофы на Земле. Райленду предстоит положиться на
+      свои обширные научные знания, изобретательность и силу воли, но, возможно, ему
+      не придётся искать в одиночку.
+    directors:
+    - name: Фил Лорд
+      external_ids:
+        tmdb: 107446
+    - name: Крис Миллер
+      external_ids:
+        tmdb: 155267
+    writers:
+    - name: Дрю Годдард
+      external_ids:
+        tmdb: 47506
+    main_cast:
+    - name: Райан Гослинг
+      character: Ryland Grace
+      external_ids:
+        tmdb: 30614
+    - name: Сандра Хюллер
+      character: Eva Stratt
+      external_ids:
+        tmdb: 7152
+    - name: Джеймс Ортис
+      character: Rocky (voice)
+      external_ids:
+        tmdb: 2096164
+    - name: Лайонел Бойс
+      character: Carl
+      external_ids:
+        tmdb: 2320708
+    - name: Милана Вайнтруб
+      character: Olesya Ilyukhina
+      external_ids:
+        tmdb: 1454946
+    - name: Кен Люн
+      character: Yao
+      external_ids:
+        tmdb: 2131
+    - name: Прия Кансара
+      character: Mary (voice)
+      external_ids:
+        tmdb: 3554544
+    - name: Миа Сотерье
+      character: Dr. Browne
+      external_ids:
+        tmdb: 1749206
+    - name: Аннель Олалейе
+      character: Olivia
+      external_ids:
+        tmdb: 3074054
+    - name: Майя Эва Хосейн
+      character: Rekha
+      external_ids:
+        tmdb: 6080198
+    - name: Бастиан Антонио Фуэнтес
+      character: Parker
+      external_ids:
+        tmdb: 3144892
+    - name: Элис Бриттен
+      character: Hardware Store Cashier
+      external_ids:
+        tmdb: 3796265
+    assets:
+      poster:
+        provider: tmdb
+        path: /lGNWODvZnfiocvegYSw1bYnm6pt.jpg
+      backdrop:
+        provider: tmdb
+        path: /8Tfys3mDZVp4tNoH2ktm06a0Tau.jpg
+    external_metrics:
+      tmdb:
+        score: 8.635
+        votes: 8353
+        observed_at: '2026-10-18'
+    provenance:
+      provider: tmdb
+      provider_id: 687163
+      fetched_at: '2026-10-18T16:19:52.009158Z'
+  semantic:
+    traits:
+    - term: genre.science_fiction
+      source: external_source
+      confidence: exact
+    - term: genre.adventure
+      source: external_source
+      confidence: exact
+    - term: genre.drama
+      source: external_source
+      confidence: exact
+    - term: story.problem_solving
+      source: llm_inferred
+      confidence: high
+    - term: humor.witty
+      source: llm_inferred
+      confidence: high
+    - term: story.intrigue
+      source: llm_inferred
+      confidence: high
+    - term: worldbuilding.strong
+      source: llm_inferred
+      confidence: medium
+    - term: structure.mystery
+      source: llm_inferred
+      confidence: medium
+    input_digest: sha256:aed5641b8fd559fbb302b23fb63a1e7fa5ab5ef5c28a724136a8299ffb255cc5
+    vocabulary_digest: sha256:3a84ed82cd767ea408ae0bd3a08e264bcc82fbc4f7e7c12d4c05b4a26b50c493
+    algorithm_version: media-semantic-v1
+provenance:
+  created_at: '2026-10-18'
+  updated_at: '2026-10-18'
+viewer_signals:
+  primary:
+    viewing: &id001
+      status: watched
+    rating: &id002
+      score: 8.5
+      source: explicit
+      confidence: exact
+    reaction: &id003
+      value: liked
+      source: explicit
+      confidence: high
+    feedback: &id004
+      summary: 'Хороший интересный фильм, который с удовольствием посмотрел уже несколько
+        раз. Во многом очень похож на «Марсианина»: плотный интересный сюжет, органичный
+        остроумный юмор и находчивый главный герой, решающий проблемы. Визуальная
+        часть даже чуть более впечатляющая, чем в «Марсианине»; особенно понравилась
+        сцена с разноцветными частицами в открытом космосе. При этом повествование
+        несколько более затянуто, поэтому ставлю 8,5/10 — немного ниже оценки «Марсианина»
+        (9/10).'
+      signals:
+      - term: humor.witty
+        sentiment: positive
+        strength: 3
+        source: explicit
+        confidence: high
+      - term: story.problem_solving
+        sentiment: positive
+        strength: 3
+        source: explicit
+        confidence: high
+      - term: story.intrigue
+        sentiment: positive
+        strength: 2
+        source: explicit
+        confidence: high
+      - term: visuals.strong
+        sentiment: positive
+        strength: 3
+        source: explicit
+        confidence: high
+      - term: entertainment.engaging
+        sentiment: positive
+        strength: 2
+        source: explicit
+        confidence: high
+      - term: reaction.pacing_dragging
+        sentiment: negative
+        strength: 2
+        source: explicit
+        confidence: high
+    history:
+    - at: '2026-10-18T16:19:52.155087Z'
+      previous: {}
+      current:
+        viewing: *id001
+        rating: *id002
+        reaction: *id003
+        feedback: *id004
+      event_id: dec8c55d-1aa6-4a06-982a-5c2bc76f51a3
+      material_evidence: true

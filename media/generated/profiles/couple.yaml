@@ -136,9 +136,9 @@ affinities:
       confidence: high
       weight: 2.7
   entertainment.engaging:
-    score: 0.454545
+    score: 0.5
     confidence: high
-    evidence_count: 9
+    evidence_count: 10
     evidence:
     - entity_id: backrooms-2026
       source_target: primary
@@ -196,6 +196,14 @@ affinities:
       source: explicit
       confidence: high
       weight: 2.7
+    - entity_id: project-hail-mary-2026
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
     - entity_id: the-martian-2015
       source_target: primary
       source_kind: feedback
@@ -247,7 +255,7 @@ affinities:
   genre.adventure:
     score: 1.0
     confidence: low
-    evidence_count: 2
+    evidence_count: 3
     evidence:
     - entity_id: interstellar-2014
       source_target: primary
@@ -258,6 +266,15 @@ affinities:
       trait_source: external_source
       trait_confidence: exact
       weight: 0.5
+    - entity_id: project-hail-mary-2026
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 8.5
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: external_source
+      trait_confidence: exact
+      weight: 0.3125
     - entity_id: the-martian-2015
       source_target: primary
       source_kind: rating_trait
@@ -293,7 +310,7 @@ affinities:
   genre.drama:
     score: 1.0
     confidence: low
-    evidence_count: 3
+    evidence_count: 4
     evidence:
     - entity_id: green-book-2018
       source_target: primary
@@ -313,6 +330,15 @@ affinities:
       trait_source: external_source
       trait_confidence: exact
       weight: 0.5
+    - entity_id: project-hail-mary-2026
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 8.5
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: external_source
+      trait_confidence: exact
+      weight: 0.3125
     - entity_id: the-martian-2015
       source_target: primary
       source_kind: rating_trait
@@ -346,9 +372,9 @@ affinities:
       trait_confidence: exact
       weight: 0.25
   genre.science_fiction:
-    score: 0.944598
+    score: 0.948187
     confidence: medium
-    evidence_count: 7
+    evidence_count: 8
     evidence:
     - entity_id: backrooms-2026
       source_target: primary
@@ -403,6 +429,15 @@ affinities:
       trait_source: external_source
       trait_confidence: exact
       weight: 0.5
+    - entity_id: project-hail-mary-2026
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 8.5
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: external_source
+      trait_confidence: exact
+      weight: 0.3125
     - entity_id: the-martian-2015
       source_target: primary
       source_kind: rating_trait
@@ -437,9 +472,26 @@ affinities:
       weight: 0.25
   humor.witty:
     score: 1.0
-    confidence: medium
-    evidence_count: 2
+    confidence: high
+    evidence_count: 4
     evidence:
+    - entity_id: project-hail-mary-2026
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 3
+      source: explicit
+      confidence: high
+      weight: 2.7
+    - entity_id: project-hail-mary-2026
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 8.5
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.28125
     - entity_id: the-martian-2015
       source_target: primary
       source_kind: feedback
@@ -516,10 +568,23 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: medium
       weight: 0.2625
+  reaction.pacing_dragging:
+    score: -1.0
+    confidence: low
+    evidence_count: 1
+    evidence:
+    - entity_id: project-hail-mary-2026
+      source_target: primary
+      source_kind: feedback
+      sentiment: negative
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
   story.intrigue:
-    score: 0.598326
+    score: 0.652174
     confidence: high
-    evidence_count: 12
+    evidence_count: 14
     evidence:
     - entity_id: backrooms-2026
       source_target: primary
@@ -589,6 +654,23 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.45
+    - entity_id: project-hail-mary-2026
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
+    - entity_id: project-hail-mary-2026
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 8.5
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.28125
     - entity_id: the-martian-2015
       source_target: primary
       source_kind: feedback
@@ -659,8 +741,8 @@ affinities:
       weight: 1.8
   story.problem_solving:
     score: 1.0
-    confidence: medium
-    evidence_count: 6
+    confidence: high
+    evidence_count: 8
     evidence:
     - entity_id: deja-vu-2006
       source_target: primary
@@ -698,6 +780,23 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.45
+    - entity_id: project-hail-mary-2026
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 3
+      source: explicit
+      confidence: high
+      weight: 2.7
+    - entity_id: project-hail-mary-2026
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 8.5
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.28125
     - entity_id: the-martian-2015
       source_target: primary
       source_kind: feedback
@@ -753,9 +852,9 @@ affinities:
       trait_confidence: high
       weight: 0.225
   structure.mystery:
-    score: 0.692308
+    score: 0.763158
     confidence: low
-    evidence_count: 4
+    evidence_count: 5
     evidence:
     - entity_id: backrooms-2026
       source_target: primary
@@ -784,6 +883,15 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.225
+    - entity_id: project-hail-mary-2026
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 8.5
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: medium
+      weight: 0.21875
     - entity_id: the-sheep-detectives-2026
       source_target: primary
       source_kind: rating_trait
@@ -880,9 +988,9 @@ affinities:
       trait_confidence: high
       weight: 0.45
   visuals.strong:
-    score: 0.538462
+    score: 0.625
     confidence: high
-    evidence_count: 6
+    evidence_count: 7
     evidence:
     - entity_id: deja-vu-2006
       source_target: primary
@@ -932,10 +1040,18 @@ affinities:
       source: explicit
       confidence: high
       weight: 1.8
+    - entity_id: project-hail-mary-2026
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 3
+      source: explicit
+      confidence: high
+      weight: 2.7
   worldbuilding.strong:
     score: 1.0
     confidence: medium
-    evidence_count: 2
+    evidence_count: 3
     evidence:
     - entity_id: interstellar-2014
       source_target: primary
@@ -954,13 +1070,22 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.45
+    - entity_id: project-hail-mary-2026
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 8.5
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: medium
+      weight: 0.21875
 explicit_preferences: []
 rules: []
 constraints: []
 summary:
-  ratings_count: 10
-  reactions_count: 8
+  ratings_count: 11
+  reactions_count: 9
   relations_count: 0
-  viewing_count: 10
+  viewing_count: 11
 evidence:
-  entity_count: 9
+  entity_count: 10

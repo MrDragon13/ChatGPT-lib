@@ -1,0 +1,23 @@
+{
+  "applied_at": "2026-10-18T16:19:53.465512+00:00",
+  "changed_entities": [
+    "project-hail-mary-2026"
+  ],
+  "changed_files": [
+    "media/data/works/project-hail-mary-2026.yaml",
+    "media/generated/index.jsonl",
+    "media/generated/profiles/couple.yaml",
+    "media/generated/profiles/partner.yaml",
+    "media/generated/profiles/primary.yaml",
+    ".media/operations/7a8f3490-c47b-4e81-bd38-d09077d412a6.json"
+  ],
+  "details": {
+    "created": true,
+    "work_id": "project-hail-mary-2026"
+  },
+  "idempotency_key": "dec8c55d-1aa6-4a06-982a-5c2bc76f51a3",
+  "operation": "record_media_entry",
+  "operation_id": "7a8f3490-c47b-4e81-bd38-d09077d412a6",
+  "request_digest": "sha256:7846e1ebafff448dfeb88ae2bc29ce201f52e3b045b43260acd61b4d3eca4b04",
+  "status": "applied"
+}
