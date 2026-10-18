@@ -1,0 +1,171 @@
+schema_version: 4
+id: the-sheep-detectives-2026
+entity_type: work
+identity:
+  format: movie
+  title_original: The Sheep Detectives
+  title_ru: Следствие ведут овечки
+  year: 2026
+  release_date: '2026-04-30'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 1301421
+    imdb: tt32565993
+metadata:
+  external:
+    genres:
+    - genre.comedy
+    - genre.mystery
+    runtime_min: 109
+    original_language: en
+    countries:
+    - US
+    - GB
+    production_status: completed
+    synopsis_short: Каждый вечер пастух Джордж Харди собирает своё стадо и читает
+      им детективные истории в уверенности, что овцы не понимают ни слова. Но однажды
+      утром Джорджа находят мёртвым, и тогда стадо, проникшееся детективными сюжетами,
+      решает взять расследование в свои копыта.
+    directors:
+    - name: Кайл Балда
+      external_ids:
+        tmdb: 8023
+    writers:
+    - name: Крейг Мейзин
+      external_ids:
+        tmdb: 35796
+    main_cast:
+    - name: Хью Джекман
+      character: George Hardy
+      external_ids:
+        tmdb: 6968
+    - name: Николас Браун
+      character: Officer Tim Derry
+      external_ids:
+        tmdb: 85139
+    - name: Николас Галицин
+      character: Elliot Matthews
+      external_ids:
+        tmdb: 1425934
+    - name: Молли Гордон
+      character: Rebecca Hampstead
+      external_ids:
+        tmdb: 1782117
+    - name: Джулия Луи-Дрейфус
+      character: Lily (voice)
+      external_ids:
+        tmdb: 15886
+    - name: Брайан Крэнстон
+      character: Sebastian (voice)
+      external_ids:
+        tmdb: 17419
+    - name: Крис О’Дауд
+      character: Mopple (voice)
+      external_ids:
+        tmdb: 40477
+    - name: Реджина Холл
+      character: Cloud (voice)
+      external_ids:
+        tmdb: 35705
+    - name: Патрик Стюарт
+      character: Sir Ritchfield (voice)
+      external_ids:
+        tmdb: 2387
+    - name: Белла Рамзи
+      character: Zora (voice)
+      external_ids:
+        tmdb: 1668004
+    - name: Рис Дэрби
+      character: Wool-Eyes (voice)
+      external_ids:
+        tmdb: 82666
+    - name: Бретт Голдстин
+      character: Ronnie / Reggie (voice)
+      external_ids:
+        tmdb: 21422
+    assets:
+      poster:
+        provider: tmdb
+        path: /cArYRS41NKc8kEJXrGZBWCmUmBG.jpg
+      backdrop:
+        provider: tmdb
+        path: /a8uQvrplTkhGJQog6GZ6CqF8An6.jpg
+    external_metrics:
+      tmdb:
+        score: 7.918
+        votes: 1817
+        observed_at: '2026-10-18'
+    provenance:
+      provider: tmdb
+      provider_id: 1301421
+      fetched_at: '2026-10-18T15:14:48.172101Z'
+  semantic:
+    traits:
+    - term: genre.comedy
+      source: external_source
+      confidence: exact
+    - term: genre.mystery
+      source: external_source
+      confidence: exact
+    - term: structure.mystery
+      source: llm_inferred
+      confidence: high
+    - term: structure.ensemble
+      source: llm_inferred
+      confidence: high
+    - term: story.intrigue
+      source: llm_inferred
+      confidence: high
+    - term: tone.light
+      source: llm_inferred
+      confidence: high
+    input_digest: sha256:91e227d1cc9e239b88427a2ca3de1d7fc385161aaa408377bac6cc39b1633f81
+    vocabulary_digest: sha256:3a84ed82cd767ea408ae0bd3a08e264bcc82fbc4f7e7c12d4c05b4a26b50c493
+    algorithm_version: media-semantic-v1
+provenance:
+  created_at: '2026-10-18'
+  updated_at: '2026-10-18'
+viewer_signals:
+  primary:
+    viewing: &id001
+      status: watched
+    rating: &id002
+      score: 8
+      source: explicit
+      confidence: exact
+    reaction: &id003
+      value: liked
+      source: explicit
+      confidence: high
+    feedback: &id004
+      summary: Очень милый, добрый фильм с очаровательными овечками, который интересно
+        смотреть. Детективная линия вполне неплохая, если не слишком вдумываться;
+        личность убийцы раскрывается для зрителя практически одновременно с главными
+        героями.
+      signals:
+      - term: entertainment.engaging
+        sentiment: positive
+        strength: 2
+        source: explicit
+        confidence: high
+      - term: story.intrigue
+        sentiment: positive
+        strength: 1
+        source: explicit
+        confidence: high
+      - term: tone.light
+        sentiment: positive
+        strength: 2
+        source: explicit
+        confidence: high
+    history:
+    - at: '2026-10-18T15:14:48.235485Z'
+      previous: {}
+      current:
+        viewing: *id001
+        rating: *id002
+        reaction: *id003
+        feedback: *id004
+      event_id: e665322e-98f9-418f-9ef2-9437791289e0
+      material_evidence: true

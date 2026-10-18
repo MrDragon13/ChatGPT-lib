@@ -1,0 +1,23 @@
+{
+  "applied_at": "2026-10-18T15:14:48.704884+00:00",
+  "changed_entities": [
+    "the-sheep-detectives-2026"
+  ],
+  "changed_files": [
+    "media/data/works/the-sheep-detectives-2026.yaml",
+    "media/generated/index.jsonl",
+    "media/generated/profiles/couple.yaml",
+    "media/generated/profiles/partner.yaml",
+    "media/generated/profiles/primary.yaml",
+    ".media/operations/161dd509-bc70-43f5-8f53-8d8fdbc8e2b4.json"
+  ],
+  "details": {
+    "created": true,
+    "work_id": "the-sheep-detectives-2026"
+  },
+  "idempotency_key": "e665322e-98f9-418f-9ef2-9437791289e0",
+  "operation": "record_media_entry",
+  "operation_id": "161dd509-bc70-43f5-8f53-8d8fdbc8e2b4",
+  "request_digest": "sha256:70e8bd0cc8834301636b646b619ecf3eb7dbeb315b094d549b8dc7f1b58f0b19",
+  "status": "applied"
+}
