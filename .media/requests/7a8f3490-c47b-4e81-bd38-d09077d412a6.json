@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "operation_id": "7a8f3490-c47b-4e81-bd38-d09077d412a6",
+  "idempotency_key": "dec8c55d-1aa6-4a06-982a-5c2bc76f51a3",
+  "operation": "record_media_entry",
+  "work_ref": {
+    "tmdb_media_type": "movie",
+    "tmdb_id": 687163,
+    "title": "Project Hail Mary",
+    "year": 2026
+  },
+  "create_if_missing": true,
+  "target_updates": [
+    {
+      "target": "primary",
+      "viewing": {
+        "status": "watched"
+      },
+      "rating": {
+        "score": 8.5,
+        "source": "explicit",
+        "confidence": "exact"
+      },
+      "reaction": {
+        "value": "liked",
+        "source": "explicit",
+        "confidence": "high"
+      },
+      "feedback": {
+        "summary": "Хороший интересный фильм, который с удовольствием посмотрел уже несколько раз. Во многом очень похож на «Марсианина»: плотный интересный сюжет, органичный остроумный юмор и находчивый главный герой, решающий проблемы. Визуальная часть даже чуть более впечатляющая, чем в «Марсианине»; особенно понравилась сцена с разноцветными частицами в открытом космосе. При этом повествование несколько более затянуто, поэтому ставлю 8,5/10 — немного ниже оценки «Марсианина» (9/10).",
+        "signals": [
+          {
+            "term": "humor.witty",
+            "sentiment": "positive",
+            "strength": 3,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "story.problem_solving",
+            "sentiment": "positive",
+            "strength": 3,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "story.intrigue",
+            "sentiment": "positive",
+            "strength": 2,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "visuals.strong",
+            "sentiment": "positive",
+            "strength": 3,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "entertainment.engaging",
+            "sentiment": "positive",
+            "strength": 2,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "reaction.pacing_dragging",
+            "sentiment": "negative",
+            "strength": 2,
+            "source": "explicit",
+            "confidence": "high"
+          }
+        ]
+      }
+    }
+  ],
+  "creation_context": {
+    "provider_identity": {
+      "media_type": "movie",
+      "id": 687163
+    }
+  },
+  "semantic_snapshot": {
+    "traits": [
+      {
+        "term": "genre.science_fiction",
+        "source": "external_source",
+        "confidence": "exact"
+      },
+      {
+        "term": "genre.adventure",
+        "source": "external_source",
+        "confidence": "exact"
+      },
+      {
+        "term": "genre.drama",
+        "source": "external_source",
+        "confidence": "exact"
+      },
+      {
+        "term": "story.problem_solving",
+        "source": "llm_inferred",
+        "confidence": "high"
+      },
+      {
+        "term": "humor.witty",
+        "source": "llm_inferred",
+        "confidence": "high"
+      },
+      {
+        "term": "story.intrigue",
+        "source": "llm_inferred",
+        "confidence": "high"
+      },
+      {
+        "term": "worldbuilding.strong",
+        "source": "llm_inferred",
+        "confidence": "medium"
+      },
+      {
+        "term": "structure.mystery",
+        "source": "llm_inferred",
+        "confidence": "medium"
+      }
+    ]
+  },
+  "preconditions": {
+    "expected_viewer_digests": {}
+  }
+}
