@@ -1,0 +1,23 @@
+{
+  "applied_at": "2026-10-18T16:47:39.536446+00:00",
+  "changed_entities": [
+    "equilibrium-2002"
+  ],
+  "changed_files": [
+    "media/data/works/equilibrium-2002.yaml",
+    "media/generated/index.jsonl",
+    "media/generated/profiles/couple.yaml",
+    "media/generated/profiles/partner.yaml",
+    "media/generated/profiles/primary.yaml",
+    ".media/operations/addd31aa-5911-4937-8aa3-de8fce35ae05.json"
+  ],
+  "details": {
+    "created": true,
+    "work_id": "equilibrium-2002"
+  },
+  "idempotency_key": "dfd5f0f7-a879-452b-84f7-7f707fb930cd",
+  "operation": "record_media_entry",
+  "operation_id": "addd31aa-5911-4937-8aa3-de8fce35ae05",
+  "request_digest": "sha256:5f2677bb0002dcb2713d2ad07037f35b45e7bc6cf7cbc9e19b81c22d17c08bff",
+  "status": "applied"
+}

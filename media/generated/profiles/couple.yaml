@@ -4,8 +4,8 @@ generated_from: canonical-v4
 affinities:
   action.strong:
     score: 1.0
-    confidence: medium
-    evidence_count: 1
+    confidence: high
+    evidence_count: 3
     evidence:
     - entity_id: edge-of-tomorrow-2014
       source_target: primary
@@ -15,6 +15,23 @@ affinities:
       source: explicit
       confidence: high
       weight: 2.7
+    - entity_id: equilibrium-2002
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 3
+      source: explicit
+      confidence: high
+      weight: 2.7
+    - entity_id: equilibrium-2002
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 9.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.3375
   atmosphere.immersive:
     score: 0.970526
     confidence: high
@@ -57,8 +74,25 @@ affinities:
   characters.depth:
     score: 1.0
     confidence: medium
-    evidence_count: 2
+    evidence_count: 4
     evidence:
+    - entity_id: equilibrium-2002
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
+    - entity_id: equilibrium-2002
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 9.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: medium
+      weight: 0.2625
     - entity_id: green-book-2018
       source_target: primary
       source_kind: feedback
@@ -136,9 +170,9 @@ affinities:
       confidence: high
       weight: 2.7
   entertainment.engaging:
-    score: 0.625
+    score: 0.647059
     confidence: high
-    evidence_count: 13
+    evidence_count: 14
     evidence:
     - entity_id: backrooms-2026
       source_target: primary
@@ -172,6 +206,14 @@ affinities:
       source: explicit
       confidence: high
       weight: 2.7
+    - entity_id: equilibrium-2002
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
     - entity_id: green-book-2018
       source_target: primary
       source_kind: feedback
@@ -246,8 +288,8 @@ affinities:
       weight: 1.8
   genre.action:
     score: 1.0
-    confidence: low
-    evidence_count: 5
+    confidence: medium
+    evidence_count: 6
     evidence:
     - entity_id: deja-vu-2006
       source_target: primary
@@ -268,6 +310,15 @@ affinities:
       trait_confidence: exact
       weight: 0.25
     - entity_id: edge-of-tomorrow-2014
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 9.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: external_source
+      trait_confidence: exact
+      weight: 0.375
+    - entity_id: equilibrium-2002
       source_target: primary
       source_kind: rating_trait
       rating_score: 9.0
@@ -473,9 +524,9 @@ affinities:
       trait_confidence: exact
       weight: 0.25
   genre.science_fiction:
-    score: 0.970674
+    score: 0.97191
     confidence: high
-    evidence_count: 11
+    evidence_count: 12
     evidence:
     - entity_id: backrooms-2026
       source_target: primary
@@ -505,6 +556,15 @@ affinities:
       trait_confidence: exact
       weight: 0.25
     - entity_id: edge-of-tomorrow-2014
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 9.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: external_source
+      trait_confidence: exact
+      weight: 0.375
+    - entity_id: equilibrium-2002
       source_target: primary
       source_kind: rating_trait
       rating_score: 9.0
@@ -577,7 +637,7 @@ affinities:
   genre.thriller:
     score: 1.0
     confidence: low
-    evidence_count: 3
+    evidence_count: 4
     evidence:
     - entity_id: deja-vu-2006
       source_target: primary
@@ -597,6 +657,15 @@ affinities:
       trait_source: external_source
       trait_confidence: exact
       weight: 0.25
+    - entity_id: equilibrium-2002
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 9.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: external_source
+      trait_confidence: exact
+      weight: 0.375
     - entity_id: inside-man-2006
       source_target: primary
       source_kind: rating_trait
@@ -692,7 +761,7 @@ affinities:
   pacing.fast:
     score: 1.0
     confidence: low
-    evidence_count: 1
+    evidence_count: 2
     evidence:
     - entity_id: edge-of-tomorrow-2014
       source_target: primary
@@ -703,6 +772,15 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.3375
+    - entity_id: equilibrium-2002
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 9.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: medium
+      weight: 0.2625
   pacing.moderate:
     score: 1.0
     confidence: low
@@ -740,9 +818,9 @@ affinities:
       confidence: high
       weight: 1.8
   story.intrigue:
-    score: 0.707184
+    score: 0.733223
     confidence: high
-    evidence_count: 19
+    evidence_count: 20
     evidence:
     - entity_id: backrooms-2026
       source_target: primary
@@ -795,6 +873,14 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.3375
+    - entity_id: equilibrium-2002
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
     - entity_id: inside-man-2006
       source_target: primary
       source_kind: rating_trait
@@ -1156,9 +1242,9 @@ affinities:
       trait_confidence: high
       weight: 0.225
   tone.dark:
-    score: -1.0
+    score: 0.5
     confidence: low
-    evidence_count: 1
+    evidence_count: 2
     evidence:
     - entity_id: backrooms-2026
       source_target: primary
@@ -1169,6 +1255,15 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.1125
+    - entity_id: equilibrium-2002
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 9.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.3375
   tone.light:
     score: 1.0
     confidence: medium
@@ -1278,9 +1373,9 @@ affinities:
       trait_confidence: high
       weight: 0.45
   visuals.strong:
-    score: 0.5859
+    score: 0.636677
     confidence: high
-    evidence_count: 13
+    evidence_count: 15
     evidence:
     - entity_id: deja-vu-2006
       source_target: primary
@@ -1298,6 +1393,23 @@ affinities:
       source: explicit
       confidence: high
       weight: 1.8
+    - entity_id: equilibrium-2002
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 3
+      source: explicit
+      confidence: high
+      weight: 2.7
+    - entity_id: equilibrium-2002
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 9.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.3375
     - entity_id: green-book-2018
       source_target: primary
       source_kind: feedback
@@ -1450,9 +1562,9 @@ explicit_preferences: []
 rules: []
 constraints: []
 summary:
-  ratings_count: 16
-  reactions_count: 13
+  ratings_count: 17
+  reactions_count: 14
   relations_count: 0
-  viewing_count: 16
+  viewing_count: 17
 evidence:
-  entity_count: 13
+  entity_count: 14
