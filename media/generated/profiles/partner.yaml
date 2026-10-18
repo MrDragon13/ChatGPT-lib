@@ -18,18 +18,10 @@ affinities:
       weight: 0.225
   entertainment.engaging:
     score: 1.0
-    confidence: medium
-    evidence_count: 2
+    confidence: low
+    evidence_count: 1
     evidence:
     - entity_id: deja-vu-2006
-      source_target: partner
-      source_kind: feedback
-      sentiment: positive
-      strength: 2
-      source: explicit
-      confidence: high
-      weight: 1.8
-    - entity_id: the-grand-budapest-hotel-2014
       source_target: partner
       source_kind: feedback
       sentiment: positive
@@ -110,16 +102,8 @@ affinities:
   humor.absurd:
     score: 1.0
     confidence: low
-    evidence_count: 2
+    evidence_count: 1
     evidence:
-    - entity_id: the-grand-budapest-hotel-2014
-      source_target: partner
-      source_kind: feedback
-      sentiment: positive
-      strength: 2
-      source: explicit
-      confidence: high
-      weight: 1.8
     - entity_id: the-grand-budapest-hotel-2014
       source_target: partner
       source_kind: rating_trait
@@ -271,7 +255,7 @@ evidence:
 reanalysis:
   target: partner
   threshold: 5
-  outstanding_count: 2
+  outstanding_count: 3
   due: false
   checkpoint_valid: true
-  current_evidence_digest: sha256:10ce09e6914a21eb43e5c273198893ff01c12cb42dc7096d43f2484c92747f76
+  current_evidence_digest: sha256:15d61677ab8f683501d0a33658de4fd998ee7e5ec094b0d02881d7ef3da3ae65

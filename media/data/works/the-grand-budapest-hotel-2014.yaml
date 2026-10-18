@@ -175,21 +175,8 @@ viewer_signals:
       source: explicit
       confidence: high
     feedback: &id007
-      summary: 'Со слов мужа, фильм очень понравился: жена сначала посмотрела его
-        самостоятельно и много смеялась, затем пересмотрела вместе с ним и второй
-        раз тоже смотрела с интересом. Муж предполагает оценку около 8/10; точную
-        оценку она сама не называла.'
-      signals:
-      - term: humor.absurd
-        sentiment: positive
-        strength: 2
-        source: explicit
-        confidence: high
-      - term: entertainment.engaging
-        sentiment: positive
-        strength: 2
-        source: explicit
-        confidence: high
+      summary: Фильм очень понравился, сначала посмотрела его самостоятельно и много
+        смеялась, затем пересмотрела вместе с ним и второй раз тоже смотрела с интересом.
     history:
     - at: '2026-10-18T16:32:08.636636Z'
       previous: {}
@@ -197,6 +184,43 @@ viewer_signals:
         viewing: *id004
         rating: *id005
         reaction: *id006
-        feedback: *id007
+        feedback:
+          summary: 'Со слов мужа, фильм очень понравился: жена сначала посмотрела
+            его самостоятельно и много смеялась, затем пересмотрела вместе с ним и
+            второй раз тоже смотрела с интересом. Муж предполагает оценку около 8/10;
+            точную оценку она сама не называла.'
+          signals:
+          - term: humor.absurd
+            sentiment: positive
+            strength: 2
+            source: explicit
+            confidence: high
+          - term: entertainment.engaging
+            sentiment: positive
+            strength: 2
+            source: explicit
+            confidence: high
       event_id: 749478d3-26e5-44c5-bcb8-62ead7839961
+      material_evidence: true
+    - at: '2026-10-18T16:34:28.720999Z'
+      previous:
+        feedback:
+          summary: 'Со слов мужа, фильм очень понравился: жена сначала посмотрела
+            его самостоятельно и много смеялась, затем пересмотрела вместе с ним и
+            второй раз тоже смотрела с интересом. Муж предполагает оценку около 8/10;
+            точную оценку она сама не называла.'
+          signals:
+          - term: humor.absurd
+            sentiment: positive
+            strength: 2
+            source: explicit
+            confidence: high
+          - term: entertainment.engaging
+            sentiment: positive
+            strength: 2
+            source: explicit
+            confidence: high
+      current:
+        feedback: *id007
+      event_id: 5d31586e-5972-499c-8180-f4c24cb52f1f
       material_evidence: true
