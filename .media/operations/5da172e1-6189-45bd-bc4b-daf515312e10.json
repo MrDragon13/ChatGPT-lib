@@ -1,0 +1,23 @@
+{
+  "applied_at": "2026-10-18T15:58:10.115913+00:00",
+  "changed_entities": [
+    "edge-of-tomorrow-2014"
+  ],
+  "changed_files": [
+    "media/data/works/edge-of-tomorrow-2014.yaml",
+    "media/generated/index.jsonl",
+    "media/generated/profiles/couple.yaml",
+    "media/generated/profiles/partner.yaml",
+    "media/generated/profiles/primary.yaml",
+    ".media/operations/5da172e1-6189-45bd-bc4b-daf515312e10.json"
+  ],
+  "details": {
+    "created": true,
+    "work_id": "edge-of-tomorrow-2014"
+  },
+  "idempotency_key": "b3794283-fc92-4a9d-9ab4-d7ce7596e802",
+  "operation": "record_media_entry",
+  "operation_id": "5da172e1-6189-45bd-bc4b-daf515312e10",
+  "request_digest": "sha256:7dc3871cfcde83f90ba2ef18dbf885cb10f8940ed4092c51d734f4d0222214dc",
+  "status": "applied"
+}
