@@ -1,0 +1,175 @@
+schema_version: 4
+id: backrooms-2026
+entity_type: work
+identity:
+  format: movie
+  title_original: Backrooms
+  title_ru: Закулисье реальности
+  year: 2026
+  release_date: '2026-05-27'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 1083381
+    imdb: tt26657236
+metadata:
+  external:
+    genres:
+    - genre.mystery
+    - genre.science_fiction
+    runtime_min: 110
+    original_language: en
+    countries:
+    - US
+    - CA
+    production_status: completed
+    synopsis_short: Когда неудачливый продавец мебели Кларк обнаруживает скрытый портал
+      в другое измерение в подвале своего магазина, он оказывается в бесконечном лабиринте
+      извилистых жёлтых коридоров. В этом мире время и пространство не подчиняются
+      логике, а нечто жуткое может скрываться за каждым углом.
+    directors:
+    - name: Кейн Парсонс
+      external_ids:
+        tmdb: 3688382
+    writers:
+    - name: Уилл Судик
+      external_ids:
+        tmdb: 3603502
+    main_cast:
+    - name: Чиветел Эджиофор
+      character: Clark
+      external_ids:
+        tmdb: 5294
+    - name: Ренате Реинсве
+      character: Mary
+      external_ids:
+        tmdb: 1576786
+    - name: Финн Беннетт
+      character: Bobby
+      external_ids:
+        tmdb: 1512452
+    - name: Лукита Максуэлл
+      character: Kat
+      external_ids:
+        tmdb: 1709431
+    - name: Марк Дюпласс
+      character: Phil
+      external_ids:
+        tmdb: 45407
+    - name: Эван Джогиа
+      character: Naren Warne
+      external_ids:
+        tmdb: 212934
+    - name: Роберт Боброцкий
+      character: Pirate Clark
+      external_ids:
+        tmdb: 4848549
+    - name: Эмбер Эмброуз
+      character: Young Mary
+      external_ids:
+        tmdb: 5725467
+    - name: Криста Косонен
+      character: Nora
+      external_ids:
+        tmdb: 72482
+    - name: Филип Грэйнджер
+      character: Meterman
+      external_ids:
+        tmdb: 64670
+    - name: Кэтрин Изабель
+      character: Robin
+      external_ids:
+        tmdb: 27136
+    - name: Питер Нью
+      character: Big Wayne
+      external_ids:
+        tmdb: 83424
+    assets:
+      poster:
+        provider: tmdb
+        path: /oBY8IQb9NpzbkCo0xzpz7Q1DCu.jpg
+      backdrop:
+        provider: tmdb
+        path: /dqmMWNWfLnExDRpMtIMqI97GQFR.jpg
+    external_metrics:
+      tmdb:
+        score: 7.009
+        votes: 3769
+        observed_at: '2026-10-18'
+    provenance:
+      provider: tmdb
+      provider_id: 1083381
+      fetched_at: '2026-10-18T15:46:41.680831Z'
+  semantic:
+    traits:
+    - term: genre.science_fiction
+      source: external_source
+      confidence: exact
+    - term: genre.mystery
+      source: external_source
+      confidence: exact
+    - term: tone.dark
+      source: llm_inferred
+      confidence: high
+    - term: structure.mystery
+      source: llm_inferred
+      confidence: high
+    - term: content.frightening
+      source: llm_inferred
+      confidence: high
+    - term: atmosphere.immersive
+      source: llm_inferred
+      confidence: medium
+    input_digest: sha256:3f56a939450647e6dc8053e89195496ee9cf1b2768c0510cfe867fc12c2d7577
+    vocabulary_digest: sha256:3a84ed82cd767ea408ae0bd3a08e264bcc82fbc4f7e7c12d4c05b4a26b50c493
+    algorithm_version: media-semantic-v1
+provenance:
+  created_at: '2026-10-18'
+  updated_at: '2026-10-18'
+viewer_signals:
+  primary:
+    viewing: &id001
+      status: watched
+    rating: &id002
+      score: 4
+      source: explicit
+      confidence: exact
+    reaction: &id003
+      value: disliked
+      source: explicit
+      confidence: high
+    feedback: &id004
+      summary: 'Очень странный фильм, который мне не понравился; интернет-хайп вокруг
+        него кажется раздутым. Чтобы понимать происходящее и множество отсылок, зрителю,
+        по моему ощущению, нужно заранее изучить большой объём лора в интернете: авторы
+        почти ничего не объясняют внутри самого фильма. История пытается удерживать
+        интерес только тем, что ты не понимаешь происходящего, хотя по сути мало что
+        происходит. Весь фильм держит в неведении, а концовка просто обрывает повествование
+        и не отвечает на вопросы. Мне не нравится загадочность ради самой загадочности
+        без содержательного развития и объяснений.'
+      signals:
+      - term: story.intrigue
+        sentiment: negative
+        strength: 3
+        source: explicit
+        confidence: high
+      - term: story.payoff
+        sentiment: negative
+        strength: 3
+        source: explicit
+        confidence: high
+      - term: entertainment.engaging
+        sentiment: negative
+        strength: 3
+        source: explicit
+        confidence: high
+    history:
+    - at: '2026-10-18T15:46:41.766453Z'
+      previous: {}
+      current:
+        viewing: *id001
+        rating: *id002
+        reaction: *id003
+        feedback: *id004
+      event_id: 5f90d477-2e1c-41eb-8dd1-b0584a032014
+      material_evidence: true
