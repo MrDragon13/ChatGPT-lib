@@ -1,0 +1,23 @@
+{
+  "applied_at": "2026-10-18T16:41:51.010504+00:00",
+  "changed_entities": [
+    "ready-player-one-2018"
+  ],
+  "changed_files": [
+    "media/data/works/ready-player-one-2018.yaml",
+    "media/generated/index.jsonl",
+    "media/generated/profiles/couple.yaml",
+    "media/generated/profiles/partner.yaml",
+    "media/generated/profiles/primary.yaml",
+    ".media/operations/d829c142-967a-49e4-bdd4-b3551d086310.json"
+  ],
+  "details": {
+    "created": true,
+    "work_id": "ready-player-one-2018"
+  },
+  "idempotency_key": "e8fbfa57-4d81-4e8d-b1d2-939e48ef83fa",
+  "operation": "record_media_entry",
+  "operation_id": "d829c142-967a-49e4-bdd4-b3551d086310",
+  "request_digest": "sha256:7d1592fb6af80569db117c59722b938366464f330f6e519a48b50d7b86d2ec96",
+  "status": "applied"
+}

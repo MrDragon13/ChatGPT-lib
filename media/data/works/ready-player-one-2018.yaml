@@ -1,0 +1,224 @@
+schema_version: 4
+id: ready-player-one-2018
+entity_type: work
+identity:
+  format: movie
+  title_original: Ready Player One
+  title_ru: Первому игроку приготовиться
+  year: 2018
+  release_date: '2018-03-28'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 333339
+    imdb: tt1677720
+metadata:
+  external:
+    genres:
+    - genre.adventure
+    - genre.action
+    - genre.science_fiction
+    runtime_min: 140
+    original_language: en
+    countries:
+    - US
+    production_status: completed
+    synopsis_short: Действие фильма происходит в 2045 году, мир погружается в хаос
+      и находится на грани коллапса. Люди ищут спасения в игре OASIS — огромной вселенной
+      виртуальной реальности. Ее создатель, гениальный и эксцентричный Джеймс Холлидэй,
+      оставляет уникальное завещание. Все его колоссальное состояние получит игрок,
+      первым обнаруживший цифровое «пасхальное яйцо», которое миллиардер спрятал где-то
+      на просторах OASISа. Запущенный им квест охватывает весь мир. Совершенно негероический
+      парень по имени Уэйд Уоттс решает принять участие в состязании, с головой бросаясь
+      в головокружительную, искажающую реальность погоню за сокровищами по фантастической
+      вселенной, полной загадок, открытий и опасностей.
+    directors:
+    - name: Стивен Спилберг
+      external_ids:
+        tmdb: 488
+    writers:
+    - name: Эрнест Клайн
+      external_ids:
+        tmdb: 74624
+    - name: Зак Пенн
+      external_ids:
+        tmdb: 11011
+    main_cast:
+    - name: Тай Шеридан
+      character: Parzival / Wade
+      external_ids:
+        tmdb: 1034681
+    - name: Оливия Кук
+      character: Art3mis / Samantha
+      external_ids:
+        tmdb: 1173984
+    - name: Бен Мендельсон
+      character: Sorrento
+      external_ids:
+        tmdb: 77335
+    - name: Лина Уэйт
+      character: Aech / Helen
+      external_ids:
+        tmdb: 1059572
+    - name: Ти Джей Миллер
+      character: I-R0k (voice)
+      external_ids:
+        tmdb: 51990
+    - name: Саймон Пегг
+      character: Curator / Ogden Morrow
+      external_ids:
+        tmdb: 11108
+    - name: Марк Райлэнс
+      character: Anorak / Halliday
+      external_ids:
+        tmdb: 40900
+    - name: Филип Чжао
+      character: Sho
+      external_ids:
+        tmdb: 1721235
+    - name: Уин Морисаки
+      character: Daito
+      external_ids:
+        tmdb: 1561997
+    - name: Ханна Джон-Кеймен
+      character: F'Nale Zandor
+      external_ids:
+        tmdb: 1408809
+    - name: Ральф Айнесон
+      character: Rick
+      external_ids:
+        tmdb: 202032
+    - name: Сьюзан Линч
+      character: Alice
+      external_ids:
+        tmdb: 42571
+    assets:
+      poster:
+        provider: tmdb
+        path: /eVvMjpcw2lkS1A7hTeOzZDk0Ocf.jpg
+      backdrop:
+        provider: tmdb
+        path: /5a7lMDn3nAj2ByO0X1fg6BhUphR.jpg
+    external_metrics:
+      tmdb:
+        score: 7.584
+        votes: 17495
+        observed_at: '2026-10-18'
+    provenance:
+      provider: tmdb
+      provider_id: 333339
+      fetched_at: '2026-10-18T16:41:49.076150Z'
+  semantic:
+    traits:
+    - term: genre.science_fiction
+      source: external_source
+      confidence: exact
+    - term: genre.adventure
+      source: external_source
+      confidence: exact
+    - term: genre.action
+      source: external_source
+      confidence: exact
+    - term: worldbuilding.strong
+      source: llm_inferred
+      confidence: high
+    - term: visuals.strong
+      source: llm_inferred
+      confidence: high
+    - term: story.intrigue
+      source: llm_inferred
+      confidence: high
+    - term: tone.light
+      source: llm_inferred
+      confidence: medium
+    input_digest: sha256:d35d978d1276f21f731efa1b0c9b13b697c291fa77a2c03a26682d683921721e
+    vocabulary_digest: sha256:3a84ed82cd767ea408ae0bd3a08e264bcc82fbc4f7e7c12d4c05b4a26b50c493
+    algorithm_version: media-semantic-v1
+provenance:
+  created_at: '2026-10-18'
+  updated_at: '2026-10-18'
+viewer_signals:
+  primary:
+    viewing: &id001
+      status: watched
+    rating: &id002
+      score: 10
+      source: explicit
+      confidence: exact
+    reaction: &id003
+      value: liked
+      source: explicit
+      confidence: high
+    feedback: &id004
+      summary: Очень любимый фильм, оценка 10/10, смотрел примерно пять раз. Отличная
+        интересная задумка о технологиях будущего, местами даже воспринимается как
+        предсказание. Поскольку я геймер, особенно люблю многочисленные отсылки к
+        видеоиграм и поп-культуре. Стивен Спилберг по-прежнему делает отличное кино,
+        очень жду продолжения.
+      signals:
+      - term: genre.science_fiction
+        sentiment: positive
+        strength: 3
+        source: explicit
+        confidence: high
+      - term: story.intrigue
+        sentiment: positive
+        strength: 2
+        source: explicit
+        confidence: high
+      - term: worldbuilding.strong
+        sentiment: positive
+        strength: 3
+        source: explicit
+        confidence: high
+      - term: entertainment.engaging
+        sentiment: positive
+        strength: 3
+        source: explicit
+        confidence: high
+    history:
+    - at: '2026-10-18T16:41:49.265653Z'
+      previous: {}
+      current:
+        viewing: *id001
+        rating: *id002
+        reaction: *id003
+        feedback: *id004
+      event_id: e8fbfa57-4d81-4e8d-b1d2-939e48ef83fa
+      material_evidence: true
+  partner:
+    viewing: &id005
+      status: watched
+    rating: &id006
+      score: 10
+      source: explicit
+      confidence: exact
+    reaction: &id007
+      value: liked
+      source: explicit
+      confidence: high
+    feedback: &id008
+      summary: Жена разделяет восторженное впечатление от фильма и тоже оценивает
+        его на 10/10. Особенно ей понравились красивые персонажи и красивая графика.
+        Число просмотров жены не уточнялось.
+      signals:
+      - term: visuals.strong
+        sentiment: positive
+        strength: 3
+        source: explicit
+        confidence: high
+      - term: entertainment.engaging
+        sentiment: positive
+        strength: 3
+        source: explicit
+        confidence: high
+    history:
+    - at: '2026-10-18T16:41:49.266608Z'
+      previous: {}
+      current:
+        viewing: *id005
+        rating: *id006
+        reaction: *id007
+        feedback: *id008
+      event_id: e8fbfa57-4d81-4e8d-b1d2-939e48ef83fa
+      material_evidence: true

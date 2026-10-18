@@ -127,9 +127,9 @@ affinities:
       confidence: high
       weight: 2.7
   entertainment.engaging:
-    score: 0.5
+    score: 0.555556
     confidence: high
-    evidence_count: 10
+    evidence_count: 11
     evidence:
     - entity_id: backrooms-2026
       source_target: primary
@@ -195,6 +195,14 @@ affinities:
       source: explicit
       confidence: high
       weight: 1.8
+    - entity_id: ready-player-one-2018
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 3
+      source: explicit
+      confidence: high
+      weight: 2.7
     - entity_id: the-martian-2015
       source_target: primary
       source_kind: feedback
@@ -214,7 +222,7 @@ affinities:
   genre.action:
     score: 1.0
     confidence: low
-    evidence_count: 2
+    evidence_count: 3
     evidence:
     - entity_id: deja-vu-2006
       source_target: primary
@@ -234,10 +242,19 @@ affinities:
       trait_source: external_source
       trait_confidence: exact
       weight: 0.375
+    - entity_id: ready-player-one-2018
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 10.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: external_source
+      trait_confidence: exact
+      weight: 0.5
   genre.adventure:
     score: 1.0
     confidence: low
-    evidence_count: 3
+    evidence_count: 4
     evidence:
     - entity_id: interstellar-2014
       source_target: primary
@@ -257,6 +274,15 @@ affinities:
       trait_source: external_source
       trait_confidence: exact
       weight: 0.3125
+    - entity_id: ready-player-one-2018
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 10.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: external_source
+      trait_confidence: exact
+      weight: 0.5
     - entity_id: the-martian-2015
       source_target: primary
       source_kind: rating_trait
@@ -377,9 +403,9 @@ affinities:
       trait_confidence: exact
       weight: 0.25
   genre.science_fiction:
-    score: 0.945355
-    confidence: medium
-    evidence_count: 7
+    score: 0.967846
+    confidence: high
+    evidence_count: 9
     evidence:
     - entity_id: backrooms-2026
       source_target: primary
@@ -434,6 +460,23 @@ affinities:
       trait_source: external_source
       trait_confidence: exact
       weight: 0.3125
+    - entity_id: ready-player-one-2018
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 3
+      source: explicit
+      confidence: high
+      weight: 2.7
+    - entity_id: ready-player-one-2018
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 10.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: external_source
+      trait_confidence: exact
+      weight: 0.5
     - entity_id: the-martian-2015
       source_target: primary
       source_kind: rating_trait
@@ -591,9 +634,9 @@ affinities:
       confidence: high
       weight: 1.8
   story.intrigue:
-    score: 0.603306
+    score: 0.659574
     confidence: high
-    evidence_count: 13
+    evidence_count: 15
     evidence:
     - entity_id: backrooms-2026
       source_target: primary
@@ -672,6 +715,23 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.28125
+    - entity_id: ready-player-one-2018
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
+    - entity_id: ready-player-one-2018
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 10.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.45
     - entity_id: the-martian-2015
       source_target: primary
       source_kind: feedback
@@ -935,7 +995,7 @@ affinities:
   tone.light:
     score: 1.0
     confidence: medium
-    evidence_count: 4
+    evidence_count: 5
     evidence:
     - entity_id: green-book-2018
       source_target: primary
@@ -946,6 +1006,15 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: medium
       weight: 0.13125
+    - entity_id: ready-player-one-2018
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 10.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: medium
+      weight: 0.35
     - entity_id: the-martian-2015
       source_target: primary
       source_kind: rating_trait
@@ -1005,9 +1074,9 @@ affinities:
       trait_confidence: high
       weight: 0.45
   visuals.strong:
-    score: 0.5
+    score: 0.512195
     confidence: high
-    evidence_count: 9
+    evidence_count: 10
     evidence:
     - entity_id: deja-vu-2006
       source_target: primary
@@ -1073,6 +1142,15 @@ affinities:
       source: explicit
       confidence: high
       weight: 2.7
+    - entity_id: ready-player-one-2018
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 10.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.45
     - entity_id: the-grand-budapest-hotel-2014
       source_target: primary
       source_kind: feedback
@@ -1083,8 +1161,8 @@ affinities:
       weight: 1.8
   worldbuilding.strong:
     score: 1.0
-    confidence: medium
-    evidence_count: 3
+    confidence: high
+    evidence_count: 5
     evidence:
     - entity_id: interstellar-2014
       source_target: primary
@@ -1112,6 +1190,23 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: medium
       weight: 0.21875
+    - entity_id: ready-player-one-2018
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 3
+      source: explicit
+      confidence: high
+      weight: 2.7
+    - entity_id: ready-player-one-2018
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 10.0
+      rating_source: explicit
+      rating_confidence: exact
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.45
 explicit_preferences:
 - id: genre-secondary-to-execution
   statement: Жанр сам по себе вторичен; качество реализации важнее жанровой принадлежности.
@@ -1125,16 +1220,16 @@ rules:
   confidence: exact
 constraints: []
 summary:
-  ratings_count: 12
-  reactions_count: 9
+  ratings_count: 13
+  reactions_count: 10
   relations_count: 0
-  viewing_count: 12
+  viewing_count: 13
 evidence:
-  entity_count: 12
+  entity_count: 13
 reanalysis:
   target: primary
   threshold: 5
-  outstanding_count: 12
+  outstanding_count: 13
   due: true
   checkpoint_valid: true
-  current_evidence_digest: sha256:a5f813ef1515711dbd5ca6fe4d70dcb23a3bc8ce0ff156b3ad66c58f19785932
+  current_evidence_digest: sha256:dc23bdb9dc2d0c79956d46322e36193f0ede413101dd50f02735b967494f0451
