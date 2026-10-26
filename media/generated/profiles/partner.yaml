@@ -340,7 +340,7 @@ summary:
   relations_count: 0
   viewing_count: 3
 evidence:
-  entity_count: 14
+  entity_count: 15
 reanalysis:
   target: partner
   threshold: 5
