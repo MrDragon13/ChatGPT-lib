@@ -1,0 +1,23 @@
+{
+  "applied_at": "2026-10-26T17:36:14.120534+00:00",
+  "changed_entities": [
+    "intouchables-2011"
+  ],
+  "changed_files": [
+    "media/data/works/intouchables-2011.yaml",
+    "media/generated/index.jsonl",
+    "media/generated/profiles/couple.yaml",
+    "media/generated/profiles/partner.yaml",
+    "media/generated/profiles/primary.yaml",
+    ".media/operations/c43a3c49-c8c7-42b4-8b94-85da9a9891c6.json"
+  ],
+  "details": {
+    "created": true,
+    "work_id": "intouchables-2011"
+  },
+  "idempotency_key": "d9974627-7dc3-4df2-8a8a-a7e57c63e719",
+  "operation": "record_media_entry",
+  "operation_id": "c43a3c49-c8c7-42b4-8b94-85da9a9891c6",
+  "request_digest": "sha256:f1b9db0e95067ad98842924bc7ddc6ef9e6e90926752466e6c7c28a20e0c0c41",
+  "status": "applied"
+}
