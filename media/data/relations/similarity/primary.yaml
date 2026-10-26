@@ -4,6 +4,23 @@ relations:
 - type: similar
   left:
     kind: canonical
+    work_id: deja-vu-2006
+  right:
+    kind: canonical
+    work_id: source-code-2011
+  terms:
+  - genre.science_fiction
+  - story.intrigue
+  - narrative.time_loop
+  note: «Исходный код» и «Дежавю» похожи по детективной линии и играм со временем.
+    В «Исходном коде» сильнее тема параллельных вселенных; также зритель отметил отдельные
+    параллели с «Гранью будущего».
+  updated_at: '2026-10-26T17:27:11.628216+00:00'
+  provenance:
+    source: explicit
+- type: similar
+  left:
+    kind: canonical
     work_id: project-hail-mary-2026
   right:
     kind: canonical

@@ -1,0 +1,13 @@
+{
+  "applied_at": "2026-10-26T17:27:12.280051+00:00",
+  "changed_entities": [
+    "similarity:primary:work:deja-vu-2006|work:source-code-2011"
+  ],
+  "changed_files": [
+    "media/data/relations/similarity/primary.yaml",
+    ".media/operations/d64010ac-c586-4299-9f5f-4a44f04848c9.json"
+  ],
+  "operation": "set_work_similarity",
+  "operation_id": "d64010ac-c586-4299-9f5f-4a44f04848c9",
+  "status": "applied"
+}
