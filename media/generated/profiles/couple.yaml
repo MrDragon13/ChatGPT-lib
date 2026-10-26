@@ -41,7 +41,7 @@ affinities:
       confidence: high
       weight: 0.9
   atmosphere.immersive:
-    score: 0.971034
+    score: 0.971164
     confidence: high
     evidence_count: 5
     evidence:
@@ -82,12 +82,12 @@ affinities:
     - entity_id: intouchables-2011
       source_target: primary
       source_kind: rating_trait
-      rating_score: 8.0
-      rating_source: explicit_approx
-      rating_confidence: medium
+      rating_score: 7.5
+      rating_source: explicit
+      rating_confidence: exact
       trait_source: llm_inferred
       trait_confidence: medium
-      weight: 0.104125
+      weight: 0.13125
   characters.depth:
     score: 1.0
     confidence: high
@@ -138,12 +138,12 @@ affinities:
     - entity_id: intouchables-2011
       source_target: primary
       source_kind: rating_trait
-      rating_score: 8.0
-      rating_source: explicit_approx
-      rating_confidence: medium
+      rating_score: 7.5
+      rating_source: explicit
+      rating_confidence: exact
       trait_source: llm_inferred
       trait_confidence: high
-      weight: 0.133875
+      weight: 0.16875
   content.frightening:
     score: -1.0
     confidence: low
@@ -462,12 +462,12 @@ affinities:
     - entity_id: intouchables-2011
       source_target: primary
       source_kind: rating_trait
-      rating_score: 8.0
-      rating_source: explicit_approx
-      rating_confidence: medium
+      rating_score: 7.5
+      rating_source: explicit
+      rating_confidence: exact
       trait_source: external_source
       trait_confidence: exact
-      weight: 0.14875
+      weight: 0.1875
     - entity_id: the-grand-budapest-hotel-2014
       source_target: partner
       source_kind: rating_trait
@@ -535,12 +535,12 @@ affinities:
     - entity_id: intouchables-2011
       source_target: primary
       source_kind: rating_trait
-      rating_score: 8.0
-      rating_source: explicit_approx
-      rating_confidence: medium
+      rating_score: 7.5
+      rating_source: explicit
+      rating_confidence: exact
       trait_source: external_source
       trait_confidence: exact
-      weight: 0.14875
+      weight: 0.1875
     - entity_id: project-hail-mary-2026
       source_target: primary
       source_kind: rating_trait
@@ -1428,12 +1428,12 @@ affinities:
     - entity_id: intouchables-2011
       source_target: primary
       source_kind: rating_trait
-      rating_score: 8.0
-      rating_source: explicit_approx
-      rating_confidence: medium
+      rating_score: 7.5
+      rating_source: explicit
+      rating_confidence: exact
       trait_source: llm_inferred
       trait_confidence: medium
-      weight: 0.104125
+      weight: 0.13125
     - entity_id: ready-player-one-2018
       source_target: primary
       source_kind: rating_trait
