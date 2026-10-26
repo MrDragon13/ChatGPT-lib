@@ -41,9 +41,9 @@ affinities:
       confidence: high
       weight: 0.9
   atmosphere.immersive:
-    score: 0.970526
+    score: 0.971034
     confidence: high
-    evidence_count: 4
+    evidence_count: 5
     evidence:
     - entity_id: backrooms-2026
       source_target: primary
@@ -79,10 +79,19 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.45
+    - entity_id: intouchables-2011
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit_approx
+      rating_confidence: medium
+      trait_source: llm_inferred
+      trait_confidence: medium
+      weight: 0.104125
   characters.depth:
     score: 1.0
-    confidence: medium
-    evidence_count: 4
+    confidence: high
+    evidence_count: 6
     evidence:
     - entity_id: equilibrium-2002
       source_target: primary
@@ -118,6 +127,23 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.16875
+    - entity_id: intouchables-2011
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
+    - entity_id: intouchables-2011
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit_approx
+      rating_confidence: medium
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.133875
   content.frightening:
     score: -1.0
     confidence: low
@@ -169,9 +195,9 @@ affinities:
       confidence: high
       weight: 2.7
   entertainment.engaging:
-    score: 0.612903
+    score: 0.636364
     confidence: high
-    evidence_count: 13
+    evidence_count: 14
     evidence:
     - entity_id: backrooms-2026
       source_target: primary
@@ -229,6 +255,14 @@ affinities:
       source: explicit
       confidence: high
       weight: 2.7
+    - entity_id: intouchables-2011
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
     - entity_id: obsession-2026
       source_target: primary
       source_kind: feedback
@@ -362,7 +396,7 @@ affinities:
   genre.comedy:
     score: 1.0
     confidence: low
-    evidence_count: 2
+    evidence_count: 3
     evidence:
     - entity_id: green-book-2018
       source_target: primary
@@ -373,6 +407,15 @@ affinities:
       trait_source: external_source
       trait_confidence: exact
       weight: 0.1875
+    - entity_id: intouchables-2011
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit_approx
+      rating_confidence: medium
+      trait_source: external_source
+      trait_confidence: exact
+      weight: 0.14875
     - entity_id: the-sheep-detectives-2026
       source_target: primary
       source_kind: rating_trait
@@ -399,7 +442,7 @@ affinities:
   genre.drama:
     score: 1.0
     confidence: low
-    evidence_count: 5
+    evidence_count: 6
     evidence:
     - entity_id: green-book-2018
       source_target: primary
@@ -428,6 +471,15 @@ affinities:
       trait_source: external_source
       trait_confidence: exact
       weight: 0.5
+    - entity_id: intouchables-2011
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit_approx
+      rating_confidence: medium
+      trait_source: external_source
+      trait_confidence: exact
+      weight: 0.14875
     - entity_id: project-hail-mary-2026
       source_target: primary
       source_kind: rating_trait
@@ -1185,7 +1237,7 @@ affinities:
   tone.light:
     score: 1.0
     confidence: medium
-    evidence_count: 5
+    evidence_count: 6
     evidence:
     - entity_id: green-book-2018
       source_target: primary
@@ -1196,6 +1248,15 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: medium
       weight: 0.13125
+    - entity_id: intouchables-2011
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 8.0
+      rating_source: explicit_approx
+      rating_confidence: medium
+      trait_source: llm_inferred
+      trait_confidence: medium
+      weight: 0.104125
     - entity_id: ready-player-one-2018
       source_target: primary
       source_kind: rating_trait
@@ -1436,12 +1497,12 @@ rules:
   confidence: exact
 constraints: []
 summary:
-  ratings_count: 15
-  reactions_count: 12
+  ratings_count: 16
+  reactions_count: 13
   relations_count: 0
-  viewing_count: 15
+  viewing_count: 16
 evidence:
-  entity_count: 15
+  entity_count: 16
 inferred_preferences:
 - id: rich-science-fiction
   statement: 'Сильный интерес к качественно реализованной научной фантастике: оригинальные
@@ -1622,7 +1683,7 @@ inferred_preferences:
 reanalysis:
   target: primary
   threshold: 5
-  outstanding_count: 1
+  outstanding_count: 2
   due: false
   checkpoint_valid: true
-  current_evidence_digest: sha256:c08a381bed10de6e487cf9976733f491ec7f43a57aeaefbe8ae23b823723979a
+  current_evidence_digest: sha256:7d0315e02d18fdfdbadebd9a860f17021417da37c2b1f2356712e1ed8cf4764a

@@ -1,0 +1,172 @@
+schema_version: 4
+id: intouchables-2011
+entity_type: work
+identity:
+  format: movie
+  title_original: Intouchables
+  title_ru: 1+1
+  year: 2011
+  release_date: '2011-11-02'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 77338
+    imdb: tt1675434
+metadata:
+  external:
+    genres:
+    - genre.drama
+    - genre.comedy
+    runtime_min: 113
+    original_language: fr
+    countries:
+    - FR
+    production_status: completed
+    synopsis_short: Пострадав в результате несчастного случая, богатый аристократ
+      Филипп нанимает в помощники человека, который менее всего подходит для этой
+      работы, – молодого жителя предместья Дрисса, только что освободившегося из тюрьмы.
+      Несмотря на то, что Филипп прикован к инвалидному креслу, Дриссу удается привнести
+      в размеренную жизнь аристократа дух приключений.
+    directors:
+    - name: Éric Toledano
+      external_ids:
+        tmdb: 84425
+    - name: Olivier Nakache
+      external_ids:
+        tmdb: 84426
+    writers:
+    - name: Éric Toledano
+      external_ids:
+        tmdb: 84425
+    - name: Olivier Nakache
+      external_ids:
+        tmdb: 84426
+    main_cast:
+    - name: Франсуа Клюзе
+      character: Philippe
+      external_ids:
+        tmdb: 33161
+    - name: Омар Си
+      character: Driss
+      external_ids:
+        tmdb: 78423
+    - name: Анн Ле Ни
+      character: Yvonne
+      external_ids:
+        tmdb: 19370
+    - name: Одри Флёро
+      character: Magalie
+      external_ids:
+        tmdb: 219708
+    - name: Жозефин де Мо
+      character: La DRH société de courses
+      external_ids:
+        tmdb: 84430
+    - name: Клотильд Молле
+      character: Marcelle
+      external_ids:
+        tmdb: 2411
+    - name: Альба Гайя Крагеде Беллуджи
+      character: Elisa
+      external_ids:
+        tmdb: 26107
+    - name: Cyril Mendy
+      character: Adama
+      external_ids:
+        tmdb: 581728
+    - name: Salimata Kamate
+      character: Fatou
+      external_ids:
+        tmdb: 1411815
+    - name: Absa Diatou Toure
+      character: Mina
+      external_ids:
+        tmdb: 1411817
+    - name: Grégoire Oestermann
+      character: Antoine
+      external_ids:
+        tmdb: 146212
+    - name: Dominique Daguier
+      character: Ami Philippe
+      external_ids:
+        tmdb: 1349054
+    assets:
+      poster:
+        provider: tmdb
+        path: /zQsq95pYgjhJwYKqoFdeXlVse88.jpg
+      backdrop:
+        provider: tmdb
+        path: /q6OGlZ1KMEb14AC8KbPCxyNOal6.jpg
+    external_metrics:
+      tmdb:
+        score: 8.3
+        votes: 18994
+        observed_at: '2026-10-26'
+    provenance:
+      provider: tmdb
+      provider_id: 77338
+      fetched_at: '2026-10-26T17:36:11.765522Z'
+  semantic:
+    traits:
+    - term: genre.comedy
+      source: external_source
+      confidence: exact
+    - term: genre.drama
+      source: external_source
+      confidence: exact
+    - term: characters.depth
+      source: llm_inferred
+      confidence: high
+    - term: tone.light
+      source: llm_inferred
+      confidence: medium
+    - term: atmosphere.immersive
+      source: llm_inferred
+      confidence: medium
+    input_digest: sha256:a23f862290fe0a45bd2842cd76aed4f3970454b944f6113e60acface00b71767
+    vocabulary_digest: sha256:3a84ed82cd767ea408ae0bd3a08e264bcc82fbc4f7e7c12d4c05b4a26b50c493
+    algorithm_version: media-semantic-v1
+provenance:
+  created_at: '2026-10-26'
+  updated_at: '2026-10-26'
+viewer_signals:
+  primary:
+    viewing: &id001
+      status: watched
+    rating: &id002
+      score: 8
+      source: explicit_approx
+      confidence: medium
+    reaction: &id003
+      value: liked
+      source: explicit
+      confidence: high
+    feedback: &id004
+      summary: 'Давно смотрел «1+1» и даже пересматривал несколько раз, когда его
+        показывали по телевидению; подробности сейчас помнит не очень хорошо. В целом
+        хороший, добрый фильм, примерно 7,5–8/10: сочетание драматической истории
+        и комедии с упором на развитие отношений двух главных героев. Напоминает «Зелёную
+        книгу»: в центре оба раза богатый человек, испытывающий определённые сложности,
+        и его наёмный помощник; герои из разных социальных миров постепенно становятся
+        друзьями, переживая события вместе.'
+      signals:
+      - term: characters.depth
+        sentiment: positive
+        strength: 2
+        source: explicit
+        confidence: high
+      - term: entertainment.engaging
+        sentiment: positive
+        strength: 2
+        source: explicit
+        confidence: high
+    history:
+    - at: '2026-10-26T17:36:11.991048Z'
+      previous: {}
+      current:
+        viewing: *id001
+        rating: *id002
+        reaction: *id003
+        feedback: *id004
+      event_id: d9974627-7dc3-4df2-8a8a-a7e57c63e719
+      material_evidence: true
