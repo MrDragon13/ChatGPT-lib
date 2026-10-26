@@ -133,15 +133,15 @@ viewer_signals:
   primary:
     viewing: &id001
       status: watched
-    rating: &id002
-      score: 8
-      source: explicit_approx
-      confidence: medium
-    reaction: &id003
+    rating: &id004
+      score: 7.5
+      source: explicit
+      confidence: exact
+    reaction: &id002
       value: liked
       source: explicit
       confidence: high
-    feedback: &id004
+    feedback: &id003
       summary: 'Давно смотрел «1+1» и даже пересматривал несколько раз, когда его
         показывали по телевидению; подробности сейчас помнит не очень хорошо. В целом
         хороший, добрый фильм, примерно 7,5–8/10: сочетание драматической истории
@@ -165,8 +165,21 @@ viewer_signals:
       previous: {}
       current:
         viewing: *id001
-        rating: *id002
-        reaction: *id003
-        feedback: *id004
+        rating:
+          score: 8
+          source: explicit_approx
+          confidence: medium
+        reaction: *id002
+        feedback: *id003
       event_id: d9974627-7dc3-4df2-8a8a-a7e57c63e719
+      material_evidence: true
+    - at: '2026-10-26T17:40:18.414334Z'
+      previous:
+        rating:
+          score: 8
+          source: explicit_approx
+          confidence: medium
+      current:
+        rating: *id004
+      event_id: 4b0f02dd-c302-493b-8c0b-f253e537d6e8
       material_evidence: true
