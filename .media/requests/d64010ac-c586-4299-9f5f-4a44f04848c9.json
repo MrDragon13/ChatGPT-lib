@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "operation_id": "d64010ac-c586-4299-9f5f-4a44f04848c9",
+  "operation": "set_work_similarity",
+  "target": "primary",
+  "left": {
+    "id": "source-code-2011"
+  },
+  "right": {
+    "id": "deja-vu-2006"
+  },
+  "terms": [
+    "genre.science_fiction",
+    "story.intrigue",
+    "narrative.time_loop"
+  ],
+  "note": "«Исходный код» и «Дежавю» похожи по детективной линии и играм со временем. В «Исходном коде» сильнее тема параллельных вселенных; также зритель отметил отдельные параллели с «Гранью будущего»."
+}
