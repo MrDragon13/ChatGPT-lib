@@ -1,0 +1,13 @@
+{
+  "applied_at": "2026-10-26T17:37:27.277889+00:00",
+  "changed_entities": [
+    "similarity:primary:work:green-book-2018|work:intouchables-2011"
+  ],
+  "changed_files": [
+    "media/data/relations/similarity/primary.yaml",
+    ".media/operations/f82e44a1-1b2c-46cc-8845-c98cb310bbef.json"
+  ],
+  "operation": "set_work_similarity",
+  "operation_id": "f82e44a1-1b2c-46cc-8845-c98cb310bbef",
+  "status": "applied"
+}
