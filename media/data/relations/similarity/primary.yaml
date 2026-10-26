@@ -21,6 +21,24 @@ relations:
 - type: similar
   left:
     kind: canonical
+    work_id: green-book-2018
+  right:
+    kind: canonical
+    work_id: intouchables-2011
+  terms:
+  - genre.drama
+  - genre.comedy
+  - characters.depth
+  note: 'Зритель прямо сравнил «1+1» с «Зелёной книгой»: обе истории сочетают драму
+    и юмор, в центре — развитие дружбы богатого человека, переживающего трудности,
+    и его наёмного помощника, несмотря на социальную дистанцию. Фильм «1+1» смотрел
+    давно, несколько раз по телевидению; подробности помнит не очень хорошо.'
+  updated_at: '2026-10-26T17:37:26.193497+00:00'
+  provenance:
+    source: explicit
+- type: similar
+  left:
+    kind: canonical
     work_id: project-hail-mary-2026
   right:
     kind: canonical
