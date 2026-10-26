@@ -1,0 +1,23 @@
+{
+  "applied_at": "2026-10-26T17:25:51.837172+00:00",
+  "changed_entities": [
+    "source-code-2011"
+  ],
+  "changed_files": [
+    "media/data/works/source-code-2011.yaml",
+    "media/generated/index.jsonl",
+    "media/generated/profiles/couple.yaml",
+    "media/generated/profiles/partner.yaml",
+    "media/generated/profiles/primary.yaml",
+    ".media/operations/4adcfe45-27d3-42b1-a1e6-bb367cff9a61.json"
+  ],
+  "details": {
+    "created": true,
+    "work_id": "source-code-2011"
+  },
+  "idempotency_key": "04a592ec-f5d4-4e39-a914-ab52439507d6",
+  "operation": "record_media_entry",
+  "operation_id": "4adcfe45-27d3-42b1-a1e6-bb367cff9a61",
+  "request_digest": "sha256:da767415421c54646adb1ffe42b22d0dc533376edf2b7dacd1bc6302f753aa37",
+  "status": "applied"
+}

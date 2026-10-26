@@ -5,7 +5,7 @@ affinities:
   action.strong:
     score: 1.0
     confidence: high
-    evidence_count: 3
+    evidence_count: 4
     evidence:
     - entity_id: edge-of-tomorrow-2014
       source_target: primary
@@ -32,6 +32,14 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.3375
+    - entity_id: source-code-2011
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 1
+      source: explicit
+      confidence: high
+      weight: 0.9
   atmosphere.immersive:
     score: 0.970526
     confidence: high
@@ -161,9 +169,9 @@ affinities:
       confidence: high
       weight: 2.7
   entertainment.engaging:
-    score: 0.586207
+    score: 0.612903
     confidence: high
-    evidence_count: 12
+    evidence_count: 13
     evidence:
     - entity_id: backrooms-2026
       source_target: primary
@@ -245,6 +253,14 @@ affinities:
       source: explicit
       confidence: high
       weight: 2.7
+    - entity_id: source-code-2011
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
     - entity_id: the-martian-2015
       source_target: primary
       source_kind: feedback
@@ -431,9 +447,9 @@ affinities:
       trait_confidence: exact
       weight: 0.375
   genre.mystery:
-    score: 0.333333
+    score: 0.486191
     confidence: low
-    evidence_count: 2
+    evidence_count: 3
     evidence:
     - entity_id: backrooms-2026
       source_target: primary
@@ -444,6 +460,15 @@ affinities:
       trait_source: external_source
       trait_confidence: exact
       weight: 0.125
+    - entity_id: source-code-2011
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 7.5
+      rating_source: explicit_approx
+      rating_confidence: medium
+      trait_source: external_source
+      trait_confidence: exact
+      weight: 0.111562
     - entity_id: the-sheep-detectives-2026
       source_target: primary
       source_kind: rating_trait
@@ -454,9 +479,9 @@ affinities:
       trait_confidence: exact
       weight: 0.25
   genre.science_fiction:
-    score: 0.969325
+    score: 0.969739
     confidence: high
-    evidence_count: 10
+    evidence_count: 11
     evidence:
     - entity_id: backrooms-2026
       source_target: primary
@@ -537,6 +562,15 @@ affinities:
       trait_source: external_source
       trait_confidence: exact
       weight: 0.5
+    - entity_id: source-code-2011
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 7.5
+      rating_source: explicit_approx
+      rating_confidence: medium
+      trait_source: external_source
+      trait_confidence: exact
+      weight: 0.111562
     - entity_id: the-martian-2015
       source_target: primary
       source_kind: rating_trait
@@ -549,7 +583,7 @@ affinities:
   genre.thriller:
     score: 1.0
     confidence: low
-    evidence_count: 3
+    evidence_count: 4
     evidence:
     - entity_id: deja-vu-2006
       source_target: primary
@@ -578,6 +612,15 @@ affinities:
       trait_source: external_source
       trait_confidence: exact
       weight: 0.125
+    - entity_id: source-code-2011
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 7.5
+      rating_source: explicit_approx
+      rating_confidence: medium
+      trait_source: external_source
+      trait_confidence: exact
+      weight: 0.111562
   humor.absurd:
     score: -1.0
     confidence: low
@@ -633,7 +676,7 @@ affinities:
   narrative.time_loop:
     score: 1.0
     confidence: medium
-    evidence_count: 2
+    evidence_count: 4
     evidence:
     - entity_id: edge-of-tomorrow-2014
       source_target: primary
@@ -652,10 +695,27 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.3375
+    - entity_id: source-code-2011
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 1
+      source: explicit
+      confidence: high
+      weight: 0.9
+    - entity_id: source-code-2011
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 7.5
+      rating_source: explicit_approx
+      rating_confidence: medium
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.100406
   pacing.fast:
     score: 1.0
     confidence: low
-    evidence_count: 2
+    evidence_count: 3
     evidence:
     - entity_id: edge-of-tomorrow-2014
       source_target: primary
@@ -675,6 +735,15 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: medium
       weight: 0.2625
+    - entity_id: source-code-2011
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 7.5
+      rating_source: explicit_approx
+      rating_confidence: medium
+      trait_source: llm_inferred
+      trait_confidence: medium
+      weight: 0.078094
   pacing.moderate:
     score: 1.0
     confidence: low
@@ -712,9 +781,9 @@ affinities:
       confidence: high
       weight: 1.8
   story.intrigue:
-    score: 0.694268
+    score: 0.723967
     confidence: high
-    evidence_count: 16
+    evidence_count: 18
     evidence:
     - entity_id: backrooms-2026
       source_target: primary
@@ -818,6 +887,23 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.45
+    - entity_id: source-code-2011
+      source_target: primary
+      source_kind: feedback
+      sentiment: positive
+      strength: 2
+      source: explicit
+      confidence: high
+      weight: 1.8
+    - entity_id: source-code-2011
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 7.5
+      rating_source: explicit_approx
+      rating_confidence: medium
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.100406
     - entity_id: the-martian-2015
       source_target: primary
       source_kind: feedback
@@ -905,7 +991,7 @@ affinities:
   story.problem_solving:
     score: 1.0
     confidence: high
-    evidence_count: 8
+    evidence_count: 9
     evidence:
     - entity_id: deja-vu-2006
       source_target: primary
@@ -960,6 +1046,15 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.28125
+    - entity_id: source-code-2011
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 7.5
+      rating_source: explicit_approx
+      rating_confidence: medium
+      trait_source: llm_inferred
+      trait_confidence: high
+      weight: 0.100406
     - entity_id: the-martian-2015
       source_target: primary
       source_kind: feedback
@@ -1139,7 +1234,7 @@ affinities:
   tone.serious:
     score: 1.0
     confidence: low
-    evidence_count: 3
+    evidence_count: 4
     evidence:
     - entity_id: deja-vu-2006
       source_target: primary
@@ -1168,6 +1263,15 @@ affinities:
       trait_source: llm_inferred
       trait_confidence: high
       weight: 0.45
+    - entity_id: source-code-2011
+      source_target: primary
+      source_kind: rating_trait
+      rating_score: 7.5
+      rating_source: explicit_approx
+      rating_confidence: medium
+      trait_source: llm_inferred
+      trait_confidence: medium
+      weight: 0.078094
   visuals.strong:
     score: 0.581152
     confidence: high
@@ -1332,12 +1436,12 @@ rules:
   confidence: exact
 constraints: []
 summary:
-  ratings_count: 14
-  reactions_count: 11
+  ratings_count: 15
+  reactions_count: 12
   relations_count: 0
-  viewing_count: 14
+  viewing_count: 15
 evidence:
-  entity_count: 14
+  entity_count: 15
 inferred_preferences:
 - id: rich-science-fiction
   statement: 'Сильный интерес к качественно реализованной научной фантастике: оригинальные
@@ -1518,7 +1622,7 @@ inferred_preferences:
 reanalysis:
   target: primary
   threshold: 5
-  outstanding_count: 0
+  outstanding_count: 1
   due: false
   checkpoint_valid: true
-  current_evidence_digest: sha256:5644fc102be2291ea6edd70350126a37e334b7373e80eaa61df66e241ea631dd
+  current_evidence_digest: sha256:c08a381bed10de6e487cf9976733f491ec7f43a57aeaefbe8ae23b823723979a

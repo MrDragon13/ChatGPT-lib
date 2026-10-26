@@ -1,0 +1,185 @@
+schema_version: 4
+id: source-code-2011
+entity_type: work
+identity:
+  format: movie
+  title_original: Source Code
+  title_ru: Исходный код
+  year: 2011
+  release_date: '2011-03-30'
+  external_ids:
+    tmdb:
+      media_type: movie
+      id: 45612
+    imdb: tt0945513
+metadata:
+  external:
+    genres:
+    - genre.thriller
+    - genre.science_fiction
+    - genre.mystery
+    runtime_min: 93
+    original_language: en
+    countries:
+    - US
+    - FR
+    production_status: completed
+    synopsis_short: Герой фильма - солдат, который оказывается в теле некоего человека,
+      и вынужден постоянно переживать чудовищный взрыв поезда, пока не поймёт, кто
+      его устроил.
+    directors:
+    - name: Данкан Джонс
+      external_ids:
+        tmdb: 81850
+    writers:
+    - name: Ben Ripley
+      external_ids:
+        tmdb: 58709
+    main_cast:
+    - name: Джейк Джилленхол
+      character: Colter Stevens
+      external_ids:
+        tmdb: 131
+    - name: Мишель Монахэн
+      character: Christina Warren
+      external_ids:
+        tmdb: 11705
+    - name: Вера Фармига
+      character: Colleen Goodwin
+      external_ids:
+        tmdb: 21657
+    - name: Джеффри Райт
+      character: Dr. Rutledge
+      external_ids:
+        tmdb: 2954
+    - name: Michael Arden
+      character: Derek Frost
+      external_ids:
+        tmdb: 83874
+    - name: Кэс Анвар
+      character: Hazmi
+      external_ids:
+        tmdb: 59214
+    - name: Расселл Питерс
+      character: Max Denoff
+      external_ids:
+        tmdb: 82417
+    - name: Брент Скэгфорд
+      character: George Troxel
+      external_ids:
+        tmdb: 522169
+    - name: Крейг Томас
+      character: Gold Watch Executive
+      external_ids:
+        tmdb: 572609
+    - name: Gordon Masten
+      character: Conductor
+      external_ids:
+        tmdb: 179421
+    - name: Susan Bain
+      character: Nurse
+      external_ids:
+        tmdb: 298091
+    - name: Paula Jean Hixson
+      character: Coffee Mug Lady
+      external_ids:
+        tmdb: 230595
+    assets:
+      poster:
+        provider: tmdb
+        path: /dE4IM48fgZBzr96y7gjwpbab4hJ.jpg
+      backdrop:
+        provider: tmdb
+        path: /mDb4uku4zEElsITXDpbir4fR0HW.jpg
+    external_metrics:
+      tmdb:
+        score: 7.314
+        votes: 9522
+        observed_at: '2026-10-26'
+    provenance:
+      provider: tmdb
+      provider_id: 45612
+      fetched_at: '2026-10-26T17:25:49.609535Z'
+  semantic:
+    traits:
+    - term: genre.science_fiction
+      source: external_source
+      confidence: exact
+    - term: genre.thriller
+      source: external_source
+      confidence: exact
+    - term: genre.mystery
+      source: external_source
+      confidence: exact
+    - term: story.intrigue
+      source: llm_inferred
+      confidence: high
+    - term: story.problem_solving
+      source: llm_inferred
+      confidence: high
+    - term: narrative.time_loop
+      source: llm_inferred
+      confidence: high
+    - term: pacing.fast
+      source: llm_inferred
+      confidence: medium
+    - term: tone.serious
+      source: llm_inferred
+      confidence: medium
+    input_digest: sha256:26da8c9eb790ac5e5cf95e7a0defb77ccfa0e4f0876d8e47f452d6bcbc943254
+    vocabulary_digest: sha256:3a84ed82cd767ea408ae0bd3a08e264bcc82fbc4f7e7c12d4c05b4a26b50c493
+    algorithm_version: media-semantic-v1
+provenance:
+  created_at: '2026-10-26'
+  updated_at: '2026-10-26'
+viewer_signals:
+  primary:
+    viewing: &id001
+      status: watched
+    rating: &id002
+      score: 7.5
+      source: explicit_approx
+      confidence: medium
+    reaction: &id003
+      value: liked
+      source: explicit
+      confidence: high
+    feedback: &id004
+      summary: 'Оценка примерно 7–7,5/10. Хороший фильм на вечер: в целом качественный
+        фантастический триллер с интересным расследованием, играми со временем и неплохим
+        экшеном. Похож на «Дежавю» по детективной линии и временным экспериментам,
+        хотя «Исходный код» больше уходит к теме параллельных вселенных; заметны и
+        отдельные параллели с «Гранью будущего». Фильм немного наивный, хорошо сделан,
+        но не шедевр. Сложно точно сформулировать, чего не хватает; осталось ощущение
+        недостаточной глубины сюжета и просто хорошего фильма, без особого восторга.'
+      signals:
+      - term: story.intrigue
+        sentiment: positive
+        strength: 2
+        source: explicit
+        confidence: high
+      - term: entertainment.engaging
+        sentiment: positive
+        strength: 2
+        source: explicit
+        confidence: high
+      - term: action.strong
+        sentiment: positive
+        strength: 1
+        source: explicit
+        confidence: high
+      - term: narrative.time_loop
+        sentiment: positive
+        strength: 1
+        source: explicit
+        confidence: high
+    history:
+    - at: '2026-10-26T17:25:49.823309Z'
+      previous: {}
+      current:
+        viewing: *id001
+        rating: *id002
+        reaction: *id003
+        feedback: *id004
+      event_id: 04a592ec-f5d4-4e39-a914-ab52439507d6
+      material_evidence: true
