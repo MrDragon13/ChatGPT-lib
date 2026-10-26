@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "operation_id": "4adcfe45-27d3-42b1-a1e6-bb367cff9a61",
+  "idempotency_key": "04a592ec-f5d4-4e39-a914-ab52439507d6",
+  "operation": "record_media_entry",
+  "work_ref": {
+    "tmdb_media_type": "movie",
+    "tmdb_id": 45612,
+    "title": "Source Code",
+    "year": 2011
+  },
+  "create_if_missing": true,
+  "target_updates": [
+    {
+      "target": "primary",
+      "viewing": {
+        "status": "watched"
+      },
+      "rating": {
+        "score": 7.5,
+        "source": "explicit_approx",
+        "confidence": "medium"
+      },
+      "reaction": {
+        "value": "liked",
+        "source": "explicit",
+        "confidence": "high"
+      },
+      "feedback": {
+        "summary": "Оценка примерно 7–7,5/10. Хороший фильм на вечер: в целом качественный фантастический триллер с интересным расследованием, играми со временем и неплохим экшеном. Похож на «Дежавю» по детективной линии и временным экспериментам, хотя «Исходный код» больше уходит к теме параллельных вселенных; заметны и отдельные параллели с «Гранью будущего». Фильм немного наивный, хорошо сделан, но не шедевр. Сложно точно сформулировать, чего не хватает; осталось ощущение недостаточной глубины сюжета и просто хорошего фильма, без особого восторга.",
+        "signals": [
+          {
+            "term": "story.intrigue",
+            "sentiment": "positive",
+            "strength": 2,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "entertainment.engaging",
+            "sentiment": "positive",
+            "strength": 2,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "action.strong",
+            "sentiment": "positive",
+            "strength": 1,
+            "source": "explicit",
+            "confidence": "high"
+          },
+          {
+            "term": "narrative.time_loop",
+            "sentiment": "positive",
+            "strength": 1,
+            "source": "explicit",
+            "confidence": "high"
+          }
+        ]
+      }
+    }
+  ],
+  "creation_context": {
+    "provider_identity": {
+      "media_type": "movie",
+      "id": 45612
+    }
+  },
+  "semantic_snapshot": {
+    "traits": [
+      {
+        "term": "genre.science_fiction",
+        "source": "external_source",
+        "confidence": "exact"
+      },
+      {
+        "term": "genre.thriller",
+        "source": "external_source",
+        "confidence": "exact"
+      },
+      {
+        "term": "genre.mystery",
+        "source": "external_source",
+        "confidence": "exact"
+      },
+      {
+        "term": "story.intrigue",
+        "source": "llm_inferred",
+        "confidence": "high"
+      },
+      {
+        "term": "story.problem_solving",
+        "source": "llm_inferred",
+        "confidence": "high"
+      },
+      {
+        "term": "narrative.time_loop",
+        "source": "llm_inferred",
+        "confidence": "high"
+      },
+      {
+        "term": "pacing.fast",
+        "source": "llm_inferred",
+        "confidence": "medium"
+      },
+      {
+        "term": "tone.serious",
+        "source": "llm_inferred",
+        "confidence": "medium"
+      }
+    ]
+  },
+  "preconditions": {
+    "expected_viewer_digests": {}
+  }
+}
